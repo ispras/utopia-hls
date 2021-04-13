@@ -21,6 +21,10 @@
 
 namespace utopia {
 
+/**
+ * \brief An intermediate representation combining p- and v-nets.
+ * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
+ */
 class Net final {
 public:
   typedef typename std::vector<VNode *>::const_iterator const_viterator;
@@ -29,10 +33,14 @@ public:
   Net(): _vnodes(1024*1024), _pnodes(1024*1024) {}
 
   std::size_t vsize() const { return _vnodes.size(); }
+  const VNode* vnode(size_t i) const { return _vnodes[i]; }
+
   const_viterator vbegin() const { return _vnodes.cbegin(); }
   const_viterator vend() const { return _vnodes.cend(); }
 
   std::size_t psize() const { return _pnodes.size(); }
+  const PNode* pnode(size_t i) const { return _pnodes[i]; }
+
   const_piterator pbegin() const { return _pnodes.cbegin(); }
   const_piterator pend() const { return _pnodes.cend(); }
 
@@ -40,11 +48,11 @@ public:
     return add_vnode(new VNode(VNode::SRC, var, Event::always(), Function::NOP));
   }
 
-  VNode* add_fun(const Variable &var, Function fun, const std::vector<VNode *> inputs) {
+  VNode* add_fun(const Variable &var, Function fun, const std::vector<VNode *> &inputs) {
     return add_vnode(new VNode(VNode::FUN, var, Event::always(), fun, inputs));
   }
 
-  VNode* add_mux(const Variable &var, const std::vector<VNode *> inputs) {
+  VNode* add_mux(const Variable &var, const std::vector<VNode *> &inputs) {
     return add_vnode(new VNode(VNode::MUX, var, Event::always(), Function::MUX, inputs));
   }
 

@@ -18,11 +18,18 @@
 
 namespace utopia {
 
+/**
+ * \brief Represents a data type.
+ * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
+ */
 class Type final {
 public:
   enum Kind {
+    /// Signed integer (width).
     SINT,
+    /// Unsigned integer (width).
     UINT,
+    /// Floating-point number (width, fract).
     REAL
   };
 
@@ -43,6 +50,10 @@ private:
   const std::size_t _fract;
 };
 
+/**
+ * \brief Represents a variable (wire or register).
+ * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
+ */
 class Variable final {
 public:
   enum Kind {
@@ -50,28 +61,28 @@ public:
     REG
   };
 
-  enum Dir {
+  enum Bind {
     INPUT,
     OUTPUT,
     INNER
   };
 
-  static Variable var(const std::string &name, Kind kind, Dir dir, const Type &type) {
-    return Variable(name, kind, dir, type);
+  static Variable var(const std::string &name, Kind kind, Bind bind, const Type &type) {
+    return Variable(name, kind, bind, type);
   }
 
   const std::string& name() const { return _name; }
   Kind kind() const { return _kind; }
-  Dir dir() const { return _dir; }
+  Bind bind() const { return _bind; }
   const Type& type() const { return _type; }
 
 private:
-  Variable(const std::string &name, Kind kind, Dir dir, const Type &type):
-    _name(name), _kind(kind), _dir(dir), _type(type) {}
+  Variable(const std::string &name, Kind kind, Bind bind, const Type &type):
+    _name(name), _kind(kind), _bind(bind), _type(type) {}
 
   const std::string _name;
   const Kind _kind;
-  const Dir _dir;
+  const Bind _bind;
   const Type _type;
 };
 

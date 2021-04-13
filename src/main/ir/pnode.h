@@ -22,12 +22,12 @@
 namespace utopia {
 
 /**
- * \brief Represents an RTL process (p-node) as a guarded action.
+ * \brief Represents a p-node (p = process), a guarded action.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class PNode final {
 public:
-  // Creation of p-nodes is carried out through IR.
+  // Creation of p-nodes is deligated to IR.
   friend class Net;
 
   typedef typename std::vector<VNode *>::const_iterator const_viterator;
@@ -35,7 +35,7 @@ public:
   const Event& event() const { return _event; }
 
   const_viterator guard_cbegin() const { return _guard.cbegin(); }
-  const_viterator guard_cend() const { return _guard.cbegin(); }
+  const_viterator guard_cend() const { return _guard.cend(); }
 
   const_viterator action_cbegin() const { return _action.cbegin(); }
   const_viterator action_cend() const { return _action.cend(); }

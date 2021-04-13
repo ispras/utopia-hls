@@ -18,33 +18,48 @@ namespace utopia {
 
 class VNode;
 
+/**
+ * \brief Represents a triggering event.
+ * \authof <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
+ */
 class Event final {
 public:
   enum Kind {
+    /// Positive edge: always_ff @(posedge <signal>) begin <action> end.
     POSEDGE,
+    /// Negative edge: always_ff @(negedge <signal>) begin <action> end.
     NEGEDGE,
-    ANYEDGE,
+    /// Low level: always_latch begin if (~<signal>) <action> end.
     LEVEL0,
+    /// High Level: always_latch begin if (<signal>) <action> end.
     LEVEL1,
+    /// Continuous: always_comb begin <action> end.
     ALWAYS,
+    /// Explicit delay: #<delay> <action>.
     DELAY
   };
 
   static Event posedge(const VNode *signal) { return Event(POSEDGE, signal); }
   static Event negedge(const VNode *signal) { return Event(NEGEDGE, signal); }
-  static Event anyedge(const VNode *signal) { return Event(ANYEDGE, signal); }
   static Event level0(const VNode *signal) { return Event(LEVEL0, signal); }
   static Event level1(const VNode *signal) { return Event(LEVEL1, signal); }
   static Event always() { return Event(ALWAYS); }
-  static Event delay() { return Event(DELAY); }
+  static Event delay(std::size_t delay) { return Event(DELAY, 0, delay); }
+
+  Kind kind() const { return _kind; }
+  const VNode* signal() const { return _signal; }
+  std::size_t delay() const { return _delay; }
 
 private:
-  Event(Kind kind, const VNode *signal = 0):
-    _kind(kind), _signal(signal) {}
+  Event(Kind kind, const VNode *signal = 0, std::size_t delay = 0):
+    _kind(kind), _signal(signal), _delay(delay) {}
 
+  // Event kind.
   const Kind _kind;
-  // For edges and levels only.
+  // Single-bit signal for tracking events on (for edges and levels only).
   const VNode *_signal;
+  // Delay value.
+  const std::size_t _delay;
 };
 
 } // namespace utopia
