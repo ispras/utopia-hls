@@ -12,32 +12,18 @@
  * the License.
  */
 
-#pragma once
-
-#include <memory>
-#include <stdexcept>
 #include <string>
+
+#include "utils.h"
 
 namespace eda {
 namespace ir {
 namespace utils {
 
-template<typename ... Args>
-std::string format(const std::string &format, Args ... args) {
-  int length = snprintf(nullptr, 0, format.c_str(), args ...);
-
-  if (length < 0) {
-    throw std::runtime_error("Formatting error");
-  }
-
-  auto size = static_cast<size_t>(length + 1);
-  auto buffer = std::make_unique<char[]>(size);
-
-  snprintf(buffer.get(), size, format.c_str(), args ...);
-  return std::string(buffer.get(), buffer.get() + size - 1);
+std::string unique_name(const std::string &prefix) {
+  static int i = 0;
+  return utils::format("%s$%d", prefix.c_str(), i++);
 }
-
-std::string unique_name(const std::string &prefix);
 
 }}} // namespace eda::ir::utils
 

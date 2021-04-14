@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <iostream>
+
 namespace eda {
 namespace ir {
 
@@ -24,6 +26,9 @@ class VNode;
  * \authof <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class Event final {
+  // Debug print.
+  friend std::ostream& operator <<(std::ostream &out, const Event &event);
+
 public:
   enum Kind {
     /// Positive edge: always_ff @(posedge <signal>) begin <action> end.
@@ -79,6 +84,8 @@ private:
   // Delay value.
   const std::size_t _delay;
 };
+
+std::ostream& operator <<(std::ostream &out, const Event &event);
 
 }} // namespace eda::ir
 

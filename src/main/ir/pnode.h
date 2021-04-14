@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include <algorithm>
+#include <iostream>
 #include <vector>
 
 #include "event.h"
@@ -28,19 +28,23 @@ namespace ir {
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class PNode final {
-  // Creation of p-nodes.
+  // Creation.
   friend class Net;
+  // Debug print.
+  friend std::ostream& operator <<(std::ostream &out, const PNode &pnode);
 
 public:
   typedef typename std::vector<VNode *>::const_iterator const_viterator;
 
   const Event& event() const { return _event; }
 
-  const_viterator guard_cbegin() const { return _guard.cbegin(); }
-  const_viterator guard_cend() const { return _guard.cend(); }
+  std::size_t gsize() const { return _guard.size(); }
+  const_viterator gbegin() const { return _guard.cbegin(); }
+  const_viterator gend() const { return _guard.cend(); }
 
-  const_viterator action_cbegin() const { return _action.cbegin(); }
-  const_viterator action_cend() const { return _action.cend(); }
+  std::size_t asize() const { return _action.size(); }
+  const_viterator abegin() const { return _action.cbegin(); }
+  const_viterator aend() const { return _action.cend(); }
 
 private:
   PNode(const Event &event, const std::vector<VNode *> &guard, const std::vector<VNode *> &action):
@@ -60,6 +64,8 @@ private:
   // The non-blocking assignments.
   std::vector<VNode *> _action;
 };
+
+std::ostream& operator <<(std::ostream &out, const PNode &pnode);
 
 }} // namespace eda::ir
 

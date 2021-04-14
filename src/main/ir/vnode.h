@@ -15,7 +15,9 @@
 #pragma once
 
 #include <cstddef>
+#include <iostream>
 #include <string>
+#include <vector>
 
 #include "event.h"
 #include "function.h"
@@ -32,10 +34,12 @@ class PNode;
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class VNode final {
-  // Creation of v-nodes.
+  // Creation.
   friend class Net;
   // Setting the parent p-node.
   friend class PNode;
+  // Debug print.
+  friend std::ostream& operator <<(std::ostream &out, const VNode &vnode);
 
 public:
   enum Kind {
@@ -64,16 +68,18 @@ private:
       const std::vector<VNode *> &inputs):
     _pnode(nullptr), _kind(kind), _var(var), _event(event), _fun(fun), _inputs(inputs) {}
 
-  VNode(Kind kind, const Variable &var, const Event &event,
-      const std::vector<VNode *> &inputs):
-    _pnode(nullptr), _kind(kind), _var(var), _event(event), _fun(Function::NOP), _inputs(inputs) {}
+  VNode *duplicate(const std::string &new_name) {
+    Variable var(new_name, _var.kind(), _var.bind(), _var.type());
+    return new VNode(_kind, var, _event, _fun, _inputs);
+  }
+
+  void replace_with(Kind kind, const Variable &var, const Event &event, Function fun,
+      const std::vector<VNode *> &inputs) {
+    this->~VNode();
+    new (this) VNode(kind, var, event, fun, inputs);
+  }
 
   void set_pnode(PNode *pnode) { _pnode = pnode; }
-
-  VNode *duplicate(const std::string &new_name) {
-    Variable new_var(new_name, _var.kind(), _var.bind(), _var.type());
-    return new VNode(_kind, new_var, _event, _fun, _inputs);
-  }
 
   // Parent p-node (set on p-node creation).
   PNode *_pnode;
@@ -84,6 +90,8 @@ private:
   const Function _fun;
   const std::vector<VNode *> _inputs;
 };
+
+std::ostream& operator <<(std::ostream &out, const VNode &vnode);
 
 }} // namespace eda::ir
 

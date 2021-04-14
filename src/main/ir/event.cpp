@@ -12,32 +12,32 @@
  * the License.
  */
 
-#pragma once
+#include <iostream>
 
-#include <memory>
-#include <stdexcept>
-#include <string>
+#include "event.h"
+#include "vnode.h"
 
 namespace eda {
 namespace ir {
-namespace utils {
 
-template<typename ... Args>
-std::string format(const std::string &format, Args ... args) {
-  int length = snprintf(nullptr, 0, format.c_str(), args ...);
-
-  if (length < 0) {
-    throw std::runtime_error("Formatting error");
+std::ostream& operator <<(std::ostream &out, const Event &event) {
+  switch (event.kind()) {
+  case Event::POSEDGE:
+    return out << "posedge(" << event.signal()->name() << ")";
+  case Event::NEGEDGE:
+    return out << "negedge(" << event.signal()->name() << ")";
+  case Event::LEVEL0:
+    return out << "level0(" << event.signal()->name() << ")";
+  case Event::LEVEL1:
+    return out << "level1(" << event.signal()->name() << ")";
+  case Event::ALWAYS:
+    return out << "*";
+  case Event::DELAY:
+    return out << "#" << event.delay();
   }
 
-  auto size = static_cast<size_t>(length + 1);
-  auto buffer = std::make_unique<char[]>(size);
-
-  snprintf(buffer.get(), size, format.c_str(), args ...);
-  return std::string(buffer.get(), buffer.get() + size - 1);
+  return out;
 }
 
-std::string unique_name(const std::string &prefix);
-
-}}} // namespace eda::ir::utils
+}} // namespace eda::ir
 

@@ -12,34 +12,38 @@
  * the License.
  */
 
-#pragma once
-
 #include <iostream>
+
+#include "pnode.h"
+#include "vnode.h"
 
 namespace eda {
 namespace ir {
 
-/**
- * \brief Defines names of supported BV operations.
- * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
- */
-enum Function {
-  /// Identity function: y <= x.
-  NOP,
-  /// Negation: y <= ~x.
-  NOT,
-  /// Addition: y <= x[0] + x[1].
-  ADD,
-  /// Subtraction: y <= x[0] - x[1].
-  SUB,
-  /// Multiplication: y <= x[0] * x[1].
-  MUL,
-  /// Division: y <= x[0] / x[1].
-  DIV
-  // TODO: Add more operations.
-};
+std::ostream& operator <<(std::ostream &out, const PNode &pnode) {
+  out << "always @(" << pnode.event() << ") begin" << std::endl;
 
-std::ostream& operator <<(std::ostream &out, Function fun);
+  if (pnode.gsize() > 0) {  
+    out << "  if (";
+    bool separator = false;
+    for (auto i = pnode.gbegin(); i != pnode.gend(); i++) {
+      out << (separator ? " && " : "") << **i;
+      separator = true;
+    }
+    out << ") begin" << std::endl;
+  }
+
+  for (auto i = pnode.abegin(); i != pnode.aend(); i++) {
+    out << "    " << **i << std::endl;
+  }
+
+  if (pnode.gsize() > 0) {
+    out << "  end" << std::endl;
+  }
+
+  out << "end";
+  return out;
+}
 
 }} // namespace eda::ir
 

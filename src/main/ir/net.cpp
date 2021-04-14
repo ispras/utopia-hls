@@ -24,77 +24,94 @@ namespace ir {
 void Net::create() {
   assert(!_created);
 
-  for (auto &[name, vnodes]: _vnodes_temp) {
-    assert(!vnodes.empty());
+  for (auto &[name, usage]: _vnodes_temp) {
+    VNode *phi = usage.first;
+    std::vector<VNode *> &defines = usage.second;
 
-    VNode *vnode = vnodes.front();
+    // Multiple definitions <=> phi-node required.
+    assert(phi != nullptr && defines.size() >= 2 ||
+           phi == nullptr && defines.size() == 1);
 
-    if (vnodes.size() == 1) {
-      _vnodes.push_back(vnode);
+    // No multiplexing required.
+    if (defines.size() == 1) {
+      _vnodes.push_back(defines.front());
       continue;
     }
 
-    const Variable var = vnode->var();
+    // Multiplexing required.
+    std::vector<VNode *> mux_inputs(2 * defines.size());
+    Variable mux_output = phi->var();
 
-    if (var.kind() == Variable::WIRE) {
-      // { w <= f[i](...) } => { w[i] <= f[i](...) }, w <= mux{ w[i] }.
-      std::vector<VNode *> new_vnodes(vnodes.size());
-      std::vector<VNode *> mux_inputs(2 * vnodes.size());
-
-
-      // Compose { c[i] } and { w[i] }.
-      for (std::size_t i = 0; i < vnodes.size(); i++) {
-        VNode *old_vnode = vnodes[i];
-        VNode *new_vnode = old_vnode->duplicate(utils::format("%s$%d", old_vnode->name(), i));
+    switch (phi->var().kind()) {
+    // if (g[1]) { w <= f[1](...) }    w[1] <= f[1](...)
+    // ...                          => ...               + w <= mux{ g[i] -> w[i] }
+    // if (g[n]) { w <= f[n](...) }    w[n] <= f[n](...)
+    case Variable::WIRE:
+      // Creates the { w[i] } nodes and compose the mux inputs: { g[i] -> w[i] }.
+      for (std::size_t i = 0; i < defines.size(); i++) {
+        VNode *old_vnode = defines[i];
 
         assert(old_vnode->_pnode != nullptr);
+        assert(!old_vnode->_pnode->_guard.empty());
+
+        // Create a { w[i] <= f[i](...) } node.
+        VNode *new_vnode = old_vnode->duplicate(utils::unique_name(old_vnode->name()));
+        _vnodes.push_back(new_vnode);
+
+        // Guards come first: mux(g[1], ..., g[n]; w[1], ..., w[n]).
         mux_inputs[i] = old_vnode->_pnode->_guard.back();
-        new_vnodes[i] = new_vnode;
+        mux_inputs[i + defines.size()] = new_vnode;
       }
 
-      // Add newly created { w[i] } to the v-net.
-      _vnodes.insert(std::end(_vnodes), std::begin(new_vnodes), std::end(new_vnodes));
+      // Connect the wire w/ the multiplexor: w <= mux{ g[i] -> w[i] }.
+      phi->replace_with(VNode::MUX, mux_output, Event::always(), Function::NOP, mux_inputs);
+      _vnodes.push_back(phi);
 
-      // Compose { c[i], w[i] }.
-      mux_inputs.insert(std::begin(mux_inputs) + vnodes.size(), std::begin(new_vnodes), std::end(new_vnodes));
+      break;
 
-      // Create a multiplexor.
-      VNode *mux = new VNode(VNode::MUX, var, Event::always(), mux_inputs);
+    // if (g[1]) { r <= w[1] }    w <= mux{ g[i] -> w[i] }
+    // ...                     => 
+    // if (g[n]) { r <= w[n] }    r <= w
+    case Variable::REG:
+      // Compose the mux inputs { g[i] -> w[i] }.
+      for (std::size_t i = 0; i < defines.size(); i++) {
+        VNode *vnode = defines[i];
+        assert(vnode->_pnode != nullptr);
+
+        // Guards come first: mux(g[1], ..., g[n]; w[1], ..., w[n]).
+        mux_inputs[i] = vnode->_pnode->_guard.back();
+        mux_inputs[i + defines.size()] = vnode->_inputs.front();
+      }
+
+      // Create a wire w.
+      Variable wire(utils::unique_name(mux_output.name()), Variable::WIRE, mux_output.type());
+
+      // Create a multiplexor: w <= mux{ g[i] -> w[i] }.
+      VNode *mux = new VNode(VNode::MUX, wire, Event::always(), Function::NOP, mux_inputs);
       _vnodes.push_back(mux);
 
-      continue;
+      // Connect the register w/ the multiplexor via the wire: r <= w.
+      phi->replace_with(VNode::REG, mux_output, defines.front()->event(), Function::NOP, { mux });
+      _vnodes.push_back(phi);
+
+      break;
     }
-
-    assert(var.kind() == Variable::REG);
-
-    // { c[i]: r <= w[i] } => r <= w, w <= mux{ c[i] -> w[i] }.
-    std::vector<VNode *> mux_inputs(2 * vnodes.size());
-    std::size_t i = 0;
-
-    // Compose { c[i] }.
-    for (VNode *vnode: vnodes) {
-      assert(vnode->_pnode != nullptr);
-      mux_inputs[i++] = vnode->_pnode->_guard.back();
-    }
-
-    // Compose { c[i], w[i] }.
-    for (VNode *vnode: vnodes) {
-      mux_inputs[i++] = vnode->_inputs.front();
-    }
-
-    // Create a wire: w.
-    Variable wire(utils::format("%s$wire", var.name()), Variable::WIRE, var.type());
-
-    // Create a multiplexor: w <= mux{ c[i] -> w[i] }.
-    VNode *mux = new VNode(VNode::MUX, wire, Event::always(), mux_inputs);
-    _vnodes.push_back(mux);
-
-    // Connect the register w/ the multiplexor via the wire: r <= w.
-    VNode *reg = new VNode(VNode::REG, var, vnode->event(), { mux });
-    _vnodes.push_back(reg);
   }
 
+  _vnodes_temp.clear();
   _created = true;
+}
+
+std::ostream& operator <<(std::ostream &out, const Net &net) {
+  for (auto i = net.pbegin(); i != net.pend(); i++) {
+    out << **i << std::endl;
+  }
+
+  for (auto i = net.vbegin(); i != net.vend(); i++) {
+    out << **i << std::endl;
+  }
+
+  return out;
 }
  
 }} // namespace eda::ir

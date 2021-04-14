@@ -15,6 +15,7 @@
 #pragma once
 
 #include <cstddef>
+#include <iostream>
 
 namespace eda {
 namespace ir {
@@ -56,6 +57,9 @@ private:
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class Variable final {
+  // Debug print.
+  friend std::ostream& operator <<(std::ostream &out, const Variable &variable);
+
 public:
   enum Kind {
     WIRE,
@@ -85,6 +89,10 @@ private:
   const Bind _bind;
   const Type _type;
 };
+
+inline std::ostream& operator <<(std::ostream &out, const Variable &variable) {
+  return out << variable.name();
+}
 
 }} // namespace eda::ir
 
