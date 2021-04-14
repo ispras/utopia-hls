@@ -14,12 +14,15 @@
 
 #pragma once
 
+#include <cassert>
+#include <unordered_map>
 #include <vector>
 
 #include "pnode.h"
 #include "vnode.h"
 
-namespace utopia {
+namespace eda {
+namespace ir {
 
 /**
  * \brief An intermediate representation combining p- and v-nets.
@@ -30,57 +33,64 @@ public:
   typedef typename std::vector<VNode *>::const_iterator const_viterator;
   typedef typename std::vector<PNode *>::const_iterator const_piterator;
 
-  Net(): _vnodes(1024*1024), _pnodes(1024*1024) {}
+  Net(): _created(false) {
+    _vnodes.reserve(1024*1024);
+    _pnodes.reserve(1024*1024);
+    _vnodes_temp.reserve(1024*1024);
+  } 
+  
 
   std::size_t vsize() const { return _vnodes.size(); }
-  const VNode* vnode(size_t i) const { return _vnodes[i]; }
-
   const_viterator vbegin() const { return _vnodes.cbegin(); }
   const_viterator vend() const { return _vnodes.cend(); }
 
   std::size_t psize() const { return _pnodes.size(); }
-  const PNode* pnode(size_t i) const { return _pnodes[i]; }
-
   const_piterator pbegin() const { return _pnodes.cbegin(); }
   const_piterator pend() const { return _pnodes.cend(); }
 
+  /// Creates and adds an s-node (s = source).
   VNode* add_src(const Variable &var) {
-    return add_vnode(new VNode(VNode::SRC, var, Event::always(), Function::NOP));
+    assert(!_created);
+    return add_vnode(new VNode(VNode::SRC, var, Event::always(), {}));
   }
 
+  /// Creates and adds an f-node (s = function).
   VNode* add_fun(const Variable &var, Function fun, const std::vector<VNode *> &inputs) {
+    assert(!_created);
     return add_vnode(new VNode(VNode::FUN, var, Event::always(), fun, inputs));
   }
 
+  /// Creates and adds an m-node (m = multiplexor).
   VNode* add_mux(const Variable &var, const std::vector<VNode *> &inputs) {
-    return add_vnode(new VNode(VNode::MUX, var, Event::always(), Function::MUX, inputs));
+    assert(!_created);
+    return add_vnode(new VNode(VNode::MUX, var, Event::always(), inputs));
   }
 
-  VNode* add_reg(const Variable &var, const Event &event, const VNode *input) {
-    std::vector<VNode *> inputs = { inputs };
-    return add_vnode(new VNode(VNode::REG, var, event, Function::NOP, inputs));
+  /// Creates and adds an r-node (r = register).
+  VNode* add_reg(const Variable &var, const Event &event, VNode *input) {
+    assert(!_created);
+    return add_vnode(new VNode(VNode::REG, var, event, { input }));
   }
 
-  PNode* add_cmb(const std::vector<VNode *> &action) {
-    return add_pnode(new PNode(Event::always(), action));
-  }
-
+  /// Creates and adds a combinational p-node.
   PNode* add_cmb(const std::vector<VNode *> &guard, const std::vector<VNode *> &action) {
+    assert(!_created);
     return add_pnode(new PNode(Event::always(), guard, action));
   }
 
-  PNode* add_seq(const Event &event, const std::vector<VNode *> &action) {
-    return add_pnode(new PNode(event, action));
-  }
-
+  /// Creates and adds a sequential p-node.
   PNode* add_seq(const Event &event, const std::vector<VNode *> &guard,
       const std::vector<VNode *> &action) {
+    assert(!_created);
     return add_pnode(new PNode(event, guard, action));
   }
 
+  /// Creates the v-net according to the p-net.
+  void create();
+
 private:
   VNode* add_vnode(VNode *vnode) {
-    _vnodes.push_back(vnode);
+    _vnodes_temp[vnode->var().name()].push_back(vnode);
     return vnode;
   }
 
@@ -91,7 +101,11 @@ private:
 
   std::vector<VNode *> _vnodes;
   std::vector<PNode *> _pnodes;
+ 
+  std::unordered_map<std::string, std::vector<VNode *>> _vnodes_temp;
+
+  bool _created;
 };
 
-} // namespace utopia
+}} // namespace utopia::ir
 

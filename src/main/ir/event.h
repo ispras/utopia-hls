@@ -14,7 +14,8 @@
 
 #pragma once
 
-namespace utopia {
+namespace eda {
+namespace ir {
 
 class VNode;
 
@@ -39,19 +40,36 @@ public:
     DELAY
   };
 
-  static Event posedge(const VNode *signal) { return Event(POSEDGE, signal); }
-  static Event negedge(const VNode *signal) { return Event(NEGEDGE, signal); }
-  static Event level0(const VNode *signal) { return Event(LEVEL0, signal); }
-  static Event level1(const VNode *signal) { return Event(LEVEL1, signal); }
-  static Event always() { return Event(ALWAYS); }
-  static Event delay(std::size_t delay) { return Event(DELAY, 0, delay); }
+  static Event posedge(const VNode *signal) {
+    return Event(POSEDGE, signal);
+  }
+
+  static Event negedge(const VNode *signal) {
+    return Event(NEGEDGE, signal);
+  }
+
+  static Event level0(const VNode *signal) {
+    return Event(LEVEL0, signal);
+  }
+
+  static Event level1(const VNode *signal) {
+    return Event(LEVEL1, signal);
+  }
+
+  static Event always() {
+    return Event(ALWAYS);
+  }
+
+  static Event delay(std::size_t delay) {
+    return Event(DELAY, nullptr, delay);
+  }
 
   Kind kind() const { return _kind; }
   const VNode* signal() const { return _signal; }
   std::size_t delay() const { return _delay; }
 
 private:
-  Event(Kind kind, const VNode *signal = 0, std::size_t delay = 0):
+  Event(Kind kind, const VNode *signal = nullptr, std::size_t delay = 0):
     _kind(kind), _signal(signal), _delay(delay) {}
 
   // Event kind.
@@ -62,5 +80,5 @@ private:
   const std::size_t _delay;
 };
 
-} // namespace utopia
+}} // namespace eda::ir
 

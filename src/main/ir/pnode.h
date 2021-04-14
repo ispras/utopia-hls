@@ -14,22 +14,24 @@
 
 #pragma once
 
+#include <algorithm>
 #include <vector>
 
 #include "event.h"
 #include "vnode.h"
 
-namespace utopia {
+namespace eda {
+namespace ir {
 
 /**
  * \brief Represents a p-node (p = process), a guarded action.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class PNode final {
-public:
-  // Creation of p-nodes is deligated to IR.
+  // Creation of p-nodes.
   friend class Net;
 
+public:
   typedef typename std::vector<VNode *>::const_iterator const_viterator;
 
   const Event& event() const { return _event; }
@@ -42,10 +44,14 @@ public:
 
 private:
   PNode(const Event &event, const std::vector<VNode *> &guard, const std::vector<VNode *> &action):
-    _event(event), _guard(guard), _action(action) {}
-
-  PNode(const Event &event, const std::vector<VNode *> &action):
-    _event(event), _guard(), _action(action) {}
+      _event(event), _guard(guard), _action(action) {
+    for (auto *vnode: guard) {
+      vnode->set_pnode(this);
+    }
+    for (auto *vnode: action) {
+      vnode->set_pnode(this);
+    }
+  }
 
   // The execution trigger (posedge, always, etc.).
   const Event _event;
@@ -55,5 +61,5 @@ private:
   std::vector<VNode *> _action;
 };
 
-} // namespace utopia
+}} // namespace eda::ir
 

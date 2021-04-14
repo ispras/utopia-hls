@@ -14,28 +14,28 @@
 
 #pragma once
 
+#include <memory>
+#include <stdexcept>
+#include <string>
+
 namespace eda {
 namespace ir {
+namespace utils {
 
-/**
- * \brief Defines names of supported BV operations.
- * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
- */
-enum Function {
-  /// Identity function: y <= x.
-  NOP,
-  /// Negation: y <= ~x.
-  NOT,
-  /// Addition: y <= x[0] + x[1].
-  ADD,
-  /// Subtraction: y <= x[0] - x[1].
-  SUB,
-  /// Multiplication: y <= x[0] * x[1].
-  MUL,
-  /// Division: y <= x[0] / x[1].
-  DIV
-  // TODO: Add more operations.
-};
+template<typename ... Args>
+std::string format(const std::string &format, Args ... args) {
+  int length = snprintf(nullptr, 0, format.c_str(), args ...);
 
-}} // namespace eda::ir
+  if (length < 0) {
+    throw std::runtime_error("Formatting error");
+  }
+
+  auto size = static_cast<size_t>(length + 1);
+  auto buffer = std::make_unique<char[]>(size);
+
+  snprintf(buffer.get(), size, format.c_str(), args ...);
+  return std::string(buffer.get(), buffer.get() + size - 1);
+}
+
+}}} // namespace eda::ir::utils
 

@@ -21,28 +21,37 @@
 #include "function.h"
 #include "variable.h"
 
-namespace utopia {
+namespace eda {
+namespace ir {
+
+class Net;
+class PNode;
 
 /**
  * \brief Represents a v-node (v = variable), a functional or communication unit of the design.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class VNode final {
-public:
-  // Creation of v-nodes is deligated to IR.
+  // Creation of v-nodes.
   friend class Net;
+  // Setting the parent p-node.
+  friend class PNode;
 
+public:
   enum Kind {
     /// Source node (s-node): input wire x.
     SRC,
     /// Functional node (f-node): always_comb y <= f(x[0], ..., x[n-1]).
     FUN,
-    /// Multiplexor node (m-node): always_comb y <= mux(c[0] -> x[0], ..., c[n-1] -> x[n-1]).
+    /// Multiplexor node (m-node): always_comb y <= mux(x[0], ..., x[n-1]).
     MUX,
     /// Register node (r-node): always_ff @(edge) y <= x or always_latch if(level) y <= x.
     REG
   };
 
+  const PNode* pnode() const { return _pnode; }
+
+  const std::string& name() const { return _var.name(); }
   Kind kind() const { return _kind; }
   const Variable &var() const { return _var; }
   const Event& event() const { return _event; }
@@ -53,10 +62,21 @@ public:
 private:
   VNode(Kind kind, const Variable &var, const Event &event, Function fun,
       const std::vector<VNode *> &inputs):
-    _kind(kind), _var(var), _event(event), _fun(fun), _inputs(inputs) {}
+    _pnode(nullptr), _kind(kind), _var(var), _event(event), _fun(fun), _inputs(inputs) {}
 
-  VNode(Kind kind, const Variable &var, const Event &event, Function fun):
-    _kind(kind), _var(var), _event(event), _fun(fun), _inputs() {}
+  VNode(Kind kind, const Variable &var, const Event &event,
+      const std::vector<VNode *> &inputs):
+    _pnode(nullptr), _kind(kind), _var(var), _event(event), _fun(Function::NOP), _inputs(inputs) {}
+
+  void set_pnode(PNode *pnode) { _pnode = pnode; }
+
+  VNode *duplicate(const std::string &new_name) {
+    Variable new_var(new_name, _var.kind(), _var.bind(), _var.type());
+    return new VNode(_kind, new_var, _event, _fun, _inputs);
+  }
+
+  // Parent p-node (set on p-node creation).
+  PNode *_pnode;
 
   const Kind _kind;
   const Variable _var;
@@ -65,5 +85,5 @@ private:
   const std::vector<VNode *> _inputs;
 };
 
-} // namespace utopia
+}} // namespace eda::ir
 

@@ -16,7 +16,8 @@
 
 #include <cstddef>
 
-namespace utopia {
+namespace eda {
+namespace ir {
 
 /**
  * \brief Represents a data type.
@@ -67,9 +68,11 @@ public:
     INNER
   };
 
-  static Variable var(const std::string &name, Kind kind, Bind bind, const Type &type) {
-    return Variable(name, kind, bind, type);
-  }
+  Variable(const std::string &name, Kind kind, Bind bind, const Type &type):
+    _name(name), _kind(kind), _bind(bind), _type(type) {}
+
+  Variable(const std::string &name, Kind kind, const Type &type):
+    _name(name), _kind(kind), _bind(INNER), _type(type) {}
 
   const std::string& name() const { return _name; }
   Kind kind() const { return _kind; }
@@ -77,14 +80,11 @@ public:
   const Type& type() const { return _type; }
 
 private:
-  Variable(const std::string &name, Kind kind, Bind bind, const Type &type):
-    _name(name), _kind(kind), _bind(bind), _type(type) {}
-
   const std::string _name;
   const Kind _kind;
   const Bind _bind;
   const Type _type;
 };
 
-} // namespace utopia
+}} // namespace eda::ir
 
