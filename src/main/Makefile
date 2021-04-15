@@ -1,7 +1,7 @@
 SRC = main.cpp \
       gate/gate.cpp \
-      gate/gevent.cpp \
       gate/gsymbol.cpp \
+      gate/signal.cpp \
       rtl/event.cpp \
       rtl/fsymbol.cpp \
       rtl/net.cpp \

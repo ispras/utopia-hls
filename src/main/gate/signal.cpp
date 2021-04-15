@@ -15,22 +15,22 @@
 #include <iostream>
 
 #include "gate/gate.h"
-#include "gate/gevent.h"
+#include "gate/signal.h"
 
 namespace eda {
 namespace gate {
 
-std::ostream& operator <<(std::ostream &out, const GateEvent &event) {
-  switch (event.kind()) {
-  case GateEvent::POSEDGE:
-    return out << "posedge(" << event.signal()->id() << ")";
-  case GateEvent::NEGEDGE:
-    return out << "negedge(" << event.signal()->id() << ")";
-  case GateEvent::LEVEL0:
-    return out << "level0(" << event.signal()->id() << ")";
-  case GateEvent::LEVEL1:
-    return out << "level1(" << event.signal()->id() << ")";
-  case GateEvent::ALWAYS:
+std::ostream& operator <<(std::ostream &out, const Signal &signal) {
+  switch (signal.kind()) {
+  case Signal::POSEDGE:
+    return out << "posedge(" << signal.gate()->id() << ")";
+  case Signal::NEGEDGE:
+    return out << "negedge(" << signal.gate()->id() << ")";
+  case Signal::LEVEL0:
+    return out << "level0(" << signal.gate()->id() << ")";
+  case Signal::LEVEL1:
+    return out << "level1(" << signal.gate()->id() << ")";
+  case Signal::ALWAYS:
     return out << "*";
   }
 

@@ -26,7 +26,9 @@ namespace rtl {
 void Net::create() {
   assert(!_created);
 
-  for (auto &[name, usage]: _vnodes_temp) {
+  for (auto &[_, usage]: _vnodes_temp) {
+    assert(!_.empty());
+
     VNode *phi = usage.first;
     std::vector<VNode *> &defines = usage.second;
 

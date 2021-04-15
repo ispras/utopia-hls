@@ -17,8 +17,8 @@
 #include <iostream>
 #include <vector>
 
-#include "gate/gevent.h"
 #include "gate/gsymbol.h"
+#include "gate/signal.h"
 
 namespace eda {
 namespace gate {
@@ -34,25 +34,20 @@ class Gate final {
 public:
   const unsigned id() const { return _id; }
   GateSymbol gate() const { return _gate; }
-  const GateEvent& clock() const { return _clock; }
-  const GateEvent& reset() const { return _reset; }
   std::size_t arity() const { return _inputs.size(); }
-  const Gate* input(size_t i) const { return _inputs[i]; }
+  const Signal& input(size_t i) const { return _inputs[i]; }
 
   bool is_source() const { return _inputs.empty(); }
-  bool is_gate() const { return !_inputs.empty() && _clock.kind() == GateEvent::ALWAYS; }
-  bool is_trigger() const { return !_inputs.empty() && _clock.kind() != GateEvent::ALWAYS; }
+  bool is_gate() const { return !_inputs.empty() && _inputs[0].kind() == Signal::ALWAYS; }
+  bool is_trigger() const { return !_inputs.empty() && _inputs[0].kind() != Signal::ALWAYS; }
 
 private:
-  Gate(unsigned id, GateSymbol gate, const GateEvent &clock, const GateEvent &reset,
-      const std::vector<Gate *> inputs):
-    _id(id), _gate(gate), _clock(clock), _reset(reset), _inputs(inputs) {}
+  Gate(unsigned id, GateSymbol gate, const std::vector<Signal> inputs):
+    _id(id), _gate(gate), _inputs(inputs) {}
 
   const unsigned _id;
   const GateSymbol _gate;
-  const GateEvent _clock;
-  const GateEvent _reset;
-  const std::vector<Gate *> _inputs;
+  const std::vector<Signal> _inputs;
 };
 
 std::ostream& operator <<(std::ostream &out, const Gate &gate);

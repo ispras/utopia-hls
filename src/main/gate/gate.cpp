@@ -19,10 +19,10 @@
 namespace eda {
 namespace gate {
 
-static std::ostream& operator <<(std::ostream &out, const std::vector<Gate *> &gates) {
+static std::ostream& operator <<(std::ostream &out, const std::vector<Signal> &signals) {
   bool separator = false;
-  for (Gate *gate: gates) {
-    out << (separator ? ", " : "") << gate->id();
+  for (const Signal &signal: signals) {
+    out << (separator ? ", " : "") << signal.kind() << "(" << signal.gate()->id() << ")";
     separator = true;
   }
 
@@ -32,11 +32,9 @@ static std::ostream& operator <<(std::ostream &out, const std::vector<Gate *> &g
 std::ostream& operator <<(std::ostream &out, const Gate &gate) {
   if (gate.is_source()) {
     return out << "S{" << gate.id() << "}";
-  } else if (gate.is_gate()) {
-    return out << "G{" << gate.id() << " <= " << gate.gate() << "(" << gate._inputs << ")}";
   } else {
-    return out << "T{clk=" << gate.clock() << ", rst=" << gate.reset() << ": "
-               << gate.id() << " <= " << gate.input(0)->id() << "}";
+    return out << (gate.is_gate() ? "G" : "T") << "{"
+               << gate.id() << " <= " << gate.gate() << "(" << gate._inputs << ")}";
   }
 }
 

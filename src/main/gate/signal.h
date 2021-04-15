@@ -22,12 +22,12 @@ namespace gate {
 class Gate;
 
 /**
- * \brief Represents a triggering event.
+ * \brief Represents a triggering signal.
  * \authof <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
-class GateEvent final {
+class Signal final {
   // Debug print.
-  friend std::ostream& operator <<(std::ostream &out, const GateEvent &event);
+  friend std::ostream& operator <<(std::ostream &out, const Signal &signal);
 
 public:
   enum Kind {
@@ -43,40 +43,38 @@ public:
     ALWAYS
   };
 
-  static GateEvent posedge(const Gate *signal) {
-    return GateEvent(POSEDGE, signal);
+  static Signal posedge(const Gate *gate) {
+    return Signal(POSEDGE, gate);
   }
 
-  static GateEvent negedge(const Gate *signal) {
-    return GateEvent(NEGEDGE, signal);
+  static Signal negedge(const Gate *gate) {
+    return Signal(NEGEDGE, gate);
   }
 
-  static GateEvent level0(const Gate *signal) {
-    return GateEvent(LEVEL0, signal);
+  static Signal level0(const Gate *gate) {
+    return Signal(LEVEL0, gate);
   }
 
-  static GateEvent level1(const Gate *signal) {
-    return GateEvent(LEVEL1, signal);
+  static Signal level1(const Gate *gate) {
+    return Signal(LEVEL1, gate);
   }
 
-  static GateEvent always() {
-    return GateEvent(ALWAYS);
+  static Signal always() {
+    return Signal(ALWAYS);
   }
 
   Kind kind() const { return _kind; }
-  const Gate* signal() const { return _signal; }
+  const Gate* gate() const { return _gate; }
 
 private:
-  GateEvent(Kind kind, const Gate *signal = nullptr):
-    _kind(kind), _signal(signal) {}
+  Signal(Kind kind, const Gate *gate = nullptr):
+    _kind(kind), _gate(gate) {}
 
-  // Event kind.
   const Kind _kind;
-  // Single-bit signal for tracking events on (for edges and levels only).
-  const Gate *_signal;
+  const Gate *_gate;
 };
 
-std::ostream& operator <<(std::ostream &out, const GateEvent &event);
+std::ostream& operator <<(std::ostream &out, const Signal &signal);
 
 }} // namespace eda::gate
 
