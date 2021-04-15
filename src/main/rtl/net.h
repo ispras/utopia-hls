@@ -54,31 +54,31 @@ public:
   /// Creates and adds an s-node (s = source).
   VNode* add_src(const Variable &var) {
     assert(!_created);
-    return add_vnode(new VNode(VNode::SRC, var, Event::always(), Function::NOP, {}));
+    return add_vnode(new VNode(VNode::SRC, var, Event::always(), FuncSymbol::NOP, {}));
   }
 
   /// Creates and adds an f-node (s = function).
-  VNode* add_fun(const Variable &var, Function fun, const std::vector<VNode *> &inputs) {
+  VNode* add_func(const Variable &var, FuncSymbol func, const std::vector<VNode *> &inputs) {
     assert(!_created);
-    return add_vnode(new VNode(VNode::FUN, var, Event::always(), fun, inputs));
+    return add_vnode(new VNode(VNode::FUNC, var, Event::always(), func, inputs));
   }
 
   /// Creates and adds a phi-node (unspecified multiplexor).
   VNode *add_phi(const Variable &var) {
     assert(!_created);
-    return add_vnode(new VNode(VNode::MUX, var, Event::always(), Function::NOP,  {}));
+    return add_vnode(new VNode(VNode::MUX, var, Event::always(), FuncSymbol::NOP,  {}));
   }
 
   /// Creates and adds an m-node (m = multiplexor).
   VNode* add_mux(const Variable &var, const std::vector<VNode *> &inputs) {
     assert(!_created);
-    return add_vnode(new VNode(VNode::MUX, var, Event::always(), Function::NOP, inputs));
+    return add_vnode(new VNode(VNode::MUX, var, Event::always(), FuncSymbol::NOP, inputs));
   }
 
   /// Creates and adds an r-node (r = register).
   VNode* add_reg(const Variable &var, const Event &event, VNode *input) {
     assert(!_created);
-    return add_vnode(new VNode(VNode::REG, var, event, Function::NOP, { input }));
+    return add_vnode(new VNode(VNode::REG, var, event, FuncSymbol::NOP, { input }));
   }
 
   /// Creates and adds a combinational p-node.

@@ -32,17 +32,13 @@ static std::ostream& operator <<(std::ostream &out, const std::vector<VNode *> &
 std::ostream& operator <<(std::ostream &out, const VNode &vnode) {
   switch (vnode.kind()) {
   case VNode::SRC:
-    out << "S{" << vnode.var() << "}";
-    break;
-  case VNode::FUN:
-    out << "F{" << vnode.var() << " <= " << vnode.fun() << "(" << vnode._inputs << ")}";
-    break;
+    return out << "S{" << vnode.var() << "}";
+  case VNode::FUNC:
+    return out << "F{" << vnode.var() << " <= " << vnode.func() << "(" << vnode._inputs << ")}";
   case VNode::MUX:
-    out << "M{" << vnode.var() << " <= mux(" << vnode._inputs << ")}";
-    break;
+    return out << "M{" << vnode.var() << " <= mux(" << vnode._inputs << ")}";
   case VNode::REG:
-    out << "R{" << vnode.event() << ": " << vnode.var() << " <= " << vnode.input(0)->name() << "}";
-    break;
+    return out << "R{" << vnode.event() << ": " << vnode.var() << " <= " << vnode.input(0)->name() << "}";
   }
 
   return out;

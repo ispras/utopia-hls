@@ -15,29 +15,26 @@
 #include <iostream>
 
 #include "gate/gate.h"
+#include "gate/gevent.h"
 
 namespace eda {
 namespace gate {
 
-static std::ostream& operator <<(std::ostream &out, const std::vector<Gate *> &gates) {
-  bool separator = false;
-  for (Gate *gate: gates) {
-    out << (separator ? ", " : "") << gate->id();
-    separator = true;
+std::ostream& operator <<(std::ostream &out, const GateEvent &event) {
+  switch (event.kind()) {
+  case GateEvent::POSEDGE:
+    return out << "posedge(" << event.signal()->id() << ")";
+  case GateEvent::NEGEDGE:
+    return out << "negedge(" << event.signal()->id() << ")";
+  case GateEvent::LEVEL0:
+    return out << "level0(" << event.signal()->id() << ")";
+  case GateEvent::LEVEL1:
+    return out << "level1(" << event.signal()->id() << ")";
+  case GateEvent::ALWAYS:
+    return out << "*";
   }
 
   return out;
-}
-
-std::ostream& operator <<(std::ostream &out, const Gate &gate) {
-  if (gate.is_source()) {
-    return out << "S{" << gate.id() << "}";
-  } else if (gate.is_gate()) {
-    return out << "G{" << gate.id() << " <= " << gate.gate() << "(" << gate._inputs << ")}";
-  } else {
-    return out << "T{clk=" << gate.clock() << ", rst=" << gate.reset() << ": "
-               << gate.id() << " <= " << gate.input(0)->id() << "}";
-  }
 }
 
 }} // namespace eda::gate

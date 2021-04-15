@@ -17,29 +17,32 @@
 #include <iostream>
 
 namespace eda {
-namespace rtl {
+namespace gate {
 
 /**
- * \brief Defines names of supported RTL-level functions.
+ * \brief Defines names of supported logical gates.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
-enum Function {
-  /// Identity function: y <= x.
+enum GateSymbol {
+  /// Identity: y <= x.
   NOP,
   /// Negation: y <= ~x.
   NOT,
-  /// Addition: y <= x[0] + x[1].
-  ADD,
-  /// Subtraction: y <= x[0] - x[1].
-  SUB,
-  /// Multiplication: y <= x[0] * x[1].
-  MUL,
-  /// Division: y <= x[0] / x[1].
-  DIV
-  // TODO: Add more functions.
+  /// Conjunction: y <= x[0] & x[1].
+  AND,
+  /// Disjunction: y <= x[0] | x[1].
+  OR,
+  /// Exclusive OR: y <= x[0] + x[1] (mod 2).
+  XOR,
+  /// Sheffer's stroke: y <= ~(x[0] & x[1]).
+  NAND,
+  /// Peirce's arrow: y <= ~(x[0] | x[1]).
+  NOR,
+  /// Exclusive NOR: y <= ~(x[0] + x[1] (mod 2)).
+  XNOR
 };
 
-std::ostream& operator <<(std::ostream &out, Function fun);
+std::ostream& operator <<(std::ostream &out, GateSymbol gate);
 
-}} // namespace eda::rtl
+}} // namespace eda::gate
 

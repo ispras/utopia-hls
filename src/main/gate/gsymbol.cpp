@@ -14,29 +14,33 @@
 
 #include <iostream>
 
-#include "rtl/function.h"
+#include "gate/gsymbol.h"
 
 namespace eda {
-namespace rtl {
+namespace gate {
 
-std::ostream& operator <<(std::ostream &out, Function fun) {
-  switch (fun) {
-  case Function::NOP:
-    return out << "";
-  case Function::NOT:
-    return out << "~";
-  case Function::ADD:
-    return out << "+";
-  case Function::SUB:
-    return out << "-";
-  case Function::MUL:
-    return out << "*";
-  case Function::DIV:
-    return out << "/";
+std::ostream& operator <<(std::ostream &out, GateSymbol gate) {
+  switch (gate) {
+  case GateSymbol::NOP:
+    return out << "buf";
+  case GateSymbol::NOT:
+    return out << "not";
+  case GateSymbol::AND:
+    return out << "and";
+  case GateSymbol::OR:
+    return out << "or";
+  case GateSymbol::XOR:
+    return out << "xor";
+  case GateSymbol::NAND:
+    return out << "nand";
+  case GateSymbol::NOR:
+    return out << "nor";
+  case GateSymbol::XNOR:
+    return out << "xnor";
   }
 
   return out;
 }
 
-}} // namespace eda::rtl
+}} // namespace eda::gate
 

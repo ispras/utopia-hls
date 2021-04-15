@@ -66,7 +66,7 @@ void Net::create() {
       }
 
       // Connect the wire w/ the multiplexor: w <= mux{ g[i] -> w[i] }.
-      phi->replace_with(VNode::MUX, mux_output, Event::always(), Function::NOP, mux_inputs);
+      phi->replace_with(VNode::MUX, mux_output, Event::always(), FuncSymbol::NOP, mux_inputs);
       _vnodes.push_back(phi);
 
       break;
@@ -89,11 +89,11 @@ void Net::create() {
       Variable wire(unique_name(mux_output.name()), Variable::WIRE, mux_output.type());
 
       // Create a multiplexor: w <= mux{ g[i] -> w[i] }.
-      VNode *mux = new VNode(VNode::MUX, wire, Event::always(), Function::NOP, mux_inputs);
+      VNode *mux = new VNode(VNode::MUX, wire, Event::always(), FuncSymbol::NOP, mux_inputs);
       _vnodes.push_back(mux);
 
       // Connect the register w/ the multiplexor via the wire: r <= w.
-      phi->replace_with(VNode::REG, mux_output, defines.front()->event(), Function::NOP, { mux });
+      phi->replace_with(VNode::REG, mux_output, defines.front()->event(), FuncSymbol::NOP, { mux });
       _vnodes.push_back(phi);
 
       break;

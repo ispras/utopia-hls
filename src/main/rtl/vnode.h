@@ -20,7 +20,7 @@
 #include <vector>
 
 #include "rtl/event.h"
-#include "rtl/function.h"
+#include "rtl/fsymbol.h"
 #include "rtl/variable.h"
 
 namespace eda {
@@ -46,7 +46,7 @@ public:
     /// Source node (s-node): input wire x.
     SRC,
     /// Functional node (f-node): always_comb y <= f(x[0], ..., x[n-1]).
-    FUN,
+    FUNC,
     /// Multiplexor node (m-node): always_comb y <= mux(x[0], ..., x[n-1]).
     MUX,
     /// Register node (r-node): always_ff @(edge) y <= x or always_latch if(level) y <= x.
@@ -59,24 +59,24 @@ public:
   Kind kind() const { return _kind; }
   const Variable &var() const { return _var; }
   const Event& event() const { return _event; }
-  Function fun() const { return _fun; }
+  FuncSymbol func() const { return _func; }
   std::size_t arity() const { return _inputs.size(); }
   const VNode* input(size_t i) const { return _inputs[i]; }
 
 private:
-  VNode(Kind kind, const Variable &var, const Event &event, Function fun,
+  VNode(Kind kind, const Variable &var, const Event &event, FuncSymbol func,
       const std::vector<VNode *> &inputs):
-    _pnode(nullptr), _kind(kind), _var(var), _event(event), _fun(fun), _inputs(inputs) {}
+    _pnode(nullptr), _kind(kind), _var(var), _event(event), _func(func), _inputs(inputs) {}
 
   VNode *duplicate(const std::string &new_name) {
     Variable var(new_name, _var.kind(), _var.bind(), _var.type());
-    return new VNode(_kind, var, _event, _fun, _inputs);
+    return new VNode(_kind, var, _event, _func, _inputs);
   }
 
-  void replace_with(Kind kind, const Variable &var, const Event &event, Function fun,
+  void replace_with(Kind kind, const Variable &var, const Event &event, FuncSymbol func,
       const std::vector<VNode *> &inputs) {
     this->~VNode();
-    new (this) VNode(kind, var, event, fun, inputs);
+    new (this) VNode(kind, var, event, func, inputs);
   }
 
   void set_pnode(PNode *pnode) { _pnode = pnode; }
@@ -87,7 +87,7 @@ private:
   const Kind _kind;
   const Variable _var;
   const Event _event;
-  const Function _fun;
+  const FuncSymbol _func;
   const std::vector<VNode *> _inputs;
 };
 

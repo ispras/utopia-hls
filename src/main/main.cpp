@@ -14,8 +14,10 @@
 
 #include <iostream>
 
+#include "gate/gate.h"
 #include "rtl/net.h"
 
+using namespace eda::gate;
 using namespace eda::rtl;
 
 int main() {
@@ -58,7 +60,7 @@ int main() {
   VNode *cnode = net.add_src(c);
 
   Variable n("n", Variable::WIRE, Type::uint(1));
-  VNode *nnode = net.add_fun(n, Function::NOT, { cnode });
+  VNode *nnode = net.add_func(n, FuncSymbol::NOT, { cnode });
 
   Variable x("x", Variable::WIRE, Variable::INPUT, Type::uint(8));
   VNode *xnode = net.add_src(x);
@@ -67,14 +69,14 @@ int main() {
   VNode *ynode = net.add_src(y);
 
   Variable f("f", Variable::WIRE, Type::uint(8));
-  VNode *fnode = net.add_fun(f, Function::ADD, { xnode, ynode });
+  VNode *fnode = net.add_func(f, FuncSymbol::ADD, { xnode, ynode });
 
   Variable g("g", Variable::WIRE, Type::uint(8));
-  VNode *gnode = net.add_fun(g, Function::SUB, { xnode, ynode });
+  VNode *gnode = net.add_func(g, FuncSymbol::SUB, { xnode, ynode });
 
   Variable w("w", Variable::WIRE, Type::uint(8));
-  VNode *wnode1 = net.add_fun(w, Function::NOP, { fnode });
-  VNode *wnode2 = net.add_fun(w, Function::NOP, { gnode });
+  VNode *wnode1 = net.add_func(w, FuncSymbol::NOP, { fnode });
+  VNode *wnode2 = net.add_func(w, FuncSymbol::NOP, { gnode });
   VNode *w_phi = net.add_phi(w);
 
   Variable r("r", Variable::REG, Type::uint(8));
@@ -83,10 +85,10 @@ int main() {
   VNode *r_phi = net.add_phi(r);
 
   Variable u("u", Variable::WIRE, Variable::OUTPUT, Type::uint(8));
-  VNode *unode = net.add_fun(u, Function::NOP, { w_phi });
+  VNode *unode = net.add_func(u, FuncSymbol::NOP, { w_phi });
 
   Variable v("v", Variable::WIRE, Variable::OUTPUT, Type::uint(8));
-  VNode *vnode = net.add_fun(v, Function::NOP, { r_phi });
+  VNode *vnode = net.add_func(v, FuncSymbol::NOP, { r_phi });
 
   net.add_cmb({ cnode }, { wnode1 });
   net.add_cmb({ nnode }, { wnode2 });
@@ -99,6 +101,10 @@ int main() {
   net.create();
 
   std::cout << net;
+
+  std::cout << "sizeof(std::vector<void*>)=" << sizeof(std::vector<void*>) << std::endl;
+  std::cout << "sizeof(VNode)=" << sizeof(VNode) << std::endl;
+  std::cout << "sizeof(Gate)=" << sizeof(Gate) << std::endl;
 
   return 0;
 }
