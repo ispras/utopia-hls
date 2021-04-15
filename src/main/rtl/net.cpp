@@ -15,11 +15,13 @@
 #include <cassert>
 #include <cstddef>
 
-#include "net.h"
-#include "utils.h"
+#include "rtl/net.h"
+#include "utils/utils.h"
+
+using namespace eda::utils;
 
 namespace eda {
-namespace ir {
+namespace rtl {
 
 void Net::create() {
   assert(!_created);
@@ -29,8 +31,8 @@ void Net::create() {
     std::vector<VNode *> &defines = usage.second;
 
     // Multiple definitions <=> phi-node required.
-    assert(phi != nullptr && defines.size() >= 2 ||
-           phi == nullptr && defines.size() == 1);
+    assert((phi != nullptr && defines.size() >= 2) ||
+           (phi == nullptr && defines.size() == 1));
 
     // No multiplexing required.
     if (defines.size() == 1) {
@@ -55,7 +57,7 @@ void Net::create() {
         assert(!old_vnode->_pnode->_guard.empty());
 
         // Create a { w[i] <= f[i](...) } node.
-        VNode *new_vnode = old_vnode->duplicate(utils::unique_name(old_vnode->name()));
+        VNode *new_vnode = old_vnode->duplicate(unique_name(old_vnode->name()));
         _vnodes.push_back(new_vnode);
 
         // Guards come first: mux(g[1], ..., g[n]; w[1], ..., w[n]).
@@ -84,7 +86,7 @@ void Net::create() {
       }
 
       // Create a wire w.
-      Variable wire(utils::unique_name(mux_output.name()), Variable::WIRE, mux_output.type());
+      Variable wire(unique_name(mux_output.name()), Variable::WIRE, mux_output.type());
 
       // Create a multiplexor: w <= mux{ g[i] -> w[i] }.
       VNode *mux = new VNode(VNode::MUX, wire, Event::always(), Function::NOP, mux_inputs);
@@ -114,5 +116,5 @@ std::ostream& operator <<(std::ostream &out, const Net &net) {
   return out;
 }
  
-}} // namespace eda::ir
+}} // namespace eda::rtl
 

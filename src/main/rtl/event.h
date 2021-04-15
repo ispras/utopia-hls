@@ -17,7 +17,7 @@
 #include <iostream>
 
 namespace eda {
-namespace ir {
+namespace rtl {
 
 class VNode;
 
@@ -87,5 +87,5 @@ private:
 
 std::ostream& operator <<(std::ostream &out, const Event &event);
 
-}} // namespace eda::ir
+}} // namespace eda::rtl
 

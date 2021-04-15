@@ -12,32 +12,31 @@
  * the License.
  */
 
-#pragma once
+#include <iostream>
 
-#include <memory>
-#include <stdexcept>
-#include <string>
+#include "rtl/function.h"
 
 namespace eda {
-namespace ir {
-namespace utils {
+namespace rtl {
 
-template<typename ... Args>
-std::string format(const std::string &format, Args ... args) {
-  int length = snprintf(nullptr, 0, format.c_str(), args ...);
-
-  if (length < 0) {
-    throw std::runtime_error("Formatting error");
+std::ostream& operator <<(std::ostream &out, Function fun) {
+  switch (fun) {
+  case Function::NOP:
+    return out << "";
+  case Function::NOT:
+    return out << "~";
+  case Function::ADD:
+    return out << "+";
+  case Function::SUB:
+    return out << "-";
+  case Function::MUL:
+    return out << "*";
+  case Function::DIV:
+    return out << "/";
   }
 
-  auto size = static_cast<size_t>(length + 1);
-  auto buffer = std::make_unique<char[]>(size);
-
-  snprintf(buffer.get(), size, format.c_str(), args ...);
-  return std::string(buffer.get(), buffer.get() + size - 1);
+  return out;
 }
 
-std::string unique_name(const std::string &prefix);
-
-}}} // namespace eda::ir::utils
+}} // namespace eda::rtl
 

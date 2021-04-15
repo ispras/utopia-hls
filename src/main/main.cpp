@@ -14,9 +14,9 @@
 
 #include <iostream>
 
-#include "net.h"
+#include "rtl/net.h"
 
-using namespace eda::ir;
+using namespace eda::rtl;
 
 int main() {
   Net net;

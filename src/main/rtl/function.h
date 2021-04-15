@@ -12,31 +12,34 @@
  * the License.
  */
 
+#pragma once
+
 #include <iostream>
 
-#include "function.h"
-
 namespace eda {
-namespace ir {
+namespace rtl {
 
-std::ostream& operator <<(std::ostream &out, Function fun) {
-  switch (fun) {
-  case Function::NOP:
-    return out << "";
-  case Function::NOT:
-    return out << "~";
-  case Function::ADD:
-    return out << "+";
-  case Function::SUB:
-    return out << "-";
-  case Function::MUL:
-    return out << "*";
-  case Function::DIV:
-    return out << "/";
-  }
+/**
+ * \brief Defines names of supported RTL-level functions.
+ * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
+ */
+enum Function {
+  /// Identity function: y <= x.
+  NOP,
+  /// Negation: y <= ~x.
+  NOT,
+  /// Addition: y <= x[0] + x[1].
+  ADD,
+  /// Subtraction: y <= x[0] - x[1].
+  SUB,
+  /// Multiplication: y <= x[0] * x[1].
+  MUL,
+  /// Division: y <= x[0] / x[1].
+  DIV
+  // TODO: Add more functions.
+};
 
-  return out;
-}
+std::ostream& operator <<(std::ostream &out, Function fun);
 
-}} // namespace eda::ir
+}} // namespace eda::rtl
 

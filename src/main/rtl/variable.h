@@ -18,7 +18,7 @@
 #include <iostream>
 
 namespace eda {
-namespace ir {
+namespace rtl {
 
 /**
  * \brief Represents a data type.
@@ -94,5 +94,5 @@ inline std::ostream& operator <<(std::ostream &out, const Variable &variable) {
   return out << variable.name();
 }
 
-}} // namespace eda::ir
+}} // namespace eda::rtl
 

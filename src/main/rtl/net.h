@@ -19,11 +19,11 @@
 #include <unordered_map>
 #include <vector>
 
-#include "pnode.h"
-#include "vnode.h"
+#include "rtl/pnode.h"
+#include "rtl/vnode.h"
 
 namespace eda {
-namespace ir {
+namespace rtl {
 
 /**
  * \brief An intermediate representation combining p- and v-nets.
@@ -124,5 +124,5 @@ private:
 
 std::ostream& operator <<(std::ostream &out, const Net &net);
 
-}} // namespace utopia::ir
+}} // namespace eda::rtl
 

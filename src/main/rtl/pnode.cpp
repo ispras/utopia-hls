@@ -14,30 +14,36 @@
 
 #include <iostream>
 
-#include "event.h"
-#include "vnode.h"
+#include "rtl/pnode.h"
+#include "rtl/vnode.h"
 
 namespace eda {
-namespace ir {
+namespace rtl {
 
-std::ostream& operator <<(std::ostream &out, const Event &event) {
-  switch (event.kind()) {
-  case Event::POSEDGE:
-    return out << "posedge(" << event.signal()->name() << ")";
-  case Event::NEGEDGE:
-    return out << "negedge(" << event.signal()->name() << ")";
-  case Event::LEVEL0:
-    return out << "level0(" << event.signal()->name() << ")";
-  case Event::LEVEL1:
-    return out << "level1(" << event.signal()->name() << ")";
-  case Event::ALWAYS:
-    return out << "*";
-  case Event::DELAY:
-    return out << "#" << event.delay();
+std::ostream& operator <<(std::ostream &out, const PNode &pnode) {
+  out << "always @(" << pnode.event() << ") begin" << std::endl;
+
+  if (pnode.gsize() > 0) {  
+    out << "  if (";
+    bool separator = false;
+    for (auto i = pnode.gbegin(); i != pnode.gend(); i++) {
+      out << (separator ? " && " : "") << **i;
+      separator = true;
+    }
+    out << ") begin" << std::endl;
   }
 
+  for (auto i = pnode.abegin(); i != pnode.aend(); i++) {
+    out << "    " << **i << std::endl;
+  }
+
+  if (pnode.gsize() > 0) {
+    out << "  end" << std::endl;
+  }
+
+  out << "end";
   return out;
 }
 
-}} // namespace eda::ir
+}} // namespace eda::rtl
 

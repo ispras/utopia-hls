@@ -14,10 +14,10 @@
 
 #include <iostream>
 
-#include "vnode.h"
+#include "rtl/vnode.h"
 
 namespace eda {
-namespace ir {
+namespace rtl {
 
 static std::ostream& operator <<(std::ostream &out, const std::vector<VNode *> &vnodes) {
   bool separator = false;
@@ -48,5 +48,5 @@ std::ostream& operator <<(std::ostream &out, const VNode &vnode) {
   return out;
 }
 
-}} // namespace eda::ir
+}} // namespace eda::rtl
 

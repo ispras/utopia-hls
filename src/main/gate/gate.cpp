@@ -12,34 +12,26 @@
  * the License.
  */
 
-#pragma once
-
 #include <iostream>
 
+#include "gate/gate.h"
+
 namespace eda {
-namespace ir {
+namespace gate {
 
-/**
- * \brief Defines names of supported BV operations.
- * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
- */
-enum Function {
-  /// Identity function: y <= x.
-  NOP,
-  /// Negation: y <= ~x.
-  NOT,
-  /// Addition: y <= x[0] + x[1].
-  ADD,
-  /// Subtraction: y <= x[0] - x[1].
-  SUB,
-  /// Multiplication: y <= x[0] * x[1].
-  MUL,
-  /// Division: y <= x[0] / x[1].
-  DIV
-  // TODO: Add more operations.
-};
+std::ostream& operator <<(std::ostream &out, Gate gate) {
+  switch (gate) {
+  case Gate::NOT:
+    return out << "not";
+  case Gate::AND:
+    return out << "and";
+  case Gate::OR:
+    return out << "or";
+  // TODO: Add more gates.
+  }
 
-std::ostream& operator <<(std::ostream &out, Function fun);
+  return out;
+}
 
-}} // namespace eda::ir
+}} // namespace eda::gate
 

@@ -19,12 +19,12 @@
 #include <string>
 #include <vector>
 
-#include "event.h"
-#include "function.h"
-#include "variable.h"
+#include "rtl/event.h"
+#include "rtl/function.h"
+#include "rtl/variable.h"
 
 namespace eda {
-namespace ir {
+namespace rtl {
 
 class Net;
 class PNode;
@@ -93,5 +93,5 @@ private:
 
 std::ostream& operator <<(std::ostream &out, const VNode &vnode);
 
-}} // namespace eda::ir
+}} // namespace eda::rtl
 

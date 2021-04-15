@@ -17,7 +17,6 @@
 #include "utils.h"
 
 namespace eda {
-namespace ir {
 namespace utils {
 
 std::string unique_name(const std::string &prefix) {
@@ -25,5 +24,5 @@ std::string unique_name(const std::string &prefix) {
   return utils::format("%s$%d", prefix.c_str(), i++);
 }
 
-}}} // namespace eda::ir::utils
+}} // namespace eda::utils
 
