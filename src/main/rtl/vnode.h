@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <cstddef>
 #include <iostream>
 #include <string>
@@ -46,7 +47,7 @@ public:
     /// Source node (s-node): input wire x.
     SRC,
     /// Functional node (f-node): always_comb y <= f(x[0], ..., x[n-1]).
-    FUNC,
+    FUN,
     /// Multiplexor node (m-node): always_comb y <= mux(x[0], ..., x[n-1]).
     MUX,
     /// Register node (r-node): always_ff @(edge) y <= x or always_latch if(level) y <= x.
@@ -79,7 +80,10 @@ private:
     new (this) VNode(kind, var, event, func, inputs);
   }
 
-  void set_pnode(PNode *pnode) { _pnode = pnode; }
+  void set_pnode(PNode *pnode) {
+    assert(pnode != nullptr);
+    _pnode = pnode;
+  }
 
   // Parent p-node (set on p-node creation).
   PNode *_pnode;

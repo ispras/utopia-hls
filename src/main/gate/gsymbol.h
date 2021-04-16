@@ -20,26 +20,44 @@ namespace eda {
 namespace gate {
 
 /**
- * \brief Defines names of supported logical gates.
+ * \brief Defines names of supported logical gates and flip-flops/latches.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 enum GateSymbol {
-  /// Identity: y <= x.
+  //----------------------------------------------------------------------------
+  // Logic gates
+  //----------------------------------------------------------------------------
+
+  /// Identity: OUT = X.
   NOP,
-  /// Negation: y <= ~x.
+  /// Negation: OUT = ~X.
   NOT,
-  /// Conjunction: y <= x[0] & x[1].
+  /// Conjunction: OUT = X & Y (& ...).
   AND,
-  /// Disjunction: y <= x[0] | x[1].
+  /// Disjunction: OUT = X | Y (| ...).
   OR,
-  /// Exclusive OR: y <= x[0] + x[1] (mod 2).
+  /// Exclusive OR: OUT = X + Y (+ ...) (mod 2).
   XOR,
-  /// Sheffer's stroke: y <= ~(x[0] & x[1]).
+  /// Sheffer's stroke: OUT = ~(X & Y (& ...)).
   NAND,
-  /// Peirce's arrow: y <= ~(x[0] | x[1]).
+  /// Peirce's arrow: OUT <= ~(X | Y (| ...)).
   NOR,
-  /// Exclusive NOR: y <= ~(x[0] + x[1] (mod 2)).
-  XNOR
+  /// Exclusive NOR: OUT <= ~(X + Y (+ ...) (mod 2)).
+  XNOR,
+
+  //----------------------------------------------------------------------------
+  // Flip-flops and latches
+  //----------------------------------------------------------------------------
+
+  /// D latch (Q, D, ENA):
+  /// Q(t) = ENA(level1) ? Q(t-1) : D.
+  LATCH,
+  /// D flip-flop (Q, D, CLK):
+  /// Q(t) = CLK(posedge) ? D : Q(t-1).
+  DFF,
+  /// D flip-flop w/ (asynchronous) reset and set (Q, D, CLK, RST, SET):
+  /// Q(t) = RST(level1) ? 0 : (SET(level1) ? 1 : (CLK(posedge) ? D : Q(t-1))).
+  DFFrs
 };
 
 std::ostream& operator <<(std::ostream &out, GateSymbol gate);

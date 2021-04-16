@@ -37,6 +37,12 @@ std::ostream& operator <<(std::ostream &out, GateSymbol gate) {
     return out << "nor";
   case GateSymbol::XNOR:
     return out << "xnor";
+  case GateSymbol::LATCH:
+    return out << "latch";
+  case GateSymbol::DFF:
+    return out << "dff";
+  case GateSymbol::DFFrs:
+    return out << "dff_rs";
   }
 
   return out;

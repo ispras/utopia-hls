@@ -16,14 +16,21 @@
 
 #include <cassert>
 #include <iostream>
+#include <unordered_map>
 #include <vector>
 
 #include "gate/gate.h"
 
 namespace eda {
-namespace gate {
+namespace rtl {
 
 class Net;
+class VNode;
+
+}} // namespace eda::rtl
+
+namespace eda {
+namespace gate {
 
 /**
  * \brief Represents a gate-level netlist.
@@ -38,38 +45,28 @@ public:
 
   Netlist() {
     _gates.reserve(1024*1024);
+    _gates_id.reserve(1024*1024);
   } 
 
   std::size_t size() const { return _gates.size(); }
   const_iterator begin() const { return _gates.cbegin(); }
   const_iterator end() const { return _gates.cend(); }
 
-  /// Create an input.
-  Gate* add_source(unsigned id) {
-    return add_gate(new Gate(id, GateSymbol::NOP, Event::always(), Event::always(), {}));
-  }
-
-  /// Creates a logical gate (combinational).
-  Gate* add_gate(unsigned id, GateSymbol gate, const std::vector<Gate *> inputs) {
-    return add_gate(new Gate(id, gate, GateEvent::always(), GateEvent::always(), inputs));
-  }
-
-  /// Creates and adds an f-node (s = function).
-  Gate* add_trigger(unsigned id, GateSymbol gate, const GateEvent &clock,
-      const GateEvent &reset, Gate *data) {
-    return add_gate(new Gate(id, gate, clock, reset, { data }));
-  }
-
   /// Synthesizes the gate-level netlist from the RTL-level net.
-  void create(const Net &net);
+  void create(const eda::rtl::Net &net);
 
 private:
-  Gate* add_gate(Gate *gate) {
-    _gates.push_back(gate);
-    return gate;
-  }
+  unsigned gate_id(const eda::rtl::VNode *vnode);
+  void allocate_gates(const eda::rtl::VNode *vnode);
+  void handle_src(const eda::rtl::VNode *vnode);
+  void handle_fun(const eda::rtl::VNode *vnode);
+  void handle_mux(const eda::rtl::VNode *vnode);
+  void handle_reg(const eda::rtl::VNode *vnode);
 
   std::vector<Gate *> _gates;
+
+  // Maps vnodes to the identifiers of their lower bits' gates.
+  std::unordered_map<std::string, unsigned> _gates_id;
 };
 
 std::ostream& operator <<(std::ostream &out, const Netlist &netlist);

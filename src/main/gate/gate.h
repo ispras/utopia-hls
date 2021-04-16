@@ -23,11 +23,15 @@
 namespace eda {
 namespace gate {
 
+class Netlist;
+
 /**
  * \brief Represents a logic gate or a flip-flop/latch.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class Gate final {
+  // Creation.
+  friend class Netlist;
   // Debug print.
   friend std::ostream& operator <<(std::ostream &out, const Gate &gate);
 
@@ -38,12 +42,24 @@ public:
   const Signal& input(size_t i) const { return _inputs[i]; }
 
   bool is_source() const { return _inputs.empty(); }
-  bool is_gate() const { return !_inputs.empty() && _inputs[0].kind() == Signal::ALWAYS; }
-  bool is_trigger() const { return !_inputs.empty() && _inputs[0].kind() != Signal::ALWAYS; }
+  bool is_trigger() const { return is_sequential(); }
+  bool is_gate() const { return !is_source() && !is_trigger(); }
 
 private:
+  Gate(unsigned id):
+    _id(id), _gate(GateSymbol::NOP), _inputs({}) {}
+
   Gate(unsigned id, GateSymbol gate, const std::vector<Signal> inputs):
     _id(id), _gate(gate), _inputs(inputs) {}
+
+  bool is_sequential() const {
+    for (const auto &input: _inputs) {
+      if (input.kind() != Signal::ALWAYS) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   const unsigned _id;
   const GateSymbol _gate;

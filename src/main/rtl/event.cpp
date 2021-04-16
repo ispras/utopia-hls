@@ -23,13 +23,13 @@ namespace rtl {
 std::ostream& operator <<(std::ostream &out, const Event &event) {
   switch (event.kind()) {
   case Event::POSEDGE:
-    return out << "posedge(" << event.signal()->name() << ")";
+    return out << "posedge(" << event.node()->name() << ")";
   case Event::NEGEDGE:
-    return out << "negedge(" << event.signal()->name() << ")";
+    return out << "negedge(" << event.node()->name() << ")";
   case Event::LEVEL0:
-    return out << "level0(" << event.signal()->name() << ")";
+    return out << "level0(" << event.node()->name() << ")";
   case Event::LEVEL1:
-    return out << "level1(" << event.signal()->name() << ")";
+    return out << "level1(" << event.node()->name() << ")";
   case Event::ALWAYS:
     return out << "*";
   case Event::DELAY:

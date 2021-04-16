@@ -58,9 +58,9 @@ public:
   }
 
   /// Creates and adds an f-node (s = function).
-  VNode* add_func(const Variable &var, FuncSymbol func, const std::vector<VNode *> &inputs) {
+  VNode* add_fun(const Variable &var, FuncSymbol func, const std::vector<VNode *> &inputs) {
     assert(!_created);
-    return add_vnode(new VNode(VNode::FUNC, var, Event::always(), func, inputs));
+    return add_vnode(new VNode(VNode::FUN, var, Event::always(), func, inputs));
   }
 
   /// Creates and adds a phi-node (unspecified multiplexor).

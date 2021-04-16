@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <iostream>
 
 namespace eda {
@@ -59,16 +60,18 @@ public:
     return Signal(LEVEL1, gate);
   }
 
-  static Signal always() {
-    return Signal(ALWAYS);
+  static Signal always(const Gate *gate) {
+    return Signal(ALWAYS, gate);
   }
 
   Kind kind() const { return _kind; }
   const Gate* gate() const { return _gate; }
 
 private:
-  Signal(Kind kind, const Gate *gate = nullptr):
-    _kind(kind), _gate(gate) {}
+  Signal(Kind kind, const Gate *gate):
+      _kind(kind), _gate(gate) {
+    assert(gate != nullptr);
+  }
 
   const Kind _kind;
   const Gate *_gate;

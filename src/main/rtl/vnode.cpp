@@ -33,7 +33,7 @@ std::ostream& operator <<(std::ostream &out, const VNode &vnode) {
   switch (vnode.kind()) {
   case VNode::SRC:
     return out << "S{" << vnode.var() << "}";
-  case VNode::FUNC:
+  case VNode::FUN:
     return out << "F{" << vnode.var() << " <= " << vnode.func() << "(" << vnode._inputs << ")}";
   case VNode::MUX:
     return out << "M{" << vnode.var() << " <= mux(" << vnode._inputs << ")}";
