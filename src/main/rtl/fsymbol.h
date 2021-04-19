@@ -24,19 +24,25 @@ namespace rtl {
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 enum FuncSymbol {
-  /// Identity function: y <= x.
+  /// Identity: OUT = X.
   NOP,
-  /// Negation: y <= ~x.
+  /// Negation: OUT = ~X.
   NOT,
-  /// Addition: y <= x[0] + x[1].
+  /// Disjunction: OUT = X | Y.
+  OR,
+  /// Conjunction: OUT = X & Y.
+  AND, 
+  /// Addition: OUT = X + Y.
   ADD,
-  /// Subtraction: y <= x[0] - x[1].
+  /// Subtraction: OUT = X - Y.
   SUB,
-  /// Multiplication: y <= x[0] * x[1].
+  /// Multiplication: OUT = X * Y.
   MUL,
-  /// Division: y <= x[0] / x[1].
-  DIV
+  /// Division: OUT = X / Y.
+  DIV,
   // TODO: Add more functions.
+  /// Multiplexor: OUT = MUX(C[1], ..., C[n]; X[1], ..., X[n]).
+  MUX
 };
 
 std::ostream& operator <<(std::ostream &out, FuncSymbol func);

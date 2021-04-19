@@ -32,6 +32,8 @@ class VNode;
 namespace eda {
 namespace gate {
 
+class FLibrary;
+
 /**
  * \brief Represents a gate-level netlist.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
@@ -52,16 +54,53 @@ public:
   const_iterator begin() const { return _gates.cbegin(); }
   const_iterator end() const { return _gates.cend(); }
 
+  Gate* gate(unsigned id) const { return _gates[id]; }
+
+  Signal posedge(unsigned id) const { return Signal::posedge(gate(id)); }
+  Signal negedge(unsigned id) const { return Signal::negedge(gate(id)); }
+  Signal level0(unsigned id) const { return Signal::level0(gate(id)); }
+  Signal level1(unsigned id) const { return Signal::level1(gate(id)); }
+  Signal always(unsigned id) const { return Signal::always(gate(id)); }
+
+  /// Returns the next gate identifier.
+  unsigned next_gate_id() const { return _gates.size(); }
+
+  /// Adds a new source and returns its identifier.
+  unsigned add_src() {
+    return add_gate(new Gate(next_gate_id()));
+  }
+
+  /// Adds a new gate and returns its identifier.
+  unsigned add_gate(GateSymbol kind, const std::vector<Signal> &inputs) {
+    return add_gate(new Gate(next_gate_id(), kind, inputs));
+  }
+
+  // Modifies the existing gate.
+  void set_gate(unsigned id, GateSymbol kind, const std::vector<Signal> &inputs) {
+    Gate *g = gate(id);
+    g->set_kind(kind);
+    g->set_inputs(inputs);
+  }
+
   /// Synthesizes the gate-level netlist from the RTL-level net.
-  void create(const eda::rtl::Net &net);
+  void create(const eda::rtl::Net &net, FLibrary &lib);
 
 private:
   unsigned gate_id(const eda::rtl::VNode *vnode);
   void allocate_gates(const eda::rtl::VNode *vnode);
-  void handle_src(const eda::rtl::VNode *vnode);
-  void handle_fun(const eda::rtl::VNode *vnode);
-  void handle_mux(const eda::rtl::VNode *vnode);
-  void handle_reg(const eda::rtl::VNode *vnode);
+
+  void handle_src(const eda::rtl::VNode *vnode, FLibrary &lib);
+  void handle_fun(const eda::rtl::VNode *vnode, FLibrary &lib);
+  void handle_mux(const eda::rtl::VNode *vnode, FLibrary &lib);
+  void handle_reg(const eda::rtl::VNode *vnode, FLibrary &lib);
+
+  std::vector<unsigned> out_of(const eda::rtl::VNode *vnode);
+  std::vector<std::vector<unsigned>> in_of(const eda::rtl::VNode *vnode);
+
+  unsigned add_gate(Gate *gate) {
+    _gates.push_back(gate);
+    return gate->id();
+  }
 
   std::vector<Gate *> _gates;
 

@@ -20,21 +20,25 @@
 namespace eda {
 namespace gate {
 
-std::ostream& operator <<(std::ostream &out, const Signal &signal) {
-  switch (signal.kind()) {
+std::ostream& operator <<(std::ostream &out, const Signal::Kind &kind) {
+  switch (kind) {
   case Signal::POSEDGE:
-    return out << "posedge(" << signal.gate()->id() << ")";
+    return out << "posedge";
   case Signal::NEGEDGE:
-    return out << "negedge(" << signal.gate()->id() << ")";
+    return out << "negedge";
   case Signal::LEVEL0:
-    return out << "level0(" << signal.gate()->id() << ")";
+    return out << "level0";
   case Signal::LEVEL1:
-    return out << "level1(" << signal.gate()->id() << ")";
+    return out << "level1";
   case Signal::ALWAYS:
     return out << "*";
   }
 
   return out;
+}
+
+std::ostream& operator <<(std::ostream &out, const Signal &signal) {
+  return out << signal.kind() << "(" << signal.gate()->id() << ")";
 }
 
 }} // namespace eda::gate

@@ -73,10 +73,11 @@ private:
     assert(gate != nullptr);
   }
 
-  const Kind _kind;
+  Kind _kind;
   const Gate *_gate;
 };
 
+std::ostream& operator <<(std::ostream &out, const Signal::Kind &kind);
 std::ostream& operator <<(std::ostream &out, const Signal &signal);
 
 }} // namespace eda::gate

@@ -25,6 +25,10 @@ std::ostream& operator <<(std::ostream &out, FuncSymbol func) {
     return out << "";
   case FuncSymbol::NOT:
     return out << "~";
+  case FuncSymbol::OR:
+    return out << "|";
+  case FuncSymbol::AND:
+    return out << "&";
   case FuncSymbol::ADD:
     return out << "+";
   case FuncSymbol::SUB:
@@ -33,6 +37,8 @@ std::ostream& operator <<(std::ostream &out, FuncSymbol func) {
     return out << "*";
   case FuncSymbol::DIV:
     return out << "/";
+  case FuncSymbol::MUX:
+    return out << "mux";
   }
 
   return out;

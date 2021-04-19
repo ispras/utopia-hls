@@ -34,7 +34,7 @@ std::ostream& operator <<(std::ostream &out, const Gate &gate) {
     return out << "S{" << gate.id() << "}";
   } else {
     return out << (gate.is_gate() ? "G" : "T") << "{"
-               << gate.id() << " <= " << gate.gate() << "(" << gate._inputs << ")}";
+               << gate.id() << " <= " << gate.kind() << "(" << gate._inputs << ")}";
   }
 }
 

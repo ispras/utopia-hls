@@ -15,6 +15,7 @@
 #include <cassert>
 #include <cstddef>
 
+#include "gate/flibrary.h"
 #include "gate/netlist.h"
 #include "rtl/net.h"
 #include "rtl/vnode.h"
@@ -25,6 +26,29 @@ using namespace eda::utils;
 
 namespace eda {
 namespace gate {
+
+void Netlist::create(const Net &net, FLibrary &lib) {
+  for (auto i = net.vbegin(); i != net.vend(); i++) {
+    allocate_gates(*i);
+  }
+
+  for (auto i = net.vbegin(); i != net.vend(); i++) {
+    switch ((*i)->kind()) {
+    case VNode::SRC:
+      handle_src(*i, lib);
+      break;
+    case VNode::FUN:
+      handle_fun(*i, lib);
+      break;
+    case VNode::MUX:
+      handle_mux(*i, lib);
+      break;
+    case VNode::REG:
+      handle_reg(*i, lib);
+      break;
+    }
+  }
+}
 
 unsigned Netlist::gate_id(const VNode *vnode) {
   const auto i = _gates_id.find(vnode->name());
@@ -48,41 +72,43 @@ void Netlist::allocate_gates(const VNode *vnode) {
   }
 }
 
-void Netlist::handle_src(const VNode *vnode) {
-  // Do nothing.
-}
-
-void Netlist::handle_fun(const VNode *vnode) {
+std::vector<unsigned> Netlist::out_of(const VNode *vnode) {
   const unsigned base = gate_id(vnode);
   const unsigned size = vnode->var().type().width();
 
-  // TODO: Synthesize the functional unit.
+  std::vector<unsigned> out(size);
   for (unsigned i = 0; i < size; i++) {
-    Gate *gate = _gates[base + i];
-
-    std::vector<Signal> inputs;
-    inputs.reserve(vnode->arity());
-
-    for (size_t j = 0; j < vnode->arity(); j++) {
-      const VNode *input = vnode->input(j);
-      const unsigned input_base = gate_id(input);
-      const unsigned input_size = input->var().type().width();
-
-      inputs.push_back(Signal::always(_gates[(input_base + i) % input_size]));
-    }
-
-    // TODO: There should be corresponding function.
-    gate->~Gate();
-    new (gate) Gate(base + i, GateSymbol::AND, inputs);
+    out[i] = base + i;
   }
+
+  return out;
 }
 
-void Netlist::handle_mux(const VNode *vnode) {
-  // TODO: Synthesize the multiplexor.
-  handle_fun(vnode);
+std::vector<std::vector<unsigned>> Netlist::in_of(const VNode *vnode) {
+  std::vector<std::vector<unsigned>> in(vnode->arity());
+  
+  for (std::size_t i = 0; i < vnode->arity(); i++) {
+    in[i] = out_of(vnode->input(i));
+  }
+
+  return in;
 }
 
-void Netlist::handle_reg(const VNode *vnode) {
+void Netlist::handle_src(const VNode *vnode, FLibrary &lib) {
+  // Do nothing.
+}
+
+void Netlist::handle_fun(const VNode *vnode, FLibrary &lib) {
+  assert(lib.supports(vnode->func()));
+  lib.synthesize(vnode->func(), out_of(vnode), in_of(vnode), *this);
+}
+
+void Netlist::handle_mux(const VNode *vnode, FLibrary &lib) {
+  assert(lib.supports(FuncSymbol::MUX));
+  lib.synthesize(FuncSymbol::MUX, out_of(vnode), in_of(vnode), *this);
+}
+
+void Netlist::handle_reg(const VNode *vnode, FLibrary &lib) {
   const Event &event = vnode->event();
 
   if (!event.edge()) {
@@ -106,29 +132,6 @@ void Netlist::handle_reg(const VNode *vnode) {
     gate->~Gate();
     new (gate) Gate(base + i, GateSymbol::DFF,
       { Signal::always(_gates[data_base + i]), Signal::posedge(_gates[clk_id]) } );
-  }
-}
-
-void Netlist::create(const Net &net) {
-  for (auto i = net.vbegin(); i != net.vend(); i++) {
-    allocate_gates(*i);
-  }
-
-  for (auto i = net.vbegin(); i != net.vend(); i++) {
-    switch ((*i)->kind()) {
-    case VNode::SRC:
-      handle_src(*i);
-      break;
-    case VNode::FUN:
-      handle_fun(*i);
-      break;
-    case VNode::MUX:
-      handle_mux(*i);
-      break;
-    case VNode::REG:
-      handle_reg(*i);
-      break;
-    }
   }
 }
 

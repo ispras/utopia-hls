@@ -14,6 +14,7 @@
 
 #include <iostream>
 
+#include "gate/flibrary.h"
 #include "gate/gate.h"
 #include "gate/netlist.h"
 #include "rtl/net.h"
@@ -26,6 +27,7 @@ int main() {
 
   // module(
   //   input  wire       clk,
+  //   input  wire       rst,
   //   input  wire       c,
   //   input  wire [7:0] x,
   //   input  wire [7:0] y,
@@ -45,9 +47,10 @@ int main() {
   //     else   w <= g; 
   //   end
   //
-  //   always @(posedge clk) begin
-  //     if (c) r <= f;
-  //     else   r <= g;
+  //   always @(posedge clk, posedge rst) begin
+  //     if (rst)    r <= 0;
+  //     else if (c) r <= f;
+  //     else        r <= g;
   //   end
   //
   //   assign u = w;
@@ -56,6 +59,9 @@ int main() {
 
   Variable clk("clk", Variable::WIRE, Variable::INPUT, Type::uint(1));
   VNode *clknode = net.add_src(clk);
+
+  Variable rst("rst", Variable::WIRE, Variable::INPUT, Type::uint(1));
+  VNode *rstnode = net.add_src(rst);
 
   Variable c("c", Variable::WIRE, Variable::INPUT, Type::uint(1));
   VNode *cnode = net.add_src(c);
@@ -81,6 +87,7 @@ int main() {
   VNode *w_phi = net.add_phi(w);
 
   Variable r("r", Variable::REG, Type::uint(8));
+  VNode *rnode0 = net.add_reg(r, Event::level1(rstnode), rstnode); // TODO: RHS should be zero.
   VNode *rnode1 = net.add_reg(r, Event::posedge(clknode), fnode);
   VNode *rnode2 = net.add_reg(r, Event::posedge(clknode), gnode);
   VNode *r_phi = net.add_phi(r);
@@ -96,6 +103,7 @@ int main() {
   net.add_cmb({}, { unode });
   net.add_cmb({}, { vnode });
 
+  net.add_seq(Event::level1(rstnode), {}, { rnode0 });
   net.add_seq(Event::posedge(clknode), { cnode }, { rnode1 });
   net.add_seq(Event::posedge(clknode), { nnode }, { rnode2 });
 
@@ -105,7 +113,7 @@ int main() {
   std::cout << "------------------------------------------"  << std::endl;
 
   Netlist netlist;
-  netlist.create(net);
+  netlist.create(net, FLibraryDefault::instance());
   std::cout << netlist;
 
   return 0;

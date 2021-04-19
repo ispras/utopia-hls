@@ -1,4 +1,5 @@
 SRC = main.cpp \
+      gate/flibrary.cpp \
       gate/gate.cpp \
       gate/gsymbol.cpp \
       gate/netlist.cpp \

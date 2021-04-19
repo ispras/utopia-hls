@@ -37,7 +37,7 @@ class Gate final {
 
 public:
   const unsigned id() const { return _id; }
-  GateSymbol gate() const { return _gate; }
+  GateSymbol kind() const { return _kind; }
   std::size_t arity() const { return _inputs.size(); }
   const Signal& input(size_t i) const { return _inputs[i]; }
 
@@ -47,10 +47,10 @@ public:
 
 private:
   Gate(unsigned id):
-    _id(id), _gate(GateSymbol::NOP), _inputs({}) {}
+    _id(id), _kind(GateSymbol::NOP), _inputs({}) {}
 
   Gate(unsigned id, GateSymbol gate, const std::vector<Signal> inputs):
-    _id(id), _gate(gate), _inputs(inputs) {}
+    _id(id), _kind(gate), _inputs(inputs) {}
 
   bool is_sequential() const {
     for (const auto &input: _inputs) {
@@ -61,9 +61,16 @@ private:
     return false;
   }
 
+  void set_kind(GateSymbol kind) { _kind = kind; }
+
+  void set_inputs(const std::vector<Signal> &inputs) {
+    _inputs.assign(inputs.begin(), inputs.end());
+  }
+
   const unsigned _id;
-  const GateSymbol _gate;
-  const std::vector<Signal> _inputs;
+
+  GateSymbol _kind;
+  std::vector<Signal> _inputs;
 };
 
 std::ostream& operator <<(std::ostream &out, const Gate &gate);
