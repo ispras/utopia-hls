@@ -87,9 +87,9 @@ int main() {
   VNode *w_phi = net.add_phi(w);
 
   Variable r("r", Variable::REG, Type::uint(8));
-  VNode *rnode0 = net.add_reg(r, Event::level1(rstnode), rstnode); // TODO: RHS should be zero.
-  VNode *rnode1 = net.add_reg(r, Event::posedge(clknode), fnode);
-  VNode *rnode2 = net.add_reg(r, Event::posedge(clknode), gnode);
+  VNode *rnode0 = net.add_reg(r, { Event::level1(rstnode) }, fnode); // TODO: RHS should be zero.
+  VNode *rnode1 = net.add_reg(r, { Event::posedge(clknode) }, fnode);
+  VNode *rnode2 = net.add_reg(r, { Event::posedge(clknode) }, gnode);
   VNode *r_phi = net.add_phi(r);
 
   Variable u("u", Variable::WIRE, Variable::OUTPUT, Type::uint(8));

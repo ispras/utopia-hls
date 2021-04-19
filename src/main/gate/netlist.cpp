@@ -109,13 +109,14 @@ void Netlist::handle_mux(const VNode *vnode, FLibrary &lib) {
 }
 
 void Netlist::handle_reg(const VNode *vnode, FLibrary &lib) {
-  const Event &event = vnode->event();
+  const std::vector<Event> &events = vnode->events();
+  assert(!events.empty());
 
-  if (!event.edge()) {
+  if (!events.front().edge()) {
     // TODO: Handle latches and asynchronous resets.
   }
 
-  const VNode *clk = event.node();
+  const VNode *clk = events.front().node();
   const unsigned clk_id = gate_id(clk);
 
   const unsigned base = gate_id(vnode);

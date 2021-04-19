@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <iostream>
@@ -59,38 +60,40 @@ public:
   const std::string& name() const { return _var.name(); }
   Kind kind() const { return _kind; }
   const Variable &var() const { return _var; }
-  const Event& event() const { return _event; }
+  const std::vector<Event>& events() const { return _events; }
   FuncSymbol func() const { return _func; }
   std::size_t arity() const { return _inputs.size(); }
   const VNode* input(size_t i) const { return _inputs[i]; }
 
 private:
-  VNode(Kind kind, const Variable &var, const Event &event, FuncSymbol func,
-      const std::vector<VNode *> &inputs):
-    _pnode(nullptr), _kind(kind), _var(var), _event(event), _func(func), _inputs(inputs) {}
+  VNode(Kind kind, const Variable &var, const std::vector<Event> &events,
+      FuncSymbol func, const std::vector<VNode *> &inputs):
+    _pnode(nullptr), _kind(kind), _var(var), _events(events), _func(func), _inputs(inputs) {
+    assert(std::find(inputs.begin(), inputs.end(), nullptr) == inputs.end());
+  }
 
   VNode *duplicate(const std::string &new_name) {
     Variable var(new_name, _var.kind(), _var.bind(), _var.type());
-    return new VNode(_kind, var, _event, _func, _inputs);
+    return new VNode(_kind, var, _events, _func, _inputs);
   }
 
-  void replace_with(Kind kind, const Variable &var, const Event &event, FuncSymbol func,
-      const std::vector<VNode *> &inputs) {
+  void replace_with(Kind kind, const Variable &var, const std::vector<Event> &events,
+      FuncSymbol func, const std::vector<VNode *> &inputs) {
     this->~VNode();
-    new (this) VNode(kind, var, event, func, inputs);
+    new (this) VNode(kind, var, events, func, inputs);
   }
 
-  void set_pnode(PNode *pnode) {
+  void set_pnode(const PNode *pnode) {
     assert(pnode != nullptr);
     _pnode = pnode;
   }
 
   // Parent p-node (set on p-node creation).
-  PNode *_pnode;
+  const PNode *_pnode;
 
   const Kind _kind;
   const Variable _var;
-  const Event _event;
+  const std::vector<Event> _events;
   const FuncSymbol _func;
   const std::vector<VNode *> _inputs;
 };

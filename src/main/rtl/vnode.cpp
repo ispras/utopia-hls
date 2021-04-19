@@ -38,7 +38,14 @@ std::ostream& operator <<(std::ostream &out, const VNode &vnode) {
   case VNode::MUX:
     return out << "M{" << vnode.var() << " <= mux(" << vnode._inputs << ")}";
   case VNode::REG:
-    return out << "R{" << vnode.event() << ": " << vnode.var() << " <= " << vnode.input(0)->name() << "}";
+    out << "R{";
+    bool separator = false;
+    for (std::size_t i = 0; i < vnode.events().size(); i++) {
+      out << (separator ? ", " : "") << vnode.events()[i] << ": ";
+      out << vnode.var() << " <= " << vnode.input(i)->name();
+      separator = true;
+    }
+    return out << "}";
   }
 
   return out;

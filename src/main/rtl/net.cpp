@@ -30,7 +30,7 @@ void Net::create() {
     assert(!_.empty());
 
     VNode *phi = usage.first;
-    std::vector<VNode *> &defines = usage.second;
+    VNodeList &defines = usage.second;
 
     // Multiple definitions <=> phi-node required.
     assert((phi != nullptr && defines.size() >= 2) ||
@@ -38,72 +38,149 @@ void Net::create() {
 
     // No multiplexing required.
     if (defines.size() == 1) {
+      // TODO: Set event if register.
       _vnodes.push_back(defines.front());
       continue;
     }
 
     // Multiplexing required.
-    std::vector<VNode *> mux_inputs(2 * defines.size());
-    Variable mux_output = phi->var();
-
     switch (phi->var().kind()) {
-    // if (g[1]) { w <= f[1](...) }    w[1] <= f[1](...)
-    // ...                          => ...               + w <= mux{ g[i] -> w[i] }
-    // if (g[n]) { w <= f[n](...) }    w[n] <= f[n](...)
     case Variable::WIRE:
-      // Creates the { w[i] } nodes and compose the mux inputs: { g[i] -> w[i] }.
-      for (std::size_t i = 0; i < defines.size(); i++) {
-        VNode *old_vnode = defines[i];
-
-        assert(old_vnode->_pnode != nullptr);
-        assert(!old_vnode->_pnode->_guard.empty());
-
-        // Create a { w[i] <= f[i](...) } node.
-        VNode *new_vnode = old_vnode->duplicate(unique_name(old_vnode->name()));
-        _vnodes.push_back(new_vnode);
-
-        // Guards come first: mux(g[1], ..., g[n]; w[1], ..., w[n]).
-        mux_inputs[i] = old_vnode->_pnode->_guard.back();
-        mux_inputs[i + defines.size()] = new_vnode;
-      }
-
-      // Connect the wire w/ the multiplexor: w <= mux{ g[i] -> w[i] }.
-      phi->replace_with(VNode::MUX, mux_output, Event::always(), FuncSymbol::NOP, mux_inputs);
-      _vnodes.push_back(phi);
-
+      mux_wire_defines(phi, defines);
       break;
-
-    // if (g[1]) { r <= w[1] }    w <= mux{ g[i] -> w[i] }
-    // ...                     => 
-    // if (g[n]) { r <= w[n] }    r <= w
     case Variable::REG:
-      // Compose the mux inputs { g[i] -> w[i] }.
-      for (std::size_t i = 0; i < defines.size(); i++) {
-        VNode *vnode = defines[i];
-        assert(vnode->_pnode != nullptr);
-
-        // Guards come first: mux(g[1], ..., g[n]; w[1], ..., w[n]).
-        mux_inputs[i] = vnode->_pnode->_guard.back();
-        mux_inputs[i + defines.size()] = vnode->_inputs.front();
-      }
-
-      // Create a wire w.
-      Variable wire(unique_name(mux_output.name()), Variable::WIRE, mux_output.type());
-
-      // Create a multiplexor: w <= mux{ g[i] -> w[i] }.
-      VNode *mux = new VNode(VNode::MUX, wire, Event::always(), FuncSymbol::NOP, mux_inputs);
-      _vnodes.push_back(mux);
-
-      // Connect the register w/ the multiplexor via the wire: r <= w.
-      phi->replace_with(VNode::REG, mux_output, defines.front()->event(), FuncSymbol::NOP, { mux });
-      _vnodes.push_back(phi);
-
+      mux_reg_defines(phi, defines);
       break;
     }
   }
 
   _vnodes_temp.clear();
   _created = true;
+}
+
+// if (g[1]) { w <= f[1](...) }    w[1] <= f[1](...)
+// ...                          => ...               + w <= mux{ g[i] -> w[i] }
+// if (g[n]) { w <= f[n](...) }    w[n] <= f[n](...)
+void Net::mux_wire_defines(VNode *phi, const VNodeList &defines) {
+  const std::size_t n = defines.size();
+  assert(n > 1);
+
+  // Create the { w[i] } nodes and compose the mux inputs: { g[i] -> w[i] }.
+  VNodeList inputs(2 * n);
+
+  for (std::size_t i = 0; i < n; i++) {
+    VNode *old_vnode = defines[i];
+
+    assert(old_vnode->pnode() != nullptr);
+    assert(!old_vnode->pnode()->_guard.empty());
+
+    // Create a { w[i] <= f[i](...) } node.
+    VNode *new_vnode = old_vnode->duplicate(unique_name(old_vnode->name()));
+    _vnodes.push_back(new_vnode);
+
+    // Guards come first: mux(g[1], ..., g[n]; w[1], ..., w[n]).
+    inputs[i] = old_vnode->pnode()->_guard.back();
+    inputs[i + n] = new_vnode;
+  }
+
+  // Connect the wire w/ the multiplexor: w <= mux{ g[i] -> w[i] }.
+  Variable output = phi->var();
+  phi->replace_with(VNode::MUX, output, {}, FuncSymbol::NOP, inputs);
+
+  _vnodes.push_back(phi);
+}
+
+// @(event): if (g[1]) { r <= w[1] }    w <= mux{ g[i] -> w[i] }
+// ...                     =>
+// @(event): if (g[n]) { r <= w[n] }    @(event): r <= w
+void Net::mux_reg_defines(VNode *phi, const VNodeList &defines) {
+  std::vector<std::pair<Event, VNodeList>> groups = group_reg_defines(defines);
+
+  Variable output = phi->var();
+
+  EventList events;
+  VNodeList inputs;
+
+  for (const auto &[event, defines]: groups) {
+    // Create a wire w for the given event.
+    const std::string name = output.name() + "$" + event.node()->name();
+    Variable wire(name, Variable::WIRE, output.type());
+
+    // Create a multiplexor: w <= mux{ g[i] -> w[i] }.
+    VNode *mux = create_mux(wire, defines);
+    _vnodes.push_back(mux);
+
+    events.push_back(event);
+    inputs.push_back(mux);
+  }
+
+  // Connect the register w/ the multiplexor(s) via the wire(s): r <= w.
+  phi->replace_with(VNode::REG, output, events, FuncSymbol::NOP, inputs);
+  _vnodes.push_back(phi);
+}
+
+std::vector<std::pair<Event, Net::VNodeList>> Net::group_reg_defines(const VNodeList &defines) {
+  const Event *clock = nullptr;
+  const Event *level = nullptr;
+
+  VNodeList clock_defines;
+  VNodeList level_defines;
+
+  // Collect all the events triggering the register.
+  for (VNode *vnode: defines) {
+    assert(vnode != nullptr && vnode->pnode() != nullptr);
+
+    const Event &event = vnode->pnode()->event();
+    assert(event.edge() || event.level());
+
+    if (event.edge()) {
+      // At most one edge-triggered event (clock) is allowed.
+      assert(clock == nullptr || *clock == event);
+      clock = &event;
+      clock_defines.push_back(vnode);
+    } else {
+      // At most one level-triggered event (enable or reset) is allowed.
+      assert(level == nullptr || *level == event);
+      level = &event;
+      level_defines.push_back(vnode);
+    }
+  }
+
+  std::vector<std::pair<Event, VNodeList>> groups;
+  if (clock != nullptr) {
+    groups.push_back({ *clock, clock_defines });
+  }
+  if (level != nullptr) {
+    groups.push_back({ *level, level_defines });
+  }
+
+  return groups;
+}
+
+VNode* Net::create_mux(const Variable &output, const VNodeList &defines) {
+  const std::size_t n = defines.size();
+  assert(n > 0);
+
+  // Multiplexor is not required.
+  if (n == 1) {
+    VNode *vnode = defines.front();
+    return new VNode(VNode::FUN, output, {}, FuncSymbol::NOP, { vnode->_inputs.front() }); 
+  }
+
+  // Compose the mux inputs { g[i] -> w[i] }.
+  VNodeList inputs(2 * n);
+
+  for (std::size_t i = 0; i < n; i++) {
+    VNode *vnode = defines[i];
+    assert(vnode->pnode() != nullptr);
+
+    // Guards come first: mux(g[1], ..., g[n]; w[1], ..., w[n]).
+    inputs[i] = vnode->pnode()->_guard.back();
+    inputs[i + n] = vnode->_inputs.front();
+  }
+
+  // Create a multiplexor: w <= mux{ g[i] -> w[i] }.
+  return new VNode(VNode::MUX, output, {}, FuncSymbol::NOP, inputs);
 }
 
 std::ostream& operator <<(std::ostream &out, const Net &net) {

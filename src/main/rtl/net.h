@@ -17,6 +17,7 @@
 #include <cassert>
 #include <iostream>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "rtl/pnode.h"
@@ -34,8 +35,12 @@ class Net final {
   friend std::ostream& operator <<(std::ostream &out, const Net &net);
 
 public:
-  typedef typename std::vector<VNode *>::const_iterator const_viterator;
-  typedef typename std::vector<PNode *>::const_iterator const_piterator;
+  typedef std::vector<VNode *> VNodeList;
+  typedef std::vector<PNode *> PNodeList;
+  typedef std::vector<Event> EventList;
+
+  typedef typename VNodeList::const_iterator const_viterator;
+  typedef typename PNodeList::const_iterator const_piterator;
 
   Net(): _created(false) {
     _vnodes.reserve(1024*1024);
@@ -54,42 +59,41 @@ public:
   /// Creates and adds an s-node (s = source).
   VNode* add_src(const Variable &var) {
     assert(!_created);
-    return add_vnode(new VNode(VNode::SRC, var, Event::always(), FuncSymbol::NOP, {}));
+    return add_vnode(new VNode(VNode::SRC, var, {}, FuncSymbol::NOP, {}));
   }
 
   /// Creates and adds an f-node (s = function).
-  VNode* add_fun(const Variable &var, FuncSymbol func, const std::vector<VNode *> &inputs) {
+  VNode* add_fun(const Variable &var, FuncSymbol func, const VNodeList &inputs) {
     assert(!_created);
-    return add_vnode(new VNode(VNode::FUN, var, Event::always(), func, inputs));
+    return add_vnode(new VNode(VNode::FUN, var, {}, func, inputs));
   }
 
   /// Creates and adds a phi-node (unspecified multiplexor).
   VNode *add_phi(const Variable &var) {
     assert(!_created);
-    return add_vnode(new VNode(VNode::MUX, var, Event::always(), FuncSymbol::NOP,  {}));
+    return add_vnode(new VNode(VNode::MUX, var, {}, FuncSymbol::NOP,  {}));
   }
 
   /// Creates and adds an m-node (m = multiplexor).
-  VNode* add_mux(const Variable &var, const std::vector<VNode *> &inputs) {
+  VNode* add_mux(const Variable &var, const VNodeList &inputs) {
     assert(!_created);
-    return add_vnode(new VNode(VNode::MUX, var, Event::always(), FuncSymbol::NOP, inputs));
+    return add_vnode(new VNode(VNode::MUX, var, {}, FuncSymbol::NOP, inputs));
   }
 
   /// Creates and adds an r-node (r = register).
-  VNode* add_reg(const Variable &var, const Event &event, VNode *input) {
+  VNode* add_reg(const Variable &var, const EventList &events, VNode *input) {
     assert(!_created);
-    return add_vnode(new VNode(VNode::REG, var, event, FuncSymbol::NOP, { input }));
+    return add_vnode(new VNode(VNode::REG, var, events, FuncSymbol::NOP, { input }));
   }
 
   /// Creates and adds a combinational p-node.
-  PNode* add_cmb(const std::vector<VNode *> &guard, const std::vector<VNode *> &action) {
+  PNode* add_cmb(const VNodeList &guard, const VNodeList &action) {
     assert(!_created);
     return add_pnode(new PNode(Event::always(), guard, action));
   }
 
   /// Creates and adds a sequential p-node.
-  PNode* add_seq(const Event &event, const std::vector<VNode *> &guard,
-      const std::vector<VNode *> &action) {
+  PNode* add_seq(const Event &event, const VNodeList &guard, const VNodeList &action) {
     assert(!_created);
     return add_pnode(new PNode(event, guard, action));
   }
@@ -98,6 +102,12 @@ public:
   void create();
 
 private:
+  void mux_wire_defines(VNode *phi, const VNodeList &defines);
+
+  void mux_reg_defines(VNode *phi, const VNodeList &defines);
+  std::vector<std::pair<Event, VNodeList>> group_reg_defines(const VNodeList &defines);
+  VNode* create_mux(const Variable &output, const VNodeList &defines);
+
   VNode* add_vnode(VNode *vnode) {
     auto &usage = _vnodes_temp[vnode->var().name()];
     if (vnode->kind() == VNode::MUX) {
@@ -113,11 +123,11 @@ private:
     return pnode;
   }
 
-  std::vector<VNode *> _vnodes;
-  std::vector<PNode *> _pnodes;
+  VNodeList _vnodes;
+  PNodeList _pnodes;
  
   /// Maps a variable x to the <phi(x), {def(x), ..., def(x)}> structure.
-  std::unordered_map<std::string, std::pair<VNode *, std::vector<VNode *>>> _vnodes_temp;
+  std::unordered_map<std::string, std::pair<VNode *, VNodeList>> _vnodes_temp;
 
   bool _created;
 };

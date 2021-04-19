@@ -76,6 +76,14 @@ public:
   const VNode* node() const { return _node; }
   std::size_t delay() const { return _delay; }
 
+  bool operator ==(const Event &rhs) const {
+    if (&rhs == this) {
+      return true;
+    }
+
+    return _kind == rhs._kind && _node == rhs._node && _delay == rhs._delay;
+  }
+
 private:
   Event(Kind kind, const VNode *node = nullptr, std::size_t delay = 0):
     _kind(kind), _node(node), _delay(delay) {}
