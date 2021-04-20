@@ -83,6 +83,7 @@ private:
   void allocate_gates(const eda::rtl::VNode *vnode);
 
   void handle_src(const eda::rtl::VNode *vnode, FLibrary &lib);
+  void handle_val(const eda::rtl::VNode *vnode, FLibrary &lib);
   void handle_fun(const eda::rtl::VNode *vnode, FLibrary &lib);
   void handle_mux(const eda::rtl::VNode *vnode, FLibrary &lib);
   void handle_reg(const eda::rtl::VNode *vnode, FLibrary &lib);

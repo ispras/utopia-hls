@@ -37,6 +37,9 @@ void Netlist::create(const Net &net, FLibrary &lib) {
     case VNode::SRC:
       handle_src(vnode, lib);
       break;
+    case VNode::VAL:
+      handle_val(vnode, lib);
+      break;
     case VNode::FUN:
       handle_fun(vnode, lib);
       break;
@@ -96,6 +99,10 @@ std::vector<std::vector<unsigned>> Netlist::in_of(const VNode *vnode) {
 
 void Netlist::handle_src(const VNode *vnode, FLibrary &lib) {
   // Do nothing.
+}
+
+void Netlist::handle_val(const VNode *vnode, FLibrary &lib) {
+  lib.synthesize(out_of(vnode), vnode->value(), *this);
 }
 
 void Netlist::handle_fun(const VNode *vnode, FLibrary &lib) {

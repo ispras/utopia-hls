@@ -28,6 +28,10 @@ enum GateSymbol {
   // Logic gates
   //----------------------------------------------------------------------------
 
+  /// Constant 0: OUT = 0.
+  ZERO,
+  /// Constant 1: OUT = 1.
+  ONE,
   /// Identity: OUT = X.
   NOP,
   /// Negation: OUT = ~X.

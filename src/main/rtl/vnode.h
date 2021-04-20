@@ -47,6 +47,8 @@ public:
   enum Kind {
     /// Source node (s-node): input wire x.
     SRC,
+    /// Constant node (c-node): y <= c.
+    VAL,
     /// Functional node (f-node): always_comb y <= f(x[0], ..., x[n-1]).
     FUN,
     /// Multiplexor node (m-node): always_comb y <= mux(x[0], ..., x[n-1]).
@@ -72,24 +74,27 @@ public:
   const VNode* input(std::size_t i) const { return _inputs[i]; }
   VNode* input(std::size_t i) { return _inputs[i]; }
 
+  const std::vector<bool> value() const { return _value; }
+
   const PNode* pnode() const { return _pnode; }
 
 private:
   VNode(Kind kind, const Variable &var, const Event::List &events,
-      FuncSymbol func, const List &inputs):
-    _kind(kind), _var(var), _events(events), _func(func), _inputs(inputs), _pnode(nullptr) {
+      FuncSymbol func, const List &inputs, const std::vector<bool> &value):
+    _kind(kind), _var(var), _events(events), _func(func),
+    _inputs(inputs), _value(value), _pnode(nullptr) {
     assert(std::find(inputs.begin(), inputs.end(), nullptr) == inputs.end());
   }
 
   VNode *duplicate(const std::string &new_name) {
     Variable var(new_name, _var.kind(), _var.bind(), _var.type());
-    return new VNode(_kind, var, _events, _func, _inputs);
+    return new VNode(_kind, var, _events, _func, _inputs, _value);
   }
 
   void replace_with(Kind kind, const Variable &var, const Event::List &events,
-      FuncSymbol func, const List &inputs) {
+      FuncSymbol func, const List &inputs, const std::vector<bool> &value) {
     this->~VNode();
-    new (this) VNode(kind, var, events, func, inputs);
+    new (this) VNode(kind, var, events, func, inputs, value);
   }
 
   void set_pnode(const PNode *pnode) {
@@ -102,6 +107,7 @@ private:
   const Event::List _events;
   const FuncSymbol _func;
   const List _inputs;
+  const std::vector<bool> _value;
 
   // Parent p-node (set on p-node creation).
   const PNode *_pnode;

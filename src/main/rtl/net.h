@@ -46,43 +46,41 @@ public:
 
   /// Creates and adds an s-node (s = source).
   VNode* add_src(const Variable &var) {
-    assert(!_created);
-    return add_vnode(new VNode(VNode::SRC, var, {}, FuncSymbol::NOP, {}));
+    return add_vnode(new VNode(VNode::SRC, var, {}, FuncSymbol::NOP, {}, {}));
+  }
+
+  /// Creates and adds an c-node (c = constant).
+  VNode* add_val(const Variable &var, const std::vector<bool> value) {
+    return add_vnode(new VNode(VNode::VAL, var, {}, FuncSymbol::NOP, {}, value));
   }
 
   /// Creates and adds an f-node (s = function).
   VNode* add_fun(const Variable &var, FuncSymbol func, const VNode::List &inputs) {
-    assert(!_created);
-    return add_vnode(new VNode(VNode::FUN, var, {}, func, inputs));
+    return add_vnode(new VNode(VNode::FUN, var, {}, func, inputs, {}));
   }
 
   /// Creates and adds a phi-node (unspecified multiplexor).
   VNode *add_phi(const Variable &var) {
-    assert(!_created);
-    return add_vnode(new VNode(VNode::MUX, var, {}, FuncSymbol::NOP,  {}));
+    return add_vnode(new VNode(VNode::MUX, var, {}, FuncSymbol::NOP,  {}, {}));
   }
 
   /// Creates and adds an m-node (m = multiplexor).
   VNode* add_mux(const Variable &var, const VNode::List &inputs) {
-    assert(!_created);
-    return add_vnode(new VNode(VNode::MUX, var, {}, FuncSymbol::NOP, inputs));
+    return add_vnode(new VNode(VNode::MUX, var, {}, FuncSymbol::NOP, inputs, {}));
   }
 
   /// Creates and adds an r-node (r = register).
   VNode* add_reg(const Variable &var, const Event &event, VNode *input) {
-    assert(!_created);
-    return add_vnode(new VNode(VNode::REG, var, { event }, FuncSymbol::NOP, { input }));
+    return add_vnode(new VNode(VNode::REG, var, { event }, FuncSymbol::NOP, { input }, {}));
   }
 
   /// Creates and adds a combinational p-node.
   PNode* add_cmb(const VNode::List &guard, const VNode::List &action) {
-    assert(!_created);
     return add_pnode(new PNode(Event::always(), guard, action));
   }
 
   /// Creates and adds a sequential p-node.
   PNode* add_seq(const Event &event, const VNode::List &guard, const VNode::List &action) {
-    assert(!_created);
     return add_pnode(new PNode(event, guard, action));
   }
 
@@ -97,6 +95,7 @@ private:
   VNode* create_mux(const Variable &output, const VNode::List &defines);
 
   VNode* add_vnode(VNode *vnode) {
+    assert(!_created);
     auto &usage = _vnodes_temp[vnode->var().name()];
     if (vnode->kind() == VNode::MUX) {
        usage.first = vnode;

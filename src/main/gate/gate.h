@@ -43,7 +43,8 @@ public:
   const Signal::List& inputs() const { return _inputs; }
   const Signal& input(size_t i) const { return _inputs[i]; }
 
-  bool is_source() const { return _inputs.empty(); }
+  bool is_source() const { return _kind == GateSymbol::NOP && _inputs.empty(); }
+  bool is_value() const { return _kind == GateSymbol::ONE || _kind == GateSymbol::ZERO; }
   bool is_trigger() const { return is_sequential(); }
   bool is_gate() const { return !is_source() && !is_trigger(); }
 

@@ -42,6 +42,9 @@ struct FLibrary {
   /// Checks if the library support the given function.
   virtual bool supports(FuncSymbol func) const = 0;
 
+  /// Synthesize the netlist for the given value.
+  virtual bool synthesize(const Out &out, const std::vector<bool> &value, Netlist &net) = 0;
+
   /// Synthesize the netlist for the given function.
   virtual bool synthesize(FuncSymbol func, const Out &out, const In &in, Netlist &net) = 0;
 
@@ -58,6 +61,7 @@ public:
   }
 
   bool supports(FuncSymbol func) const override;
+  bool synthesize(const Out &out, const std::vector<bool> &value, Netlist &net) override;
   bool synthesize(FuncSymbol func, const Out &out, const In &in, Netlist &net) override;
 
 private:

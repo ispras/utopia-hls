@@ -19,6 +19,14 @@
 namespace eda {
 namespace rtl {
 
+static std::ostream& operator <<(std::ostream &out, const std::vector<bool> &value) {
+  for (bool bit: value) {
+    out << bit;
+  }
+
+  return out;
+}
+
 static std::ostream& operator <<(std::ostream &out, const VNode::List &vnodes) {
   bool separator = false;
   for (VNode *vnode: vnodes) {
@@ -33,6 +41,8 @@ std::ostream& operator <<(std::ostream &out, const VNode &vnode) {
   switch (vnode.kind()) {
   case VNode::SRC:
     return out << "S{" << vnode.var() << "}";
+  case VNode::VAL:
+    return out << "C{" << vnode.var() << " <= " << vnode.value()<< "}";
   case VNode::FUN:
     return out << "F{" << vnode.var() << " <= " << vnode.func() << "(" << vnode.inputs() << ")}";
   case VNode::MUX:

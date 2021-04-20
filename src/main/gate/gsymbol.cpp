@@ -21,6 +21,10 @@ namespace gate {
 
 std::ostream& operator <<(std::ostream &out, GateSymbol gate) {
   switch (gate) {
+  case GateSymbol::ZERO:
+    return out << "0";
+  case GateSymbol::ONE:
+    return out << "1";
   case GateSymbol::NOP:
     return out << "buf";
   case GateSymbol::NOT:

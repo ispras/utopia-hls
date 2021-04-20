@@ -26,6 +26,16 @@ bool FLibraryDefault::supports(FuncSymbol func) const {
   return true;
 }
 
+bool FLibraryDefault::synthesize(const Out &out, const std::vector<bool> &value, Netlist &net) {
+  assert(out.size() == value.size());
+
+  for (std::size_t i = 0; i < out.size(); i++) {
+    net.set_gate(out[i], (value[i] ? GateSymbol::ONE : GateSymbol::ZERO), {});
+  }
+
+  return true;
+}
+
 bool FLibraryDefault::synthesize(FuncSymbol func, const Out &out, const In &in, Netlist &net) {
   switch (func) {
   case FuncSymbol::NOP:

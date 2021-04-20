@@ -87,7 +87,7 @@ void Net::mux_wire_defines(VNode *phi, const VNode::List &defines) {
 
   // Connect the wire w/ the multiplexor: w <= mux{ g[i] -> w[i] }.
   Variable output = phi->var();
-  phi->replace_with(VNode::MUX, output, {}, FuncSymbol::NOP, inputs);
+  phi->replace_with(VNode::MUX, output, {}, FuncSymbol::NOP, inputs, {});
 
   _vnodes.push_back(phi);
 }
@@ -117,7 +117,7 @@ void Net::mux_reg_defines(VNode *phi, const VNode::List &defines) {
   }
 
   // Connect the register w/ the multiplexor(s) via the wire(s): r <= w.
-  phi->replace_with(VNode::REG, output, events, FuncSymbol::NOP, inputs);
+  phi->replace_with(VNode::REG, output, events, FuncSymbol::NOP, inputs, {});
   _vnodes.push_back(phi);
 }
 
@@ -166,7 +166,7 @@ VNode* Net::create_mux(const Variable &output, const VNode::List &defines) {
   // Multiplexor is not required.
   if (n == 1) {
     VNode *vnode = defines.front();
-    return new VNode(VNode::FUN, output, {}, FuncSymbol::NOP, { vnode->input(0) }); 
+    return new VNode(VNode::FUN, output, {}, FuncSymbol::NOP, { vnode->input(0) }, {}); 
   }
 
   // Compose the mux inputs { g[i] -> w[i] }.
@@ -182,7 +182,7 @@ VNode* Net::create_mux(const Variable &output, const VNode::List &defines) {
   }
 
   // Create a multiplexor: w <= mux{ g[i] -> w[i] }.
-  return new VNode(VNode::MUX, output, {}, FuncSymbol::NOP, inputs);
+  return new VNode(VNode::MUX, output, {}, FuncSymbol::NOP, inputs, {});
 }
 
 std::ostream& operator <<(std::ostream &out, const Net &net) {
