@@ -70,8 +70,8 @@ public:
   }
 
   /// Creates and adds an r-node (r = register).
-  VNode* add_reg(const Variable &var, const Event &event, VNode *input) {
-    return add_vnode(new VNode(VNode::REG, var, { event }, FuncSymbol::NOP, { input }, {}));
+  VNode* add_reg(const Variable &var, VNode *input) {
+    return add_vnode(new VNode(VNode::REG, var, {}, FuncSymbol::NOP, { input }, {}));
   }
 
   /// Creates and adds a combinational p-node.
