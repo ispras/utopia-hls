@@ -38,7 +38,6 @@ std::ostream& operator <<(std::ostream &out, FuncSymbol func) {
   case FuncSymbol::MUX:
     return out << "mux";
   }
-
   return out;
 }
 

@@ -38,15 +38,17 @@ struct FLibrary {
   typedef std::vector<unsigned> Arg;
   typedef Arg Out;
   typedef std::vector<Arg> In;
+  typedef std::vector<std::pair<Event::Kind, unsigned>> Control;
 
-  /// Checks if the library support the given function.
+  /// Checks if the library supports the given function.
   virtual bool supports(FuncSymbol func) const = 0;
 
   /// Synthesize the netlist for the given value.
   virtual bool synthesize(const Out &out, const std::vector<bool> &value, Netlist &net) = 0;
-
   /// Synthesize the netlist for the given function.
   virtual bool synthesize(FuncSymbol func, const Out &out, const In &in, Netlist &net) = 0;
+  /// Synthesize the netlist for the given register.
+  virtual bool synthesize(const Out &out, const In &in, const Control &control, Netlist &net) = 0;
 
   virtual ~FLibrary() {} 
 };
@@ -63,6 +65,7 @@ public:
   bool supports(FuncSymbol func) const override;
   bool synthesize(const Out &out, const std::vector<bool> &value, Netlist &net) override;
   bool synthesize(FuncSymbol func, const Out &out, const In &in, Netlist &net) override;
+  bool synthesize(const Out &out, const In &in, const Control &control, Netlist &net) override;
 
 private:
   FLibraryDefault() {}
@@ -72,12 +75,13 @@ private:
   bool synth_sub(const Out &out, const In &in, Netlist &net);
   bool synth_mux(const Out &out, const In &in, Netlist &net);
 
+  Signal invert_if_negative(const std::pair<Event::Kind, unsigned> &entry, Netlist &net);
+
   template<GateSymbol G> bool synth_unary_bitwise_op (const Out &out, const In &in, Netlist &net);
   template<GateSymbol G> bool synth_binary_bitwise_op(const Out &out, const In &in, Netlist &net);
 
   static std::unique_ptr<FLibrary> _instance;
 };
-
 
 template<GateSymbol G>
 bool FLibraryDefault::synth_unary_bitwise_op(const Out &out, const In &in, Netlist &net) {

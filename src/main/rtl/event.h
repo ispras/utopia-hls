@@ -96,6 +96,7 @@ private:
   const std::size_t _delay;
 };
 
+std::ostream& operator <<(std::ostream &out, const Event::Kind &kind);
 std::ostream& operator <<(std::ostream &out, const Event &event);
 
 }} // namespace eda::rtl

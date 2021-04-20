@@ -80,13 +80,13 @@ public:
 
 private:
   unsigned gate_id(const eda::rtl::VNode *vnode);
-  void allocate_gates(const eda::rtl::VNode *vnode);
+  void alloc_gates(const eda::rtl::VNode *vnode);
 
-  void handle_src(const eda::rtl::VNode *vnode, FLibrary &lib);
-  void handle_val(const eda::rtl::VNode *vnode, FLibrary &lib);
-  void handle_fun(const eda::rtl::VNode *vnode, FLibrary &lib);
-  void handle_mux(const eda::rtl::VNode *vnode, FLibrary &lib);
-  void handle_reg(const eda::rtl::VNode *vnode, FLibrary &lib);
+  void synth_src(const eda::rtl::VNode *vnode, FLibrary &lib);
+  void synth_val(const eda::rtl::VNode *vnode, FLibrary &lib);
+  void synth_fun(const eda::rtl::VNode *vnode, FLibrary &lib);
+  void synth_mux(const eda::rtl::VNode *vnode, FLibrary &lib);
+  void synth_reg(const eda::rtl::VNode *vnode, FLibrary &lib);
 
   std::vector<unsigned> out_of(const eda::rtl::VNode *vnode);
   std::vector<std::vector<unsigned>> in_of(const eda::rtl::VNode *vnode);

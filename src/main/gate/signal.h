@@ -18,6 +18,10 @@
 #include <iostream>
 #include <vector>
 
+#include "rtl/event.h"
+
+using namespace eda::rtl;
+
 namespace eda {
 namespace gate {
 
@@ -31,53 +35,42 @@ class Signal final {
 public:
   typedef std::vector<Signal> List;
 
-  enum Kind {
-    /// Positive edge: always_ff @(posedge <signal>) begin <action> end.
-    POSEDGE,
-    /// Negative edge: always_ff @(negedge <signal>) begin <action> end.
-    NEGEDGE,
-    /// Low level: always_latch begin if (~<signal>) <action> end.
-    LEVEL0,
-    /// High Level: always_latch begin if (<signal>) <action> end.
-    LEVEL1,
-    /// Continuous: always_comb begin <action> end.
-    ALWAYS
-  };
-
   static Signal posedge(const Gate *gate) {
-    return Signal(POSEDGE, gate);
+    return Signal(Event::POSEDGE, gate);
   }
 
   static Signal negedge(const Gate *gate) {
-    return Signal(NEGEDGE, gate);
+    return Signal(Event::NEGEDGE, gate);
   }
 
   static Signal level0(const Gate *gate) {
-    return Signal(LEVEL0, gate);
+    return Signal(Event::LEVEL0, gate);
   }
 
   static Signal level1(const Gate *gate) {
-    return Signal(LEVEL1, gate);
+    return Signal(Event::LEVEL1, gate);
   }
 
   static Signal always(const Gate *gate) {
-    return Signal(ALWAYS, gate);
+    return Signal(Event::ALWAYS, gate);
   }
 
-  Kind kind() const { return _kind; }
+  bool edge() const { return _kind == Event::POSEDGE || _kind == Event::NEGEDGE; }
+  bool level() const { return _kind == Event::LEVEL0 || _kind == Event::LEVEL1; }
+
+  Event::Kind kind() const { return _kind; }
   const Gate* gate() const { return _gate; }
 
 private:
-  Signal(Kind kind, const Gate *gate):
+  Signal(Event::Kind kind, const Gate *gate):
       _kind(kind), _gate(gate) {
     assert(gate != nullptr);
   }
 
-  Kind _kind;
+  Event::Kind _kind;
   const Gate *_gate;
 };
 
-std::ostream& operator <<(std::ostream &out, const Signal::Kind &kind);
 std::ostream& operator <<(std::ostream &out, const Signal &signal);
 
 }} // namespace eda::gate

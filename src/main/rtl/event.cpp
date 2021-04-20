@@ -20,23 +20,32 @@
 namespace eda {
 namespace rtl {
 
-std::ostream& operator <<(std::ostream &out, const Event &event) {
-  switch (event.kind()) {
+std::ostream& operator <<(std::ostream &out, const Event::Kind &kind) {
+  switch (kind) {
   case Event::POSEDGE:
-    return out << "posedge(" << event.node()->name() << ")";
+    return out << "posedge";
   case Event::NEGEDGE:
-    return out << "negedge(" << event.node()->name() << ")";
+    return out << "negedge";
   case Event::LEVEL0:
-    return out << "level0(" << event.node()->name() << ")";
+    return out << "level0";
   case Event::LEVEL1:
-    return out << "level1(" << event.node()->name() << ")";
+    return out << "level1";
   case Event::ALWAYS:
     return out << "*";
   case Event::DELAY:
+    return out << "#";
+  }
+  return out;
+}
+
+std::ostream& operator <<(std::ostream &out, const Event &event) {
+  if (event.kind() == Event::ALWAYS) {
+    return out << "*";
+  }
+  if (event.kind() == Event::DELAY) {
     return out << "#" << event.delay();
   }
-
-  return out;
+  return out << event.kind() << "(" << event.node()->name() << ")";
 }
 
 }} // namespace eda::rtl

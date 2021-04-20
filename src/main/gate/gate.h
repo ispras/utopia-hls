@@ -57,7 +57,7 @@ private:
 
   bool is_sequential() const {
     for (const auto &input: _inputs) {
-      if (input.kind() != Signal::ALWAYS) {
+      if (input.kind() != Event::ALWAYS) {
         return true;
       }
     }

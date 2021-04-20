@@ -60,6 +60,34 @@ bool FLibraryDefault::synthesize(FuncSymbol func, const Out &out, const In &in, 
   }
 }
 
+bool FLibraryDefault::synthesize(
+    const Out &out, const In &in, const Control &control, Netlist &net) {
+  assert(control.size() == 1 || control.size() == 2);
+  assert(control.size() == in.size());
+
+  Signal clock = invert_if_negative(control[0], net);
+  if (control.size() == 1) {
+    for (std::size_t i = 0; i < out.size(); i++) {
+      Signal d = net.always(in[0][i]); // stored data
+      net.set_gate(out[i], (clock.edge() ? GateSymbol::DFF : GateSymbol::LATCH), { d, clock });
+    }
+  } else {
+    Signal edged = invert_if_negative(control[1], net);
+    Signal reset = Signal::always(edged.gate());
+
+    for (std::size_t i = 0; i < out.size(); i++) {
+      Signal d = net.always(in[0][i]); // stored data
+      Signal v = net.always(in[1][i]); // reset value
+      Signal n = net.always(net.add_gate(GateSymbol::NOT, { v }));
+      Signal r = net.level1(net.add_gate(GateSymbol::AND, { n, reset }));
+      Signal s = net.level1(net.add_gate(GateSymbol::AND, { v, reset }));
+      net.set_gate(out[i], GateSymbol::DFFrs, { d, clock, r, s });
+    }
+  }
+
+  return true;
+}
+
 bool FLibraryDefault::synth_add(const Out &out, const In &in, Netlist &net) {
   // TODO:
   return synth_binary_bitwise_op<GateSymbol::AND>(out, in, net);
@@ -94,6 +122,27 @@ bool FLibraryDefault::synth_mux(const Out &out, const In &in, Netlist &net) {
   }
   
   return true;
+}
+
+Signal FLibraryDefault::invert_if_negative(
+    const std::pair<Event::Kind, unsigned> &entry, Netlist &net) {
+  switch (entry.first) {
+  case Event::POSEDGE:
+    // Leave the clock signal unchanged.
+    return net.posedge(entry.second);
+  case Event::NEGEDGE:
+    // Invert the clock signal.
+    return net.posedge(net.add_gate(GateSymbol::NOT, { net.always(entry.second) }));
+  case Event::LEVEL0:
+    // Invert the enable signal.
+    return net.level1(net.add_gate(GateSymbol::NOT, { net.always(entry.second) }));
+  case Event::LEVEL1:
+    // Leave the enable signal unchanged.
+    return net.level1(entry.second);
+  default:
+    assert(false);
+    return net.posedge(-1);
+  }
 }
 
 }} // namespace eda::gate

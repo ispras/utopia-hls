@@ -29,25 +29,25 @@ namespace gate {
 
 void Netlist::create(const Net &net, FLibrary &lib) {
   for (const auto vnode: net.vnodes()) {
-    allocate_gates(vnode);
+    alloc_gates(vnode);
   }
 
   for (const auto vnode: net.vnodes()) {
     switch (vnode->kind()) {
     case VNode::SRC:
-      handle_src(vnode, lib);
+      synth_src(vnode, lib);
       break;
     case VNode::VAL:
-      handle_val(vnode, lib);
+      synth_val(vnode, lib);
       break;
     case VNode::FUN:
-      handle_fun(vnode, lib);
+      synth_fun(vnode, lib);
       break;
     case VNode::MUX:
-      handle_mux(vnode, lib);
+      synth_mux(vnode, lib);
       break;
     case VNode::REG:
-      handle_reg(vnode, lib);
+      synth_reg(vnode, lib);
       break;
     }
   }
@@ -63,7 +63,7 @@ unsigned Netlist::gate_id(const VNode *vnode) {
   return _gates.size();
 }
 
-void Netlist::allocate_gates(const VNode *vnode) {
+void Netlist::alloc_gates(const VNode *vnode) {
   assert(vnode != nullptr);
 
   const unsigned base = gate_id(vnode);
@@ -97,50 +97,34 @@ std::vector<std::vector<unsigned>> Netlist::in_of(const VNode *vnode) {
   return in;
 }
 
-void Netlist::handle_src(const VNode *vnode, FLibrary &lib) {
+void Netlist::synth_src(const VNode *vnode, FLibrary &lib) {
   // Do nothing.
 }
 
-void Netlist::handle_val(const VNode *vnode, FLibrary &lib) {
+void Netlist::synth_val(const VNode *vnode, FLibrary &lib) {
   lib.synthesize(out_of(vnode), vnode->value(), *this);
 }
 
-void Netlist::handle_fun(const VNode *vnode, FLibrary &lib) {
+void Netlist::synth_fun(const VNode *vnode, FLibrary &lib) {
   assert(lib.supports(vnode->func()));
   lib.synthesize(vnode->func(), out_of(vnode), in_of(vnode), *this);
 }
 
-void Netlist::handle_mux(const VNode *vnode, FLibrary &lib) {
+void Netlist::synth_mux(const VNode *vnode, FLibrary &lib) {
   assert(lib.supports(FuncSymbol::MUX));
   lib.synthesize(FuncSymbol::MUX, out_of(vnode), in_of(vnode), *this);
 }
 
-void Netlist::handle_reg(const VNode *vnode, FLibrary &lib) {
-  const Event::List &events = vnode->events();
-  assert(!events.empty());
+void Netlist::synth_reg(const VNode *vnode, FLibrary &lib) {
+  // Level (latch), edge (flip-flop), or edge and level (flip-flop /w set/reset).
+  assert(vnode->esize() == 1 || vnode->esize() == 2);
 
-  if (!events.front().edge()) {
-    // TODO: Handle latches and asynchronous resets.
+  std::vector<std::pair<Event::Kind, unsigned>> control;
+  for (const auto &event: vnode->events()) {
+    control.push_back({ event.kind(), gate_id(event.node()) });
   }
 
-  const VNode *clk = events.front().node();
-  const unsigned clk_id = gate_id(clk);
-
-  const unsigned base = gate_id(vnode);
-  const unsigned size = vnode->var().type().width();
-
-  // TODO: Synthesize the proper trigger.
-  for (unsigned i = 0; i < size; i++) {
-    Gate *gate = _gates[base + i];
-
-    const VNode *data = vnode->input(0);
-    const unsigned data_base = gate_id(data);
-
-    // TODO: proper edge.
-    gate->~Gate();
-    new (gate) Gate(base + i, GateSymbol::DFF,
-      { Signal::always(_gates[data_base + i]), Signal::posedge(_gates[clk_id]) } );
-  }
+  lib.synthesize(out_of(vnode), in_of(vnode), control, *this);
 }
 
 std::ostream& operator <<(std::ostream &out, const Netlist &netlist) {
