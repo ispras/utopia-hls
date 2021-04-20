@@ -57,9 +57,6 @@ private:
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class Variable final {
-  // Debug print.
-  friend std::ostream& operator <<(std::ostream &out, const Variable &variable);
-
 public:
   enum Kind {
     WIRE,

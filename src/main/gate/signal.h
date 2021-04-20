@@ -16,6 +16,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <vector>
 
 namespace eda {
 namespace gate {
@@ -24,13 +25,12 @@ class Gate;
 
 /**
  * \brief Represents a triggering signal.
- * \authof <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
+ * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class Signal final {
-  // Debug print.
-  friend std::ostream& operator <<(std::ostream &out, const Signal &signal);
-
 public:
+  typedef std::vector<Signal> List;
+
   enum Kind {
     /// Positive edge: always_ff @(posedge <signal>) begin <action> end.
     POSEDGE,

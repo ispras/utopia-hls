@@ -29,78 +29,38 @@ bool FLibraryDefault::supports(FuncSymbol func) const {
 bool FLibraryDefault::synthesize(FuncSymbol func, const Out &out, const In &in, Netlist &net) {
   switch (func) {
   case FuncSymbol::NOP:
-    return synthesize_nop(out, in, net);
+    return synth_unary_bitwise_op<GateSymbol::NOP>(out, in, net);
   case FuncSymbol::NOT:
-    return synthesize_not(out, in, net);
+    return synth_unary_bitwise_op<GateSymbol::NOT>(out, in, net);
   case FuncSymbol::AND:
-    return synthesize_and(out, in, net);
+    return synth_binary_bitwise_op<GateSymbol::AND>(out, in, net);
+  case FuncSymbol::OR:
+    return synth_binary_bitwise_op<GateSymbol::OR>(out, in, net);
+  case FuncSymbol::XOR:
+    return synth_binary_bitwise_op<GateSymbol::XOR>(out, in, net);
   case FuncSymbol::ADD:
-    return synthesize_add(out, in, net);
+    return synth_add(out, in, net);
   case FuncSymbol::SUB:
-    return synthesize_sub(out, in, net);
+    return synth_sub(out, in, net);
   case FuncSymbol::MUX:
-    return synthesize_mux(out, in, net);
+    return synth_mux(out, in, net);
   default:
     assert(false);
     return false;
   }
 }
 
-bool FLibraryDefault::synthesize_nop(const Out &out, const In &in, Netlist &net) {
-  assert(in.size() == 1);
-
-  const Arg &x = in[0];
-  assert(out.size() == x.size());
-
-  for (std::size_t i = 0; i < out.size(); i++) {
-    Signal xi = net.always(x[i]);
-    net.set_gate(out[i], GateSymbol::NOP, { xi });
-  }
-
-  return true;
-}
-
-bool FLibraryDefault::synthesize_not(const Out &out, const In &in, Netlist &net) {
-  assert(in.size() == 1);
-
-  const Arg &x = in[0];
-  assert(out.size() == x.size());
-
-  for (std::size_t i = 0; i < out.size(); i++) {
-    Signal xi = net.always(x[i]);
-    net.set_gate(out[i], GateSymbol::NOT, { xi });
-  }
-
-  return true;
-}
-
-bool FLibraryDefault::synthesize_and(const Out &out, const In &in, Netlist &net) {
-  assert(in.size() == 2);
-
-  const Arg &x = in[0];
-  const Arg &y = in[1];
-  assert(x.size() == y.size() && out.size() == x.size());
-
-  for (std::size_t i = 0; i < out.size(); i++) {
-    Signal xi = net.always(x[i]);
-    Signal yi = net.always(y[i]);
-    net.set_gate(out[i], GateSymbol::AND, { xi, yi });
-  }
-
-  return true;
-}
-
-bool FLibraryDefault::synthesize_add(const Out &out, const In &in, Netlist &net) {
+bool FLibraryDefault::synth_add(const Out &out, const In &in, Netlist &net) {
   // TODO:
-  return synthesize_and(out, in, net);
+  return synth_binary_bitwise_op<GateSymbol::AND>(out, in, net);
 }
 
-bool FLibraryDefault::synthesize_sub(const Out &out, const In &in, Netlist &net) {
+bool FLibraryDefault::synth_sub(const Out &out, const In &in, Netlist &net) {
   // TODO:
-  return synthesize_and(out, in, net);
+  return synth_binary_bitwise_op<GateSymbol::OR>(out, in, net);
 }
 
-bool FLibraryDefault::synthesize_mux(const Out &out, const In &in, Netlist &net) {
+bool FLibraryDefault::synth_mux(const Out &out, const In &in, Netlist &net) {
   assert(in.size() >= 4 && (in.size() & 1) == 0);
   const std::size_t n = in.size() / 2;
 

@@ -26,15 +26,15 @@ std::ostream& operator <<(std::ostream &out, const PNode &pnode) {
   if (pnode.gsize() > 0) {  
     out << "  if (";
     bool separator = false;
-    for (auto i = pnode.gbegin(); i != pnode.gend(); i++) {
-      out << (separator ? " && " : "") << **i;
+    for (const auto vnode: pnode.guard()) {
+      out << (separator ? " && " : "") << *vnode;
       separator = true;
     }
     out << ") begin" << std::endl;
   }
 
-  for (auto i = pnode.abegin(); i != pnode.aend(); i++) {
-    out << "    " << **i << std::endl;
+  for (const auto vnode: pnode.action()) {
+    out << "    " << *vnode << std::endl;
   }
 
   if (pnode.gsize() > 0) {

@@ -28,23 +28,23 @@ namespace eda {
 namespace gate {
 
 void Netlist::create(const Net &net, FLibrary &lib) {
-  for (auto i = net.vbegin(); i != net.vend(); i++) {
-    allocate_gates(*i);
+  for (const auto vnode: net.vnodes()) {
+    allocate_gates(vnode);
   }
 
-  for (auto i = net.vbegin(); i != net.vend(); i++) {
-    switch ((*i)->kind()) {
+  for (const auto vnode: net.vnodes()) {
+    switch (vnode->kind()) {
     case VNode::SRC:
-      handle_src(*i, lib);
+      handle_src(vnode, lib);
       break;
     case VNode::FUN:
-      handle_fun(*i, lib);
+      handle_fun(vnode, lib);
       break;
     case VNode::MUX:
-      handle_mux(*i, lib);
+      handle_mux(vnode, lib);
       break;
     case VNode::REG:
-      handle_reg(*i, lib);
+      handle_reg(vnode, lib);
       break;
     }
   }
@@ -109,7 +109,7 @@ void Netlist::handle_mux(const VNode *vnode, FLibrary &lib) {
 }
 
 void Netlist::handle_reg(const VNode *vnode, FLibrary &lib) {
-  const std::vector<Event> &events = vnode->events();
+  const Event::List &events = vnode->events();
   assert(!events.empty());
 
   if (!events.front().edge()) {
@@ -137,8 +137,8 @@ void Netlist::handle_reg(const VNode *vnode, FLibrary &lib) {
 }
 
 std::ostream& operator <<(std::ostream &out, const Netlist &netlist) {
-  for (auto i = netlist.begin(); i != netlist.end(); i++) {
-    out << **i << std::endl;
+  for (const auto gate: netlist.gates()) {
+    out << *gate << std::endl;
   }
 
   return out;

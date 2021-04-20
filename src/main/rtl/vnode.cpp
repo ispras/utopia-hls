@@ -19,7 +19,7 @@
 namespace eda {
 namespace rtl {
 
-static std::ostream& operator <<(std::ostream &out, const std::vector<VNode *> &vnodes) {
+static std::ostream& operator <<(std::ostream &out, const VNode::List &vnodes) {
   bool separator = false;
   for (VNode *vnode: vnodes) {
     out << (separator ? ", " : "") << vnode->name();
@@ -34,14 +34,14 @@ std::ostream& operator <<(std::ostream &out, const VNode &vnode) {
   case VNode::SRC:
     return out << "S{" << vnode.var() << "}";
   case VNode::FUN:
-    return out << "F{" << vnode.var() << " <= " << vnode.func() << "(" << vnode._inputs << ")}";
+    return out << "F{" << vnode.var() << " <= " << vnode.func() << "(" << vnode.inputs() << ")}";
   case VNode::MUX:
-    return out << "M{" << vnode.var() << " <= mux(" << vnode._inputs << ")}";
+    return out << "M{" << vnode.var() << " <= mux(" << vnode.inputs() << ")}";
   case VNode::REG:
     out << "R{";
     bool separator = false;
-    for (std::size_t i = 0; i < vnode.events().size(); i++) {
-      out << (separator ? ", " : "") << vnode.events()[i] << ": ";
+    for (std::size_t i = 0; i < vnode.esize(); i++) {
+      out << (separator ? ", " : "") << vnode.event(i) << ": ";
       out << vnode.var() << " <= " << vnode.input(i)->name();
       separator = true;
     }

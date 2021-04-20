@@ -39,22 +39,15 @@ class FLibrary;
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class Netlist final {
-  // Debug print.
-  friend std::ostream& operator <<(std::ostream &out, const Netlist &netlist);
-
 public:
-  typedef typename std::vector<Gate *>::const_iterator const_iterator;
-
   Netlist() {
     _gates.reserve(1024*1024);
     _gates_id.reserve(1024*1024);
   } 
 
   std::size_t size() const { return _gates.size(); }
-  const_iterator begin() const { return _gates.cbegin(); }
-  const_iterator end() const { return _gates.cend(); }
-
-  Gate* gate(unsigned id) const { return _gates[id]; }
+  const Gate::List& gates() const { return _gates; }
+  Gate* gate(std::size_t i) const { return _gates[i]; }
 
   Signal posedge(unsigned id) const { return Signal::posedge(gate(id)); }
   Signal negedge(unsigned id) const { return Signal::negedge(gate(id)); }
@@ -71,12 +64,12 @@ public:
   }
 
   /// Adds a new gate and returns its identifier.
-  unsigned add_gate(GateSymbol kind, const std::vector<Signal> &inputs) {
+  unsigned add_gate(GateSymbol kind, const Signal::List &inputs) {
     return add_gate(new Gate(next_gate_id(), kind, inputs));
   }
 
   // Modifies the existing gate.
-  void set_gate(unsigned id, GateSymbol kind, const std::vector<Signal> &inputs) {
+  void set_gate(unsigned id, GateSymbol kind, const Signal::List &inputs) {
     Gate *g = gate(id);
     g->set_kind(kind);
     g->set_inputs(inputs);
@@ -102,7 +95,7 @@ private:
     return gate->id();
   }
 
-  std::vector<Gate *> _gates;
+  Gate::List _gates;
 
   // Maps vnodes to the identifiers of their lower bits' gates.
   std::unordered_map<std::string, unsigned> _gates_id;

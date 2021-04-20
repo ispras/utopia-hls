@@ -28,18 +28,16 @@ enum FuncSymbol {
   NOP,
   /// Negation: OUT = ~X.
   NOT,
+  /// Conjunction: OUT = X & Y.
+  AND,
   /// Disjunction: OUT = X | Y.
   OR,
-  /// Conjunction: OUT = X & Y.
-  AND, 
+  /// Exclusive OR: OUT = X ^ Y.
+  XOR,
   /// Addition: OUT = X + Y.
   ADD,
   /// Subtraction: OUT = X - Y.
   SUB,
-  /// Multiplication: OUT = X * Y.
-  MUL,
-  /// Division: OUT = X / Y.
-  DIV,
   // TODO: Add more functions.
   /// Multiplexor: OUT = MUX(C[1], ..., C[n]; X[1], ..., X[n]).
   MUX

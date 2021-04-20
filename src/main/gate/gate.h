@@ -32,13 +32,15 @@ class Netlist;
 class Gate final {
   // Creation.
   friend class Netlist;
-  // Debug print.
-  friend std::ostream& operator <<(std::ostream &out, const Gate &gate);
 
 public:
+  typedef std::vector<Gate *> List;
+
   const unsigned id() const { return _id; }
   GateSymbol kind() const { return _kind; }
   std::size_t arity() const { return _inputs.size(); }
+
+  const Signal::List& inputs() const { return _inputs; }
   const Signal& input(size_t i) const { return _inputs[i]; }
 
   bool is_source() const { return _inputs.empty(); }
@@ -49,7 +51,7 @@ private:
   Gate(unsigned id):
     _id(id), _kind(GateSymbol::NOP), _inputs({}) {}
 
-  Gate(unsigned id, GateSymbol gate, const std::vector<Signal> inputs):
+  Gate(unsigned id, GateSymbol gate, const Signal::List inputs):
     _id(id), _kind(gate), _inputs(inputs) {}
 
   bool is_sequential() const {
@@ -63,14 +65,14 @@ private:
 
   void set_kind(GateSymbol kind) { _kind = kind; }
 
-  void set_inputs(const std::vector<Signal> &inputs) {
+  void set_inputs(const Signal::List &inputs) {
     _inputs.assign(inputs.begin(), inputs.end());
   }
 
   const unsigned _id;
 
   GateSymbol _kind;
-  std::vector<Signal> _inputs;
+  Signal::List _inputs;
 };
 
 std::ostream& operator <<(std::ostream &out, const Gate &gate);

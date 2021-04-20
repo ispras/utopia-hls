@@ -30,24 +30,22 @@ namespace rtl {
 class PNode final {
   // Creation.
   friend class Net;
-  // Debug print.
-  friend std::ostream& operator <<(std::ostream &out, const PNode &pnode);
 
 public:
-  typedef typename std::vector<VNode *>::const_iterator const_viterator;
+  typedef std::vector<PNode *> List;
 
   const Event& event() const { return _event; }
 
   std::size_t gsize() const { return _guard.size(); }
-  const_viterator gbegin() const { return _guard.cbegin(); }
-  const_viterator gend() const { return _guard.cend(); }
+  const VNode::List& guard() const { return _guard; }
+  const VNode* guard(std::size_t i) const { return _guard[i]; }
 
   std::size_t asize() const { return _action.size(); }
-  const_viterator abegin() const { return _action.cbegin(); }
-  const_viterator aend() const { return _action.cend(); }
+  const VNode::List& action() const { return _action; }
+  const VNode* action(std::size_t i) const { return _action[i]; }
 
 private:
-  PNode(const Event &event, const std::vector<VNode *> &guard, const std::vector<VNode *> &action):
+  PNode(const Event &event, const VNode::List &guard, const VNode::List &action):
       _event(event), _guard(guard), _action(action) {
     for (auto *vnode: guard) {
       vnode->set_pnode(this);
@@ -60,9 +58,9 @@ private:
   // The execution trigger (posedge, always, etc.).
   const Event _event;
   // The last v-node is the guard bit.
-  std::vector<VNode *> _guard;
+  VNode::List _guard;
   // The non-blocking assignments.
-  std::vector<VNode *> _action;
+  VNode::List _action;
 };
 
 std::ostream& operator <<(std::ostream &out, const PNode &pnode);

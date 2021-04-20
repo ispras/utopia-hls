@@ -15,6 +15,7 @@
 #pragma once
 
 #include <iostream>
+#include <vector>
 
 namespace eda {
 namespace rtl {
@@ -23,13 +24,12 @@ class VNode;
 
 /**
  * \brief Represents a triggering event.
- * \authof <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
+ * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class Event final {
-  // Debug print.
-  friend std::ostream& operator <<(std::ostream &out, const Event &event);
-
 public:
+  typedef std::vector<Event> List;
+
   enum Kind {
     /// Positive edge: always_ff @(posedge <node>) begin <action> end.
     POSEDGE,

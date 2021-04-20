@@ -40,10 +40,10 @@ class VNode final {
   friend class Net;
   // Setting the parent p-node.
   friend class PNode;
-  // Debug print.
-  friend std::ostream& operator <<(std::ostream &out, const VNode &vnode);
 
 public:
+  typedef std::vector<VNode *> List;
+
   enum Kind {
     /// Source node (s-node): input wire x.
     SRC,
@@ -55,20 +55,29 @@ public:
     REG
   };
 
-  const PNode* pnode() const { return _pnode; }
-
-  const std::string& name() const { return _var.name(); }
   Kind kind() const { return _kind; }
-  const Variable &var() const { return _var; }
-  const std::vector<Event>& events() const { return _events; }
+
+  const Variable& var() const { return _var; }
+  const std::string& name() const { return _var.name(); }
+  const Type& type() const { return _var.type(); }
+
+  const std::size_t esize() const { return _events.size(); }
+  const Event::List& events() const { return _events; }
+  const Event& event(std::size_t i) const { return _events[i]; }
+
   FuncSymbol func() const { return _func; }
   std::size_t arity() const { return _inputs.size(); }
-  const VNode* input(size_t i) const { return _inputs[i]; }
+
+  const List& inputs() const { return _inputs; }
+  const VNode* input(std::size_t i) const { return _inputs[i]; }
+  VNode* input(std::size_t i) { return _inputs[i]; }
+
+  const PNode* pnode() const { return _pnode; }
 
 private:
-  VNode(Kind kind, const Variable &var, const std::vector<Event> &events,
-      FuncSymbol func, const std::vector<VNode *> &inputs):
-    _pnode(nullptr), _kind(kind), _var(var), _events(events), _func(func), _inputs(inputs) {
+  VNode(Kind kind, const Variable &var, const Event::List &events,
+      FuncSymbol func, const List &inputs):
+    _kind(kind), _var(var), _events(events), _func(func), _inputs(inputs), _pnode(nullptr) {
     assert(std::find(inputs.begin(), inputs.end(), nullptr) == inputs.end());
   }
 
@@ -77,8 +86,8 @@ private:
     return new VNode(_kind, var, _events, _func, _inputs);
   }
 
-  void replace_with(Kind kind, const Variable &var, const std::vector<Event> &events,
-      FuncSymbol func, const std::vector<VNode *> &inputs) {
+  void replace_with(Kind kind, const Variable &var, const Event::List &events,
+      FuncSymbol func, const List &inputs) {
     this->~VNode();
     new (this) VNode(kind, var, events, func, inputs);
   }
@@ -88,14 +97,14 @@ private:
     _pnode = pnode;
   }
 
-  // Parent p-node (set on p-node creation).
-  const PNode *_pnode;
-
   const Kind _kind;
   const Variable _var;
-  const std::vector<Event> _events;
+  const Event::List _events;
   const FuncSymbol _func;
-  const std::vector<VNode *> _inputs;
+  const List _inputs;
+
+  // Parent p-node (set on p-node creation).
+  const PNode *_pnode;
 };
 
 std::ostream& operator <<(std::ostream &out, const VNode &vnode);

@@ -14,9 +14,13 @@
 
 #pragma once
 
+#include <cassert>
 #include <memory>
 #include <vector>
 
+#include "gate/gsymbol.h"
+#include "gate/netlist.h"
+#include "gate/signal.h"
 #include "rtl/fsymbol.h"
 
 using namespace eda::rtl;
@@ -60,15 +64,48 @@ private:
   FLibraryDefault() {}
   ~FLibraryDefault() override {}
 
-  bool synthesize_nop(const Out &out, const In &in, Netlist &net);
-  bool synthesize_not(const Out &out, const In &in, Netlist &net);
-  bool synthesize_and(const Out &out, const In &in, Netlist &net);
-  bool synthesize_add(const Out &out, const In &in, Netlist &net);
-  bool synthesize_sub(const Out &out, const In &in, Netlist &net);
-  bool synthesize_mux(const Out &out, const In &in, Netlist &net);
+  bool synth_add(const Out &out, const In &in, Netlist &net);
+  bool synth_sub(const Out &out, const In &in, Netlist &net);
+  bool synth_mux(const Out &out, const In &in, Netlist &net);
+
+  template<GateSymbol G> bool synth_unary_bitwise_op (const Out &out, const In &in, Netlist &net);
+  template<GateSymbol G> bool synth_binary_bitwise_op(const Out &out, const In &in, Netlist &net);
 
   static std::unique_ptr<FLibrary> _instance;
 };
+
+
+template<GateSymbol G>
+bool FLibraryDefault::synth_unary_bitwise_op(const Out &out, const In &in, Netlist &net) {
+  assert(in.size() == 1);
+
+  const Arg &x = in[0];
+  assert(out.size() == x.size());
+
+  for (std::size_t i = 0; i < out.size(); i++) {
+    Signal xi = net.always(x[i]);
+    net.set_gate(out[i], G, { xi });
+  }
+
+  return true;
+}
+
+template<GateSymbol G>
+bool FLibraryDefault::synth_binary_bitwise_op(const Out &out, const In &in, Netlist &net) {
+  assert(in.size() == 2);
+
+  const Arg &x = in[0];
+  const Arg &y = in[1];
+  assert(x.size() == y.size() && out.size() == x.size());
+
+  for (std::size_t i = 0; i < out.size(); i++) {
+    Signal xi = net.always(x[i]);
+    Signal yi = net.always(y[i]);
+    net.set_gate(out[i], G, { xi, yi });
+  }
+
+  return true;
+}
 
 }} // namespace eda::gate
 
