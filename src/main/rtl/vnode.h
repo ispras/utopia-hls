@@ -25,8 +25,7 @@
 #include "rtl/fsymbol.h"
 #include "rtl/variable.h"
 
-namespace eda {
-namespace rtl {
+namespace eda::rtl {
 
 class Net;
 class PNode;
@@ -115,5 +114,4 @@ private:
 
 std::ostream& operator <<(std::ostream &out, const VNode &vnode);
 
-}} // namespace eda::rtl
-
+} // namespace eda::rtl

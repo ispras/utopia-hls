@@ -16,8 +16,7 @@
 
 #include "gate/gsymbol.h"
 
-namespace eda {
-namespace gate {
+namespace eda::gate {
 
 std::ostream& operator <<(std::ostream &out, GateSymbol gate) {
   switch (gate) {
@@ -52,5 +51,4 @@ std::ostream& operator <<(std::ostream &out, GateSymbol gate) {
   return out;
 }
 
-}} // namespace eda::gate
-
+} // namespace eda::gate

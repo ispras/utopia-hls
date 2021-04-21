@@ -17,8 +17,7 @@
 #include "gate/flibrary.h"
 #include "gate/netlist.h"
 
-namespace eda {
-namespace gate {
+namespace eda::gate {
 
 std::unique_ptr<FLibrary> FLibraryDefault::_instance;
 
@@ -26,41 +25,46 @@ bool FLibraryDefault::supports(FuncSymbol func) const {
   return true;
 }
 
-bool FLibraryDefault::synthesize(const Out &out, const std::vector<bool> &value, Netlist &net) {
+void FLibraryDefault::synthesize(const Out &out, const std::vector<bool> &value, Netlist &net) {
   assert(out.size() == value.size());
 
   for (std::size_t i = 0; i < out.size(); i++) {
     net.set_gate(out[i], (value[i] ? GateSymbol::ONE : GateSymbol::ZERO), {});
   }
-
-  return true;
 }
 
-bool FLibraryDefault::synthesize(FuncSymbol func, const Out &out, const In &in, Netlist &net) {
+void FLibraryDefault::synthesize(FuncSymbol func, const Out &out, const In &in, Netlist &net) {
   switch (func) {
   case FuncSymbol::NOP:
-    return synth_unary_bitwise_op<GateSymbol::NOP>(out, in, net);
+    synth_unary_bitwise_op<GateSymbol::NOP>(out, in, net);
+    break;
   case FuncSymbol::NOT:
-    return synth_unary_bitwise_op<GateSymbol::NOT>(out, in, net);
+    synth_unary_bitwise_op<GateSymbol::NOT>(out, in, net);
+    break;
   case FuncSymbol::AND:
-    return synth_binary_bitwise_op<GateSymbol::AND>(out, in, net);
+    synth_binary_bitwise_op<GateSymbol::AND>(out, in, net);
+    break;
   case FuncSymbol::OR:
-    return synth_binary_bitwise_op<GateSymbol::OR>(out, in, net);
+    synth_binary_bitwise_op<GateSymbol::OR>(out, in, net);
+    break;
   case FuncSymbol::XOR:
-    return synth_binary_bitwise_op<GateSymbol::XOR>(out, in, net);
+    synth_binary_bitwise_op<GateSymbol::XOR>(out, in, net);
+    break;
   case FuncSymbol::ADD:
-    return synth_add(out, in, net);
+    synth_add(out, in, net);
+    break;
   case FuncSymbol::SUB:
-    return synth_sub(out, in, net);
+    synth_sub(out, in, net);
+    break;
   case FuncSymbol::MUX:
-    return synth_mux(out, in, net);
+    synth_mux(out, in, net);
+    break;
   default:
     assert(false);
-    return false;
   }
 }
 
-bool FLibraryDefault::synthesize(
+void FLibraryDefault::synthesize(
     const Out &out, const In &in, const Control &control, Netlist &net) {
   assert(control.size() == 1 || control.size() == 2);
   assert(control.size() == in.size());
@@ -84,21 +88,62 @@ bool FLibraryDefault::synthesize(
       net.set_gate(out[i], GateSymbol::DFFrs, { d, clock, r, s });
     }
   }
-
-  return true;
 }
 
-bool FLibraryDefault::synth_add(const Out &out, const In &in, Netlist &net) {
-  // TODO:
-  return synth_binary_bitwise_op<GateSymbol::AND>(out, in, net);
+void FLibraryDefault::synth_add(const Out &out, const In &in, Netlist &net) {
+  synth_adder(out, in, false, net);
 }
 
-bool FLibraryDefault::synth_sub(const Out &out, const In &in, Netlist &net) {
-  // TODO:
-  return synth_binary_bitwise_op<GateSymbol::OR>(out, in, net);
+void FLibraryDefault::synth_sub(const Out &out, const In &in, Netlist &net) {
+  // The two's complement code: (x - y) == (x + ~y + 1).
+  const Arg &x = in[0];
+  const Arg &y = in[1];
+
+  Out temp(y.size());
+  for (std::size_t i = 0; i < y.size(); i++) {
+    temp[i] = net.add_gate();
+  }
+
+  synth_unary_bitwise_op<GateSymbol::NOT>(temp, { y }, net);
+  synth_adder(out, { x, temp }, true, net);
 }
 
-bool FLibraryDefault::synth_mux(const Out &out, const In &in, Netlist &net) {
+void FLibraryDefault::synth_adder(const Out &out, const In &in, bool plus_one, Netlist &net) {
+  assert(in.size() == 2);
+
+  const Arg &x = in[0];
+  const Arg &y = in[1];
+  assert(x.size() == y.size() && out.size() == x.size());
+
+  unsigned c_in = -1;
+  unsigned c_out = net.add_gate(plus_one ? GateSymbol::ONE : GateSymbol::ZERO, {});
+
+  for (std::size_t i = 0; i < out.size(); i++) {
+    c_in = c_out;
+    c_out = (i != out.size() - 1 ? net.add_gate() : -1);
+    synth_adder(out[i], c_out, x[i], y[i], c_in, net);
+  }
+}
+
+void FLibraryDefault::synth_adder(unsigned z, unsigned c_out,
+    unsigned x, unsigned y, unsigned c_in, Netlist &net) {
+  Signal x_wire = net.always(x);
+  Signal y_wire = net.always(y);
+  Signal c_wire = net.always(c_in);
+
+  // z = (x + y) + c_in (mod 2).
+  Signal x_plus_y = net.always(net.add_gate(GateSymbol::XOR, { x_wire, y_wire }));
+  net.set_gate(z, GateSymbol::XOR, { x_plus_y, c_wire });
+
+  if (c_out != -1u) {
+    // c_out = (x & y) | (x + y) & c_in.
+    Signal x_and_y = net.always(net.add_gate(GateSymbol::AND, { x_wire, y_wire }));
+    Signal x_plus_y_and_c_in = net.always(net.add_gate(GateSymbol::AND, { x_plus_y, c_wire }));
+    net.set_gate(c_out, GateSymbol::OR, { x_and_y, x_plus_y_and_c_in });
+  }
+}
+
+void FLibraryDefault::synth_mux(const Out &out, const In &in, Netlist &net) {
   assert(in.size() >= 4 && (in.size() & 1) == 0);
   const std::size_t n = in.size() / 2;
 
@@ -120,8 +165,6 @@ bool FLibraryDefault::synth_mux(const Out &out, const In &in, Netlist &net) {
 
     net.set_gate(out[i], GateSymbol::OR, temp);
   }
-  
-  return true;
 }
 
 Signal FLibraryDefault::invert_if_negative(
@@ -145,5 +188,4 @@ Signal FLibraryDefault::invert_if_negative(
   }
 }
 
-}} // namespace eda::gate
-
+} // namespace eda::gate

@@ -23,8 +23,7 @@
 #include "rtl/pnode.h"
 #include "rtl/vnode.h"
 
-namespace eda {
-namespace rtl {
+namespace eda::rtl {
 
 /**
  * \brief An intermediate representation combining p- and v-nets.
@@ -121,5 +120,4 @@ private:
 
 std::ostream& operator <<(std::ostream &out, const Net &net);
 
-}} // namespace eda::rtl
-
+} // namespace eda::rtl

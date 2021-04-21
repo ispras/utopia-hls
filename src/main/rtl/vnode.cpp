@@ -16,8 +16,7 @@
 
 #include "rtl/vnode.h"
 
-namespace eda {
-namespace rtl {
+namespace eda::rtl {
 
 static std::ostream& operator <<(std::ostream &out, const std::vector<bool> &value) {
   for (bool bit: value) {
@@ -61,5 +60,4 @@ std::ostream& operator <<(std::ostream &out, const VNode &vnode) {
   return out;
 }
 
-}} // namespace eda::rtl
-
+} // namespace eda::rtl

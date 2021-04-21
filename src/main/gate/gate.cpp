@@ -16,8 +16,7 @@
 
 #include "gate/gate.h"
 
-namespace eda {
-namespace gate {
+namespace eda::gate {
 
 static std::ostream& operator <<(std::ostream &out, const Signal::List &signals) {
   bool separator = false;
@@ -38,5 +37,4 @@ std::ostream& operator <<(std::ostream &out, const Gate &gate) {
   }
 }
 
-}} // namespace eda::gate
-
+} // namespace eda::gate

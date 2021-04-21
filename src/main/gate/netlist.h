@@ -21,16 +21,12 @@
 
 #include "gate/gate.h"
 
-namespace eda {
-namespace rtl {
-
+namespace eda::rtl {
 class Net;
 class VNode;
+} // namespace eda::rtl
 
-}} // namespace eda::rtl
-
-namespace eda {
-namespace gate {
+namespace eda::gate {
 
 class FLibrary;
 
@@ -59,7 +55,7 @@ public:
   unsigned next_gate_id() const { return _gates.size(); }
 
   /// Adds a new source and returns its identifier.
-  unsigned add_src() {
+  unsigned add_gate() {
     return add_gate(new Gate(next_gate_id()));
   }
 
@@ -104,5 +100,4 @@ private:
 
 std::ostream& operator <<(std::ostream &out, const Netlist &netlist);
 
-}} // namespace eda::gate
-
+} // namespace eda::gate

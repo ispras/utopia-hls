@@ -24,8 +24,7 @@
 using namespace eda::rtl;
 using namespace eda::utils;
 
-namespace eda {
-namespace gate {
+namespace eda::gate {
 
 void Netlist::create(const Net &net, FLibrary &lib) {
   for (const auto vnode: net.vnodes()) {
@@ -135,5 +134,4 @@ std::ostream& operator <<(std::ostream &out, const Netlist &netlist) {
   return out;
 }
  
-}} // namespace eda::gate
-
+} // namespace eda::gate

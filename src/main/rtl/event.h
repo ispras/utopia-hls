@@ -17,8 +17,7 @@
 #include <iostream>
 #include <vector>
 
-namespace eda {
-namespace rtl {
+namespace eda::rtl {
 
 class VNode;
 
@@ -99,5 +98,4 @@ private:
 std::ostream& operator <<(std::ostream &out, const Event::Kind &kind);
 std::ostream& operator <<(std::ostream &out, const Event &event);
 
-}} // namespace eda::rtl
-
+} // namespace eda::rtl

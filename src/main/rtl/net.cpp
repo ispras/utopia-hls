@@ -20,8 +20,7 @@
 
 using namespace eda::utils;
 
-namespace eda {
-namespace rtl {
+namespace eda::rtl {
  
 void Net::create() {
   assert(!_created);
@@ -197,5 +196,4 @@ std::ostream& operator <<(std::ostream &out, const Net &net) {
   return out;
 }
  
-}} // namespace eda::rtl
-
+} // namespace eda::rtl

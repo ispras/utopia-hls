@@ -17,12 +17,10 @@
 #include "gate/gate.h"
 #include "gate/signal.h"
 
-namespace eda {
-namespace gate {
+namespace eda::gate {
 
 std::ostream& operator <<(std::ostream &out, const Signal &signal) {
   return out << signal.kind() << "(" << signal.gate()->id() << ")";
 }
 
-}} // namespace eda::gate
-
+} // namespace eda::gate

@@ -16,8 +16,7 @@
 
 #include "rtl/fsymbol.h"
 
-namespace eda {
-namespace rtl {
+namespace eda::rtl {
 
 std::ostream& operator <<(std::ostream &out, FuncSymbol func) {
   switch (func) {
@@ -41,5 +40,4 @@ std::ostream& operator <<(std::ostream &out, FuncSymbol func) {
   return out;
 }
 
-}} // namespace eda::rtl
-
+} // namespace eda::rtl

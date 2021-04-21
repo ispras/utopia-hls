@@ -25,8 +25,7 @@
 
 using namespace eda::rtl;
 
-namespace eda {
-namespace gate {
+namespace eda::gate {
 
 class Netlist;
 
@@ -44,11 +43,11 @@ struct FLibrary {
   virtual bool supports(FuncSymbol func) const = 0;
 
   /// Synthesize the netlist for the given value.
-  virtual bool synthesize(const Out &out, const std::vector<bool> &value, Netlist &net) = 0;
+  virtual void synthesize(const Out &out, const std::vector<bool> &value, Netlist &net) = 0;
   /// Synthesize the netlist for the given function.
-  virtual bool synthesize(FuncSymbol func, const Out &out, const In &in, Netlist &net) = 0;
+  virtual void synthesize(FuncSymbol func, const Out &out, const In &in, Netlist &net) = 0;
   /// Synthesize the netlist for the given register.
-  virtual bool synthesize(const Out &out, const In &in, const Control &control, Netlist &net) = 0;
+  virtual void synthesize(const Out &out, const In &in, const Control &control, Netlist &net) = 0;
 
   virtual ~FLibrary() {} 
 };
@@ -63,17 +62,21 @@ public:
   }
 
   bool supports(FuncSymbol func) const override;
-  bool synthesize(const Out &out, const std::vector<bool> &value, Netlist &net) override;
-  bool synthesize(FuncSymbol func, const Out &out, const In &in, Netlist &net) override;
-  bool synthesize(const Out &out, const In &in, const Control &control, Netlist &net) override;
+
+  void synthesize(const Out &out, const std::vector<bool> &value, Netlist &net) override;
+  void synthesize(FuncSymbol func, const Out &out, const In &in, Netlist &net) override;
+  void synthesize(const Out &out, const In &in, const Control &control, Netlist &net) override;
 
 private:
   FLibraryDefault() {}
   ~FLibraryDefault() override {}
 
-  bool synth_add(const Out &out, const In &in, Netlist &net);
-  bool synth_sub(const Out &out, const In &in, Netlist &net);
-  bool synth_mux(const Out &out, const In &in, Netlist &net);
+  void synth_add(const Out &out, const In &in, Netlist &net);
+  void synth_sub(const Out &out, const In &in, Netlist &net);
+  void synth_mux(const Out &out, const In &in, Netlist &net);
+
+  void synth_adder(const Out &out, const In &in, bool plus_one, Netlist &net);
+  void synth_adder(unsigned z, unsigned c_out, unsigned x, unsigned y, unsigned c_in, Netlist &net);
 
   Signal invert_if_negative(const std::pair<Event::Kind, unsigned> &entry, Netlist &net);
 
@@ -115,5 +118,4 @@ bool FLibraryDefault::synth_binary_bitwise_op(const Out &out, const In &in, Netl
   return true;
 }
 
-}} // namespace eda::gate
-
+} // namespace eda::gate

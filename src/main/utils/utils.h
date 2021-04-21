@@ -18,8 +18,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace eda {
-namespace utils {
+namespace eda::utils {
 
 template<typename ... Args>
 std::string format(const std::string &format, Args ... args) {
@@ -38,5 +37,4 @@ std::string format(const std::string &format, Args ... args) {
 
 std::string unique_name(const std::string &prefix);
 
-}} // namespace eda::utils
-
+} // namespace eda::utils

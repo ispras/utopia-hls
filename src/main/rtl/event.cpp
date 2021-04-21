@@ -17,8 +17,7 @@
 #include "rtl/event.h"
 #include "rtl/vnode.h"
 
-namespace eda {
-namespace rtl {
+namespace eda::rtl {
 
 std::ostream& operator <<(std::ostream &out, const Event::Kind &kind) {
   switch (kind) {
@@ -48,5 +47,4 @@ std::ostream& operator <<(std::ostream &out, const Event &event) {
   return out << event.kind() << "(" << event.node()->name() << ")";
 }
 
-}} // namespace eda::rtl
-
+} // namespace eda::rtl

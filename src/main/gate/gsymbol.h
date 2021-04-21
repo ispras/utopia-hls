@@ -16,8 +16,7 @@
 
 #include <iostream>
 
-namespace eda {
-namespace gate {
+namespace eda::gate {
 
 /**
  * \brief Defines names of supported logical gates and flip-flops/latches.
@@ -66,5 +65,4 @@ enum GateSymbol {
 
 std::ostream& operator <<(std::ostream &out, GateSymbol gate);
 
-}} // namespace eda::gate
-
+} // namespace eda::gate

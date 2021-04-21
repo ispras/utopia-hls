@@ -22,8 +22,7 @@
 
 using namespace eda::rtl;
 
-namespace eda {
-namespace gate {
+namespace eda::gate {
 
 class Gate;
 
@@ -35,25 +34,16 @@ class Signal final {
 public:
   typedef std::vector<Signal> List;
 
-  static Signal posedge(const Gate *gate) {
-    return Signal(Event::POSEDGE, gate);
+  Signal(Event::Kind kind, const Gate *gate):
+      _kind(kind), _gate(gate) {
+    assert(gate != nullptr);
   }
 
-  static Signal negedge(const Gate *gate) {
-    return Signal(Event::NEGEDGE, gate);
-  }
-
-  static Signal level0(const Gate *gate) {
-    return Signal(Event::LEVEL0, gate);
-  }
-
-  static Signal level1(const Gate *gate) {
-    return Signal(Event::LEVEL1, gate);
-  }
-
-  static Signal always(const Gate *gate) {
-    return Signal(Event::ALWAYS, gate);
-  }
+  static Signal posedge(const Gate *gate) { return Signal(Event::POSEDGE, gate); }
+  static Signal negedge(const Gate *gate) { return Signal(Event::NEGEDGE, gate); }
+  static Signal level0(const Gate *gate) { return Signal(Event::LEVEL0, gate); }
+  static Signal level1(const Gate *gate) { return Signal(Event::LEVEL1, gate); }
+  static Signal always(const Gate *gate) { return Signal(Event::ALWAYS, gate); }
 
   bool edge() const { return _kind == Event::POSEDGE || _kind == Event::NEGEDGE; }
   bool level() const { return _kind == Event::LEVEL0 || _kind == Event::LEVEL1; }
@@ -62,16 +52,10 @@ public:
   const Gate* gate() const { return _gate; }
 
 private:
-  Signal(Event::Kind kind, const Gate *gate):
-      _kind(kind), _gate(gate) {
-    assert(gate != nullptr);
-  }
-
   Event::Kind _kind;
   const Gate *_gate;
 };
 
 std::ostream& operator <<(std::ostream &out, const Signal &signal);
 
-}} // namespace eda::gate
-
+} // namespace eda::gate

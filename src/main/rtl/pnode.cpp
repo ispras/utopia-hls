@@ -17,8 +17,7 @@
 #include "rtl/pnode.h"
 #include "rtl/vnode.h"
 
-namespace eda {
-namespace rtl {
+namespace eda::rtl {
 
 std::ostream& operator <<(std::ostream &out, const PNode &pnode) {
   out << "always @(" << pnode.event() << ") begin" << std::endl;
@@ -45,5 +44,4 @@ std::ostream& operator <<(std::ostream &out, const PNode &pnode) {
   return out;
 }
 
-}} // namespace eda::rtl
-
+} // namespace eda::rtl

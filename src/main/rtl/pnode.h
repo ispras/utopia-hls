@@ -20,8 +20,7 @@
 #include "rtl/event.h"
 #include "rtl/vnode.h"
 
-namespace eda {
-namespace rtl {
+namespace eda::rtl {
 
 /**
  * \brief Represents a p-node (p = process), a guarded action.
@@ -65,5 +64,4 @@ private:
 
 std::ostream& operator <<(std::ostream &out, const PNode &pnode);
 
-}} // namespace eda::rtl
-
+} // namespace eda::rtl
