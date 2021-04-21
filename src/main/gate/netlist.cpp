@@ -74,11 +74,11 @@ void Netlist::alloc_gates(const VNode *vnode) {
   }
 }
 
-std::vector<unsigned> Netlist::out_of(const VNode *vnode) {
+Netlist::Out Netlist::out_of(const VNode *vnode) {
   const unsigned base = gate_id(vnode);
   const unsigned size = vnode->var().type().width();
 
-  std::vector<unsigned> out(size);
+  Out out(size);
   for (unsigned i = 0; i < size; i++) {
     out[i] = base + i;
   }
@@ -86,9 +86,8 @@ std::vector<unsigned> Netlist::out_of(const VNode *vnode) {
   return out;
 }
 
-std::vector<std::vector<unsigned>> Netlist::in_of(const VNode *vnode) {
-  std::vector<std::vector<unsigned>> in(vnode->arity());
-  
+Netlist::In Netlist::in_of(const VNode *vnode) {
+  In in(vnode->arity());
   for (std::size_t i = 0; i < vnode->arity(); i++) {
     in[i] = out_of(vnode->input(i));
   }
@@ -118,7 +117,7 @@ void Netlist::synth_reg(const VNode *vnode, FLibrary &lib) {
   // Level (latch), edge (flip-flop), or edge and level (flip-flop /w set/reset).
   assert(vnode->esize() == 1 || vnode->esize() == 2);
 
-  std::vector<std::pair<Event::Kind, unsigned>> control;
+  ControlList control;
   for (const auto &event: vnode->events()) {
     control.push_back({ event.kind(), gate_id(event.node()) });
   }
@@ -130,7 +129,6 @@ std::ostream& operator <<(std::ostream &out, const Netlist &netlist) {
   for (const auto gate: netlist.gates()) {
     out << *gate << std::endl;
   }
-
   return out;
 }
  

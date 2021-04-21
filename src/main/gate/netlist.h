@@ -20,6 +20,9 @@
 #include <vector>
 
 #include "gate/gate.h"
+#include "rtl/event.h"
+
+using namespace eda::rtl;
 
 namespace eda::rtl {
 class Net;
@@ -36,6 +39,13 @@ class FLibrary;
  */
 class Netlist final {
 public:
+  typedef std::vector<unsigned> GateIdList;
+  typedef std::vector<bool> Value;
+  typedef std::vector<GateIdList> In;
+  typedef GateIdList Out;
+  typedef std::pair<Event::Kind, unsigned> ControlEvent;
+  typedef std::vector<ControlEvent> ControlList;
+
   Netlist() {
     _gates.reserve(1024*1024);
     _gates_id.reserve(1024*1024);
@@ -45,11 +55,11 @@ public:
   const Gate::List& gates() const { return _gates; }
   Gate* gate(std::size_t i) const { return _gates[i]; }
 
-  Signal posedge(unsigned id) const { return Signal::posedge(gate(id)); }
-  Signal negedge(unsigned id) const { return Signal::negedge(gate(id)); }
-  Signal level0(unsigned id) const { return Signal::level0(gate(id)); }
-  Signal level1(unsigned id) const { return Signal::level1(gate(id)); }
-  Signal always(unsigned id) const { return Signal::always(gate(id)); }
+  Signal posedge(unsigned id) const { return Signal(Event::POSEDGE, gate(id)); }
+  Signal negedge(unsigned id) const { return Signal(Event::NEGEDGE, gate(id)); }
+  Signal level0(unsigned id) const { return Signal(Event::LEVEL0, gate(id)); }
+  Signal level1(unsigned id) const { return Signal(Event::LEVEL1, gate(id)); }
+  Signal always(unsigned id) const { return Signal(Event::ALWAYS, gate(id)); }
 
   /// Returns the next gate identifier.
   unsigned next_gate_id() const { return _gates.size(); }
@@ -75,17 +85,17 @@ public:
   void create(const eda::rtl::Net &net, FLibrary &lib);
 
 private:
-  unsigned gate_id(const eda::rtl::VNode *vnode);
-  void alloc_gates(const eda::rtl::VNode *vnode);
+  unsigned gate_id(const VNode *vnode);
+  void alloc_gates(const VNode *vnode);
 
-  void synth_src(const eda::rtl::VNode *vnode, FLibrary &lib);
-  void synth_val(const eda::rtl::VNode *vnode, FLibrary &lib);
-  void synth_fun(const eda::rtl::VNode *vnode, FLibrary &lib);
-  void synth_mux(const eda::rtl::VNode *vnode, FLibrary &lib);
-  void synth_reg(const eda::rtl::VNode *vnode, FLibrary &lib);
+  void synth_src(const VNode *vnode, FLibrary &lib);
+  void synth_val(const VNode *vnode, FLibrary &lib);
+  void synth_fun(const VNode *vnode, FLibrary &lib);
+  void synth_mux(const VNode *vnode, FLibrary &lib);
+  void synth_reg(const VNode *vnode, FLibrary &lib);
 
-  std::vector<unsigned> out_of(const eda::rtl::VNode *vnode);
-  std::vector<std::vector<unsigned>> in_of(const eda::rtl::VNode *vnode);
+  Out out_of(const VNode *vnode);
+  In in_of(const VNode *vnode);
 
   unsigned add_gate(Gate *gate) {
     _gates.push_back(gate);

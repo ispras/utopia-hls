@@ -34,20 +34,25 @@ class Netlist;
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>.
  */
 struct FLibrary {
-  typedef std::vector<unsigned> Arg;
-  typedef Arg Out;
-  typedef std::vector<Arg> In;
-  typedef std::vector<std::pair<Event::Kind, unsigned>> Control;
+  typedef typename Netlist::GateIdList GateIdList;
+  typedef typename Netlist::Value Value;
+  typedef typename Netlist::In In;
+  typedef typename Netlist::Out Out;
+  typedef typename Netlist::ControlEvent ControlEvent;
+  typedef typename Netlist::ControlList ControlList;
 
   /// Checks if the library supports the given function.
   virtual bool supports(FuncSymbol func) const = 0;
 
   /// Synthesize the netlist for the given value.
-  virtual void synthesize(const Out &out, const std::vector<bool> &value, Netlist &net) = 0;
+  virtual void synthesize(
+    const Out &out, const Value &value, Netlist &net) = 0;
   /// Synthesize the netlist for the given function.
-  virtual void synthesize(FuncSymbol func, const Out &out, const In &in, Netlist &net) = 0;
+  virtual void synthesize(
+    FuncSymbol func, const Out &out, const In &in, Netlist &net) = 0;
   /// Synthesize the netlist for the given register.
-  virtual void synthesize(const Out &out, const In &in, const Control &control, Netlist &net) = 0;
+  virtual void synthesize(
+    const Out &out, const In &in, const ControlList &control, Netlist &net) = 0;
 
   virtual ~FLibrary() {} 
 };
@@ -63,50 +68,55 @@ public:
 
   bool supports(FuncSymbol func) const override;
 
-  void synthesize(const Out &out, const std::vector<bool> &value, Netlist &net) override;
-  void synthesize(FuncSymbol func, const Out &out, const In &in, Netlist &net) override;
-  void synthesize(const Out &out, const In &in, const Control &control, Netlist &net) override;
+  void synthesize(
+      const Out &out, const Value &value, Netlist &net) override;
+  void synthesize(
+      FuncSymbol func, const Out &out, const In &in, Netlist &net) override;
+  void synthesize(
+      const Out &out, const In &in, const ControlList &control, Netlist &net) override;
 
 private:
   FLibraryDefault() {}
   ~FLibraryDefault() override {}
 
-  void synth_add(const Out &out, const In &in, Netlist &net);
-  void synth_sub(const Out &out, const In &in, Netlist &net);
-  void synth_mux(const Out &out, const In &in, Netlist &net);
+  static void synth_add(const Out &out, const In &in, Netlist &net);
+  static void synth_sub(const Out &out, const In &in, Netlist &net);
+  static void synth_mux(const Out &out, const In &in, Netlist &net);
 
-  void synth_adder(const Out &out, const In &in, bool plus_one, Netlist &net);
-  void synth_adder(unsigned z, unsigned c_out, unsigned x, unsigned y, unsigned c_in, Netlist &net);
+  static void synth_adder(const Out &out, const In &in, bool plus_one, Netlist &net);
+  static void synth_adder(unsigned z, unsigned c_out,
+    unsigned x, unsigned y, unsigned c_in, Netlist &net);
 
-  Signal invert_if_negative(const std::pair<Event::Kind, unsigned> &entry, Netlist &net);
+  static Signal invert_if_negative(const ControlEvent &event, Netlist &net);
 
-  template<GateSymbol G> bool synth_unary_bitwise_op (const Out &out, const In &in, Netlist &net);
-  template<GateSymbol G> bool synth_binary_bitwise_op(const Out &out, const In &in, Netlist &net);
+  template<GateSymbol G>
+  static void synth_unary_bitwise_op (const Out &out, const In &in, Netlist &net);
+
+  template<GateSymbol G>
+  static void synth_binary_bitwise_op(const Out &out, const In &in, Netlist &net);
 
   static std::unique_ptr<FLibrary> _instance;
 };
 
 template<GateSymbol G>
-bool FLibraryDefault::synth_unary_bitwise_op(const Out &out, const In &in, Netlist &net) {
+void FLibraryDefault::synth_unary_bitwise_op(const Out &out, const In &in, Netlist &net) {
   assert(in.size() == 1);
 
-  const Arg &x = in[0];
+  const GateIdList &x = in[0];
   assert(out.size() == x.size());
 
   for (std::size_t i = 0; i < out.size(); i++) {
     Signal xi = net.always(x[i]);
     net.set_gate(out[i], G, { xi });
   }
-
-  return true;
 }
 
 template<GateSymbol G>
-bool FLibraryDefault::synth_binary_bitwise_op(const Out &out, const In &in, Netlist &net) {
+void FLibraryDefault::synth_binary_bitwise_op(const Out &out, const In &in, Netlist &net) {
   assert(in.size() == 2);
 
-  const Arg &x = in[0];
-  const Arg &y = in[1];
+  const GateIdList &x = in[0];
+  const GateIdList &y = in[1];
   assert(x.size() == y.size() && out.size() == x.size());
 
   for (std::size_t i = 0; i < out.size(); i++) {
@@ -114,8 +124,6 @@ bool FLibraryDefault::synth_binary_bitwise_op(const Out &out, const In &in, Netl
     Signal yi = net.always(y[i]);
     net.set_gate(out[i], G, { xi, yi });
   }
-
-  return true;
 }
 
 } // namespace eda::gate

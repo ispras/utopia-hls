@@ -17,6 +17,8 @@
 #include "gate/flibrary.h"
 #include "gate/netlist.h"
 
+using namespace eda::rtl;
+
 namespace eda::gate {
 
 std::unique_ptr<FLibrary> FLibraryDefault::_instance;
@@ -25,7 +27,7 @@ bool FLibraryDefault::supports(FuncSymbol func) const {
   return true;
 }
 
-void FLibraryDefault::synthesize(const Out &out, const std::vector<bool> &value, Netlist &net) {
+void FLibraryDefault::synthesize(const Out &out, const Value &value, Netlist &net) {
   assert(out.size() == value.size());
 
   for (std::size_t i = 0; i < out.size(); i++) {
@@ -65,7 +67,7 @@ void FLibraryDefault::synthesize(FuncSymbol func, const Out &out, const In &in, 
 }
 
 void FLibraryDefault::synthesize(
-    const Out &out, const In &in, const Control &control, Netlist &net) {
+    const Out &out, const In &in, const ControlList &control, Netlist &net) {
   assert(control.size() == 1 || control.size() == 2);
   assert(control.size() == in.size());
 
@@ -77,7 +79,7 @@ void FLibraryDefault::synthesize(
     }
   } else {
     Signal edged = invert_if_negative(control[1], net);
-    Signal reset = Signal::always(edged.gate());
+    Signal reset(Event::ALWAYS, edged.gate());
 
     for (std::size_t i = 0; i < out.size(); i++) {
       Signal d = net.always(in[0][i]); // stored data
@@ -96,8 +98,8 @@ void FLibraryDefault::synth_add(const Out &out, const In &in, Netlist &net) {
 
 void FLibraryDefault::synth_sub(const Out &out, const In &in, Netlist &net) {
   // The two's complement code: (x - y) == (x + ~y + 1).
-  const Arg &x = in[0];
-  const Arg &y = in[1];
+  const GateIdList &x = in[0];
+  const GateIdList &y = in[1];
 
   Out temp(y.size());
   for (std::size_t i = 0; i < y.size(); i++) {
@@ -111,8 +113,8 @@ void FLibraryDefault::synth_sub(const Out &out, const In &in, Netlist &net) {
 void FLibraryDefault::synth_adder(const Out &out, const In &in, bool plus_one, Netlist &net) {
   assert(in.size() == 2);
 
-  const Arg &x = in[0];
-  const Arg &y = in[1];
+  const GateIdList &x = in[0];
+  const GateIdList &y = in[1];
   assert(x.size() == y.size() && out.size() == x.size());
 
   unsigned c_in = -1;
@@ -152,8 +154,8 @@ void FLibraryDefault::synth_mux(const Out &out, const In &in, Netlist &net) {
     temp.reserve(n);
 
     for (std::size_t j = 0; j < n; j++) {
-      const Arg &c = in[j];
-      const Arg &x = in[j + n];
+      const GateIdList &c = in[j];
+      const GateIdList &x = in[j + n];
       assert(c.size() == 1 && out.size() == x.size());
 
       Signal cj0 = net.always(c[0]);
@@ -167,21 +169,20 @@ void FLibraryDefault::synth_mux(const Out &out, const In &in, Netlist &net) {
   }
 }
 
-Signal FLibraryDefault::invert_if_negative(
-    const std::pair<Event::Kind, unsigned> &entry, Netlist &net) {
-  switch (entry.first) {
+Signal FLibraryDefault::invert_if_negative(const ControlEvent &event, Netlist &net) {
+  switch (event.first) {
   case Event::POSEDGE:
     // Leave the clock signal unchanged.
-    return net.posedge(entry.second);
+    return net.posedge(event.second);
   case Event::NEGEDGE:
     // Invert the clock signal.
-    return net.posedge(net.add_gate(GateSymbol::NOT, { net.always(entry.second) }));
+    return net.posedge(net.add_gate(GateSymbol::NOT, { net.always(event.second) }));
   case Event::LEVEL0:
     // Invert the enable signal.
-    return net.level1(net.add_gate(GateSymbol::NOT, { net.always(entry.second) }));
+    return net.level1(net.add_gate(GateSymbol::NOT, { net.always(event.second) }));
   case Event::LEVEL1:
     // Leave the enable signal unchanged.
-    return net.level1(entry.second);
+    return net.level1(event.second);
   default:
     assert(false);
     return net.posedge(-1);

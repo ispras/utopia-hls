@@ -49,7 +49,7 @@ public:
 
 private:
   Gate(unsigned id):
-    _id(id), _kind(GateSymbol::NOP), _inputs({}) {}
+    _id(id), _kind(GateSymbol::NOP), _inputs() {}
 
   Gate(unsigned id, GateSymbol gate, const Signal::List inputs):
     _id(id), _kind(gate), _inputs(inputs) {}

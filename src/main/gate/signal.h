@@ -39,12 +39,6 @@ public:
     assert(gate != nullptr);
   }
 
-  static Signal posedge(const Gate *gate) { return Signal(Event::POSEDGE, gate); }
-  static Signal negedge(const Gate *gate) { return Signal(Event::NEGEDGE, gate); }
-  static Signal level0(const Gate *gate) { return Signal(Event::LEVEL0, gate); }
-  static Signal level1(const Gate *gate) { return Signal(Event::LEVEL1, gate); }
-  static Signal always(const Gate *gate) { return Signal(Event::ALWAYS, gate); }
-
   bool edge() const { return _kind == Event::POSEDGE || _kind == Event::NEGEDGE; }
   bool level() const { return _kind == Event::LEVEL0 || _kind == Event::LEVEL1; }
 

@@ -46,7 +46,7 @@ public:
   enum Kind {
     /// Source node (s-node): input wire x.
     SRC,
-    /// Constant node (c-node): y <= c.
+    /// Constant node (c-node): y <= (c[0], ..., c[n-1]).
     VAL,
     /// Functional node (f-node): always_comb y <= f(x[0], ..., x[n-1]).
     FUN,

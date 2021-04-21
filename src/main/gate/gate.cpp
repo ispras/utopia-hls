@@ -24,7 +24,6 @@ static std::ostream& operator <<(std::ostream &out, const Signal::List &signals)
     out << (separator ? ", " : "") << signal.kind() << "(" << signal.gate()->id() << ")";
     separator = true;
   }
-
   return out;
 }
 
@@ -32,8 +31,7 @@ std::ostream& operator <<(std::ostream &out, const Gate &gate) {
   if (gate.is_source()) {
     return out << "S{" << gate.id() << "}";
   } else {
-    return out << (gate.is_gate() ? "G" : "T") << "{"
-               << gate.id() << " <= " << gate.kind() << "(" << gate.inputs() << ")}";
+    return out << "G{" << gate.id() << " <= " << gate.kind() << "(" << gate.inputs() << ")}";
   }
 }
 
