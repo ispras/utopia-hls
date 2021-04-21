@@ -74,7 +74,7 @@ public:
     return add_gate(new Gate(next_gate_id(), kind, inputs));
   }
 
-  // Modifies the existing gate.
+  /// Modifies the existing gate.
   void set_gate(unsigned id, GateSymbol kind, const Signal::List &inputs) {
     Gate *g = gate(id);
     g->set_kind(kind);
@@ -94,8 +94,8 @@ private:
   void synth_mux(const VNode *vnode, FLibrary &lib);
   void synth_reg(const VNode *vnode, FLibrary &lib);
 
-  Out out_of(const VNode *vnode);
-  In in_of(const VNode *vnode);
+  Out out(const VNode *vnode);
+  In in(const VNode *vnode);
 
   unsigned add_gate(Gate *gate) {
     _gates.push_back(gate);

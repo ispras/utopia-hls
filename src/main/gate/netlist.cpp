@@ -74,7 +74,7 @@ void Netlist::alloc_gates(const VNode *vnode) {
   }
 }
 
-Netlist::Out Netlist::out_of(const VNode *vnode) {
+Netlist::Out Netlist::out(const VNode *vnode) {
   const unsigned base = gate_id(vnode);
   const unsigned size = vnode->var().type().width();
 
@@ -86,10 +86,10 @@ Netlist::Out Netlist::out_of(const VNode *vnode) {
   return out;
 }
 
-Netlist::In Netlist::in_of(const VNode *vnode) {
+Netlist::In Netlist::in(const VNode *vnode) {
   In in(vnode->arity());
   for (std::size_t i = 0; i < vnode->arity(); i++) {
-    in[i] = out_of(vnode->input(i));
+    in[i] = out(vnode->input(i));
   }
 
   return in;
@@ -100,17 +100,17 @@ void Netlist::synth_src(const VNode *vnode, FLibrary &lib) {
 }
 
 void Netlist::synth_val(const VNode *vnode, FLibrary &lib) {
-  lib.synthesize(out_of(vnode), vnode->value(), *this);
+  lib.synthesize(out(vnode), vnode->value(), *this);
 }
 
 void Netlist::synth_fun(const VNode *vnode, FLibrary &lib) {
   assert(lib.supports(vnode->func()));
-  lib.synthesize(vnode->func(), out_of(vnode), in_of(vnode), *this);
+  lib.synthesize(vnode->func(), out(vnode), in(vnode), *this);
 }
 
 void Netlist::synth_mux(const VNode *vnode, FLibrary &lib) {
   assert(lib.supports(FuncSymbol::MUX));
-  lib.synthesize(FuncSymbol::MUX, out_of(vnode), in_of(vnode), *this);
+  lib.synthesize(FuncSymbol::MUX, out(vnode), in(vnode), *this);
 }
 
 void Netlist::synth_reg(const VNode *vnode, FLibrary &lib) {
@@ -122,7 +122,7 @@ void Netlist::synth_reg(const VNode *vnode, FLibrary &lib) {
     control.push_back({ event.kind(), gate_id(event.node()) });
   }
 
-  lib.synthesize(out_of(vnode), in_of(vnode), control, *this);
+  lib.synthesize(out(vnode), in(vnode), control, *this);
 }
 
 std::ostream& operator <<(std::ostream &out, const Netlist &netlist) {

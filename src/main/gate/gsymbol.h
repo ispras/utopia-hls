@@ -53,7 +53,7 @@ enum GateSymbol {
   //----------------------------------------------------------------------------
 
   /// D latch (Q, D, ENA):
-  /// Q(t) = ENA(level1) ? Q(t-1) : D.
+  /// Q(t) = ENA(level1) ? D : Q(t-1).
   LATCH,
   /// D flip-flop (Q, D, CLK):
   /// Q(t) = CLK(posedge) ? D : Q(t-1).
