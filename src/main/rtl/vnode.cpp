@@ -49,8 +49,11 @@ std::ostream& operator <<(std::ostream &out, const VNode &vnode) {
   case VNode::REG:
     out << "R{";
     bool separator = false;
-    for (std::size_t i = 0; i < vnode.esize(); i++) {
-      out << (separator ? ", " : "") << vnode.event(i) << ": ";
+    for (std::size_t i = 0; i < vnode.arity(); i++) {
+      out << (separator ? ", " : "");
+      if (i < vnode.esize()) {
+        out << vnode.event(i) << ": ";
+      }
       out << vnode.var() << " <= " << vnode.input(i)->name();
       separator = true;
     }
