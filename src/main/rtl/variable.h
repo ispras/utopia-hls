@@ -16,6 +16,7 @@
 
 #include <cstddef>
 #include <iostream>
+#include <vector>
 
 namespace eda::rtl {
 
@@ -73,6 +74,9 @@ public:
 
   Variable(const std::string &name, Kind kind, const Type &type):
     _name(name), _kind(kind), _bind(INNER), _type(type) {}
+ 
+  Variable(const Variable &rhs) = default;
+  Variable(Variable &&rhs) = default;
 
   const std::string& name() const { return _name; }
   Kind kind() const { return _kind; }

@@ -105,6 +105,7 @@ private:
   }
 
   PNode* add_pnode(PNode *pnode) {
+    assert(!_created);
     _pnodes.push_back(pnode);
     return pnode;
   }

@@ -11,14 +11,27 @@ SRC = main.cpp \
       rtl/pnode.cpp \
       utils/utils.cpp
 
+L = rtl/parser/lexer.l
+Y = rtl/parser/parser.y
+
+L_C = lexer.yy.c
+Y_C = parser.tab.c
+Y_H = parser.tab.h
+
 EXE = main
 
 CFLAGS = -I. -std=c++17 -g3 -Wall
 
 all: $(EXE)
 
-$(EXE): $(SRC)
-	g++ $(CFLAGS) -o $@ $^
+$(EXE): $(SRC) $(L_C) $(Y_C)
+	g++ $(CFLAGS) -o $@ $^ -lfl
+
+$(L_C): $(L)
+	flex -o $@ $^
+
+$(Y_C): $(Y)
+	bison -d $^
 
 run: $(EXE)
 	./$(EXE)
@@ -27,4 +40,5 @@ debug: $(EXE)
 	gdb --args ./$(EXE)
 
 clean:
-	rm -rf $(EXE)
+	rm -rf $(EXE) $(L_C) $(Y_C) $(Y_H)
+
