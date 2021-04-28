@@ -75,12 +75,17 @@ public:
 
   /// Creates and adds a combinational p-node.
   PNode* add_cmb(const VNode::List &guard, const VNode::List &action) {
-    return add_pnode(new PNode(Event::always(), guard, action));
+    return add_pnode(new PNode(guard, action));
   }
 
   /// Creates and adds a sequential p-node.
   PNode* add_seq(const Event &event, const VNode::List &guard, const VNode::List &action) {
     return add_pnode(new PNode(event, guard, action));
+  }
+
+  /// Updates the given v-node.
+  void update(VNode *vnode, const VNode::List inputs, const std::vector<bool> value) {
+    vnode->replace_with(vnode->kind(), vnode->var(), vnode->events(), vnode->func(), inputs, value);
   }
 
   /// Creates the v-net according to the p-net.

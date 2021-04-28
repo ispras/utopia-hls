@@ -13,11 +13,26 @@
  */
 
 %{
-  int yylex(void);
-  void yyerror(const char *) {}
+  #include <string>
+  #include <iostream>
+
+  #include "rtl/parser/builder.h"
+
+  using namespace eda::rtl;
+  using namespace eda::rtl::parser;
+
+  extern int yylineno;
+  extern char* yytext;
+
+  extern int yylex(void);
+
+  void yyerror(const char *error) {
+    std::cerr << "Error(" << yylineno << "): " << error << std::endl;
+    std::cerr << yytext << std::endl;
+  }
 %}
 
-%define api.value.type {char*}
+%define api.value.type {std::string*}
 %define api.token.prefix {TOK_}
 %token
   INPUT
@@ -30,6 +45,7 @@
   NEGEDGE
   LEVEL0
   LEVEL1
+  AT
   STAR
   ASSIGN
   NOT
@@ -53,8 +69,13 @@
 %%
 
 model:
-    %empty
-  | model item
+  { Builder::get().start_model(); }
+  items
+;
+
+items:
+  %empty
+| items item
 ;
 
 item:
@@ -63,44 +84,50 @@ item:
 ;
 
 decl:
-    INPUT  TYPE VAR SEMI
-  | OUTPUT TYPE VAR SEMI
-  | WIRE   TYPE VAR SEMI
-  | REG    TYPE VAR SEMI
+  INPUT  TYPE[t] VAR[n] SEMI
+    { Builder::get().add_decl(Variable::WIRE, Variable::INPUT,  *$n, *$t); }
+| OUTPUT TYPE[t] VAR[n] SEMI
+    { Builder::get().add_decl(Variable::WIRE, Variable::OUTPUT, *$n, *$t); }
+| WIRE   TYPE[t] VAR[n] SEMI
+    { Builder::get().add_decl(Variable::WIRE, Variable::INNER,  *$n, *$t); }
+| REG    TYPE[t] VAR[n] SEMI
+    { Builder::get().add_decl(Variable::REG,  Variable::INNER,  *$n, *$t); }
 ;
 
 proc:
-    ALWAYS LBRACK event RBRACK
-      guard LCURLY action RCURLY
+  { Builder::get().start_proc(); } 
+  ALWAYS AT LBRACK event RBRACK
+    guard LCURLY action RCURLY
+  { Builder::get().end_proc(); }
 ;
 
 event:
-    POSEDGE LBRACK VAR RBRACK
-  | NEGEDGE LBRACK VAR RBRACK
-  | LEVEL0  LBRACK VAR RBRACK
-  | LEVEL1  LBRACK VAR RBRACK
-  | STAR
+  POSEDGE LBRACK VAR[s] RBRACK { Builder::get().set_event(Event::POSEDGE, *$s); }
+| NEGEDGE LBRACK VAR[s] RBRACK { Builder::get().set_event(Event::NEGEDGE, *$s); }
+| LEVEL0  LBRACK VAR[s] RBRACK { Builder::get().set_event(Event::LEVEL0,  *$s); }
+| LEVEL1  LBRACK VAR[s] RBRACK { Builder::get().set_event(Event::LEVEL1,  *$s); }
+| STAR                         { Builder::get().set_event(Event::ALWAYS,   ""); }
 ;
 
 guard:
-    %empty
-  | IF LBRACK VAR RBRACK
+  %empty                  { Builder::get().set_guard( ""); }
+| IF LBRACK VAR[g] RBRACK { Builder::get().set_guard(*$g); }
 ;
 
 action:
-    %empty
-  | action assign
+  %empty
+| action assign
 ;
 
 assign:
-    VAR ASSIGN VAL         SEMI
-  | VAR ASSIGN VAR         SEMI
-  | VAR ASSIGN NOT VAR     SEMI
-  | VAR ASSIGN VAR AND VAR SEMI
-  | VAR ASSIGN VAR OR  VAR SEMI
-  | VAR ASSIGN VAR XOR VAR SEMI
-  | VAR ASSIGN VAR ADD VAR SEMI
-  | VAR ASSIGN VAR SUB VAR SEMI
+  VAR[f] ASSIGN            VAL[c] SEMI { Builder::get().add_assign(NOP, *$f,      {*$c}); }
+| VAR[f] ASSIGN            VAR[x] SEMI { Builder::get().add_assign(NOP, *$f,      {*$x}); }
+| VAR[f] ASSIGN        NOT VAR[x] SEMI { Builder::get().add_assign(NOT, *$f,      {*$x}); }
+| VAR[f] ASSIGN VAR[x] AND VAR[y] SEMI { Builder::get().add_assign(AND, *$f, {*$x, *$y}); }
+| VAR[f] ASSIGN VAR[x] OR  VAR[y] SEMI { Builder::get().add_assign(OR,  *$f, {*$x, *$y}); }
+| VAR[f] ASSIGN VAR[x] XOR VAR[y] SEMI { Builder::get().add_assign(XOR, *$f, {*$x, *$y}); }
+| VAR[f] ASSIGN VAR[x] ADD VAR[y] SEMI { Builder::get().add_assign(ADD, *$f, {*$x, *$y}); }
+| VAR[f] ASSIGN VAR[x] SUB VAR[y] SEMI { Builder::get().add_assign(SUB, *$f, {*$x, *$y}); }
 ;
 
 %%

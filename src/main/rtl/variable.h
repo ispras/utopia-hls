@@ -35,18 +35,14 @@ public:
     REAL
   };
 
-  static Type sint(std::size_t width) { return Type(SINT, width); }
-  static Type uint(std::size_t width) { return Type(UINT, width); }
-  static Type real(std::size_t width, std::size_t fract) { return Type(REAL, width, fract); }
+  Type(Kind kind, std::size_t width, std::size_t fract = 0):
+    _kind(kind), _width(width), _fract(fract) {}
 
   Kind kind() const { return _kind; }
   std::size_t width() const { return _width; }
   std::size_t fract() const { return _fract; }
 
 private:
-  Type(Kind kind, std::size_t width, std::size_t fract = 0):
-    _kind(kind), _width(width), _fract(fract) {}
-
   const Kind _kind;
   const std::size_t _width;
   const std::size_t _fract;

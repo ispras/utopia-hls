@@ -12,17 +12,19 @@
  * the License.
  */
 
+%option yylineno
 %option noyywrap
 %option nounput
 
 %{
+  #include <string>
   #include <parser.tab.h>
 %}
 
-NUM  [1-9][0-9]+
+NUM  [1-9][0-9]*
 VAL  0b[0-1]+
+TYPE [su]:[1-9][0-9]*
 VAR  [_a-zA-Z][_a-zA-Z0-9]*
-TYPE [i,u]NUM
 
 %%
 "input"    { return TOK_INPUT;   }
@@ -35,6 +37,7 @@ TYPE [i,u]NUM
 "negedge"  { return TOK_NEGEDGE; }
 "level0"   { return TOK_LEVEL0;  }
 "level1"   { return TOK_LEVEL1;  }
+"@"        { return TOK_AT;      }
 "*"        { return TOK_STAR;    }
 "<="       { return TOK_ASSIGN;  }
 "~"        { return TOK_NOT;     }
@@ -48,23 +51,23 @@ TYPE [i,u]NUM
 ")"        { return TOK_RBRACK;  }
 "{"        { return TOK_LCURLY;  }
 "}"        { return TOK_RCURLY;  }
-NUM        {
-             yylval = strdup(yytext);
+{NUM}      {
+             yylval = new std::string(yytext);
              return TOK_NUM;
            }
-VAL        {
-             yylval = strdup(yytext);
+{VAL}      {
+             yylval = new std::string(yytext);
              return TOK_VAL;
            }
-VAR        {
-             yylval = strdup(yytext);
-             return TOK_VAR;
-           }
-TYPE       {
-             yylval = strdup(yytext);
+{TYPE}     {
+             yylval = new std::string(yytext);
              return TOK_TYPE;
            }
-[ \r\n\t]+ { /* Whitespace */    }
+{VAR}      {
+             yylval = new std::string(yytext);
+             return TOK_VAR;
+           }
+[ \t\r\n]+ { /* Whitespaces */   }
 .          { return TOK_OTHER;   }
 %%
 

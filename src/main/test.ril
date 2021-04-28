@@ -1,0 +1,41 @@
+input  u:1 clk;
+input  u:1 rst;
+input  u:1 c;
+input  u:8 x;
+input  u:8 y;
+output u:8 u;
+output u:8 v;
+reg    u:8 r;
+wire   u:1 n;
+wire   u:8 f;
+wire   u:8 g;
+wire   u:8 w;
+
+always @(*) {
+  n <= ~c;
+  f <= x + y;
+  g <= x - y;
+  u <= w;
+  v <= r;
+}
+
+always @(*) if (c) {
+  w <= f;
+}
+
+always @(*) if(n) {
+  w <= g; 
+}
+
+always @(level1(rst)) {
+  r <= 0b00000000;
+}
+
+always @(posedge(clk)) if (c) {
+  r <= f;
+}
+
+always @(posedge(clk)) if (n) {
+  r <= g;
+}
+

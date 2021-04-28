@@ -44,29 +44,14 @@ public:
     DELAY
   };
 
-  static Event posedge(const VNode *node) {
-    return Event(POSEDGE, node);
-  }
+  Event(Kind kind, const VNode *node = nullptr):
+    _kind(kind), _node(node), _delay(0) {}
 
-  static Event negedge(const VNode *node) {
-    return Event(NEGEDGE, node);
-  }
+  Event(std::size_t delay):
+    _kind(DELAY), _node(nullptr), _delay(delay) {}
 
-  static Event level0(const VNode *node) {
-    return Event(LEVEL0, node);
-  }
-
-  static Event level1(const VNode *node) {
-    return Event(LEVEL1, node);
-  }
-
-  static Event always() {
-    return Event(ALWAYS);
-  }
-
-  static Event delay(std::size_t delay) {
-    return Event(DELAY, nullptr, delay);
-  }
+  Event():
+    _kind(ALWAYS), _node(nullptr), _delay(0) {}
 
   bool edge() const { return _kind == POSEDGE || _kind == NEGEDGE; }
   bool level() const { return _kind == LEVEL0 || _kind == LEVEL1; }
@@ -84,9 +69,6 @@ public:
   }
 
 private:
-  Event(Kind kind, const VNode *node = nullptr, std::size_t delay = 0):
-    _kind(kind), _node(node), _delay(delay) {}
-
   // Event kind.
   const Kind _kind;
   // Single-bit node for tracking events on (for edges and levels only).

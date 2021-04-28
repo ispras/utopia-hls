@@ -59,7 +59,7 @@ struct FLibrary {
 
 class FLibraryDefault final: public FLibrary {
 public:
-  static FLibrary& instance() {
+  static FLibrary& get() {
     if (_instance == nullptr) {
       _instance = std::unique_ptr<FLibrary>(new FLibraryDefault());
     }

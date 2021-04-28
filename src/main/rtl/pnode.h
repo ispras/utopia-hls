@@ -54,6 +54,9 @@ private:
     }
   }
 
+  PNode(const VNode::List &guard, const VNode::List &action):
+      PNode(Event(), guard, action) {}
+
   // The execution trigger (posedge, always, etc.).
   const Event _event;
   // The last v-node is the guard bit.

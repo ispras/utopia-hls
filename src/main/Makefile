@@ -9,6 +9,7 @@ SRC = main.cpp \
       rtl/net.cpp \
       rtl/vnode.cpp \
       rtl/pnode.cpp \
+      rtl/parser/builder.cpp \
       utils/utils.cpp
 
 L = rtl/parser/lexer.l
@@ -20,7 +21,7 @@ Y_H = parser.tab.h
 
 EXE = main
 
-CFLAGS = -I. -std=c++17 -g3 -Wall
+CFLAGS = -I. -std=c++17 -g3 -Wall -DYYERROR_VERBOSE
 
 all: $(EXE)
 
