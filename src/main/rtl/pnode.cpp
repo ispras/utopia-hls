@@ -20,7 +20,7 @@
 namespace eda::rtl {
 
 std::ostream& operator <<(std::ostream &out, const PNode &pnode) {
-  out << "always @(" << pnode.event() << ") begin" << std::endl;
+  out << "always @(" << pnode.event() << ") {" << std::endl;
 
   if (pnode.gsize() > 0) {  
     out << "  if (";
@@ -29,7 +29,7 @@ std::ostream& operator <<(std::ostream &out, const PNode &pnode) {
       out << (separator ? " && " : "") << *vnode;
       separator = true;
     }
-    out << ") begin" << std::endl;
+    out << ") {" << std::endl;
   }
 
   for (const auto vnode: pnode.action()) {
@@ -37,10 +37,10 @@ std::ostream& operator <<(std::ostream &out, const PNode &pnode) {
   }
 
   if (pnode.gsize() > 0) {
-    out << "  end" << std::endl;
+    out << "  }" << std::endl;
   }
 
-  out << "end";
+  out << "}";
   return out;
 }
 

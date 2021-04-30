@@ -81,6 +81,8 @@ public:
   }
 
   std::vector<bool> to_value(const std::string &value) const;
+  Variable to_var(const std::string &value) const;
+
   Type to_type(const std::string &type) const;
 
   std::unique_ptr<Net> create();

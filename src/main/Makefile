@@ -12,6 +12,8 @@ SRC = main.cpp \
       rtl/parser/builder.cpp \
       utils/utils.cpp
 
+TEST = test.ril
+
 L = rtl/parser/lexer.l
 Y = rtl/parser/parser.y
 
@@ -34,11 +36,14 @@ $(L_C): $(L)
 $(Y_C): $(Y)
 	bison -d $^
 
-run: $(EXE)
-	./$(EXE)
+run: $(EXE) $(TEST)
+	./$(EXE) $(TEST)
 
 debug: $(EXE)
 	gdb --args ./$(EXE)
+
+memcheck: $(EXE)
+	valgrind ./$(EXE)
 
 clean:
 	rm -rf $(EXE) $(L_C) $(Y_C) $(Y_H)

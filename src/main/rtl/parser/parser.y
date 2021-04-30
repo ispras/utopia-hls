@@ -84,34 +84,60 @@ item:
 ;
 
 decl:
-  INPUT  TYPE[t] VAR[n] SEMI
-    { Builder::get().add_decl(Variable::WIRE, Variable::INPUT,  *$n, *$t); }
-| OUTPUT TYPE[t] VAR[n] SEMI
-    { Builder::get().add_decl(Variable::WIRE, Variable::OUTPUT, *$n, *$t); }
-| WIRE   TYPE[t] VAR[n] SEMI
-    { Builder::get().add_decl(Variable::WIRE, Variable::INNER,  *$n, *$t); }
-| REG    TYPE[t] VAR[n] SEMI
-    { Builder::get().add_decl(Variable::REG,  Variable::INNER,  *$n, *$t); }
+  INPUT TYPE[t] VAR[n] SEMI {
+    Builder::get().add_decl(Variable::WIRE, Variable::INPUT, *$n, *$t);
+    delete $t; delete $n;
+  }
+| OUTPUT TYPE[t] VAR[n] SEMI {
+    Builder::get().add_decl(Variable::WIRE, Variable::OUTPUT, *$n, *$t);
+    delete $t; delete $n;
+  }
+| WIRE TYPE[t] VAR[n] SEMI {
+    Builder::get().add_decl(Variable::WIRE, Variable::INNER, *$n, *$t);
+    delete $t; delete $n;
+  }
+| REG TYPE[t] VAR[n] SEMI {
+    Builder::get().add_decl(Variable::REG, Variable::INNER, *$n, *$t);
+    delete $t; delete $n;
+  }
 ;
 
 proc:
   { Builder::get().start_proc(); } 
-  ALWAYS AT LBRACK event RBRACK
-    guard LCURLY action RCURLY
+  ALWAYS AT LBRACK event RBRACK guard LCURLY action RCURLY
   { Builder::get().end_proc(); }
 ;
 
 event:
-  POSEDGE LBRACK VAR[s] RBRACK { Builder::get().set_event(Event::POSEDGE, *$s); }
-| NEGEDGE LBRACK VAR[s] RBRACK { Builder::get().set_event(Event::NEGEDGE, *$s); }
-| LEVEL0  LBRACK VAR[s] RBRACK { Builder::get().set_event(Event::LEVEL0,  *$s); }
-| LEVEL1  LBRACK VAR[s] RBRACK { Builder::get().set_event(Event::LEVEL1,  *$s); }
-| STAR                         { Builder::get().set_event(Event::ALWAYS,   ""); }
+  POSEDGE LBRACK VAR[s] RBRACK {
+    Builder::get().set_event(Event::POSEDGE, *$s);
+    delete $s;
+  }
+| NEGEDGE LBRACK VAR[s] RBRACK {
+    Builder::get().set_event(Event::NEGEDGE, *$s);
+    delete $s;
+  }
+| LEVEL0 LBRACK VAR[s] RBRACK {
+    Builder::get().set_event(Event::LEVEL0, *$s);
+    delete $s;
+  }
+| LEVEL1 LBRACK VAR[s] RBRACK {
+    Builder::get().set_event(Event::LEVEL1, *$s);
+    delete $s;
+  }
+| STAR {
+    Builder::get().set_event(Event::ALWAYS, "");
+  }
 ;
 
 guard:
-  %empty                  { Builder::get().set_guard( ""); }
-| IF LBRACK VAR[g] RBRACK { Builder::get().set_guard(*$g); }
+  %empty {
+    Builder::get().set_guard("");
+  }
+| IF LBRACK VAR[g] RBRACK {
+    Builder::get().set_guard(*$g);
+    delete $g;
+  }
 ;
 
 action:
@@ -120,14 +146,38 @@ action:
 ;
 
 assign:
-  VAR[f] ASSIGN            VAL[c] SEMI { Builder::get().add_assign(NOP, *$f,      {*$c}); }
-| VAR[f] ASSIGN            VAR[x] SEMI { Builder::get().add_assign(NOP, *$f,      {*$x}); }
-| VAR[f] ASSIGN        NOT VAR[x] SEMI { Builder::get().add_assign(NOT, *$f,      {*$x}); }
-| VAR[f] ASSIGN VAR[x] AND VAR[y] SEMI { Builder::get().add_assign(AND, *$f, {*$x, *$y}); }
-| VAR[f] ASSIGN VAR[x] OR  VAR[y] SEMI { Builder::get().add_assign(OR,  *$f, {*$x, *$y}); }
-| VAR[f] ASSIGN VAR[x] XOR VAR[y] SEMI { Builder::get().add_assign(XOR, *$f, {*$x, *$y}); }
-| VAR[f] ASSIGN VAR[x] ADD VAR[y] SEMI { Builder::get().add_assign(ADD, *$f, {*$x, *$y}); }
-| VAR[f] ASSIGN VAR[x] SUB VAR[y] SEMI { Builder::get().add_assign(SUB, *$f, {*$x, *$y}); }
+  VAR[f] ASSIGN VAL[c] SEMI {
+    Builder::get().add_assign(NOP, *$f, {*$c});
+    delete $f; delete $c;
+  }
+| VAR[f] ASSIGN VAR[x] SEMI {
+    Builder::get().add_assign(NOP, *$f, {*$x});
+    delete $f; delete $x;
+  }
+| VAR[f] ASSIGN NOT VAR[x] SEMI {
+    Builder::get().add_assign(NOT, *$f, {*$x});
+    delete $f; delete $x;
+  }
+| VAR[f] ASSIGN VAR[x] AND VAR[y] SEMI {
+    Builder::get().add_assign(AND, *$f, {*$x, *$y});
+    delete $f; delete $x; delete $y;
+  }
+| VAR[f] ASSIGN VAR[x] OR  VAR[y] SEMI {
+    Builder::get().add_assign(OR,  *$f, {*$x, *$y});
+    delete $f; delete $x; delete $y;
+  }
+| VAR[f] ASSIGN VAR[x] XOR VAR[y] SEMI {
+    Builder::get().add_assign(XOR, *$f, {*$x, *$y});
+    delete $f; delete $x; delete $y;
+  }
+| VAR[f] ASSIGN VAR[x] ADD VAR[y] SEMI {
+    Builder::get().add_assign(ADD, *$f, {*$x, *$y});
+    delete $f; delete $x; delete $y;
+  }
+| VAR[f] ASSIGN VAR[x] SUB VAR[y] SEMI {
+    Builder::get().add_assign(SUB, *$f, {*$x, *$y});
+    delete $f; delete $x; delete $y;
+  }
 ;
 
 %%

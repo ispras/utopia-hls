@@ -37,6 +37,12 @@ std::vector<bool> Builder::to_value(const std::string &value) const {
   return result;
 }
 
+Variable Builder::to_var(const std::string &value) const {
+  Type type(Type::UINT, value.size() - 2);
+  Variable var("$" + value, Variable::WIRE, Variable::INNER, type);
+  return var;
+}
+
 std::unique_ptr<Net> Builder::create() {
   auto net = std::make_unique<Net>();
 
@@ -76,13 +82,19 @@ std::unique_ptr<Net> Builder::create() {
   for (const auto &proc: _model.procs) {
     for (const auto &assign: proc.action) {
       auto v = variables.find(assign.out);
-      use_nodes[assign.out] = def_count[assign.out] > 1
-        ? net->add_phi(v->second)
-        : net->add_fun(v->second, assign.func, {});
+      if (def_count[assign.out] > 1) {
+        use_nodes[assign.out] = net->add_phi(v->second);
+      } else if (v->second.kind() == Variable::WIRE) {
+        use_nodes[assign.out] = net->add_fun(v->second, assign.func, {});
+      } else {
+        use_nodes[assign.out] = net->add_reg(v->second, nullptr);
+      }
     }
   }
  
   // Construct p-nodes.
+  std::unordered_map<std::string, VNode*> val_nodes;
+
   for (const auto &proc: _model.procs) {
     Event event(proc.event, !proc.signal.empty() ? use_nodes[proc.signal] : nullptr);
 
@@ -96,10 +108,19 @@ std::unique_ptr<Net> Builder::create() {
     for (const auto &assign: proc.action) {
       std::vector<VNode *> inputs;
 
-      std::vector<bool> value;
       for (const auto &in: assign.in) {
         if (in.at(0) == '0') {
-          value = to_value(in);
+	  VNode *cnode = nullptr;
+          auto i = val_nodes.find(in);
+
+	  if (i != val_nodes.end()) {
+            cnode = i->second;
+          } else {
+            cnode = net->add_val(to_var(in), to_value(in));
+	    val_nodes[in] = cnode;
+          }
+
+	  inputs.push_back(cnode);
           break;
         } else {
           auto i = use_nodes.find(in);
@@ -113,11 +134,11 @@ std::unique_ptr<Net> Builder::create() {
 
       if (def_count[assign.out] == 1) {
         vnode = use_nodes[assign.out];
-        net->update(vnode, inputs, value);
-      } else if (value.empty()) {
+        net->update(vnode, inputs);
+      } else if (v->second.kind() == Variable::WIRE) {
         vnode = net->add_fun(v->second, assign.func, inputs);
       } else {
-        vnode = net->add_val(v->second, value);
+	vnode = net->add_reg(v->second, inputs.front());
       }
 
       action.push_back(vnode);
