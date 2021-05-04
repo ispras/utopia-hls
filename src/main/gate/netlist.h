@@ -25,8 +25,8 @@
 using namespace eda::rtl;
 
 namespace eda::rtl {
-class Net;
-class VNode;
+  class Net;
+  class VNode;
 } // namespace eda::rtl
 
 namespace eda::gate {
@@ -39,12 +39,12 @@ class FLibrary;
  */
 class Netlist final {
 public:
-  typedef std::vector<unsigned> GateIdList;
-  typedef std::vector<bool> Value;
-  typedef std::vector<GateIdList> In;
-  typedef GateIdList Out;
-  typedef std::pair<Event::Kind, unsigned> ControlEvent;
-  typedef std::vector<ControlEvent> ControlList;
+  using GateIdList = std::vector<unsigned>;
+  using Value = std::vector<bool>;
+  using In = std::vector<GateIdList>;
+  using Out = GateIdList;
+  using ControlEvent = std::pair<Event::Kind, unsigned>;
+  using ControlList = std::vector<ControlEvent>;
 
   Netlist() {
     _gates.reserve(1024*1024);

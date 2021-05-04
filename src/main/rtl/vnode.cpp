@@ -41,11 +41,11 @@ std::ostream& operator <<(std::ostream &out, const VNode &vnode) {
   case VNode::SRC:
     return out << "S{" << vnode.var() << "}";
   case VNode::VAL:
-    return out << "C{" << vnode.var() << " <= " << vnode.value()<< "}";
+    return out << "C{" << vnode.var() << " = " << vnode.value()<< "}";
   case VNode::FUN:
-    return out << "F{" << vnode.var() << " <= " << vnode.func() << "(" << vnode.inputs() << ")}";
+    return out << "F{" << vnode.var() << " = " << vnode.func() << "(" << vnode.inputs() << ")}";
   case VNode::MUX:
-    return out << "M{" << vnode.var() << " <= mux(" << vnode.inputs() << ")}";
+    return out << "M{" << vnode.var() << " = mux(" << vnode.inputs() << ")}";
   case VNode::REG:
     out << "R{";
     bool separator = false;
@@ -54,7 +54,7 @@ std::ostream& operator <<(std::ostream &out, const VNode &vnode) {
       if (i < vnode.esize()) {
         out << vnode.event(i) << ": ";
       }
-      out << vnode.var() << " <= " << vnode.input(i)->name();
+      out << vnode.var() << " = " << vnode.input(i)->name();
       separator = true;
     }
     return out << "}";

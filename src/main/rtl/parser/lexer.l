@@ -31,7 +31,6 @@ VAR  [_a-zA-Z][_a-zA-Z0-9]*
 "output"   { return TOK_OUTPUT;  }
 "wire"     { return TOK_WIRE;    }
 "reg"      { return TOK_REG;     }
-"always"   { return TOK_ALWAYS;  }
 "if"       { return TOK_IF;      }
 "posedge"  { return TOK_POSEDGE; }
 "negedge"  { return TOK_NEGEDGE; }
@@ -39,7 +38,7 @@ VAR  [_a-zA-Z][_a-zA-Z0-9]*
 "level1"   { return TOK_LEVEL1;  }
 "@"        { return TOK_AT;      }
 "*"        { return TOK_STAR;    }
-"<="       { return TOK_ASSIGN;  }
+"="        { return TOK_ASSIGN;  }
 "~"        { return TOK_NOT;     }
 "&"        { return TOK_AND;     }
 "|"        { return TOK_OR;      }

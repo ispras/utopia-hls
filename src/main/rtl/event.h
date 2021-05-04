@@ -27,7 +27,7 @@ class VNode;
  */
 class Event final {
 public:
-  typedef std::vector<Event> List;
+  using List = std::vector<Event>;
 
   enum Kind {
     /// Positive edge: always_ff @(posedge <node>) begin <action> end.

@@ -41,7 +41,7 @@ class VNode final {
   friend class PNode;
 
 public:
-  typedef std::vector<VNode *> List;
+  using List = std::vector<VNode *>;
 
   enum Kind {
     /// Source node (s-node): input wire x.

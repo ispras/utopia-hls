@@ -32,7 +32,7 @@ class Gate;
  */
 class Signal final {
 public:
-  typedef std::vector<Signal> List;
+  using List = std::vector<Signal>;
 
   Signal(Event::Kind kind, const Gate *gate):
       _kind(kind), _gate(gate) {

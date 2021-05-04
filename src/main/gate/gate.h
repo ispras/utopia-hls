@@ -33,7 +33,7 @@ class Gate final {
   friend class Netlist;
 
 public:
-  typedef std::vector<Gate *> List;
+  using List = std::vector<Gate *>;
 
   const unsigned id() const { return _id; }
   GateSymbol kind() const { return _kind; }

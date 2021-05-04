@@ -11,31 +11,31 @@ wire   u:8 f;
 wire   u:8 g;
 wire   u:8 w;
 
-always @(*) {
-  n <= ~c;
-  f <= x + y;
-  g <= x - y;
-  u <= w;
-  v <= r;
+@(*) {
+  n = ~c;
+  f = x + y;
+  g = x - y;
+  u = w;
+  v = r;
 }
 
-always @(*) if (c) {
-  w <= f;
+@(*) if (c) {
+  w = f;
 }
 
-always @(*) if(n) {
-  w <= g; 
+@(*) if(n) {
+  w = g; 
 }
 
-always @(level1(rst)) {
-  r <= 0b00000000;
+@(level1(rst)) {
+  r = 0b00000000;
 }
 
-always @(posedge(clk)) if (c) {
-  r <= f;
+@(posedge(clk)) if (c) {
+  r = f;
 }
 
-always @(posedge(clk)) if (n) {
-  r <= g;
+@(posedge(clk)) if (n) {
+  r = g;
 }
 

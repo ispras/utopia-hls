@@ -34,12 +34,12 @@ class Netlist;
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>.
  */
 struct FLibrary {
-  typedef typename Netlist::GateIdList GateIdList;
-  typedef typename Netlist::Value Value;
-  typedef typename Netlist::In In;
-  typedef typename Netlist::Out Out;
-  typedef typename Netlist::ControlEvent ControlEvent;
-  typedef typename Netlist::ControlList ControlList;
+  using GateIdList = Netlist::GateIdList;
+  using Value = Netlist::Value;
+  using In = Netlist::In;
+  using Out = Netlist::Out;
+  using ControlEvent = Netlist::ControlEvent;
+  using ControlList = Netlist::ControlList;
 
   /// Checks if the library supports the given function.
   virtual bool supports(FuncSymbol func) const = 0;

@@ -31,7 +31,7 @@ class PNode final {
   friend class Net;
 
 public:
-  typedef std::vector<PNode *> List;
+  using List = std::vector<PNode *>;
 
   const Event& event() const { return _event; }
 

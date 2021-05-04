@@ -39,7 +39,6 @@
   OUTPUT
   WIRE
   REG
-  ALWAYS
   IF
   POSEDGE
   NEGEDGE
@@ -104,7 +103,7 @@ decl:
 
 proc:
   { Builder::get().start_proc(); } 
-  ALWAYS AT LBRACK event RBRACK guard LCURLY action RCURLY
+  AT LBRACK event RBRACK guard LCURLY action RCURLY
   { Builder::get().end_proc(); }
 ;
 
