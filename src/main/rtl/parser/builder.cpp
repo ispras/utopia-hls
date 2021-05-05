@@ -12,10 +12,10 @@
  * the License.
  */
 
-#include "rtl/parser/builder.h"
-
 #include <iostream>
 #include <unordered_map>
+
+#include "rtl/parser/builder.h"
 
 using namespace eda::rtl;
 

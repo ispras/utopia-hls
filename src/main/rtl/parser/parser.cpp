@@ -12,10 +12,23 @@
  * the License.
  */
 
-#include <string>
+#include <stdio.h>
+
+#include "rtl/parser/parser.h"
+
+extern FILE *yyin;
+extern int yyparse(void);
 
 namespace eda::rtl::parser {
 
-int parse(const std::string &filename);
+int parse(const std::string &filename) {
+  FILE *file = fopen(filename.c_str(), "r");
+  if (file == nullptr) {
+    return -1;
+  }
+
+  yyin = file;
+  return yyparse();
+}
 
 } // namespace eda::rtl::parser

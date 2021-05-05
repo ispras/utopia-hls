@@ -1,4 +1,6 @@
-SRC = main.cpp \
+C = lib/aiger/aiger.c
+
+CPP = main.cpp \
       gate/flibrary.cpp \
       gate/gate.cpp \
       gate/gsymbol.cpp \
@@ -10,31 +12,45 @@ SRC = main.cpp \
       rtl/vnode.cpp \
       rtl/pnode.cpp \
       rtl/parser/builder.cpp \
+      rtl/parser/parser.cpp \
       utils/utils.cpp
-
-TEST = test.ril
 
 L = rtl/parser/lexer.l
 Y = rtl/parser/parser.y
 
-L_C = lexer.yy.c
-Y_C = parser.tab.c
-Y_H = parser.tab.h
+L_C = lexer.yy.cpp
+Y_C = parser.tab.cpp
+Y_H = parser.tab.hpp
+
+OBJ = $(C:%.c=%.o) $(CPP:%.cpp=%.o) $(Y_C:%.cpp=%.o) $(L_C:%.cpp=%.o)
 
 EXE = main
 
-CFLAGS = -I. -std=c++17 -g3 -Wall -DYYERROR_VERBOSE
+CC  = gcc
+CXX = g++
+LD  = ld
+
+TEST = test.ril
+
+CFLAGS = -I. -g3 -Wall
+CXXFLAGS = $(CFLAGS) -std=c++17
 
 all: $(EXE)
 
-$(EXE): $(SRC) $(L_C) $(Y_C)
-	g++ $(CFLAGS) -o $@ $^ -lfl
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(EXE): $(OBJ)
+	$(CXX) $(CXXFLAGS) -DYYERROR_VERBOSE -o $@ $^ -lfl
+
+$(Y_C): $(Y)
+	bison -d -o $@ $^
 
 $(L_C): $(L)
 	flex -o $@ $^
-
-$(Y_C): $(Y)
-	bison -d $^
 
 run: $(EXE) $(TEST)
 	./$(EXE) $(TEST)
@@ -46,5 +62,5 @@ memcheck: $(EXE)
 	valgrind ./$(EXE)
 
 clean:
-	rm -rf $(EXE) $(L_C) $(Y_C) $(Y_H)
+	rm -rf $(EXE) $(OBJ) $(L_C) $(Y_C) $(Y_H)
 
