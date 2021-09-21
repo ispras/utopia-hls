@@ -14,12 +14,13 @@
 
 #include <cassert>
 
-#include "gate/flibrary.h"
-#include "gate/netlist.h"
+#include "gate/model/netlist.h"
+#include "rtl/library/flibrary.h"
 
-using namespace eda::rtl;
+using namespace eda::gate::model;
+using namespace eda::rtl::model;
 
-namespace eda::gate {
+namespace eda::rtl::library {
 
 std::unique_ptr<FLibrary> FLibraryDefault::_instance;
 
@@ -189,4 +190,4 @@ Signal FLibraryDefault::invert_if_negative(const ControlEvent &event, Netlist &n
   }
 }
 
-} // namespace eda::gate
+} // namespace eda::rtl::library

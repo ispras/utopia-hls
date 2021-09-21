@@ -18,16 +18,19 @@
 #include <memory>
 #include <vector>
 
-#include "gate/gsymbol.h"
-#include "gate/netlist.h"
-#include "gate/signal.h"
-#include "rtl/fsymbol.h"
+#include "gate/model/gsymbol.h"
+#include "gate/model/netlist.h"
+#include "gate/model/signal.h"
+#include "rtl/model/fsymbol.h"
 
-using namespace eda::rtl;
+using namespace eda::gate::model;
+using namespace eda::rtl::model;
 
-namespace eda::gate {
+namespace eda::gate::model {
+  class Netlist;
+} // namespace eda::gate::model
 
-class Netlist;
+namespace eda::rtl::library {
 
 /**
  * \brief Interface for functional library.
@@ -126,4 +129,4 @@ void FLibraryDefault::synth_binary_bitwise_op(const Out &out, const In &in, Netl
   }
 }
 
-} // namespace eda::gate
+} // namespace eda::rtl::library

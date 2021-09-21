@@ -20,10 +20,10 @@
 #include <utility>
 #include <vector>
 
-#include "rtl/pnode.h"
-#include "rtl/vnode.h"
+#include "rtl/model/pnode.h"
+#include "rtl/model/vnode.h"
 
-namespace eda::rtl {
+namespace eda::rtl::model {
 
 /**
  * \brief An intermediate representation combining p- and v-nets.
@@ -127,4 +127,4 @@ private:
 
 std::ostream& operator <<(std::ostream &out, const Net &net);
 
-} // namespace eda::rtl
+} // namespace eda::rtl::model

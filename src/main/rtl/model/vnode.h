@@ -21,11 +21,11 @@
 #include <string>
 #include <vector>
 
-#include "rtl/event.h"
-#include "rtl/fsymbol.h"
-#include "rtl/variable.h"
+#include "rtl/model/event.h"
+#include "rtl/model/fsymbol.h"
+#include "rtl/model/variable.h"
 
-namespace eda::rtl {
+namespace eda::rtl::model {
 
 class Net;
 class PNode;
@@ -114,4 +114,4 @@ private:
 
 std::ostream& operator <<(std::ostream &out, const VNode &vnode);
 
-} // namespace eda::rtl
+} // namespace eda::rtl::model

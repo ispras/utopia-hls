@@ -14,13 +14,25 @@
 
 #include <iostream>
 
-#include "gate/gate.h"
-#include "gate/signal.h"
+#include "gate/model/gate.h"
 
-namespace eda::gate {
+namespace eda::gate::model {
 
-std::ostream& operator <<(std::ostream &out, const Signal &signal) {
-  return out << signal.kind() << "(" << signal.gate()->id() << ")";
+static std::ostream& operator <<(std::ostream &out, const Signal::List &signals) {
+  bool separator = false;
+  for (const Signal &signal: signals) {
+    out << (separator ? ", " : "") << signal.kind() << "(" << signal.gate()->id() << ")";
+    separator = true;
+  }
+  return out;
 }
 
-} // namespace eda::gate
+std::ostream& operator <<(std::ostream &out, const Gate &gate) {
+  if (gate.is_source()) {
+    return out << "S{" << gate.id() << "}";
+  } else {
+    return out << "G{" << gate.id() << " <= " << gate.kind() << "(" << gate.inputs() << ")}";
+  }
+}
+
+} // namespace eda::gate::model

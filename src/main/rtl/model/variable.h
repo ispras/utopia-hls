@@ -18,7 +18,7 @@
 #include <iostream>
 #include <vector>
 
-namespace eda::rtl {
+namespace eda::rtl::model {
 
 /**
  * \brief Represents a data type.
@@ -90,4 +90,4 @@ inline std::ostream& operator <<(std::ostream &out, const Variable &variable) {
   return out << variable.name();
 }
 
-} // namespace eda::rtl
+} // namespace eda::rtl::model

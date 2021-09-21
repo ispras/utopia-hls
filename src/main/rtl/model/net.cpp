@@ -15,12 +15,12 @@
 #include <cassert>
 #include <cstddef>
 
-#include "rtl/net.h"
+#include "rtl/model/net.h"
 #include "util/utils.h"
 
 using namespace eda::utils;
 
-namespace eda::rtl {
+namespace eda::rtl::model {
  
 void Net::create() {
   assert(!_created);
@@ -196,4 +196,4 @@ std::ostream& operator <<(std::ostream &out, const Net &net) {
   return out;
 }
  
-} // namespace eda::rtl
+} // namespace eda::rtl::model

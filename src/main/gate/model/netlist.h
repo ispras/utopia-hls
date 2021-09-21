@@ -14,30 +14,26 @@
 
 #pragma once
 
-#include <cassert>
 #include <iostream>
-#include <unordered_map>
+#include <utility>
 #include <vector>
 
-#include "gate/gate.h"
-#include "rtl/event.h"
+#include "gate/model/gate.h"
+#include "rtl/model/event.h"
 
-using namespace eda::rtl;
+namespace eda::rtl::compiler {
+  class Compiler;
+} // namespace eda::rtl::compiler
 
-namespace eda::rtl {
-  class Net;
-  class VNode;
-} // namespace eda::rtl
-
-namespace eda::gate {
-
-class FLibrary;
+namespace eda::gate::model {
 
 /**
  * \brief Represents a gate-level netlist.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class Netlist final {
+  friend class eda::rtl::compiler::Compiler;
+
 public:
   using GateIdList = std::vector<unsigned>;
   using Value = std::vector<bool>;
@@ -48,7 +44,6 @@ public:
 
   Netlist() {
     _gates.reserve(1024*1024);
-    _gates_id.reserve(1024*1024);
   } 
 
   std::size_t size() const { return _gates.size(); }
@@ -81,33 +76,15 @@ public:
     g->set_inputs(inputs);
   }
 
-  /// Synthesizes the gate-level netlist from the RTL-level net.
-  void create(const eda::rtl::Net &net, FLibrary &lib);
-
 private:
-  unsigned gate_id(const VNode *vnode);
-  void alloc_gates(const VNode *vnode);
-
-  void synth_src(const VNode *vnode, FLibrary &lib);
-  void synth_val(const VNode *vnode, FLibrary &lib);
-  void synth_fun(const VNode *vnode, FLibrary &lib);
-  void synth_mux(const VNode *vnode, FLibrary &lib);
-  void synth_reg(const VNode *vnode, FLibrary &lib);
-
-  Out out(const VNode *vnode);
-  In in(const VNode *vnode);
-
   unsigned add_gate(Gate *gate) {
     _gates.push_back(gate);
     return gate->id();
   }
 
   Gate::List _gates;
-
-  // Maps vnodes to the identifiers of their lower bits' gates.
-  std::unordered_map<std::string, unsigned> _gates_id;
 };
 
 std::ostream& operator <<(std::ostream &out, const Netlist &netlist);
 
-} // namespace eda::gate
+} // namespace eda::gate::model

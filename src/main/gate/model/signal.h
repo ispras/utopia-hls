@@ -18,11 +18,11 @@
 #include <iostream>
 #include <vector>
 
-#include "rtl/event.h"
+#include "rtl/model/event.h"
 
-using namespace eda::rtl;
+using namespace eda::rtl::model;
 
-namespace eda::gate {
+namespace eda::gate::model {
 
 class Gate;
 
@@ -52,4 +52,4 @@ private:
 
 std::ostream& operator <<(std::ostream &out, const Signal &signal);
 
-} // namespace eda::gate
+} // namespace eda::gate::model

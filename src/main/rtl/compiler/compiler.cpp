@@ -15,18 +15,24 @@
 #include <cassert>
 #include <cstddef>
 
-#include "gate/flibrary.h"
-#include "gate/netlist.h"
-#include "rtl/net.h"
-#include "rtl/vnode.h"
+#include "gate/model/gate.h"
+#include "gate/model/netlist.h"
+#include "rtl/compiler/compiler.h"
+#include "rtl/library/flibrary.h"
+#include "rtl/model/net.h"
+#include "rtl/model/vnode.h"
 #include "util/utils.h"
 
-using namespace eda::rtl;
+using namespace eda::gate::model;
+using namespace eda::rtl::library;
+using namespace eda::rtl::model;
 using namespace eda::utils;
 
-namespace eda::gate {
+namespace eda::rtl::compiler {
 
-void Netlist::create(const Net &net, FLibrary &lib) {
+void Compiler::compile(const Net &net) {
+  assert(_netlist.size() == 0);
+
   for (const auto vnode: net.vnodes()) {
     alloc_gates(vnode);
   }
@@ -34,51 +40,51 @@ void Netlist::create(const Net &net, FLibrary &lib) {
   for (const auto vnode: net.vnodes()) {
     switch (vnode->kind()) {
     case VNode::SRC:
-      synth_src(vnode, lib);
+      synth_src(vnode);
       break;
     case VNode::VAL:
-      synth_val(vnode, lib);
+      synth_val(vnode);
       break;
     case VNode::FUN:
-      synth_fun(vnode, lib);
+      synth_fun(vnode);
       break;
     case VNode::MUX:
-      synth_mux(vnode, lib);
+      synth_mux(vnode);
       break;
     case VNode::REG:
-      synth_reg(vnode, lib);
+      synth_reg(vnode);
       break;
     }
   }
 }
 
-unsigned Netlist::gate_id(const VNode *vnode) {
+unsigned Compiler::gate_id(const VNode *vnode) {
   const auto i = _gates_id.find(vnode->name());
   if (i != _gates_id.end()) {
     return i->second;
   }
 
-  _gates_id.insert({ vnode->name(), _gates.size() });
-  return _gates.size();
+  _gates_id.insert({ vnode->name(), _netlist.size() });
+  return _netlist.size();
 }
 
-void Netlist::alloc_gates(const VNode *vnode) {
+void Compiler::alloc_gates(const VNode *vnode) {
   assert(vnode != nullptr);
 
   const unsigned base = gate_id(vnode);
   const unsigned size = vnode->var().type().width();
 
   for (unsigned i = 0; i < size; i++) {
-    assert(base + i == _gates.size());
-    _gates.push_back(new Gate(base + i));
+    assert(base + i == _netlist.size());
+    _netlist.add_gate(new Gate(base + i));
   }
 }
 
-Netlist::Out Netlist::out(const VNode *vnode) {
+Netlist::Out Compiler::out(const VNode *vnode) {
   const unsigned base = gate_id(vnode);
   const unsigned size = vnode->var().type().width();
 
-  Out out(size);
+  Netlist::Out out(size);
   for (unsigned i = 0; i < size; i++) {
     out[i] = base + i;
   }
@@ -86,8 +92,8 @@ Netlist::Out Netlist::out(const VNode *vnode) {
   return out;
 }
 
-Netlist::In Netlist::in(const VNode *vnode) {
-  In in(vnode->arity());
+Netlist::In Compiler::in(const VNode *vnode) {
+  Netlist::In in(vnode->arity());
   for (std::size_t i = 0; i < vnode->arity(); i++) {
     in[i] = out(vnode->input(i));
   }
@@ -95,41 +101,34 @@ Netlist::In Netlist::in(const VNode *vnode) {
   return in;
 }
 
-void Netlist::synth_src(const VNode *vnode, FLibrary &lib) {
+void Compiler::synth_src(const VNode *vnode) {
   // Do nothing.
 }
 
-void Netlist::synth_val(const VNode *vnode, FLibrary &lib) {
-  lib.synthesize(out(vnode), vnode->value(), *this);
+void Compiler::synth_val(const VNode *vnode) {
+  _library.synthesize(out(vnode), vnode->value(), _netlist);
 }
 
-void Netlist::synth_fun(const VNode *vnode, FLibrary &lib) {
-  assert(lib.supports(vnode->func()));
-  lib.synthesize(vnode->func(), out(vnode), in(vnode), *this);
+void Compiler::synth_fun(const VNode *vnode) {
+  assert(_library.supports(vnode->func()));
+  _library.synthesize(vnode->func(), out(vnode), in(vnode), _netlist);
 }
 
-void Netlist::synth_mux(const VNode *vnode, FLibrary &lib) {
-  assert(lib.supports(FuncSymbol::MUX));
-  lib.synthesize(FuncSymbol::MUX, out(vnode), in(vnode), *this);
+void Compiler::synth_mux(const VNode *vnode) {
+  assert(_library.supports(FuncSymbol::MUX));
+  _library.synthesize(FuncSymbol::MUX, out(vnode), in(vnode), _netlist);
 }
 
-void Netlist::synth_reg(const VNode *vnode, FLibrary &lib) {
+void Compiler::synth_reg(const VNode *vnode) {
   // Level (latch), edge (flip-flop), or edge and level (flip-flop /w set/reset).
   assert(vnode->esize() == 1 || vnode->esize() == 2);
 
-  ControlList control;
+  Netlist::ControlList control;
   for (const auto &event: vnode->events()) {
     control.push_back({ event.kind(), gate_id(event.node()) });
   }
 
-  lib.synthesize(out(vnode), in(vnode), control, *this);
+  _library.synthesize(out(vnode), in(vnode), control, _netlist);
 }
 
-std::ostream& operator <<(std::ostream &out, const Netlist &netlist) {
-  for (const auto gate: netlist.gates()) {
-    out << *gate << std::endl;
-  }
-  return out;
-}
- 
-} // namespace eda::gate
+} // namespace eda::rtl::compiler

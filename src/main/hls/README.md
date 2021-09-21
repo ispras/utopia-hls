@@ -3,9 +3,10 @@
 High-level modeling and synthesis facilities:
 
 * `parser` parses a high-level description of the accelerator and builds the IR;
-* `model` implements the high-level IR, including the basic transformations;
+* `model` implements the high-level IR w/ basic transformations;
 * `scheduler` performs spatial/temporal optimization of the computation graph;
-* `library` implements the library infrastructure and some functional/communication units;
-* `mapper` binds the operations w/ library elements and maps the computation graph to the FPGA;
-* `builder` constructs the RTL IR and generates the HDL description;
-* `runtime` provides drivers and an API for interacting w/ the constructed accelerator.
+* `library` contains the library infrastructure and basic libraries;
+* `mapper` binds the operations w/ library elements and maps the computation graph to HW;
+* `compiler` constructs the RTL IR and generates the HDL description;
+* `runtime` provides the drivers and the API for interacting w/ the constructed accelerator;
+* `debugger` includes simulation, verification and debugging tools. 

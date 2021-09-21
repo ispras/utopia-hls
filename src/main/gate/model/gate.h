@@ -17,10 +17,14 @@
 #include <iostream>
 #include <vector>
 
-#include "gate/gsymbol.h"
-#include "gate/signal.h"
+#include "gate/model/gsymbol.h"
+#include "gate/model/signal.h"
 
-namespace eda::gate {
+namespace eda::rtl::compiler {
+  class Compiler;
+} // eda::rtl::compiler
+
+namespace eda::gate::model {
 
 class Netlist;
 
@@ -31,6 +35,7 @@ class Netlist;
 class Gate final {
   // Creation.
   friend class Netlist;
+  friend class eda::rtl::compiler::Compiler;
 
 public:
   using List = std::vector<Gate *>;
@@ -77,4 +82,4 @@ private:
 
 std::ostream& operator <<(std::ostream &out, const Gate &gate);
 
-} // namespace eda::gate
+} // namespace eda::gate::model

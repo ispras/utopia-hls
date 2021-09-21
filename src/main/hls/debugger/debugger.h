@@ -14,5 +14,5 @@
 
 #pragma once
 
-namespace eda::hls::builder {
-} // namespace eda::hls::builder
+namespace eda::hls::debugger {
+} // namespace eda::hls::debugger

@@ -14,15 +14,18 @@
 
 #include <iostream>
 
-#include "gate/flibrary.h"
-#include "gate/gate.h"
-#include "gate/netlist.h"
-#include "rtl/net.h"
+#include "gate/model/gate.h"
+#include "gate/model/netlist.h"
+#include "rtl/compiler/compiler.h"
+#include "rtl/library/flibrary.h"
+#include "rtl/model/net.h"
 #include "rtl/parser/builder.h"
 #include "rtl/parser/parser.h"
 
-using namespace eda::gate;
-using namespace eda::rtl;
+using namespace eda::gate::model;
+using namespace eda::rtl::compiler;
+using namespace eda::rtl::library;
+using namespace eda::rtl::model;
 using namespace eda::rtl::parser;
 
 int main(int argc, char **argv) {
@@ -48,7 +51,8 @@ int main(int argc, char **argv) {
   std::cout << *pnet << std::endl;
 
   Netlist netlist;
-  netlist.create(*pnet, FLibraryDefault::get());
+  Compiler compiler(netlist, FLibraryDefault::get());
+  compiler.compile(*pnet);
 
   std::cout << "------ netlist ------" << std::endl;
   std::cout << netlist;

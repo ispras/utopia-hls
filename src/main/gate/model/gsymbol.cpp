@@ -14,9 +14,9 @@
 
 #include <iostream>
 
-#include "gate/gsymbol.h"
+#include "gate/model/gsymbol.h"
 
-namespace eda::gate {
+namespace eda::gate::model {
 
 std::ostream& operator <<(std::ostream &out, GateSymbol gate) {
   switch (gate) {
@@ -51,4 +51,4 @@ std::ostream& operator <<(std::ostream &out, GateSymbol gate) {
   return out;
 }
 
-} // namespace eda::gate
+} // namespace eda::gate::model

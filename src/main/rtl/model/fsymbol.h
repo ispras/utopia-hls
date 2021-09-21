@@ -16,7 +16,7 @@
 
 #include <iostream>
 
-namespace eda::rtl {
+namespace eda::rtl::model {
 
 /**
  * \brief Defines names of supported RTL-level functions.
@@ -44,4 +44,4 @@ enum FuncSymbol {
 
 std::ostream& operator <<(std::ostream &out, FuncSymbol func);
 
-} // namespace eda::rtl
+} // namespace eda::rtl::model

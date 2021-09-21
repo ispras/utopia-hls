@@ -18,12 +18,12 @@
 #include <string>
 #include <vector>
 
-#include "rtl/event.h"
-#include "rtl/fsymbol.h"
-#include "rtl/net.h"
-#include "rtl/variable.h"
+#include "rtl/model/event.h"
+#include "rtl/model/fsymbol.h"
+#include "rtl/model/net.h"
+#include "rtl/model/variable.h"
 
-using namespace eda::rtl;
+using namespace eda::rtl::model;
 
 namespace eda::rtl::parser {
 

@@ -1,16 +1,17 @@
 C = ext/aiger/aiger.c
 
 CPP = main.cpp \
-      gate/flibrary.cpp \
-      gate/gate.cpp \
-      gate/gsymbol.cpp \
-      gate/netlist.cpp \
-      gate/signal.cpp \
-      rtl/event.cpp \
-      rtl/fsymbol.cpp \
-      rtl/net.cpp \
-      rtl/vnode.cpp \
-      rtl/pnode.cpp \
+      gate/model/gate.cpp \
+      gate/model/gsymbol.cpp \
+      gate/model/netlist.cpp \
+      gate/model/signal.cpp \
+      rtl/compiler/compiler.cpp \
+      rtl/library/flibrary.cpp \
+      rtl/model/event.cpp \
+      rtl/model/fsymbol.cpp \
+      rtl/model/net.cpp \
+      rtl/model/vnode.cpp \
+      rtl/model/pnode.cpp \
       rtl/parser/builder.cpp \
       rtl/parser/parser.cpp \
       util/utils.cpp
