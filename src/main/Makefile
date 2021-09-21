@@ -1,4 +1,4 @@
-C = lib/aiger/aiger.c
+C = ext/aiger/aiger.c
 
 CPP = main.cpp \
       gate/flibrary.cpp \
@@ -13,7 +13,7 @@ CPP = main.cpp \
       rtl/pnode.cpp \
       rtl/parser/builder.cpp \
       rtl/parser/parser.cpp \
-      utils/utils.cpp
+      util/utils.cpp
 
 L = rtl/parser/lexer.l
 Y = rtl/parser/parser.y

@@ -16,7 +16,7 @@
 #include <cstddef>
 
 #include "rtl/net.h"
-#include "utils/utils.h"
+#include "util/utils.h"
 
 using namespace eda::utils;
 

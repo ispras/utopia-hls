@@ -19,7 +19,7 @@
 #include "gate/netlist.h"
 #include "rtl/net.h"
 #include "rtl/vnode.h"
-#include "utils/utils.h"
+#include "util/utils.h"
 
 using namespace eda::rtl;
 using namespace eda::utils;
