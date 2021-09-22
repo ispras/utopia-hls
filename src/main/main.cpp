@@ -50,12 +50,11 @@ int main(int argc, char **argv) {
   std::cout << "------ p/v-nets ------" << std::endl;
   std::cout << *pnet << std::endl;
 
-  Netlist netlist;
-  Compiler compiler(netlist, FLibraryDefault::get());
-  compiler.compile(*pnet);
+  Compiler compiler(FLibraryDefault::get());
+  std::unique_ptr<Netlist> netlist = compiler.compile(*pnet);
 
   std::cout << "------ netlist ------" << std::endl;
-  std::cout << netlist;
+  std::cout << *netlist;
 
   return 0;
 }

@@ -15,6 +15,7 @@
 #pragma once
 
 #include <cassert>
+#include <memory>
 #include <unordered_map>
 
 #include "gate/model/netlist.h"
@@ -34,29 +35,29 @@ namespace eda::rtl::compiler {
  */
 class Compiler final {
 public:
-  Compiler(Netlist &netlist, FLibrary &library):
-    _netlist(netlist), _library(library) {
+  Compiler(FLibrary &library): _library(library) {
     _gates_id.reserve(1024*1024);
   }
 
   /// Compiles the gate-level netlist from the RTL net.
-  void compile(const Net &net);
+  std::unique_ptr<Netlist> compile(const Net &net);
 
 private:
-  Netlist &_netlist;
   FLibrary &_library;
 
-  unsigned gate_id(const VNode *vnode);
-  void alloc_gates(const VNode *vnode);
+  unsigned gate_id(const VNode *vnode) const;
+  unsigned gate_id(const VNode *vnode, const Netlist &netlist);
 
-  void synth_src(const VNode *vnode);
-  void synth_val(const VNode *vnode);
-  void synth_fun(const VNode *vnode);
-  void synth_mux(const VNode *vnode);
-  void synth_reg(const VNode *vnode);
+  void alloc_gates(const VNode *vnode, Netlist &netlist);
 
-  Netlist::Out out(const VNode *vnode);
+  void synth_src(const VNode *vnode, Netlist &netlist);
+  void synth_val(const VNode *vnode, Netlist &netlist);
+  void synth_fun(const VNode *vnode, Netlist &netlist);
+  void synth_mux(const VNode *vnode, Netlist &netlist);
+  void synth_reg(const VNode *vnode, Netlist &netlist);
+
   Netlist::In in(const VNode *vnode);
+  Netlist::Out out(const VNode *vnode);
 
   // Maps vnodes to the identifiers of their lower bits' gates.
   std::unordered_map<std::string, unsigned> _gates_id;
