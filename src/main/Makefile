@@ -5,6 +5,7 @@ CPP = main.cpp \
       gate/model/gsymbol.cpp \
       gate/model/netlist.cpp \
       gate/model/signal.cpp \
+      hls/model/model.cpp \
       rtl/compiler/compiler.cpp \
       rtl/library/flibrary.cpp \
       rtl/model/event.cpp \
@@ -16,14 +17,14 @@ CPP = main.cpp \
       rtl/parser/parser.cpp \
       util/utils.cpp
 
-L = rtl/parser/lexer.l
-Y = rtl/parser/parser.y
+L = hls/parser/lexer.l \
+    rtl/parser/lexer.l
 
-L_C = lexer.yy.cpp
-Y_C = parser.tab.cpp
-Y_H = parser.tab.hpp
+Y = hls/parser/parser.y \
+    rtl/parser/parser.y
 
-OBJ = $(C:%.c=%.o) $(CPP:%.cpp=%.o) $(Y_C:%.cpp=%.o) $(L_C:%.cpp=%.o)
+OBJ = $(C:%.c=%.o) $(CPP:%.cpp=%.o) \
+      $(Y:%.y=%.tab.o) $(L:%.l=%.yy.o)
 
 EXE = main
 
@@ -44,14 +45,15 @@ all: $(EXE)
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+%.tab.cpp: %.y
+	bison -d -o $@ $^
+
+%.yy.cpp: %.l
+	flex -o $@ $^
+
 $(EXE): $(OBJ)
 	$(CXX) $(CXXFLAGS) -DYYERROR_VERBOSE -o $@ $^ -lfl
 
-$(Y_C): $(Y)
-	bison -d -o $@ $^
-
-$(L_C): $(L)
-	flex -o $@ $^
 
 run: $(EXE) $(TEST)
 	./$(EXE) $(TEST)
@@ -63,5 +65,5 @@ memcheck: $(EXE)
 	valgrind ./$(EXE)
 
 clean:
-	rm -rf $(EXE) $(OBJ) $(L_C) $(Y_C) $(Y_H)
+	rm -rf $(EXE) $(OBJ) $(L:%.l=%.yy.cpp) $(Y:%.y=%.tab.cpp) $(Y:%.y=%.tab.hpp)
 

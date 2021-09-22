@@ -14,13 +14,13 @@
 
 #include <stdio.h>
 
-#include "rtl/parser/parser.h"
+#include "hls/parser/parser.h"
 
-// The parser is built w/ the prefix 'rr' (not 'yy').
-extern FILE *rrin;
-extern int rrparse(void);
+// The parser is built w/ the prefix 'hh' (not 'yy').
+extern FILE *hhin;
+extern int hhparse(void);
 
-namespace eda::rtl::parser {
+namespace eda::hls::parser {
 
 int parse(const std::string &filename) {
   FILE *file = fopen(filename.c_str(), "r");
@@ -28,8 +28,8 @@ int parse(const std::string &filename) {
     return -1;
   }
 
-  rrin = file;
-  return rrparse();
+  hhin = file;
+  return hhparse();
 }
 
-} // namespace eda::rtl::parser
+} // namespace eda::hls::parser

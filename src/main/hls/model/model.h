@@ -14,5 +14,97 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+
 namespace eda::hls::model {
+
+struct ChanType final {
+  ChanType(const std::string &datatype, float maxflow):
+    datatype(datatype), maxflow(maxflow) {}
+
+  std::string datatype;
+  float maxflow;
+};
+
+struct NodeType final {
+  NodeType(const std::string &name, unsigned latency):
+    name(name), latency(latency) {}
+
+  void add_input(ChanType *type) {
+    inputs.push_back(type);
+  }
+
+  void add_output(ChanType *type) {
+    outputs.push_back(type);
+  }
+
+  std::string name;
+  unsigned latency;
+  std::vector<ChanType *> inputs;
+  std::vector<ChanType *> outputs;
+};
+
+struct Chan final {
+  Chan(const std::string &name, const ChanType &type):
+    name(name), type(type) {}
+
+  std::string name;
+  const ChanType &type;
+};
+
+struct Node final {
+  Node(const NodeType &type):
+    type(type) {}
+
+  void add_input(Chan *chan) {
+    inputs.push_back(chan);
+  }
+
+  void add_output(Chan *chan) {
+    outputs.push_back(chan);
+  }
+
+  const NodeType &type;
+  std::vector<Chan *> inputs;
+  std::vector<Chan *> outputs;
+};
+
+struct Graph final {
+  Graph(const std::string &name):
+    name(name) {}
+
+  void add_chan(Chan *chan) {
+    chans.push_back(chan);
+  }
+
+  void add_node(Node *node) {
+    nodes.push_back(node);
+  }
+
+  std::string name;
+  std::vector<Chan *> chans;
+  std::vector<Node *> nodes;
+};
+
+struct Model final {
+  Model() = default;
+
+  void add_chantype(ChanType *type) {
+    chantypes.push_back(type);
+  }
+
+  void add_nodetype(NodeType *type) {
+    nodetypes.push_back(type);
+  }
+
+  void add_graph(Graph *graph) {
+    graphs.push_back(graph);
+  }
+
+  std::vector<ChanType *> chantypes;
+  std::vector<NodeType *> nodetypes;
+  std::vector<Graph *> graphs;
+};
+
 } // namespace eda::hls::model

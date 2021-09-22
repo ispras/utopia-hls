@@ -12,7 +12,10 @@
  * the License.
  */
 
-#pragma once
+#include <string>
 
 namespace eda::hls::parser {
+
+int parse(const std::string &filename);
+
 } // namespace eda::hls::parser

@@ -21,18 +21,18 @@
   using namespace eda::rtl;
   using namespace eda::rtl::parser;
 
-  extern int rrlineno;
-  extern char* rrtext;
+  extern int hhlineno;
+  extern char* hhtext;
 
-  extern int rrlex(void);
+  extern int hhlex(void);
 
-  void rrerror(const char *error) {
-    std::cerr << "Error(" << rrlineno << "): " << error << std::endl;
-    std::cerr << rrtext << std::endl;
+  void hherror(const char *error) {
+    std::cerr << "Error(" << hhlineno << "): " << error << std::endl;
+    std::cerr << hhtext << std::endl;
   }
 %}
 
-%define api.prefix {rr}
+%define api.prefix {hh}
 %define api.value.type {std::string*}
 %define api.token.prefix {TOK_}
 %token

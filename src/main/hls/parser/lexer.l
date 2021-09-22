@@ -12,14 +12,14 @@
  * the License.
  */
 
-%option prefix="rr"
+%option prefix="hh"
 %option yylineno
 %option noyywrap
 %option nounput
 
 %{
   #include <string>
-  #include <rtl/parser/parser.tab.hpp>
+  #include <hls/parser/parser.tab.hpp>
 %}
 
 NUM  [1-9][0-9]*
@@ -52,19 +52,19 @@ VAR  [_a-zA-Z][_a-zA-Z0-9]*
 "{"        { return TOK_LCURLY;  }
 "}"        { return TOK_RCURLY;  }
 {NUM}      {
-             rrlval = new std::string(yytext);
+             hhlval = new std::string(yytext);
              return TOK_NUM;
            }
 {VAL}      {
-             rrlval = new std::string(yytext);
+             hhlval = new std::string(yytext);
              return TOK_VAL;
            }
 {TYPE}     {
-             rrlval = new std::string(yytext);
+             hhlval = new std::string(yytext);
              return TOK_TYPE;
            }
 {VAR}      {
-             rrlval = new std::string(yytext);
+             hhlval = new std::string(yytext);
              return TOK_VAR;
            }
 [ \t\r\n]+ { /* Whitespaces */   }
