@@ -6,6 +6,8 @@ CPP = main.cpp \
       gate/model/netlist.cpp \
       gate/model/signal.cpp \
       hls/model/model.cpp \
+      hls/parser/builder.cpp \
+      hls/parser/parser.cpp \
       rtl/compiler/compiler.cpp \
       rtl/library/flibrary.cpp \
       rtl/model/event.cpp \
@@ -32,7 +34,7 @@ CC  = gcc
 CXX = g++
 LD  = ld
 
-TEST = test.ril
+TEST = test.ril test.hil
 
 CFLAGS = -I. -g3 -Wall
 CXXFLAGS = $(CFLAGS) -std=c++17

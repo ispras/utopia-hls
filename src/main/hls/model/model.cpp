@@ -15,4 +15,10 @@
 #include <hls/model/model.h>
 
 namespace eda::hls::model {
+
+std::ostream& operator <<(std::ostream &out, const Model &model) {
+  // TODO:
+  return out;
+}
+
 } // namespace eda::hls::model

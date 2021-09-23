@@ -22,50 +22,38 @@
   #include <hls/parser/parser.tab.hpp>
 %}
 
-NUM  [1-9][0-9]*
-VAL  0b[0-1]+
-TYPE [su]:[1-9][0-9]*
-VAR  [_a-zA-Z][_a-zA-Z0-9]*
+REAL [0-9]+(.[0-9]+)?
+INT  [1-9][0-9]*
+ID   [_a-zA-Z][_a-zA-Z0-9]*
 
 %%
-"input"    { return TOK_INPUT;   }
-"output"   { return TOK_OUTPUT;  }
-"wire"     { return TOK_WIRE;    }
-"reg"      { return TOK_REG;     }
-"if"       { return TOK_IF;      }
-"posedge"  { return TOK_POSEDGE; }
-"negedge"  { return TOK_NEGEDGE; }
-"level0"   { return TOK_LEVEL0;  }
-"level1"   { return TOK_LEVEL1;  }
-"@"        { return TOK_AT;      }
-"*"        { return TOK_STAR;    }
+"graph"    { return TOK_GRAPH;   }
+"chan"     { return TOK_CHAN;    }
+"node"     { return TOK_NODE;    }
+"merge"    { return TOK_MERGE;   }
+"split"    { return TOK_SPLIT;   }
+"latency"  { return TOK_LATENCY; }
 "="        { return TOK_ASSIGN;  }
-"~"        { return TOK_NOT;     }
-"&"        { return TOK_AND;     }
-"|"        { return TOK_OR;      }
-"^"        { return TOK_XOR;     }
-"+"        { return TOK_ADD;     }
-"-"        { return TOK_SUB;     }
+"=>"       { return TOK_ARROW;   }
+","        { return TOK_COMMA;   }
 ";"        { return TOK_SEMI;    }
 "("        { return TOK_LBRACK;  }
 ")"        { return TOK_RBRACK;  }
+"<"        { return TOK_LANGLE;  }
+">"        { return TOK_RANGLE;  }
 "{"        { return TOK_LCURLY;  }
 "}"        { return TOK_RCURLY;  }
-{NUM}      {
+{INT}      {
              hhlval = new std::string(yytext);
-             return TOK_NUM;
+             return TOK_INT;
            }
-{VAL}      {
+{REAL}     {
              hhlval = new std::string(yytext);
-             return TOK_VAL;
+             return TOK_REAL;
            }
-{TYPE}     {
+{ID}       {
              hhlval = new std::string(yytext);
-             return TOK_TYPE;
-           }
-{VAR}      {
-             hhlval = new std::string(yytext);
-             return TOK_VAR;
+             return TOK_ID;
            }
 [ \t\r\n]+ { /* Whitespaces */   }
 .          { return TOK_OTHER;   }

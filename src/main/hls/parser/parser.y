@@ -16,10 +16,10 @@
   #include <string>
   #include <iostream>
 
-  #include "rtl/parser/builder.h"
+  #include "hls/parser/builder.h"
 
-  using namespace eda::rtl;
-  using namespace eda::rtl::parser;
+  using namespace eda::hls;
+  using namespace eda::hls::parser;
 
   extern int hhlineno;
   extern char* hhtext;
@@ -36,33 +36,25 @@
 %define api.value.type {std::string*}
 %define api.token.prefix {TOK_}
 %token
-  INPUT
-  OUTPUT
-  WIRE
-  REG
-  IF
-  POSEDGE
-  NEGEDGE
-  LEVEL0
-  LEVEL1
-  AT
-  STAR
+  GRAPH
+  CHAN
+  NODE
+  MERGE
+  SPLIT
+  LATENCY
   ASSIGN
-  NOT
-  AND
-  OR
-  XOR
-  ADD
-  SUB
+  ARROW
+  COMMA
   SEMI
   LBRACK
   RBRACK
+  LANGLE
+  RANGLE
   LCURLY
   RCURLY
-  NUM
-  VAL
-  VAR
-  TYPE
+  INT
+  REAL
+  ID
   OTHER
 ;
 
@@ -70,114 +62,75 @@
 
 model:
   { Builder::get().start_model(); }
-  items
+  nodetypes
+  graphs
 ;
 
-items:
+nodetypes:
   %empty
-| items item
+| nodetypes nodetype
 ;
 
-item:
-    decl
-  | proc
-;
-
-decl:
-  INPUT TYPE[t] VAR[n] SEMI {
-    Builder::get().add_decl(Variable::WIRE, Variable::INPUT, *$n, *$t);
-    delete $t; delete $n;
-  }
-| OUTPUT TYPE[t] VAR[n] SEMI {
-    Builder::get().add_decl(Variable::WIRE, Variable::OUTPUT, *$n, *$t);
-    delete $t; delete $n;
-  }
-| WIRE TYPE[t] VAR[n] SEMI {
-    Builder::get().add_decl(Variable::WIRE, Variable::INNER, *$n, *$t);
-    delete $t; delete $n;
-  }
-| REG TYPE[t] VAR[n] SEMI {
-    Builder::get().add_decl(Variable::REG, Variable::INNER, *$n, *$t);
-    delete $t; delete $n;
+nodetype:
+  NODE LANGLE LATENCY ASSIGN INT[latency] RANGLE ID[name]
+      LBRACK args RBRACK ARROW
+      LBRACK args RBRACK SEMI {
+    delete $latency; delete $name;
   }
 ;
 
-proc:
-  { Builder::get().start_proc(); } 
-  AT LBRACK event RBRACK guard LCURLY action RCURLY
-  { Builder::get().end_proc(); }
-;
-
-event:
-  POSEDGE LBRACK VAR[s] RBRACK {
-    Builder::get().set_event(Event::POSEDGE, *$s);
-    delete $s;
-  }
-| NEGEDGE LBRACK VAR[s] RBRACK {
-    Builder::get().set_event(Event::NEGEDGE, *$s);
-    delete $s;
-  }
-| LEVEL0 LBRACK VAR[s] RBRACK {
-    Builder::get().set_event(Event::LEVEL0, *$s);
-    delete $s;
-  }
-| LEVEL1 LBRACK VAR[s] RBRACK {
-    Builder::get().set_event(Event::LEVEL1, *$s);
-    delete $s;
-  }
-| STAR {
-    Builder::get().set_event(Event::ALWAYS, "");
-  }
-;
-
-guard:
-  %empty {
-    Builder::get().set_guard("");
-  }
-| IF LBRACK VAR[g] RBRACK {
-    Builder::get().set_guard(*$g);
-    delete $g;
-  }
-;
-
-action:
+args:
   %empty
-| action assign
+| arg
+| args COMMA arg
 ;
 
-assign:
-  VAR[f] ASSIGN VAL[c] SEMI {
-    Builder::get().add_assign(NOP, *$f, {*$c});
-    delete $f; delete $c;
-  }
-| VAR[f] ASSIGN VAR[x] SEMI {
-    Builder::get().add_assign(NOP, *$f, {*$x});
-    delete $f; delete $x;
-  }
-| VAR[f] ASSIGN NOT VAR[x] SEMI {
-    Builder::get().add_assign(NOT, *$f, {*$x});
-    delete $f; delete $x;
-  }
-| VAR[f] ASSIGN VAR[x] AND VAR[y] SEMI {
-    Builder::get().add_assign(AND, *$f, {*$x, *$y});
-    delete $f; delete $x; delete $y;
-  }
-| VAR[f] ASSIGN VAR[x] OR  VAR[y] SEMI {
-    Builder::get().add_assign(OR,  *$f, {*$x, *$y});
-    delete $f; delete $x; delete $y;
-  }
-| VAR[f] ASSIGN VAR[x] XOR VAR[y] SEMI {
-    Builder::get().add_assign(XOR, *$f, {*$x, *$y});
-    delete $f; delete $x; delete $y;
-  }
-| VAR[f] ASSIGN VAR[x] ADD VAR[y] SEMI {
-    Builder::get().add_assign(ADD, *$f, {*$x, *$y});
-    delete $f; delete $x; delete $y;
-  }
-| VAR[f] ASSIGN VAR[x] SUB VAR[y] SEMI {
-    Builder::get().add_assign(SUB, *$f, {*$x, *$y});
-    delete $f; delete $x; delete $y;
-  }
+arg:
+  ID[type] LANGLE REAL[flow] RANGLE ID[name]
+;
+
+graphs:
+  %empty
+| graphs graph
+;
+
+graph:
+  GRAPH ID[name] LCURLY
+    chans
+    nodes
+  RCURLY
+;
+
+chans:
+  %empty
+| chans chan
+;
+
+chan:
+  CHAN ID[type] ID[name] SEMI
+
+nodes:
+  %empty
+| nodes node
+;
+
+node:
+  NODE ID[name] LBRACK params RBRACK ARROW
+    LBRACK params RBRACK SEMI
+| NODE MERGE LBRACK params RBRACK ARROW
+    LBRACK params RBRACK SEMI
+| NODE SPLIT LBRACK params RBRACK ARROW
+    LBRACK params RBRACK SEMI
+;
+
+params:
+  %empty
+| param
+| params COMMA param
+;
+
+param:
+  ID
 ;
 
 %%

@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -106,5 +107,7 @@ struct Model final {
   std::vector<NodeType *> nodetypes;
   std::vector<Graph *> graphs;
 };
+
+std::ostream& operator <<(std::ostream &out, const Model &model);
 
 } // namespace eda::hls::model

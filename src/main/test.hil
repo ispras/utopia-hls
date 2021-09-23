@@ -1,0 +1,22 @@
+node<latency=1> source() => (X<1.0> x, Y<1.0> y);
+node<latency=1> kernel1(X<1.0> x, Y<0.5> y) => (Z<0.25> z, W<1.0> w);
+node<latency=1> kernel2(X<0.5> x, W<0.5> w) => (Z<0.25> z);
+node<latency=1> sink(Z<1.0> z) => ();
+
+graph G {
+  chan X x1;
+  chan X x2;
+  chan X x;
+  chan Y y;
+  chan Z z1;
+  chan Z z2;
+  chan Z z;
+  chan W w;
+
+  node k(x) => (y);
+  node split(x) => (x1, x2);
+  node kernel1(x1, y) => (z1, w);
+  node kernel2(x2, w) => (z2);
+  node merge(z1, z2) => (z);
+  node sink(z) => ();
+}
