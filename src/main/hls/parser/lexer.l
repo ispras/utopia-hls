@@ -30,8 +30,6 @@ ID   [_a-zA-Z][_a-zA-Z0-9]*
 "graph"    { return TOK_GRAPH;   }
 "chan"     { return TOK_CHAN;    }
 "node"     { return TOK_NODE;    }
-"merge"    { return TOK_MERGE;   }
-"split"    { return TOK_SPLIT;   }
 "latency"  { return TOK_LATENCY; }
 "="        { return TOK_ASSIGN;  }
 "=>"       { return TOK_ARROW;   }

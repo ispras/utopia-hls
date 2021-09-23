@@ -39,8 +39,25 @@ public:
 
   std::unique_ptr<Model> create();
 
-  void start_model() {
-  }
+  void start_model() {}
+  void end_model() {}
+
+  void start_nodetype() {}
+  void end_nodetype(const std::string &name, const std::string &latency) {}
+
+  void start_output_args() {}
+  void add_arg(const std::string &type, const std::string &name, const std::string &flow) {}
+
+  void start_graph() {}
+  void end_graph(const std::string &name) {}
+
+  void add_chan(const std::string &type, const std::string &name) {}
+
+  void start_node() {}
+  void end_node(const std::string &name) {}
+
+  void start_output_param() {}
+  void add_param(const std::string &name) {}
 
 private:
   Builder() {}

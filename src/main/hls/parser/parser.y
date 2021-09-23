@@ -39,8 +39,6 @@
   GRAPH
   CHAN
   NODE
-  MERGE
-  SPLIT
   LATENCY
   ASSIGN
   ARROW
@@ -64,6 +62,7 @@ model:
   { Builder::get().start_model(); }
   nodetypes
   graphs
+  { Builder::get().end_model(); }
 ;
 
 nodetypes:
@@ -72,9 +71,11 @@ nodetypes:
 ;
 
 nodetype:
+  { Builder::get().start_nodetype(); }
   NODE LANGLE LATENCY ASSIGN INT[latency] RANGLE ID[name]
       LBRACK args RBRACK ARROW
       LBRACK args RBRACK SEMI {
+    Builder::get().end_nodetype(*$name, *$latency);
     delete $latency; delete $name;
   }
 ;
@@ -86,7 +87,10 @@ args:
 ;
 
 arg:
-  ID[type] LANGLE REAL[flow] RANGLE ID[name]
+  ID[type] LANGLE REAL[flow] RANGLE ID[name] {
+    Builder::get().add_arg(*$type, *$name, *$flow);
+    delete $type; delete $flow; delete $name;
+  }
 ;
 
 graphs:
@@ -95,10 +99,14 @@ graphs:
 ;
 
 graph:
+  { Builder::get().start_graph(); }
   GRAPH ID[name] LCURLY
     chans
     nodes
-  RCURLY
+  RCURLY {
+    Builder::get().end_graph(*$name);
+    delete $name;
+  }
 ;
 
 chans:
@@ -107,7 +115,10 @@ chans:
 ;
 
 chan:
-  CHAN ID[type] ID[name] SEMI
+  CHAN ID[type] ID[name] SEMI {
+    Builder::get().add_chan(*$type, *$name);
+    delete $type; delete $name;
+  }
 
 nodes:
   %empty
@@ -115,12 +126,12 @@ nodes:
 ;
 
 node:
+  { Builder::get().start_node(); }
   NODE ID[name] LBRACK params RBRACK ARROW
-    LBRACK params RBRACK SEMI
-| NODE MERGE LBRACK params RBRACK ARROW
-    LBRACK params RBRACK SEMI
-| NODE SPLIT LBRACK params RBRACK ARROW
-    LBRACK params RBRACK SEMI
+    LBRACK params RBRACK SEMI {
+    Builder::get().end_node(*$name);
+    delete $name;
+  }
 ;
 
 params:
@@ -130,7 +141,10 @@ params:
 ;
 
 param:
-  ID
+  ID[name] {
+    Builder::get().add_param(*$param);
+    delete $param;
+  }
 ;
 
 %%
