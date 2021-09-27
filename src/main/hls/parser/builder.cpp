@@ -12,7 +12,9 @@
  * the License.
  */
 
+#include <cassert>
 #include <iostream>
+#include <memory>
 
 #include "hls/parser/builder.h"
 
@@ -23,9 +25,12 @@ namespace eda::hls::parser {
 std::unique_ptr<Builder> Builder::_instance = nullptr;
 
 std::unique_ptr<Model> Builder::create() {
-  auto model = std::make_unique<Model>();
+  assert(_model != nullptr);
+  auto model = std::unique_ptr<Model>(_model);
 
-  // TODO:
+  // TODO: Add consistency checks.
+  _model = nullptr;
+
   return model;
 }
 

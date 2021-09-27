@@ -14,8 +14,10 @@
 
 #pragma once
 
+#include <cassert>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "hls/model/model.h"
@@ -39,28 +41,117 @@ public:
 
   std::unique_ptr<Model> create();
 
-  void start_model() {}
+  void start_model() {
+    assert(_model == nullptr);
+
+    _model = new Model();
+    _nodetypes.clear();
+    _chans.clear();
+  }
+
   void end_model() {}
 
-  void start_nodetype() {}
-  void end_nodetype(const std::string &name, const std::string &latency) {}
+  void start_nodetype(const std::string &name, const std::string &latency) {
+    assert(_nodetype == nullptr);
 
-  void start_output_args() {}
-  void add_arg(const std::string &type, const std::string &name, const std::string &flow) {}
+    _nodetype = new NodeType(name, ::atoi(latency.c_str()));
+    _nodetypes.insert({ name, _nodetype });
+    _output_arg = false;
+  }
 
-  void start_graph() {}
-  void end_graph(const std::string &name) {}
+  void end_nodetype() {
+    assert(_nodetype != nullptr);
 
-  void add_chan(const std::string &type, const std::string &name) {}
+    _model->add_nodetype(_nodetype);
+    _nodetype = nullptr; 
+  }
 
-  void start_node() {}
-  void end_node(const std::string &name) {}
+  void start_output_args() {
+    _output_arg = true;
+  }
 
-  void start_output_param() {}
-  void add_param(const std::string &name) {}
+  void add_arg(const std::string &type, const std::string &name, const std::string &flow) {
+    ChanType *chantype = new ChanType(name, type, ::atof(flow.c_str()));
+
+    if (_output_arg) {
+      _nodetype->add_output(chantype);
+    } else {
+      _nodetype->add_input(chantype);
+    }
+  }
+
+  void start_graph(const std::string &name) {
+    assert(_graph == nullptr);
+    _graph = new Graph(name);
+  }
+
+  void end_graph() {
+    assert(_graph != nullptr);
+
+    _model->add_graph(_graph);
+    _graph = nullptr;
+  }
+
+  void add_chan(const std::string &type, const std::string &name) {
+    assert(_graph != nullptr);
+
+    Chan *chan = new Chan(name, type);
+    _chans[name] = chan;
+    _graph->add_chan(chan);
+  }
+
+  void start_node(const std::string &type) {
+    assert(_node == nullptr);
+
+    const auto &i = _nodetypes.find(type);
+    assert(i != _nodetypes.end());
+ 
+    _node = new Node(*(i->second));
+    _output_param = false;
+  }
+
+  void end_node() {
+    assert(_node != nullptr);
+
+    _graph->add_node(_node);
+    _node = nullptr;
+  }
+
+  void start_output_params() {
+    _output_param = true;
+  }
+
+  void add_param(const std::string &name) {
+    assert(_node != nullptr);
+
+    const auto &i = _chans.find(name);
+    assert(i != _chans.end());
+
+    Chan *chan = i->second;
+    if (_output_param) {
+      assert(chan->source == nullptr);
+      chan->source = _node->type.outputs[_node->outputs.size()];
+      _node->add_output(chan);
+    } else {
+      assert(chan->target == nullptr);
+      chan->target = _node->type.inputs[_node->inputs.size()];
+      _node->add_input(chan);
+    }
+  }
 
 private:
   Builder() {}
+
+  Model *_model = nullptr;
+  ChanType *_chantype = nullptr;
+  NodeType *_nodetype = nullptr;
+  Graph *_graph = nullptr;
+  Node *_node = nullptr;
+  bool _output_arg = false;
+  bool _output_param = false;
+
+  std::unordered_map<std::string, NodeType *> _nodetypes;
+  std::unordered_map<std::string, Chan *> _chans;
 
   static std::unique_ptr<Builder> _instance;
 };

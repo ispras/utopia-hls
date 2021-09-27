@@ -36,6 +36,7 @@
 %define api.value.type {std::string*}
 %define api.token.prefix {TOK_}
 %token
+  NODETYPE
   GRAPH
   CHAN
   NODE
@@ -71,12 +72,15 @@ nodetypes:
 ;
 
 nodetype:
-  { Builder::get().start_nodetype(); }
-  NODE LANGLE LATENCY ASSIGN INT[latency] RANGLE ID[name]
-      LBRACK args RBRACK ARROW
-      LBRACK args RBRACK SEMI {
-    Builder::get().end_nodetype(*$name, *$latency);
+  NODETYPE LANGLE LATENCY ASSIGN INT[latency] RANGLE ID[name] {
+    Builder::get().start_nodetype(*$name, *$latency);
     delete $latency; delete $name;
+  }
+  LBRACK args RBRACK ARROW {
+    Builder::get().start_output_args();
+  }
+  LBRACK args RBRACK SEMI {
+    Builder::get().end_nodetype();
   }
 ;
 
@@ -99,13 +103,14 @@ graphs:
 ;
 
 graph:
-  { Builder::get().start_graph(); }
-  GRAPH ID[name] LCURLY
-    chans
-    nodes
-  RCURLY {
-    Builder::get().end_graph(*$name);
+  GRAPH ID[name] LCURLY {
+    Builder::get().start_graph(*$name);
     delete $name;
+  }
+  chans
+  nodes
+  RCURLY {
+    Builder::get().end_graph();
   }
 ;
 
@@ -126,11 +131,16 @@ nodes:
 ;
 
 node:
-  { Builder::get().start_node(); }
-  NODE ID[name] LBRACK params RBRACK ARROW
-    LBRACK params RBRACK SEMI {
-    Builder::get().end_node(*$name);
-    delete $name;
+  // There are special types of nodes: merge*, split*, and delay*.
+  NODE ID[type] {
+    Builder::get().start_node(*$type);
+    delete $type;
+  }
+  LBRACK params RBRACK ARROW {
+    Builder::get().start_output_params();
+  }
+  LBRACK params RBRACK SEMI {
+    Builder::get().end_node();
   }
 ;
 
@@ -142,8 +152,8 @@ params:
 
 param:
   ID[name] {
-    Builder::get().add_param(*$param);
-    delete $param;
+    Builder::get().add_param(*$name);
+    delete $name;
   }
 ;
 

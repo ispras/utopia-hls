@@ -64,7 +64,9 @@ int hls_main(const std::string &filename) {
     return -1;
   }
 
-  // TODO:
+  std::unique_ptr<Model> model = eda::hls::parser::Builder::get().create();
+  std::cout << *model;
+
   return 0;
 }
 

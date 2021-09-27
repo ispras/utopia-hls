@@ -16,8 +16,67 @@
 
 namespace eda::hls::model {
 
+std::ostream& operator <<(std::ostream &out, const ChanType &chantype) {
+  return out << chantype.datatype << "<" << chantype.maxflow << ">" << " " << chantype.name;
+}
+
+static std::ostream& operator <<(std::ostream &out, const std::vector<ChanType *> &args) {
+  bool comma = false;
+  for (const ChanType *chantype: args) {
+    out << (comma ? ", " : "") << *chantype;
+    comma = true;
+  }
+
+  return out;
+}
+
+std::ostream& operator <<(std::ostream &out, const NodeType &nodetype) {
+  out << "nodetype<latency=" << nodetype.latency << "> " << nodetype.name;
+  return out << "(" << nodetype.inputs << ") => (" << nodetype.outputs << ");";
+}
+
+std::ostream& operator <<(std::ostream &out, const Chan &chan) {
+  return out << "chan " << chan.datatype << " " << chan.name << ";";
+}
+
+static std::ostream& operator <<(std::ostream &out, const std::vector<Chan *> &params) {
+  bool comma = false;
+  for (const Chan *chan: params) {
+    out << (comma ? ", " : "") << chan->name;
+    comma = true;
+  }
+
+  return out;
+}
+
+std::ostream& operator <<(std::ostream &out, const Node &node) {
+  out << "node " << node.type.name;
+  return out << "(" << node.inputs << ") => (" << node.outputs << ");";
+}
+
+std::ostream& operator <<(std::ostream &out, const Graph &graph) {
+  out << "graph " << graph.name << " {" << std::endl;
+
+  for (const Chan *chan: graph.chans) {
+    out << "  " << *chan << std::endl;
+  }
+
+  for (const Node *node: graph.nodes) {
+    out << "  " << *node << std::endl;
+  }
+
+  return out << "}";
+}
+
 std::ostream& operator <<(std::ostream &out, const Model &model) {
-  // TODO:
+  for (const NodeType *nodetype: model.nodetypes) {
+    out << *nodetype << std::endl;
+  }
+
+  for (const Graph *graph: model.graphs) {
+    out << *graph << std::endl;
+  }
+
   return out;
 }
 

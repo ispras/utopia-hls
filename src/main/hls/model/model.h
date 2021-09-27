@@ -21,9 +21,10 @@
 namespace eda::hls::model {
 
 struct ChanType final {
-  ChanType(const std::string &datatype, float maxflow):
-    datatype(datatype), maxflow(maxflow) {}
+  ChanType(const std::string &name, const std::string &datatype, float maxflow):
+    name(name), datatype(datatype), maxflow(maxflow) {}
 
+  std::string name;
   std::string datatype;
   float maxflow;
 };
@@ -47,11 +48,13 @@ struct NodeType final {
 };
 
 struct Chan final {
-  Chan(const std::string &name, const ChanType &type):
-    name(name), type(type) {}
+  Chan(const std::string &name, const std::string &datatype):
+    name(name), datatype(datatype) {}
 
   std::string name;
-  const ChanType &type;
+  std::string datatype;
+  const ChanType *source = nullptr;
+  const ChanType *target = nullptr;
 };
 
 struct Node final {
@@ -108,6 +111,11 @@ struct Model final {
   std::vector<Graph *> graphs;
 };
 
+std::ostream& operator <<(std::ostream &out, const ChanType &chantype);
+std::ostream& operator <<(std::ostream &out, const NodeType &nodetype);
+std::ostream& operator <<(std::ostream &out, const Chan &chan);
+std::ostream& operator <<(std::ostream &out, const Node &node);
+std::ostream& operator <<(std::ostream &out, const Graph &graph);
 std::ostream& operator <<(std::ostream &out, const Model &model);
 
 } // namespace eda::hls::model
