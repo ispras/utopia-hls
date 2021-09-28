@@ -56,7 +56,6 @@ all: $(EXE)
 $(EXE): $(OBJ)
 	$(CXX) $(CXXFLAGS) -DYYERROR_VERBOSE -o $@ $^ -lfl
 
-
 run: $(EXE) $(TEST)
 	./$(EXE) $(TEST)
 

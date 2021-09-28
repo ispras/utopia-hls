@@ -77,7 +77,7 @@ nodetype:
     delete $latency; delete $name;
   }
   LBRACK args RBRACK ARROW {
-    Builder::get().start_output_args();
+    Builder::get().start_outputs();
   }
   LBRACK args RBRACK SEMI {
     Builder::get().end_nodetype();
@@ -92,7 +92,7 @@ args:
 
 arg:
   ID[type] LANGLE REAL[flow] RANGLE ID[name] {
-    Builder::get().add_arg(*$type, *$name, *$flow);
+    Builder::get().add_argument(*$name, *$type, *$flow);
     delete $type; delete $flow; delete $name;
   }
 ;
@@ -137,7 +137,7 @@ node:
     delete $type;
   }
   LBRACK params RBRACK ARROW {
-    Builder::get().start_output_params();
+    Builder::get().start_outputs();
   }
   LBRACK params RBRACK SEMI {
     Builder::get().end_node();

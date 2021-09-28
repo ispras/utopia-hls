@@ -56,7 +56,7 @@ public:
 
     _nodetype = new NodeType(name, ::atoi(latency.c_str()));
     _nodetypes.insert({ name, _nodetype });
-    _output_arg = false;
+    _outputs = false;
   }
 
   void end_nodetype() {
@@ -66,17 +66,17 @@ public:
     _nodetype = nullptr; 
   }
 
-  void start_output_args() {
-    _output_arg = true;
+  void start_outputs() {
+    _outputs = true;
   }
 
-  void add_arg(const std::string &type, const std::string &name, const std::string &flow) {
-    ChanType *chantype = new ChanType(name, type, ::atof(flow.c_str()));
+  void add_argument(const std::string &name, const std::string &type, const std::string &flow) {
+    Argument *argument = new Argument(name, type, ::atof(flow.c_str()));
 
-    if (_output_arg) {
-      _nodetype->add_output(chantype);
+    if (_outputs) {
+      _nodetype->add_output(argument);
     } else {
-      _nodetype->add_input(chantype);
+      _nodetype->add_input(argument);
     }
   }
 
@@ -107,7 +107,7 @@ public:
     assert(i != _nodetypes.end());
  
     _node = new Node(*(i->second));
-    _output_param = false;
+    _outputs = false;
   }
 
   void end_node() {
@@ -117,10 +117,6 @@ public:
     _node = nullptr;
   }
 
-  void start_output_params() {
-    _output_param = true;
-  }
-
   void add_param(const std::string &name) {
     assert(_node != nullptr);
 
@@ -128,7 +124,7 @@ public:
     assert(i != _chans.end());
 
     Chan *chan = i->second;
-    if (_output_param) {
+    if (_outputs) {
       assert(chan->source == nullptr);
       chan->source = _node->type.outputs[_node->outputs.size()];
       _node->add_output(chan);
@@ -143,12 +139,11 @@ private:
   Builder() {}
 
   Model *_model = nullptr;
-  ChanType *_chantype = nullptr;
+  Argument *_argument = nullptr;
   NodeType *_nodetype = nullptr;
   Graph *_graph = nullptr;
   Node *_node = nullptr;
-  bool _output_arg = false;
-  bool _output_param = false;
+  bool _outputs = false;
 
   std::unordered_map<std::string, NodeType *> _nodetypes;
   std::unordered_map<std::string, Chan *> _chans;

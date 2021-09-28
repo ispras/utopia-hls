@@ -16,14 +16,14 @@
 
 namespace eda::hls::model {
 
-std::ostream& operator <<(std::ostream &out, const ChanType &chantype) {
-  return out << chantype.datatype << "<" << chantype.maxflow << ">" << " " << chantype.name;
+std::ostream& operator <<(std::ostream &out, const Argument &argument) {
+  return out << argument.type << "<" << argument.flow << ">" << " " << argument.name;
 }
 
-static std::ostream& operator <<(std::ostream &out, const std::vector<ChanType *> &args) {
+static std::ostream& operator <<(std::ostream &out, const std::vector<Argument *> &args) {
   bool comma = false;
-  for (const ChanType *chantype: args) {
-    out << (comma ? ", " : "") << *chantype;
+  for (const Argument *argument: args) {
+    out << (comma ? ", " : "") << *argument;
     comma = true;
   }
 
@@ -36,7 +36,7 @@ std::ostream& operator <<(std::ostream &out, const NodeType &nodetype) {
 }
 
 std::ostream& operator <<(std::ostream &out, const Chan &chan) {
-  return out << "chan " << chan.datatype << " " << chan.name << ";";
+  return out << "chan " << chan.type << " " << chan.name << ";";
 }
 
 static std::ostream& operator <<(std::ostream &out, const std::vector<Chan *> &params) {

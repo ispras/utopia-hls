@@ -20,53 +20,53 @@
 
 namespace eda::hls::model {
 
-struct ChanType final {
-  ChanType(const std::string &name, const std::string &datatype, float maxflow):
-    name(name), datatype(datatype), maxflow(maxflow) {}
+struct Argument final {
+  Argument(const std::string &name, const std::string &type, float flow):
+    name(name), type(type), flow(flow) {}
 
   std::string name;
-  std::string datatype;
-  float maxflow;
+  std::string type;
+  float flow;
 };
 
 struct NodeType final {
   NodeType(const std::string &name, unsigned latency):
     name(name), latency(latency) {}
 
-  void add_input(ChanType *type) {
-    inputs.push_back(type);
+  void add_input(Argument *input) {
+    inputs.push_back(input);
   }
 
-  void add_output(ChanType *type) {
-    outputs.push_back(type);
+  void add_output(Argument *output) {
+    outputs.push_back(output);
   }
 
   std::string name;
   unsigned latency;
-  std::vector<ChanType *> inputs;
-  std::vector<ChanType *> outputs;
+  std::vector<Argument *> inputs;
+  std::vector<Argument *> outputs;
 };
 
 struct Chan final {
-  Chan(const std::string &name, const std::string &datatype):
-    name(name), datatype(datatype) {}
+  Chan(const std::string &name, const std::string &type):
+    name(name), type(type) {}
 
   std::string name;
-  std::string datatype;
-  const ChanType *source = nullptr;
-  const ChanType *target = nullptr;
+  std::string type;
+  const Argument *source = nullptr;
+  const Argument *target = nullptr;
 };
 
 struct Node final {
   Node(const NodeType &type):
     type(type) {}
 
-  void add_input(Chan *chan) {
-    inputs.push_back(chan);
+  void add_input(Chan *input) {
+    inputs.push_back(input);
   }
 
-  void add_output(Chan *chan) {
-    outputs.push_back(chan);
+  void add_output(Chan *output) {
+    outputs.push_back(output);
   }
 
   const NodeType &type;
@@ -94,24 +94,19 @@ struct Graph final {
 struct Model final {
   Model() = default;
 
-  void add_chantype(ChanType *type) {
-    chantypes.push_back(type);
-  }
-
-  void add_nodetype(NodeType *type) {
-    nodetypes.push_back(type);
+  void add_nodetype(NodeType *nodetype) {
+    nodetypes.push_back(nodetype);
   }
 
   void add_graph(Graph *graph) {
     graphs.push_back(graph);
   }
 
-  std::vector<ChanType *> chantypes;
   std::vector<NodeType *> nodetypes;
   std::vector<Graph *> graphs;
 };
 
-std::ostream& operator <<(std::ostream &out, const ChanType &chantype);
+std::ostream& operator <<(std::ostream &out, const Argument &argument);
 std::ostream& operator <<(std::ostream &out, const NodeType &nodetype);
 std::ostream& operator <<(std::ostream &out, const Chan &chan);
 std::ostream& operator <<(std::ostream &out, const Node &node);
