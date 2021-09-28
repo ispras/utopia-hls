@@ -34,7 +34,7 @@ CC  = gcc
 CXX = g++
 LD  = ld
 
-TEST = test.ril test.hil
+TEST = ../test/ril/test.ril ../test/hil/test.hil
 
 CFLAGS = -I. -g3 -Wall
 CXXFLAGS = $(CFLAGS) -std=c++17
