@@ -16,10 +16,10 @@
   #include <string>
   #include <iostream>
 
-  #include "hls/parser/builder.h"
+  #include "hls/parser/hil/builder.h"
 
   using namespace eda::hls;
-  using namespace eda::hls::parser;
+  using namespace eda::hls::parser::hil;
 
   extern int hhlineno;
   extern char* hhtext;

@@ -14,13 +14,13 @@
 
 #include <stdio.h>
 
-#include "hls/parser/parser.h"
+#include "hls/parser/hil/parser.h"
 
 // The parser is built w/ the prefix 'hh' (not 'yy').
 extern FILE *hhin;
 extern int hhparse(void);
 
-namespace eda::hls::parser {
+namespace eda::hls::parser::hil {
 
 int parse(const std::string &filename) {
   FILE *file = fopen(filename.c_str(), "r");
@@ -32,4 +32,4 @@ int parse(const std::string &filename) {
   return hhparse();
 }
 
-} // namespace eda::hls::parser
+} // namespace eda::hls::parser::hil

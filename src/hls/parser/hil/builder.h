@@ -24,7 +24,7 @@
 
 using namespace eda::hls::model;
 
-namespace eda::hls::parser {
+namespace eda::hls::parser::hil {
 
 /**
  * \brief Helps to contruct the IR from source code.
@@ -54,7 +54,7 @@ public:
   void start_nodetype(const std::string &name, const std::string &latency) {
     assert(_nodetype == nullptr);
 
-    _nodetype = new NodeType(name, ::atoi(latency.c_str()));
+    _nodetype = new NodeType(name, std::stoi(latency));
     _nodetypes.insert({ name, _nodetype });
     _outputs = false;
   }
@@ -71,7 +71,7 @@ public:
   }
 
   void add_argument(const std::string &name, const std::string &type, const std::string &flow) {
-    Argument *argument = new Argument(name, type, ::atof(flow.c_str()));
+    Argument *argument = new Argument(name, type, std::stof(flow));
 
     if (_outputs) {
       _nodetype->add_output(argument);
@@ -151,4 +151,4 @@ private:
   static std::unique_ptr<Builder> _instance;
 };
 
-} // namespace eda::hls::parser
+} // namespace eda::hls::parser::hil

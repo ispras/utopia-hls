@@ -19,7 +19,7 @@
 
 %{
   #include <string>
-  #include <hls/parser/parser.tab.hpp>
+  #include <hls/parser/hil/parser.tab.hpp>
 %}
 
 REAL [0-9]+(.[0-9]+)?

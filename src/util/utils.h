@@ -20,6 +20,16 @@
 
 namespace eda::utils {
 
+inline bool starts_with(const std::string &string, const std::string &prefix) {
+  return string.size() >= prefix.size()
+      && string.compare(0, prefix.size(), prefix) == 0;
+}
+
+inline bool ends_with(const std::string &string, const std::string &suffix) {
+  return string.size() >= suffix.size()
+      && string.compare(string.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
 template<typename ... Args>
 std::string format(const std::string &format, Args ... args) {
   int length = snprintf(nullptr, 0, format.c_str(), args ...);
