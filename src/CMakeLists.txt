@@ -1,4 +1,6 @@
-cmake_minimum_required(VERSION 3.10)
+# SPDX-License-Identifier: Apache-2.0
+
+cmake_minimum_required(VERSION 3.14)
 
 # The project name and version.
 project(Utopia VERSION 0.0)
@@ -18,7 +20,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # The compilation options.
-add_compile_options(-g3 -Wall -DYYERROR_VERBOSE)
+add_compile_options(-g3 -Wall -Wignored-qualifiers -DYYERROR_VERBOSE)
 
 # The HLS lexer and parser.
 add_custom_command(OUTPUT hls/parser/hil COMMAND ${CMAKE_COMMAND} -E make_directory hls/parser/hil)
