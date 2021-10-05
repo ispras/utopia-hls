@@ -46,6 +46,7 @@ add_executable(${MAIN_TARGET} main.cpp
   gate/model/gsymbol.cpp
   gate/model/netlist.cpp
   gate/model/signal.cpp
+  hls/library/library.cpp
   hls/model/model.cpp
   hls/parser/hil/builder.cpp
   hls/parser/hil/parser.cpp
