@@ -13,8 +13,8 @@
 
 namespace eda::hls::library {
 
-typedef struct Port {
-  typedef enum { IN, OUT, INOUT } Direction;
+struct Port {
+  enum Direction { IN, OUT, INOUT };
 
   Port(const std::string &name, const Direction direction, const unsigned width) :
     name(name), direction(direction), width(width) {};
@@ -22,7 +22,7 @@ typedef struct Port {
   std::string name;
   Direction direction;
   unsigned width;
-} Port;
+};
 
 struct ModuleInterface {
   ModuleInterface(const std::string &name) : name(name) {};
