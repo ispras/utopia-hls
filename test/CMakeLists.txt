@@ -6,6 +6,8 @@ project(UtopiaTest VERSION 0.0)
 set(TEST_TARGET utest)
 set(CMAKE_CXX_STANDARD 17)
 
+set(MAIN_LIBRARY ueda)
+
 # Check if the 'gtest' target has been already imported (e.g., by LLVM).
 if(NOT TARGET gtest)
   include(FetchContent)
@@ -22,10 +24,12 @@ endif()
 enable_testing()
 
 add_executable(${TEST_TARGET}
-  sample_test.cpp
+  hil_test.cpp
+  ril_test.cpp
+  test_main.cpp
 )
 
-target_link_libraries(${TEST_TARGET} PRIVATE gtest_main)
+target_link_libraries(${TEST_TARGET} PRIVATE gtest_main ${MAIN_LIBRARY})
 
 include(GoogleTest)
 gtest_discover_tests(${TEST_TARGET})

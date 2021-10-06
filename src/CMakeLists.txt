@@ -5,7 +5,8 @@ cmake_minimum_required(VERSION 3.14)
 # The project name and version.
 project(Utopia VERSION 0.0)
 
-# The project executable.
+# The project library and executable.
+set(MAIN_LIBRARY ueda)
 set(MAIN_TARGET umain)
 
 # The project requires flex/bison.
@@ -48,8 +49,8 @@ add_flex_bison_dependency(RtlRilLexer RtlRilParser)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-# The executable file.
-add_executable(${MAIN_TARGET} main.cpp
+# The project library.
+add_library(${MAIN_LIBRARY}
 
   # Manually-written sources.
   gate/model/gate.cpp
@@ -78,11 +79,16 @@ add_executable(${MAIN_TARGET} main.cpp
   "${BISON_RtlRilParser_OUTPUTS}"
 )
 
-add_dependencies(${MAIN_TARGET} HlsHilParserDir RtlRilParserDir)
+add_dependencies(${MAIN_LIBRARY} HlsHilParserDir RtlRilParserDir)
 
 # The include directories.
-target_include_directories(${MAIN_TARGET} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(${MAIN_TARGET} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(${MAIN_LIBRARY} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${MAIN_LIBRARY} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 # The libraries to link with.
-target_link_libraries(${MAIN_TARGET} ${FLEX_LIBRARIES})
+target_link_libraries(${MAIN_LIBRARY} ${FLEX_LIBRARIES})
+
+# The project executable.
+add_executable(${MAIN_TARGET} main.cpp)
+add_dependencies(${MAIN_TARGET} ${MAIN_LIBRARY})
+target_link_libraries(${MAIN_TARGET} ${MAIN_LIBRARY})
