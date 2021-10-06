@@ -19,6 +19,16 @@ configure_file(config.h.in config.h)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+# The clang-tidy options.
+set(FILTER_LEXER  {"name":"lexer.yy.cpp","lines":[[999999,999999]]})
+set(FILTER_PARSER {"name":"parser.tab.cpp","lines":[[999999,999999]]})
+
+set(CMAKE_CXX_CLANG_TIDY
+  clang-tidy;
+  -header-filter=.;
+  -line-filter=[${FILTER_LEXER},${FILTER_PARSER},{"name":".h"},{"name":".cpp"}];
+  -checks=llvm-*;) # -warnings-as-errors;
+
 # The compilation options.
 add_compile_options(-g3 -Wall -Wignored-qualifiers -DYYERROR_VERBOSE)
 
