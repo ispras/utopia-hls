@@ -17,18 +17,40 @@
 using namespace eda::hls::model;
 using namespace eda::hls::parser::hil;
 
-int hil_test(const std::string &filename) {
+std::unique_ptr<Model> get_model(const std::string &filename) {
   if (parse(filename) == -1) {
     std::cout << "Could not parse " << filename << std::endl;
-    return -1;
+    return NULL;
   }
 
-  std::unique_ptr<Model> model = Builder::get().create();
-  std::cout << *model;
+  return Builder::get().create();
+}
+
+int hil_test(const std::string &filename) {
+
+  std::cout << *get_model(filename);
 
   return 0;
 }
 
+int hil_test_nodetypes(const std::string &filename) {
+
+  return (get_model(filename))->nodetypes.size();
+}
+
+int hil_test_graphs(const std::string &filename) {
+
+  return (get_model(filename))->graphs.size();
+}
+
 TEST(HilTest, SingleTest) {
   EXPECT_EQ(hil_test("test/hil/test.hil"), 0);
+}
+
+TEST(HilNodeTypesTest, SingleTest) {
+  EXPECT_EQ(hil_test_nodetypes("test/hil/test.hil"), 6);
+}
+
+TEST(HilGraphsTest, SingleTest) {
+  EXPECT_EQ(hil_test_graphs("test/hil/test.hil"), 1);
 }
