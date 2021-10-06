@@ -8,11 +8,13 @@
 
 #pragma once
 
-#include <vector>
-#include <string>
+#include <iostream>
+
+#include "hls/model/model.h"
 
 namespace eda::hls::library {
 
+/* comment for possible future usage
 struct Port {
   enum Direction { IN, OUT, INOUT };
 
@@ -22,17 +24,14 @@ struct Port {
   std::string name;
   Direction direction;
   unsigned width;
+}; */
+
+struct VerilogPrinter {
+  VerilogPrinter(eda::hls::model::NodeType &type) : type(type) {};
+
+  eda::hls::model::NodeType type;
 };
 
-struct ModuleInterface {
-  ModuleInterface(const std::string &name) : name(name) {};
-
-  void addPort(Port &port) {
-    interface.push_back(port);
-  };
-
-  std::string name;
-  std::vector<Port> interface;
-};
+std::ostream& operator <<(std::ostream &out, const VerilogPrinter &printer);
 
 } // namespace eda::hls::library
