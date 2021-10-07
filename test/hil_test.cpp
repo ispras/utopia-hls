@@ -12,10 +12,12 @@
 #include "gtest/gtest.h"
 
 #include "hls/model/model.h"
+#include "hls/library/library.h"
 #include "hls/parser/hil/builder.h"
 #include "hls/parser/hil/parser.h"
 
 using namespace eda::hls::model;
+using namespace eda::hls::library;
 using namespace eda::hls::parser::hil;
 
 std::unique_ptr<Model> hil_parse(const std::string &filename) {
@@ -29,6 +31,7 @@ std::unique_ptr<Model> hil_parse(const std::string &filename) {
 
 int hil_test(const std::string &filename) {
   std::cout << *hil_parse(filename);
+
   return 0;
 }
 
@@ -38,6 +41,18 @@ int hil_test_nodetypes(const std::string &filename) {
 
 int hil_test_graphs(const std::string &filename) {
   return (hil_parse(filename))->graphs.size();
+}
+
+int hil_test_verilogprinter(const std::string &filename) {
+  std::vector<NodeType*> nodetypes = hil_parse(filename)->nodetypes;
+
+  std::cout << "------ Verilog RTL-model ------" << std::endl;
+  for (const NodeType *type: nodetypes) {
+    VerilogPrinter *printer = new VerilogPrinter(*type);
+    std::cout << *printer;
+  }
+
+  return 0;
 }
 
 TEST(HilTest, SingleTest) {
@@ -50,4 +65,8 @@ TEST(HilNodeTypesTest, SingleTest) {
 
 TEST(HilGraphsTest, SingleTest) {
   EXPECT_EQ(hil_test_graphs("test/hil/test.hil"), 1);
+}
+
+TEST(HilVerilogPrinterTest, SingleTest) {
+  EXPECT_EQ(hil_test_verilogprinter("test/hil/test.hil"), 0);
 }

@@ -10,26 +10,29 @@
 
 namespace eda::hls::library {
 
-std::ostream& operator <<(std::ostream &out, const VerilogPrinter &printer)
+void VerilogPrinter::print(std::ostream &out) const
 {
-  out << "module " << printer.type.name << "(" << std::endl;
+  out << "module " << type.name << "(" << std::endl;
 
-  for (const eda::hls::model::Argument *arg: printer.type.inputs) {
+  for (const eda::hls::model::Argument *arg: type.inputs) {
     out << "  input " << arg->name; // TODO print arg->length
-    if (!(arg == printer.type.inputs.back() && printer.type.outputs.empty())) {
+    if (!(arg == type.inputs.back() && type.outputs.empty())) {
       out << "," << std::endl;
     }
   }
 
-  for (const eda::hls::model::Argument *arg: printer.type.outputs) {
+  for (const eda::hls::model::Argument *arg: type.outputs) {
     out << "  output " << arg->name; // TODO print arg->length
-    if (arg != printer.type.outputs.back()) {
+    if (arg != type.outputs.back()) {
       out << "," << std::endl;
     }
   }
   out << ");" << std::endl;
-  out << "endmodule" << " // " << printer.type.name << std::endl;
+  out << "endmodule" << " // " << type.name << std::endl;
+}
 
+std::ostream& operator <<(std::ostream &out, const VerilogPrinter &printer) {
+  printer.print(out);
   return out;
 }
 

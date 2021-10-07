@@ -26,10 +26,11 @@ struct Port {
   unsigned width;
 }; */
 
-struct VerilogPrinter {
-  VerilogPrinter(eda::hls::model::NodeType &type) : type(type) {};
+struct VerilogPrinter final {
+  VerilogPrinter(const eda::hls::model::NodeType &type) : type(type) {};
+  void print(std::ostream &out) const;
 
-  eda::hls::model::NodeType type;
+  const eda::hls::model::NodeType type;
 };
 
 std::ostream& operator <<(std::ostream &out, const VerilogPrinter &printer);
