@@ -33,11 +33,11 @@ int hil_test(const std::string &filename) {
 }
 
 int hil_test_nodetypes(const std::string &filename) {
-  return (get_model(filename))->nodetypes.size();
+  return (hil_parse(filename))->nodetypes.size();
 }
 
 int hil_test_graphs(const std::string &filename) {
-  return (get_model(filename))->graphs.size();
+  return (hil_parse(filename))->graphs.size();
 }
 
 TEST(HilTest, SingleTest) {
