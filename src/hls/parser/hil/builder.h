@@ -133,7 +133,6 @@ private:
   Builder() {}
 
   Model *_model = nullptr;
-  Argument *_argument = nullptr;
   NodeType *_nodetype = nullptr;
   Graph *_graph = nullptr;
   Node *_node = nullptr;

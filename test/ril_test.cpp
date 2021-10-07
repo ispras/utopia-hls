@@ -25,19 +25,13 @@ using namespace eda::rtl::model;
 using namespace eda::rtl::parser::ril;
 
 int ril_test(const std::string &filename) {
-  if (parse(filename) == -1) {
-    std::cout << "Could not parse " << filename << std::endl;
-    return -1;
-  }
-
-  std::unique_ptr<Net> pnet = Builder::get().create();
-  pnet->create();
+  auto model = parse(filename);
 
   std::cout << "------ p/v-nets ------" << std::endl;
-  std::cout << *pnet << std::endl;
+  std::cout << *model << std::endl;
 
   Compiler compiler(FLibraryDefault::get());
-  std::unique_ptr<Netlist> netlist = compiler.compile(*pnet);
+  auto netlist = compiler.compile(*model);
 
   std::cout << "------ netlist ------" << std::endl;
   std::cout << *netlist;

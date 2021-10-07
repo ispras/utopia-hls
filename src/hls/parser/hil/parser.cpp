@@ -8,6 +8,8 @@
 
 #include <stdio.h>
 
+#include "hls/model/model.h"
+#include "hls/parser/hil/builder.h"
 #include "hls/parser/hil/parser.h"
 
 // The parser is built w/ the prefix 'hh' (not 'yy').
@@ -16,14 +18,18 @@ extern int hhparse(void);
 
 namespace eda::hls::parser::hil {
 
-int parse(const std::string &filename) {
+std::unique_ptr<eda::hls::model::Model> parse(const std::string &filename) {
   FILE *file = fopen(filename.c_str(), "r");
   if (file == nullptr) {
-    return -1;
+    return nullptr;
   }
 
   hhin = file;
-  return hhparse();
+  if (hhparse() == -1) {
+    return nullptr;
+  }
+
+  return Builder::get().create();
 }
 
 } // namespace eda::hls::parser::hil

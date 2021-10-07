@@ -13,38 +13,27 @@
 
 #include "hls/model/model.h"
 #include "hls/library/library.h"
-#include "hls/parser/hil/builder.h"
 #include "hls/parser/hil/parser.h"
 
-using namespace eda::hls::model;
 using namespace eda::hls::library;
+using namespace eda::hls::model;
 using namespace eda::hls::parser::hil;
 
-std::unique_ptr<Model> hil_parse(const std::string &filename) {
-  if (parse(filename) == -1) {
-    std::cout << "Could not parse " << filename << std::endl;
-    return nullptr;
-  }
-
-  return Builder::get().create();
-}
-
 int hil_test(const std::string &filename) {
-  std::cout << *hil_parse(filename);
-
+  std::cout << *parse(filename);
   return 0;
 }
 
 int hil_test_nodetypes(const std::string &filename) {
-  return (hil_parse(filename))->nodetypes.size();
+  return (parse(filename))->nodetypes.size();
 }
 
 int hil_test_graphs(const std::string &filename) {
-  return (hil_parse(filename))->graphs.size();
+  return (parse(filename))->graphs.size();
 }
 
 int hil_test_verilogprinter(const std::string &filename) {
-  auto nodetypes = hil_parse(filename)->nodetypes;
+  auto nodetypes = parse(filename)->nodetypes;
 
   std::cout << "------ Verilog RTL-model ------" << std::endl;
   for (const auto *nodetype: nodetypes) {

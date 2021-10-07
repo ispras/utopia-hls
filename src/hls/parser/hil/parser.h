@@ -8,10 +8,15 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
+
+namespace eda::hls::model {
+  struct Model;
+} // namespace eda::hls::model
 
 namespace eda::hls::parser::hil {
 
-int parse(const std::string &filename);
+std::unique_ptr<eda::hls::model::Model> parse(const std::string &filename);
 
 } // namespace eda::hls::parser::hil
