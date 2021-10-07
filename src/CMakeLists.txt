@@ -28,7 +28,7 @@ set(CMAKE_CXX_CLANG_TIDY
   clang-tidy;
   -header-filter=.;
   -line-filter=[${FILTER_LEXER},${FILTER_PARSER},{"name":".h"},{"name":".cpp"}];
-  -checks=llvm-*;) # -warnings-as-errors;
+  -checks=llvm-*,-llvm-header-guard;) # -warnings-as-errors;
 
 # The compilation options.
 add_compile_options(-g3 -Wall -Wignored-qualifiers -DYYERROR_VERBOSE)
