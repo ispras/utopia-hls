@@ -9,4 +9,4 @@ High-level modeling and synthesis facilities:
 * `mapper` binds the operations w/ library elements and maps the computation graph to HW;
 * `compiler` constructs the RTL IR and generates the HDL description;
 * `runtime` provides the drivers and the API for interacting w/ the accelerator;
-* `debugger` includes simulation, verification and debugging tools.
+* `debugger` includes simulation, verification, and debugging tools.
