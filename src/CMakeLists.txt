@@ -61,6 +61,7 @@ add_library(${MAIN_LIBRARY}
   hls/model/model.cpp
   hls/parser/hil/builder.cpp
   hls/parser/hil/parser.cpp
+  hls/scheduler/lp_helper.cpp
   rtl/compiler/compiler.cpp
   rtl/library/flibrary.cpp
   rtl/model/event.cpp
@@ -86,7 +87,7 @@ target_include_directories(${MAIN_LIBRARY} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(${MAIN_LIBRARY} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 # The libraries to link with.
-target_link_libraries(${MAIN_LIBRARY} ${FLEX_LIBRARIES})
+target_link_libraries(${MAIN_LIBRARY} ${FLEX_LIBRARIES} lpsolve55)
 
 # The project executable.
 add_executable(${MAIN_TARGET} main.cpp)
