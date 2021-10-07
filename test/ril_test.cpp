@@ -24,7 +24,7 @@ using namespace eda::rtl::library;
 using namespace eda::rtl::model;
 using namespace eda::rtl::parser::ril;
 
-int ril_test(const std::string &filename) {
+int rilTest(const std::string &filename) {
   auto model = parse(filename);
 
   std::cout << "------ p/v-nets ------" << std::endl;
@@ -40,5 +40,5 @@ int ril_test(const std::string &filename) {
 }
 
 TEST(RilTest, SingleTest) {
-  EXPECT_EQ(ril_test("test/ril/test.ril"), 0);
+  EXPECT_EQ(rilTest("test/ril/test.ril"), 0);
 }

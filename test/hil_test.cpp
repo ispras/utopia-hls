@@ -19,20 +19,20 @@ using namespace eda::hls::library;
 using namespace eda::hls::model;
 using namespace eda::hls::parser::hil;
 
-int hil_test(const std::string &filename) {
+int hilTest(const std::string &filename) {
   std::cout << *parse(filename);
   return 0;
 }
 
-int hil_test_nodetypes(const std::string &filename) {
+int hilTestNodeTypes(const std::string &filename) {
   return (parse(filename))->nodetypes.size();
 }
 
-int hil_test_graphs(const std::string &filename) {
+int hilTestGraphs(const std::string &filename) {
   return (parse(filename))->graphs.size();
 }
 
-int hil_test_verilogprinter(const std::string &filename) {
+int hilTestVerilogPrinter(const std::string &filename) {
   auto nodetypes = parse(filename)->nodetypes;
 
   std::cout << "------ Verilog RTL-model ------" << std::endl;
@@ -45,17 +45,17 @@ int hil_test_verilogprinter(const std::string &filename) {
 }
 
 TEST(HilTest, SimpleTest) {
-  EXPECT_EQ(hil_test("test/hil/test.hil"), 0);
+  EXPECT_EQ(hilTest("test/hil/test.hil"), 0);
 }
 
 TEST(HilTest, NodeTypesTest) {
-  EXPECT_EQ(hil_test_nodetypes("test/hil/test.hil"), 6);
+  EXPECT_EQ(hilTestNodeTypes("test/hil/test.hil"), 6);
 }
 
 TEST(HilTest, GraphsTest) {
-  EXPECT_EQ(hil_test_graphs("test/hil/test.hil"), 1);
+  EXPECT_EQ(hilTestGraphs("test/hil/test.hil"), 1);
 }
 
 TEST(HilTest, VerilogPrinterTest) {
-  EXPECT_EQ(hil_test_verilogprinter("test/hil/test.hil"), 0);
+  EXPECT_EQ(hilTestVerilogPrinter("test/hil/test.hil"), 0);
 }
