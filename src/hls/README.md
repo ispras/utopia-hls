@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: Apache-2.0 ->
+
 # High-Level Representation
 
 High-level modeling and synthesis facilities:

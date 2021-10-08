@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 find_package(MLIR REQUIRED CONFIG)
 
 message(STATUS "Using MLIRConfig.cmake in: ${MLIR_DIR}")
