@@ -43,6 +43,7 @@ namespace eda::hls::debugger {
       case unknown:
       default:
         std::cout << "Z3 solver says \"unknown\"" << std::endl;
+        return false;
         break;
     }
   }
