@@ -25,8 +25,9 @@
 
 #include <string.h>
 #include <vta/driver.h>
-#include <tvm/runtime/registry.h>
-#include <dmlc/logging.h>
+#include <logging.h>
+
+#include <iostream>
 #include <thread>
 #include <string>
 #include "cma_api.h"
@@ -167,13 +168,3 @@ void VTAProgram(const char *rbf) {
   "generated in a Quartus session with the command "
   "'quartus_cpf -o bitstream_compression=on -c <file>.sof <file>.rbf'.";
 }
-
-using tvm::runtime::TVMRetValue;
-using tvm::runtime::TVMArgs;
-
-TVM_REGISTER_GLOBAL("vta.de10nano.program")
-.set_body([](TVMArgs args, TVMRetValue* rv) {
-    std::string bitstream = args[0];
-    VTAProgram(bitstream.c_str());
-});
-

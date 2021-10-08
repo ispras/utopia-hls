@@ -29,7 +29,7 @@
 extern "C" {
 #endif
 
-#include <tvm/runtime/c_runtime_api.h>
+#include <c_runtime_api.h>
 #include <vta/driver.h>
 
 #define VTA_MEMCPY_H2D 1

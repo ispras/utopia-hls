@@ -26,10 +26,11 @@
  */
 #include "runtime.h"
 
-#include <dmlc/logging.h>
+#include "c_runtime_api.h"
+#include "logging.h"
+
 #include <malloc.h>
 #include <stdlib.h>
-#include <tvm/runtime/c_runtime_api.h>
 #include <vta/driver.h>
 #include <vta/hw_spec.h>
 
