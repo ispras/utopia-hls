@@ -60,6 +60,7 @@ add_library(${MAIN_LIBRARY}
   gate/model/signal.cpp
   hls/debugger/debugger.cpp
   hls/library/library.cpp
+  hls/compiler/compiler.cpp
   hls/model/model.cpp
   hls/parser/hil/builder.cpp
   hls/parser/hil/parser.cpp

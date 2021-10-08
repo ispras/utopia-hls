@@ -48,7 +48,7 @@ int hilTestVerilogPrinter(const std::string &filename) {
 
 int hilTestCompiler(const std::string &filename) {
   auto compiler = std::make_unique<Compiler>(*parse(filename));
-  //std::cout << *compiler; TODO
+  std::cout << *compiler;
   return 0;
 }
 
