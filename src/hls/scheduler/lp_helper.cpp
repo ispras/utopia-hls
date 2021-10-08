@@ -10,14 +10,14 @@
 
 namespace eda::hls::scheduler {
 
-int LpSolverHelper::solve() {
+void LpSolverHelper::solve() {
   addAllConstraints();
 
   // Only important messages on screen while solving
   set_verbose(lp, IMPORTANT);
 
   // Calculate a solution
-  return ::solve(lp);
+  status = ::solve(lp);
 }
 
 void LpSolverHelper::addConstraint(std::vector<std::string> names, 
@@ -25,21 +25,14 @@ void LpSolverHelper::addConstraint(std::vector<std::string> names,
   std::vector<SolverVariable*> vars;
   for (const std::string &name : names) {
     auto it = variables.find(name);
-    if (it != variables.end()) {
-      vars.push_back(it->second);
-    } else {
-      // TODO: report error
-    }
+    assert(it != variables.end());
+    vars.push_back(it->second);
   }
 
   constraints.push_back(new SolverConstraint(vars, values, 
       static_cast<int>(operation), rhs));
 }
 
-/// Constructs and adds a variable to the problem
-///
-/// \param name variable name
-/// \param node corresponding graph node
 void LpSolverHelper::addVariable(const std::string &name, Node* node) {
   SolverVariable* new_variable = 
       new SolverVariable(name, ++current_column, node);
@@ -49,7 +42,6 @@ void LpSolverHelper::addVariable(const std::string &name, Node* node) {
   set_col_name(lp, current_column, &name_loc[0]);
 }
 
-/// Get the existing variables
 std::vector<SolverVariable*> LpSolverHelper::getVariables() {
   std::vector<SolverVariable*> result;
   for (const auto &pair : variables) {
@@ -58,20 +50,72 @@ std::vector<SolverVariable*> LpSolverHelper::getVariables() {
   return result;
 }
 
-/// Adds all existing constraints to the problem.
 void LpSolverHelper::addAllConstraints() {
   set_add_rowmode(lp, TRUE);
-  for (const auto &constraint : constraints) {
+  for (const auto* constraint : constraints) {
     int exprs = constraint->variables.size();
     int* colno = new int[exprs];
     int i = 0;
-    for (const auto &var : constraint->variables) {
+    for (const auto* var : constraint->variables) {
       colno[i++] = var->column_number;
     }
-    add_constraintex(lp, exprs, &(constraint->values)[0], colno, 
+    std::vector<double> values = constraint->values;
+    add_constraintex(lp, exprs, &values[0], colno, 
         constraint->operation, constraint->rhs);
   }
   set_add_rowmode(lp, FALSE);
+}
+
+void LpSolverHelper::printStatus() {
+  switch (status) {
+    case -2:
+      std::cout<<"Out of memory\n";
+      break;
+    
+    case 0:
+      std::cout<<"An optimal solution was obtained\n";
+      break;
+
+    case 1:
+      std::cout<<"A sub-optimal solution was obtained\n";
+      break;
+
+    case 2:
+      std::cout<<"The model is infeasible\n";
+      break;
+
+    case 3:
+      std::cout<<"The model is unbounded\n";
+      break;
+
+    case 4:
+      std::cout<<"The model is degenerative\n";
+      break;
+
+    case 5:
+      std::cout<<"Numerical failure encountered\n";
+      break;
+
+    case 6:
+      std::cout<<"The abort routine returned TRUE\n";
+      break;
+
+    case 7:
+      std::cout<<"A timeout occurred\n";
+      break;
+
+    case 9:
+      std::cout<<"The model could be solved by presolve\n";
+      break;
+
+    case 25:
+      std::cout<<"Accuracy error encountered\n";
+      break;
+
+    default:
+      std::cout<<"Unexpected\n";
+      break;
+    }
 }
 
 } // namespace eda::hls::scheduler

@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <hls/model/model.h>
 #include <lpsolve/lp_lib.h>
 #include <map>
@@ -36,16 +37,13 @@ struct SolverConstraint;
 class LpSolverHelper final {
 
 public:
-  LpSolverHelper() : current_column(0) {
+  LpSolverHelper() : current_column(0), status(-10) {
     lp = make_lp(0, 0);
     set_maxim(lp);
   }
 
   /// Solves the formulated problem.
-  /// 
-  /// \return Solution status. See lpsolve \code solve() \endcode method 
-  /// description.
-  int solve(); 
+  void solve(); 
 
   void getResults();
 
@@ -55,8 +53,8 @@ public:
   /// \param values variable coefficients
   /// \param operation operation
   /// \param rhs right-hand side value
-  void addConstraint(std::vector<std::string>, std::vector<double>, 
-      OperationType, double);
+  void addConstraint(std::vector<std::string> names, 
+    std::vector<double> values, OperationType operation, double rhs);
 
   /// Constructs and adds a variable to the problem
   ///
@@ -66,6 +64,9 @@ public:
 
   /// Prints the problem
   void printProblem() { write_LP(lp, stdout); }
+
+  /// Prints the last solution status
+  void printStatus();
 
   /// Get the existing variables
   std::vector<SolverVariable*> getVariables();
@@ -81,6 +82,7 @@ private:
   std::map<std::string, SolverVariable*> variables;
   std::vector<SolverConstraint*> constraints;
   int current_column;
+  int status;
 };
 
 struct SolverVariable final {
@@ -91,7 +93,6 @@ struct SolverVariable final {
   std::string name;
   int column_number;
   Node* node;
-
 };
 
 struct SolverConstraint final {
@@ -100,13 +101,8 @@ struct SolverConstraint final {
       std::vector<double> values, int operation, double rhs) : 
       variables(variables), values(values), operation(operation), rhs(rhs) {
     
-    if (variables.size() != values.size()) {
-      // TODO: report error
-    }
-
-    if ((operation != 1) && (operation != 2) && (operation != 3)) {
-      // TODO: report error
-    }
+    assert(variables.size() == values.size());
+    assert((operation == 1) || (operation == 2) || (operation == 3));
   }
 
   std::vector<SolverVariable*> variables;
