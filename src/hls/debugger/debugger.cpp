@@ -8,8 +8,6 @@
 
 #include <hls/debugger/debugger.h>
 
-#include "z3++.h"
-
 using namespace eda::hls::model;
 using namespace z3;
 

@@ -10,6 +10,8 @@
 
 #include "hls/model/model.h"
 
+#include "z3++.h"
+
 #include <memory>
 
 using namespace eda::hls::model;
@@ -33,6 +35,6 @@ private:
 
   static std::unique_ptr<Verifier> instance;
 
-  expr to_expr(Model &model) const;
+  z3::expr to_expr(Model &model) const;
 };
 } // namespace eda::hls::debugger
