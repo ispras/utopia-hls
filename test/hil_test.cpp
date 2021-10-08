@@ -12,9 +12,11 @@
 #include "gtest/gtest.h"
 
 #include "hls/model/model.h"
+#include "hls/compiler/compiler.h"
 #include "hls/library/library.h"
 #include "hls/parser/hil/parser.h"
 
+using namespace eda::hls::compiler;
 using namespace eda::hls::library;
 using namespace eda::hls::model;
 using namespace eda::hls::parser::hil;
@@ -44,6 +46,12 @@ int hilTestVerilogPrinter(const std::string &filename) {
   return 0;
 }
 
+int hilTestCompiler(const std::string &filename) {
+  auto compiler = std::make_unique<Compiler>(*parse(filename));
+  //std::cout << *compiler; TODO
+  return 0;
+}
+
 TEST(HilTest, SimpleTest) {
   EXPECT_EQ(hilTest("test/hil/test.hil"), 0);
 }
@@ -58,4 +66,8 @@ TEST(HilTest, GraphsTest) {
 
 TEST(HilTest, VerilogPrinterTest) {
   EXPECT_EQ(hilTestVerilogPrinter("test/hil/test.hil"), 0);
+}
+
+TEST(HilTest, CompilerTest) {
+  EXPECT_EQ(hilTestCompiler("test/hil/test.hil"), 0);
 }

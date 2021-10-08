@@ -14,14 +14,14 @@ void VerilogPrinter::print(std::ostream &out) const
 {
   out << "module " << type.name << "(" << std::endl;
 
-  for (const eda::hls::model::Argument *arg: type.inputs) {
+  for (const auto *arg: type.inputs) {
     out << "  input " << arg->name; // TODO print arg->length
     if (!(arg == type.inputs.back() && type.outputs.empty())) {
       out << "," << std::endl;
     }
   }
 
-  for (const eda::hls::model::Argument *arg: type.outputs) {
+  for (const auto *arg: type.outputs) {
     out << "  output " << arg->name; // TODO print arg->length
     if (arg != type.outputs.back()) {
       out << "," << std::endl;
