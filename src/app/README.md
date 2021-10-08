@@ -1,5 +1,5 @@
-<!-- SPDX-License-Identifier: Apache-2.0 ->
+[//]: <> (SPDX-License-Identifier: Apache-2.0)
 
-# Application-Specific Representations 
+# Application-Specific Representations
 
 Application-specific facilities.
