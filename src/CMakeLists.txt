@@ -8,6 +8,7 @@ project(Utopia VERSION 0.0)
 # The project library and executable.
 set(MAIN_LIBRARY ueda)
 set(MAIN_TARGET umain)
+set(Z3_LIBRARY z3)
 
 # The project requires flex/bison.
 find_package(FLEX REQUIRED)
@@ -57,6 +58,7 @@ add_library(${MAIN_LIBRARY}
   gate/model/gsymbol.cpp
   gate/model/netlist.cpp
   gate/model/signal.cpp
+  hls/debugger/debugger.cpp
   hls/library/library.cpp
   hls/model/model.cpp
   hls/parser/hil/builder.cpp
@@ -87,7 +89,7 @@ target_include_directories(${MAIN_LIBRARY} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(${MAIN_LIBRARY} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 # The libraries to link with.
-target_link_libraries(${MAIN_LIBRARY} ${FLEX_LIBRARIES} lpsolve55)
+target_link_libraries(${MAIN_LIBRARY} ${FLEX_LIBRARIES} lpsolve55 ${Z3_LIBRARY})
 
 # The project executable.
 add_executable(${MAIN_TARGET} main.cpp)
