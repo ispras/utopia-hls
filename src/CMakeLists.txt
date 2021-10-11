@@ -74,7 +74,7 @@ add_library(${MAIN_LIBRARY}
   rtl/model/pnode.cpp
   rtl/parser/ril/builder.cpp
   rtl/parser/ril/parser.cpp
-  util/utils.cpp
+  util/string.cpp
 
   # Automatically generated sources.
   "${FLEX_HlsHilLexer_OUTPUTS}"

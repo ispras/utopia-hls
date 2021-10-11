@@ -8,7 +8,7 @@
 
 #include <string>
 
-#include "utils.h"
+#include "util/string.h"
 
 namespace eda::utils {
 
