@@ -1,9 +1,9 @@
 # ==================== COMPILATION RELATED SETTINGS ====================
 # Path to the kernel sources (from "./driver", if relative path is used)
-KSOURCE_DIR=/opt/intel/linux-socfpga-rel_socfpga-4.9.78-ltsi_18.08.02_pr
+KSOURCE_DIR?=../../../kernel
 
 # Cross compiler "prepend" string
-CROSS_COMPILE=arm-linux-gnueabihf-
+CROSS_COMPILE?=arm-linux-gnueabihf-
 
 # Architecture
 ARCH=arm
