@@ -20,8 +20,8 @@
  * \brief VTA driver for DE10_Nano board.
  */
 
-#include "de10nano_driver.h"
-#include "de10nano_mgr.h"
+#include "driver.h"
+#include "manager.h"
 
 #include <string.h>
 #include <util/logging.h>
