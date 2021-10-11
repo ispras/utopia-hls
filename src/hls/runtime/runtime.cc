@@ -27,7 +27,7 @@
 #include "runtime.h"
 
 #include "c_runtime_api.h"
-#include "logging.h"
+#include "util/logging.h"
 
 #include <malloc.h>
 #include <stdlib.h>
@@ -269,8 +269,8 @@ class UopKernel {
     le.dst_factor = dst_factor;
     le.src_factor = src_factor;
     le.wgt_factor = wgt_factor;
-    CHECK_EQ(seq_.size(), 0U);
-    CHECK_LT(loop_.size(), 2U);
+    CHECK(seq_.size() == 0U);
+    CHECK(loop_.size() < 2U);
     loop_.push_back(le);
     ++loop_ptr_;
   }
@@ -568,7 +568,7 @@ class UopKernelMap {
       memcpy(&key, signature, sizeof(int));
       key = key + 1;
     }
-    CHECK_LT(key, 100);
+    CHECK(key < 100);
     if (kmap_.size() <= key) {
       kmap_.resize(key + 1, nullptr);
     }
@@ -1039,7 +1039,7 @@ class CommandQueue {
      * elements size should not larger than VTA_PAGE_BYTES.
      *
      */
-    CHECK_GE(VTA_PAGE_BYTES, elem_bytes);
+    CHECK(VTA_PAGE_BYTES >= elem_bytes);
     return elem_bytes;
   }
 
@@ -1127,13 +1127,13 @@ class CommandQueue {
     }
     // Make sure that the last instruction is a finish instruction
     CHECK(reinterpret_cast<VTAMemInsn*>(insn_queue_.data())[insn_queue_.count() - 1].opcode ==
-          VTA_OPCODE_FINISH);
+           VTA_OPCODE_FINISH);
 
     // Make sure that we don't exceed contiguous physical memory limits
     CHECK(insn_queue_.count() * sizeof(VTAGenericInsn) <= VTA_MAX_XFER);
     int timeout =
         VTADeviceRun(device_, insn_queue_.dram_phy_addr(), insn_queue_.count(), wait_cycles);
-    CHECK_EQ(timeout, 0);
+    CHECK(timeout == 0);
     // Reset buffers
     uop_queue_.Reset();
     insn_queue_.Reset();
@@ -1156,7 +1156,7 @@ class CommandQueue {
     UopKernel** kptr = uptr[0]->Get(signature, nbytes);
     if (kptr[0] == nullptr) {
       record_kernel_ = new UopKernel(static_cast<char*>(signature), nbytes);
-      CHECK_EQ((*finit)(signature), 0);
+      CHECK((*finit)(signature) == 0);
       kptr[0] = static_cast<UopKernel*>(record_kernel_);
       if (debug_flag_ & VTA_DEBUG_DUMP_UOP) {
         record_kernel_->Dump();
@@ -1175,7 +1175,7 @@ class CommandQueue {
     UopKernel** kptr = uptr[0]->Get(signature, nbytes);
     if (kptr[0] == nullptr) {
       record_kernel_ = new UopKernel(static_cast<char*>(signature), nbytes);
-      CHECK_EQ((*finit)(signature), 0);
+      CHECK((*finit)(signature) == 0);
       kptr[0] = static_cast<UopKernel*>(record_kernel_);
       if (debug_flag_ & VTA_DEBUG_DUMP_UOP) {
         record_kernel_->Dump();

@@ -25,7 +25,7 @@
 #define TVM_RUNTIME_DEVICE_API_H_
 
 #include <c_runtime_api.h>
-#include <logging.h>
+#include <util/logging.h>
 
 #include <string>
 
@@ -267,7 +267,7 @@ inline bool IsRPCSessionDevice(DLDevice dev) { return (dev.device_type / kRPCSes
  * \return the table index.
  */
 inline int GetRPCSessionIndex(DLDevice dev) {
-  ICHECK(IsRPCSessionDevice(dev)) << "GetRPCSessionIndex: dev has no RPC session";
+  CHECK(IsRPCSessionDevice(dev)) << "GetRPCSessionIndex: dev has no RPC session";
   return dev.device_type / kRPCSessMask - 1;
 }
 

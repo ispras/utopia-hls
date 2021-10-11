@@ -24,8 +24,8 @@
 #include "de10nano_mgr.h"
 
 #include <string.h>
+#include <util/logging.h>
 #include <vta/driver.h>
-#include <logging.h>
 
 #include <iostream>
 #include <thread>
