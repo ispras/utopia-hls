@@ -16,9 +16,7 @@ namespace eda::hls::compiler {
 // TODO: move this code into VerilogPrinter
 void Compiler::printChan(std::ostream &out, const eda::hls::model::Chan *chan) const {
   // TODO: chan.type is ignored
-  // out << chan->name << " " << " source: " << (chan->source != nullptr ? chan->source->name : "") <<
-  //                             " target: " << (chan->target != nullptr ? chan->target->name : "") << std::endl;
-  out << "." << chan->target->name << "(" << chan->source->name << ")";
+  out << "." << chan->source->name << "(" << chan->target->name << ")";
 }
 
 void Compiler::print(std::ostream &out) const {
@@ -30,15 +28,10 @@ void Compiler::print(std::ostream &out) const {
 
   // print model.graphs TODO: refactor it by moving to VerilogPrinter!
   for (const auto *graph : model.graphs) {
-    out << "module " << graph->name << " _";
-    for (auto elem : graph->name) {
-      out << (char)std::tolower((unsigned char)elem);
-    }
-    out << " ();" << std::endl;
+    out << "module " << graph->name << "();" << std::endl;
 
     for (const auto *chan : graph->chans) {
       out << "wire " << chan->name << ";" << std::endl;
-      // printChan(out, chan);
     }
     for (const auto *node : graph->nodes) {
       // TODO: node.type is ignored
@@ -47,13 +40,15 @@ void Compiler::print(std::ostream &out) const {
       bool comma = false;
 
       for (const auto *input : node->inputs) {
-        out << (comma ? "," : "");
+        out << (comma ? ", " : "");
         printChan(out, input);
+        comma = true;
       }
 
       for (const auto *output: node->outputs) {
-        out << (comma ? "," : "");
+        out << (comma ? ", " : "");
         printChan(out, output);
+        comma = true;
       }
       out << ");" << std::endl;
     }
