@@ -12,6 +12,10 @@
 #include <string>
 #include <vector>
 
+#include "util/string.h"
+
+using namespace eda::utils;
+
 namespace eda::hls::model {
 
 struct Argument final {
@@ -33,6 +37,37 @@ struct NodeType final {
 
   void add_output(Argument *output) {
     outputs.push_back(output);
+  }
+
+  bool is_source() const {
+    return inputs.empty();
+  }
+
+  bool is_sink() const {
+    return outputs.empty();
+  }
+
+  bool is_merge() const {
+    return outputs.size() == 1
+        && starts_with(name, "merge");
+  }
+
+  bool is_split() const {
+    return inputs.size() == 1
+        && starts_with(name, "split");
+  }
+
+  bool is_delay() const {
+    return inputs.size() == 1 && outputs.size() == 1
+        && starts_with(name, "delay");
+  }
+
+  bool is_kernel() const {
+    return !is_source()
+        && !is_sink()
+        && !is_merge()
+        && !is_split()
+        && !is_delay();
   }
 
   std::string name;
@@ -62,6 +97,13 @@ struct Node final {
   void add_output(Chan *output) {
     outputs.push_back(output);
   }
+
+  bool is_source() const { return type.is_source(); }
+  bool is_sink()   const { return type.is_sink();   }
+  bool is_merge()  const { return type.is_merge();  }
+  bool is_split()  const { return type.is_split();  }
+  bool is_delay()  const { return type.is_delay();  }
+  bool is_kernel() const { return type.is_kernel(); }
 
   const NodeType &type;
   std::vector<Chan *> inputs;
