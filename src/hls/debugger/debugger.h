@@ -12,9 +12,11 @@
 
 #include "z3++.h"
 
+#include <list>
 #include <memory>
 
 using namespace eda::hls::model;
+using namespace z3;
 
 namespace eda::hls::debugger {
 
@@ -35,6 +37,11 @@ private:
 
   static std::unique_ptr<Verifier> instance;
 
-  z3::expr to_expr(Model &model) const;
+  bool match(std::vector<Graph*> left,
+      std::vector<Graph*> right,
+      std::list<std::pair<Graph*, Graph*>> &matches) const;
+
+  void to_expr(Graph *graph, context &ctx, std::vector<expr *> nodes) const;
+  z3::func_decl mkFunction(const char *name, sort fSort) const;
 };
 } // namespace eda::hls::debugger
