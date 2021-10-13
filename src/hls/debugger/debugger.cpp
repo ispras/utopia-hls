@@ -97,25 +97,25 @@ namespace eda::hls::debugger {
     std::vector<expr*> nodes) const {
 
     // create equations for channels
-    std::vector<Chan*> g_channels = graph->chans;
+    std::vector<Chan*> gChannels = graph->chans;
 
-    for (const auto &channel : g_channels) {
+    for (const auto &channel : gChannels) {
 
       const char *srcName = (channel->source->name).c_str();
       const char *tgtName = (channel->target->name).c_str();
 
       sort fSort = ctx.uninterpreted_sort(channel->type.c_str());
-      func_decl src_func = mkFunction(srcName, fSort);
-      func_decl tgt_func = mkFunction(tgtName, fSort);
+      func_decl srcFunc = mkFunction(srcName, fSort);
+      func_decl tgtFunc = mkFunction(tgtName, fSort);
 
-      expr ch_expr = src_func() == tgt_func();
-      nodes.push_back(&ch_expr);
+      expr chanExpr = srcFunc() == tgtFunc();
+      nodes.push_back(&chanExpr);
     }
 
     // create equations for nodes
-    std::vector<Node*> g_nodes = graph->nodes;
+    std::vector<Node*> gNodes = graph->nodes;
 
-    for (const auto &node : g_nodes) {
+    for (const auto &node : gNodes) {
 
       sort fSort = ctx.uninterpreted_sort(node->type.name.c_str());
 
@@ -125,12 +125,12 @@ namespace eda::hls::debugger {
         std::string input = node->inputs[0]->target->name;
         std::string output = node->outputs[0]->source->name;
 
-        func_decl in_func = mkFunction(input.c_str(), fSort);
-        func_decl out_func = mkFunction(output.c_str(), fSort);
+        func_decl inFunc = mkFunction(input.c_str(), fSort);
+        func_decl outFunc = mkFunction(output.c_str(), fSort);
 
-        expr delay_expr = in_func() == out_func();
+        expr delayExpr = inFunc() == outFunc();
 
-        nodes.push_back(&delay_expr);
+        nodes.push_back(&delayExpr);
 
       } else if (node->is_kernel()) {
 
