@@ -42,6 +42,8 @@ private:
       std::list<std::pair<Graph*, Graph*>> &matches) const;
 
   void to_expr(Graph *graph, context &ctx, std::vector<expr *> nodes) const;
-  z3::func_decl mkFunction(const char *name, sort fSort) const;
+
+  func_decl mkFunction(const std::string name, const Chan *channel, context &ctx) const;
+  func_decl mkFunction(const std::string name, sort fSort) const;
 };
 } // namespace eda::hls::debugger

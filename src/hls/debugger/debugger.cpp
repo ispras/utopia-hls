@@ -88,8 +88,14 @@ namespace eda::hls::debugger {
     return false;
   }
 
-  z3::func_decl Verifier::mkFunction(const char *name, sort fSort) const {
-    return function(name, fSort, fSort);
+  func_decl Verifier::mkFunction(const std::string name, sort fSort) const {
+    return function(name.c_str(), fSort, fSort);
+  }
+
+  func_decl Verifier::mkFunction(const std::string name, const Chan *channel, context &ctx) const {
+
+    sort fSort = ctx.uninterpreted_sort(channel->type.c_str());
+    return mkFunction(name, fSort);
   }
 
   void Verifier::to_expr(Graph *graph,
@@ -101,12 +107,11 @@ namespace eda::hls::debugger {
 
     for (const auto &channel : gChannels) {
 
-      const char *srcName = (channel->source->name).c_str();
-      const char *tgtName = (channel->target->name).c_str();
+      std::string srcName = channel->source->name;
+      std::string tgtName = channel->target->name;
 
-      sort fSort = ctx.uninterpreted_sort(channel->type.c_str());
-      func_decl srcFunc = mkFunction(srcName, fSort);
-      func_decl tgtFunc = mkFunction(tgtName, fSort);
+      func_decl srcFunc = mkFunction(srcName, channel, ctx);
+      func_decl tgtFunc = mkFunction(tgtName, channel, ctx);
 
       expr chanExpr = srcFunc() == tgtFunc();
       nodes.push_back(&chanExpr);
@@ -134,10 +139,156 @@ namespace eda::hls::debugger {
 
       } else if (node->is_kernel()) {
 
+        // TODO: set function name here
+        std::string funcName = "kernel";
+
+        std::vector<Chan*> nodeOuts = node->outputs;
+
+        for (const auto &nodeOut : nodeOuts) {
+
+          const char* funcIdxName = nodeOut->name.c_str();
+
+          size_t arity = node->inputs.size();
+
+          switch (arity) {
+
+            case 1:
+            {
+              std::string arg0Name = node->inputs[0]->target->name;
+              func_decl arg0 = mkFunction(arg0Name, node->inputs[0], ctx);
+              func_decl kernelFunc = mkFunction(funcName + "_" + funcIdxName, fSort);
+              func_decl val = mkFunction(funcIdxName, fSort);
+
+              expr result = kernelFunc(arg0()) == val();
+              nodes.push_back(&result);
+
+              break;
+            }
+            case 2:
+            {
+              std::string arg0Name = node->inputs[0]->target->name;
+              func_decl arg0 = mkFunction(arg0Name, node->inputs[0], ctx);
+
+              std::string arg1Name = node->inputs[1]->target->name;
+              func_decl arg1 = mkFunction(arg1Name, node->inputs[1], ctx);
+
+              func_decl kernelFunc = mkFunction(funcName + "_" + funcIdxName, fSort);
+              func_decl val = mkFunction(funcIdxName, fSort);
+
+              expr result = kernelFunc(arg0(), arg1()) == val();
+              nodes.push_back(&result);
+
+              break;
+            }
+            case 3:
+            {
+              std::string arg0Name = node->inputs[0]->target->name;
+              func_decl arg0 = mkFunction(arg0Name, node->inputs[0], ctx);
+
+              std::string arg1Name = node->inputs[1]->target->name;
+              func_decl arg1 = mkFunction(arg1Name, node->inputs[1], ctx);
+
+              std::string arg2Name = node->inputs[2]->target->name;
+              func_decl arg2 = mkFunction(arg2Name, node->inputs[2], ctx);
+
+              func_decl kernelFunc = mkFunction(funcName + "_" + funcIdxName, fSort);
+              func_decl val = mkFunction(funcIdxName, fSort);
+
+              expr result = kernelFunc(arg0(), arg1(), arg2()) == val();
+              nodes.push_back(&result);
+
+              break;
+            }
+            case 4:
+            {
+              std::string arg0Name = node->inputs[0]->target->name;
+              func_decl arg0 = mkFunction(arg0Name, node->inputs[0], ctx);
+
+              std::string arg1Name = node->inputs[1]->target->name;
+              func_decl arg1 = mkFunction(arg1Name, node->inputs[1], ctx);
+
+              std::string arg2Name = node->inputs[2]->target->name;
+              func_decl arg2 = mkFunction(arg2Name, node->inputs[2], ctx);
+
+              std::string arg3Name = node->inputs[3]->target->name;
+              func_decl arg3 = mkFunction(arg3Name, node->inputs[3], ctx);
+
+              func_decl kernelFunc = mkFunction(funcName + "_" + funcIdxName, fSort);
+              func_decl val = mkFunction(funcIdxName, fSort);
+
+              expr result = kernelFunc(arg0(), arg1(), arg2(), arg3()) == val();
+              nodes.push_back(&result);
+
+              break;
+            }
+            case 5:
+            {
+              std::string arg0Name = node->inputs[0]->target->name;
+              func_decl arg0 = mkFunction(arg0Name, node->inputs[0], ctx);
+
+              std::string arg1Name = node->inputs[1]->target->name;
+              func_decl arg1 = mkFunction(arg1Name, node->inputs[1], ctx);
+
+              std::string arg2Name = node->inputs[2]->target->name;
+              func_decl arg2 = mkFunction(arg2Name, node->inputs[2], ctx);
+
+              std::string arg3Name = node->inputs[3]->target->name;
+              func_decl arg3 = mkFunction(arg3Name, node->inputs[3], ctx);
+
+              std::string arg4Name = node->inputs[4]->target->name;
+              func_decl arg4 = mkFunction(arg4Name, node->inputs[4], ctx);
+
+              func_decl kernelFunc = mkFunction(funcName + "_" + funcIdxName, fSort);
+              func_decl val = mkFunction(funcIdxName, fSort);
+
+              expr result = kernelFunc(arg0(), arg1(), arg2(), arg3()) == val();
+              nodes.push_back(&result);
+
+              break;
+            }
+            default:
+              std::cout << "Unsupported arity of " + funcName + " func node: "
+                  + std::to_string(arity) << std::endl;
+              break;
+          }
+        }
       } else if (node->is_merge()) {
 
+        // merge has the only output
+        Chan *nodeOut = node->outputs[0];
+        func_decl val = mkFunction(nodeOut->source->name, fSort);
+
+        expr mergeExpr = expr(ctx);
+        std::vector< Chan*> nodeInputs = node->inputs;
+
+        for (const auto &nodeInput : nodeInputs) {
+
+          std::string inputName = nodeInput->target->name;
+          func_decl inputFunc = mkFunction(inputName, fSort);
+
+          mergeExpr = mergeExpr || (inputFunc() == val());
+        }
+
+        nodes.push_back(&mergeExpr);
+        
       } else if (node->is_split()) {
 
+        //split has the only input
+        Chan *nodeInput = node->inputs[0];
+        func_decl arg = mkFunction(nodeInput->target->name, fSort);
+
+        expr splitExpr = expr(ctx);
+        std::vector< Chan*> nodeOutputs = node->outputs;
+
+        for (const auto &nodeOut : nodeOutputs) {
+          
+          std::string outName = nodeOut->source->name;
+          func_decl outFunc = mkFunction(outName, fSort);
+
+          splitExpr = splitExpr || (arg() == outFunc());
+        }
+
+        nodes.push_back(&splitExpr);
       } else {
         // sink or source, do nothing
         assert(node->is_sink() || node->is_source());
