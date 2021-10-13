@@ -1,0 +1,15 @@
+actor kto [ id1 < id2, id4 < id5 ] ( x = 0; y; complex z ) otkuda ==> kuda :
+mutable a;
+b = 25;
+chto.gde.kogda : initialize ==> id: [20] repeat 5 at 10 
+guard true var zxc; qwe = 23 delay old id do
+ident.fier[old id] := 696;
+call id : (old id);
+while true do
+if null then
+abc := 123;
+end
+endwhile
+endinitialize
+priority id1 > id2.id3 > id4 ; end
+endactor

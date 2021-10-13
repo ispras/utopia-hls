@@ -1,0 +1,14 @@
+actor Act0r (x = 28) ==> multi high next_actor :
+schedule regexp 
+([id1**])
+endschedule
+abc = if x = 28 then 5 else 6 end + old std;
+q.w.e.r.t.y: action 
+[boy, girl] repeat map {olld -> neew : for key in false} at* any
+==>
+jupyter : [old moon, sun] do
+foreach black_hole in true do
+endforeach
+endaction
+end 
+

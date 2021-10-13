@@ -1,0 +1,90 @@
+import lib1.li2 = lib12;
+import all libmath.libphis;
+actor BIG 
+[int < float , type1 < type2(flag1 = true, flag2 = false)]
+(abc[dfe] character = old man; xyz)
+multi int small , float little ==> huge
+time year :
+mutable complex z = x + i*z;
+function testFunc ([a1,a2 --> ] formal1, formal2) var local1 = 0; char local2 :
+    assig[i+old x / 3].n := true;
+    assig[].nment[] := false;
+    key1 := null;
+    key2 := old key1;
+    key3 := if key1 = null then k else t end * 
+    let x : 
+        const lambda (list y) --> set var h=2; j=0: 
+            proc () var list l = null begin 
+                call calling : (1);
+                begin var x; y; z do 
+                end
+                if old condition then 
+                    while 1  var int a = 5 do 
+                    endwhile
+                else
+                    foreach type1 id1,id2,id3 in range, cycle , foreach id4 in 0,1 var x do
+                    endforeach
+                    choose type2 id01,id02 in  set, stack, choose id03 in 1 var y do 
+                    else var tmp = null do 
+                    endchoose 
+                end
+            endproc
+        endlambda
+    endlet;
+end
+procedure testProc ([a1,a2 --> a3 ] formal2, formal2) var i; j:
+assig[i+old x / 3].n := true;
+    assig[].nment[] := false;
+    key1 := null;
+    key2 := old key1;
+    key3 := if key1 = null then k else t end * 
+    let x : 
+        const lambda (list y) --> set var h=2; j=0: 
+            proc () var list l = null begin 
+                call calling : (1);
+                begin var x; y; z do 
+                end
+                if old condition then 
+                    while 1  var int a = 5 do 
+                    endwhile
+                else
+                    foreach type1 id1,id2,id3 in range, cycle , foreach id4 in 0,1 var x do
+                    endforeach
+                    choose type2 id01,id02 in  set, stack, choose id03 in 1 var y do 
+                    else var tmp = null do 
+                    endchoose 
+                end
+            endproc
+        endlambda
+    endlet;
+end
+schedule fsm sch:
+    id1 ( z.x.c , q.w.e ) --> new | (c.x.z) --> alter;
+    id2 (qwerty,zxc) --> new2;
+endschedule
+t.a.g: action 
+    id: [id1,id2,id3] 
+    repeat [exp1,exp2: for int id11,id22,id33 in 1,2,3 | null ]
+    at {old set:for int id11,id22,id33 in 1,2,3 } , [old_id]
+    ==>
+    new_id: [id1+id2,id2+id3,id3+id1] 
+    repeat [exp1,exp2: for int id11,id22,id33 in 1,2,3 | null ]
+    at* {old set:for int id11,id22,id33 in 1,2,3 } , [old_id + id]
+    guard map { tmp -> pmt, id -> di : for int id11,id22,id33 in 1,2,3 } , old g
+    var x; int y; complex z = 0 delay 5 do
+        lhs := 1;
+endaction
+t.a.g: initialize 
+    ==>
+    new_id: [id1+id2,id2+id3,id3+id1] 
+    repeat [exp1,exp2: for int id11,id22,id33 in 1,2,3 | null ]
+    at* {old set:for int id11,id22,id33 in 1,2,3 } , [old_id + id]
+    guard map { tmp -> pmt, id -> di : for int id11,id22,id33 in 1,2,3 } , old g
+    var x; int y; complex z = 0 delay 5 do
+        lhs := 1;
+endinitialize
+priority 
+    id1 > id2.id3 > id4 ; 
+    id5 > id6;
+end
+endactor

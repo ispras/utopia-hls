@@ -1,0 +1,13 @@
+import lib1;
+import l.i.b = lib2;
+actor id [ kail < [ lol --> ]] ( x;y;z ) ==> :
+float flag = true;
+procedure print ( int a, complex b ) 
+begin
+var i = 0 do
+choose id in old id2 do 
+i := i + 1;
+endchoose
+end
+end
+endactor
