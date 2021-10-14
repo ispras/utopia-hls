@@ -68,6 +68,8 @@ public:
   /// Prints the last solution status
   void printStatus();
 
+  int getStatus();
+
   /// Get the existing variables
   std::vector<SolverVariable*> getVariables();
 

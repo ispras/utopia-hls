@@ -23,6 +23,11 @@ void LpSolverHelper::solve() {
 void LpSolverHelper::addConstraint(std::vector<std::string> names, 
     std::vector<double> values, OperationType operation, double rhs) {
   std::vector<SolverVariable*> vars;
+  std::cout<<"Adding constraint for: ";
+  for (const std::string &name : names) {
+    std::cout<<name<<" ";
+  }
+  std::cout<<"\n";
   for (const std::string &name : names) {
     auto it = variables.find(name);
     assert(it != variables.end());
@@ -34,6 +39,7 @@ void LpSolverHelper::addConstraint(std::vector<std::string> names,
 }
 
 void LpSolverHelper::addVariable(const std::string &name, Node* node) {
+  std::cout<<"Adding variable: "<<name<<"\n";
   SolverVariable* new_variable = 
       new SolverVariable(name, ++current_column, node);
   variables[name] = new_variable;
@@ -64,6 +70,10 @@ void LpSolverHelper::addAllConstraints() {
         constraint->operation, constraint->rhs);
   }
   set_add_rowmode(lp, FALSE);
+}
+
+int LpSolverHelper::getStatus() {
+  return status;
 }
 
 void LpSolverHelper::printStatus() {

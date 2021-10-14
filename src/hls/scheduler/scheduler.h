@@ -9,6 +9,7 @@
 #pragma once
 
 #include <hls/model/model.h>
+#include <hls/scheduler/lp_helper.h>
 #include <string>
 
 using namespace eda::hls::model;
@@ -19,23 +20,27 @@ class LpSolver final {
 
 public:
 
-  void setModel(const std::string& fileName);
+  LpSolver(Model* model_arg) : model(model_arg) { 
+    helper = new LpSolverHelper;
+  }
+
+  LpSolver() { helper = new LpSolverHelper; }
+
+  void setModel(Model* model_arg) { model = model_arg; }
 
   void balance();
+
+  int getResult();
 
 private:
 
   void checkFlows(const Node* node);
   
   Model* model;
+  LpSolverHelper* helper;
 
 };
 
-const std::string MERGE = "merge";
-const std::string SPLIT = "split";
-int isMergeSplit(const std::string& nodeName);
-bool checkMerge(const std::string &nodeName);
-bool checkSplit(const std::string &nodeName);
-
+float sumFlows(std::vector<Argument*> args);
 
 } // namespace eda::hls::scheduler
