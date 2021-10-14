@@ -27,6 +27,7 @@ add_executable(${TEST_TARGET}
   hil_test.cpp
   ril_test.cpp
   test_main.cpp
+  scheduler_test.cpp
 )
 
 target_link_libraries(${TEST_TARGET} PRIVATE gtest_main ${MAIN_LIBRARY})

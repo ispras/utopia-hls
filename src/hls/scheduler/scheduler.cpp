@@ -29,14 +29,14 @@ void LpSolver::balance() {
       helper->addConstraint(names, valOne, OperationType::LessOrEqual, 1);     
     }
 
-    for (const Chan* channel : graph->chans) {
+    /*for (const Chan* channel : graph->chans) {
       const Argument* from = channel->source;
       const Argument* to = channel->target;
 
       std::vector<std::string> names{from->name, to->name};
       std::vector<double> values{from->flow, -1.0 * to->flow};
       helper->addConstraint(names, values, OperationType::Equal,0);
-    }
+    }*/
 
     helper->printProblem();
     helper->solve();

@@ -9,6 +9,9 @@ project(Utopia VERSION 0.0)
 set(MAIN_LIBRARY ueda)
 set(MAIN_TARGET umain)
 set(Z3_LIBRARY z3)
+set(LPSOLVE55_LIBRARY lpsolve55)
+set(DL_LIBRARY dl)
+set(COLAMD_LIBRARY colamd)
 
 # The project requires flex/bison.
 find_package(FLEX REQUIRED)
@@ -91,7 +94,7 @@ target_include_directories(${MAIN_LIBRARY} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(${MAIN_LIBRARY} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 # The libraries to link with.
-target_link_libraries(${MAIN_LIBRARY} ${FLEX_LIBRARIES} lpsolve55 dl colamd ${Z3_LIBRARY})
+target_link_libraries(${MAIN_LIBRARY} ${FLEX_LIBRARIES} ${LPSOLVE55_LIBRARY} ${DL_LIBRARY} ${COLAMD_LIBRARY} ${Z3_LIBRARY})
 
 # The project executable.
 add_executable(${MAIN_TARGET} main.cpp)
