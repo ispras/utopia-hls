@@ -15,10 +15,10 @@ graph G {
   chan Z z;
   chan W w;
 
-  node source() => (x, y);
-  node split(x) => (x1, x2);
-  node kernel1(x1, y) => (z1, w);
-  node kernel2(x2, w) => (z2);
-  node merge(z1, z2) => (z);
-  node sink(z) => ();
+  node source n1() => (x, y);
+  node split n2(x) => (x1, x2);
+  node kernel1 n3(x1, y) => (z1, w);
+  node kernel2 n4(x2, w) => (z2);
+  node merge n5(z1, z2) => (z);
+  node sink n6(z) => ();
 }

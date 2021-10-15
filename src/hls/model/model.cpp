@@ -44,7 +44,7 @@ static std::ostream& operator <<(std::ostream &out, const std::vector<Chan *> &p
 }
 
 std::ostream& operator <<(std::ostream &out, const Node &node) {
-  out << "node " << node.type.name;
+  out << "node " << node.type.name << " " << node.name;
   return out << "(" << node.inputs << ") => (" << node.outputs << ");";
 }
 

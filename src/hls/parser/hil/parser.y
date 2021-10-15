@@ -126,9 +126,9 @@ nodes:
 
 node:
   // There are special types of nodes: merge*, split*, and delay*.
-  NODE ID[type] {
-    Builder::get().start_node(*$type);
-    delete $type;
+  NODE ID[type] ID[name] {
+    Builder::get().start_node(*$type, *$name);
+    delete $type; delete $name;
   }
   LBRACK params RBRACK ARROW {
     Builder::get().start_outputs();

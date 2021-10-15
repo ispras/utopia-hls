@@ -87,8 +87,8 @@ struct Chan final {
 };
 
 struct Node final {
-  Node(const NodeType &type):
-    type(type) {}
+  Node(const std::string &name, const NodeType &type):
+    name(name), type(type) {}
 
   void add_input(Chan *input) {
     inputs.push_back(input);
@@ -105,6 +105,7 @@ struct Node final {
   bool is_delay()  const { return type.is_delay();  }
   bool is_kernel() const { return type.is_kernel(); }
 
+  std::string name;
   const NodeType &type;
   std::vector<Chan *> inputs;
   std::vector<Chan *> outputs;

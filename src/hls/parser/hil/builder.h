@@ -94,13 +94,13 @@ public:
     _graph->add_chan(chan);
   }
 
-  void start_node(const std::string &type) {
+  void start_node(const std::string &type, const std::string &name) {
     assert(_node == nullptr);
 
     const auto &i = _nodetypes.find(type);
     assert(i != _nodetypes.end());
  
-    _node = new Node(*(i->second));
+    _node = new Node(name, *(i->second));
     _outputs = false;
   }
 
