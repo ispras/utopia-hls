@@ -119,12 +119,12 @@ public:
 
     Chan *chan = i->second;
     if (_outputs) {
-      assert(chan->source == nullptr);
-      chan->source = _node->type.outputs[_node->outputs.size()];
+      assert(!chan->source.is_linked());
+      chan->source = { _node, _node->type.outputs[_node->outputs.size()] };
       _node->add_output(chan);
     } else {
-      assert(chan->target == nullptr);
-      chan->target = _node->type.inputs[_node->inputs.size()];
+      assert(!chan->target.is_linked());
+      chan->target = { _node, _node->type.inputs[_node->inputs.size()] };
       _node->add_input(chan);
     }
   }

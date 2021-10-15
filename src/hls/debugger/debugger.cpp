@@ -107,8 +107,8 @@ namespace eda::hls::debugger {
 
     for (const auto &channel : gChannels) {
 
-      std::string srcName = channel->source->name;
-      std::string tgtName = channel->target->name;
+      std::string srcName = channel->source.node->name;
+      std::string tgtName = channel->target.node->name;
 
       func_decl srcFunc = mkFunction(srcName, channel, ctx);
       func_decl tgtFunc = mkFunction(tgtName, channel, ctx);
@@ -127,8 +127,8 @@ namespace eda::hls::debugger {
       if (node->is_delay()) {
 
         // treat delay node as in-to-out channel
-        std::string input = node->inputs[0]->target->name;
-        std::string output = node->outputs[0]->source->name;
+        std::string input = node->inputs[0]->target.node->name;
+        std::string output = node->outputs[0]->source.node->name;
 
         func_decl inFunc = mkFunction(input.c_str(), fSort);
         func_decl outFunc = mkFunction(output.c_str(), fSort);
@@ -154,7 +154,7 @@ namespace eda::hls::debugger {
 
             case 1:
             {
-              std::string arg0Name = node->inputs[0]->target->name;
+              std::string arg0Name = node->inputs[0]->target.node->name;
               func_decl arg0 = mkFunction(arg0Name, node->inputs[0], ctx);
               func_decl kernelFunc = mkFunction(funcName + "_" + funcIdxName, fSort);
               func_decl val = mkFunction(funcIdxName, fSort);
@@ -166,10 +166,10 @@ namespace eda::hls::debugger {
             }
             case 2:
             {
-              std::string arg0Name = node->inputs[0]->target->name;
+              std::string arg0Name = node->inputs[0]->target.node->name;
               func_decl arg0 = mkFunction(arg0Name, node->inputs[0], ctx);
 
-              std::string arg1Name = node->inputs[1]->target->name;
+              std::string arg1Name = node->inputs[1]->target.node->name;
               func_decl arg1 = mkFunction(arg1Name, node->inputs[1], ctx);
 
               func_decl kernelFunc = mkFunction(funcName + "_" + funcIdxName, fSort);
@@ -182,13 +182,13 @@ namespace eda::hls::debugger {
             }
             case 3:
             {
-              std::string arg0Name = node->inputs[0]->target->name;
+              std::string arg0Name = node->inputs[0]->target.node->name;
               func_decl arg0 = mkFunction(arg0Name, node->inputs[0], ctx);
 
-              std::string arg1Name = node->inputs[1]->target->name;
+              std::string arg1Name = node->inputs[1]->target.node->name;
               func_decl arg1 = mkFunction(arg1Name, node->inputs[1], ctx);
 
-              std::string arg2Name = node->inputs[2]->target->name;
+              std::string arg2Name = node->inputs[2]->target.node->name;
               func_decl arg2 = mkFunction(arg2Name, node->inputs[2], ctx);
 
               func_decl kernelFunc = mkFunction(funcName + "_" + funcIdxName, fSort);
@@ -201,16 +201,16 @@ namespace eda::hls::debugger {
             }
             case 4:
             {
-              std::string arg0Name = node->inputs[0]->target->name;
+              std::string arg0Name = node->inputs[0]->target.node->name;
               func_decl arg0 = mkFunction(arg0Name, node->inputs[0], ctx);
 
-              std::string arg1Name = node->inputs[1]->target->name;
+              std::string arg1Name = node->inputs[1]->target.node->name;
               func_decl arg1 = mkFunction(arg1Name, node->inputs[1], ctx);
 
-              std::string arg2Name = node->inputs[2]->target->name;
+              std::string arg2Name = node->inputs[2]->target.node->name;
               func_decl arg2 = mkFunction(arg2Name, node->inputs[2], ctx);
 
-              std::string arg3Name = node->inputs[3]->target->name;
+              std::string arg3Name = node->inputs[3]->target.node->name;
               func_decl arg3 = mkFunction(arg3Name, node->inputs[3], ctx);
 
               func_decl kernelFunc = mkFunction(funcName + "_" + funcIdxName, fSort);
@@ -223,19 +223,19 @@ namespace eda::hls::debugger {
             }
             case 5:
             {
-              std::string arg0Name = node->inputs[0]->target->name;
+              std::string arg0Name = node->inputs[0]->target.node->name;
               func_decl arg0 = mkFunction(arg0Name, node->inputs[0], ctx);
 
-              std::string arg1Name = node->inputs[1]->target->name;
+              std::string arg1Name = node->inputs[1]->target.node->name;
               func_decl arg1 = mkFunction(arg1Name, node->inputs[1], ctx);
 
-              std::string arg2Name = node->inputs[2]->target->name;
+              std::string arg2Name = node->inputs[2]->target.node->name;
               func_decl arg2 = mkFunction(arg2Name, node->inputs[2], ctx);
 
-              std::string arg3Name = node->inputs[3]->target->name;
+              std::string arg3Name = node->inputs[3]->target.node->name;
               func_decl arg3 = mkFunction(arg3Name, node->inputs[3], ctx);
 
-              std::string arg4Name = node->inputs[4]->target->name;
+              std::string arg4Name = node->inputs[4]->target.node->name;
               func_decl arg4 = mkFunction(arg4Name, node->inputs[4], ctx);
 
               func_decl kernelFunc = mkFunction(funcName + "_" + funcIdxName, fSort);
@@ -256,14 +256,14 @@ namespace eda::hls::debugger {
 
         // merge has the only output
         Chan *nodeOut = node->outputs[0];
-        func_decl val = mkFunction(nodeOut->source->name, fSort);
+        func_decl val = mkFunction(nodeOut->source.node->name, fSort);
 
         expr mergeExpr = expr(ctx);
         std::vector< Chan*> nodeInputs = node->inputs;
 
         for (const auto &nodeInput : nodeInputs) {
 
-          std::string inputName = nodeInput->target->name;
+          std::string inputName = nodeInput->target.node->name;
           func_decl inputFunc = mkFunction(inputName, fSort);
 
           mergeExpr = mergeExpr || (inputFunc() == val());
@@ -275,14 +275,14 @@ namespace eda::hls::debugger {
 
         //split has the only input
         Chan *nodeInput = node->inputs[0];
-        func_decl arg = mkFunction(nodeInput->target->name, fSort);
+        func_decl arg = mkFunction(nodeInput->target.node->name, fSort);
 
         expr splitExpr = expr(ctx);
         std::vector< Chan*> nodeOutputs = node->outputs;
 
         for (const auto &nodeOut : nodeOutputs) {
           
-          std::string outName = nodeOut->source->name;
+          std::string outName = nodeOut->source.node->name;
           func_decl outFunc = mkFunction(outName, fSort);
 
           splitExpr = splitExpr || (arg() == outFunc());

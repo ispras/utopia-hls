@@ -33,14 +33,14 @@ std::unique_ptr<Model> Builder::create() {
       assert(chan != nullptr);
 
       // The channel is attached to nodes.
-      assert(chan->source != nullptr);
-      assert(chan->target != nullptr);
+      assert(chan->source.is_linked());
+      assert(chan->target.is_linked());
 
       // The channel is not a loopback.
-      assert(chan->source != chan->target);
+      assert(chan->source.node != chan->target.node);
 
       // The source and target datatypes are the same.
-      assert(chan->source->type == chan->target->type);
+      assert(chan->source.port->type == chan->target.port->type);
     }
 
     for (const Node *node: graph->nodes) {

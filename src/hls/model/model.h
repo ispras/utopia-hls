@@ -76,14 +76,30 @@ struct NodeType final {
   std::vector<Argument *> outputs;
 };
 
+struct Node;
+
+struct Binding final {
+  Binding():
+    node(nullptr), port(nullptr) {}
+  Binding(const Node *node, const Argument *port):
+    node(node), port(port) {}
+
+  bool is_linked() const {
+    return node != nullptr;
+  }
+
+  const Node *node;
+  const Argument *port;
+};
+
 struct Chan final {
   Chan(const std::string &name, const std::string &type):
     name(name), type(type) {}
 
   std::string name;
   std::string type;
-  const Argument *source = nullptr;
-  const Argument *target = nullptr;
+  Binding source;
+  Binding target;
 };
 
 struct Node final {

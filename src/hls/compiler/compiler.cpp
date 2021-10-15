@@ -16,7 +16,7 @@ namespace eda::hls::compiler {
 // TODO: move this code into VerilogPrinter
 void Compiler::printChan(std::ostream &out, const eda::hls::model::Chan *chan) const {
   // TODO: chan.type is ignored
-  out << "." << chan->source->name << "(" << chan->target->name << ")";
+  out << "." << chan->source.node->name << "(" << chan->target.node->name << ")";
 }
 
 void Compiler::print(std::ostream &out) const {
