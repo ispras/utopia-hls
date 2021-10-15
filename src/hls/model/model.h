@@ -19,17 +19,18 @@ using namespace eda::utils;
 namespace eda::hls::model {
 
 struct Argument final {
-  Argument(const std::string &name, const std::string &type, float flow):
-    name(name), type(type), flow(flow) {}
+  Argument(const std::string &name, const std::string &type, float flow, unsigned latency):
+    name(name), type(type), flow(flow), latency(latency) {}
 
   std::string name;
   std::string type;
   float flow;
+  unsigned latency;
 };
 
 struct NodeType final {
-  NodeType(const std::string &name, unsigned latency):
-    name(name), latency(latency) {}
+  NodeType(const std::string &name):
+    name(name) {}
 
   void add_input(Argument *input) {
     inputs.push_back(input);
@@ -71,7 +72,6 @@ struct NodeType final {
   }
 
   std::string name;
-  unsigned latency;
   std::vector<Argument *> inputs;
   std::vector<Argument *> outputs;
 };

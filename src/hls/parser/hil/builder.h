@@ -45,10 +45,10 @@ public:
 
   void end_model() {}
 
-  void start_nodetype(const std::string &name, const std::string &latency) {
+  void start_nodetype(const std::string &name) {
     assert(_nodetype == nullptr);
 
-    _nodetype = new NodeType(name, std::stoi(latency));
+    _nodetype = new NodeType(name);
     _nodetypes.insert({ name, _nodetype });
     _outputs = false;
   }
@@ -64,8 +64,12 @@ public:
     _outputs = true;
   }
 
-  void add_argument(const std::string &name, const std::string &type, const std::string &flow) {
-    Argument *argument = new Argument(name, type, std::stof(flow));
+  void add_argument(
+      const std::string &name,
+      const std::string &type,
+      const std::string &flow,
+      const std::string &latency = "0") {
+    Argument *argument = new Argument(name, type, std::stof(flow), std::stoi(latency));
 
     if (_outputs) {
       _nodetype->add_output(argument);

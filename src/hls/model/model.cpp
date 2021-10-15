@@ -11,7 +11,8 @@
 namespace eda::hls::model {
 
 std::ostream& operator <<(std::ostream &out, const Argument &argument) {
-  return out << argument.type << "<" << argument.flow << ">" << " " << argument.name;
+  out << argument.type << "<" << argument.flow << ">" << " ";
+  return out << "#" << argument.latency << " " << argument.name;
 }
 
 static std::ostream& operator <<(std::ostream &out, const std::vector<Argument *> &args) {
@@ -25,7 +26,7 @@ static std::ostream& operator <<(std::ostream &out, const std::vector<Argument *
 }
 
 std::ostream& operator <<(std::ostream &out, const NodeType &nodetype) {
-  out << "nodetype<latency=" << nodetype.latency << "> " << nodetype.name;
+  out << "nodetype " << nodetype.name;
   return out << "(" << nodetype.inputs << ") => (" << nodetype.outputs << ");";
 }
 

@@ -34,7 +34,7 @@
   GRAPH
   CHAN
   NODE
-  LATENCY
+  SHARP
   ASSIGN
   ARROW
   COMMA
@@ -66,9 +66,9 @@ nodetypes:
 ;
 
 nodetype:
-  NODETYPE LANGLE LATENCY ASSIGN INT[latency] RANGLE ID[name] {
-    Builder::get().start_nodetype(*$name, *$latency);
-    delete $latency; delete $name;
+  NODETYPE ID[name] {
+    Builder::get().start_nodetype(*$name);
+    delete $name;
   }
   LBRACK args RBRACK ARROW {
     Builder::get().start_outputs();
@@ -88,6 +88,10 @@ arg:
   ID[type] LANGLE REAL[flow] RANGLE ID[name] {
     Builder::get().add_argument(*$name, *$type, *$flow);
     delete $type; delete $flow; delete $name;
+  }
+| ID[type] LANGLE REAL[flow] RANGLE SHARP INT[latency] ID[name] {
+    Builder::get().add_argument(*$name, *$type, *$flow, *$latency);
+    delete $type; delete $flow; delete $latency; delete $name;
   }
 ;
 

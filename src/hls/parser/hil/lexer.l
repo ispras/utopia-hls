@@ -16,8 +16,8 @@
   #include <hls/parser/hil/parser.tab.hpp>
 %}
 
-REAL [0-9]+(.[0-9]+)?
-INT  [1-9][0-9]*
+REAL [0-9]+.[0-9]+
+INT  [0-9]+
 ID   [_a-zA-Z][_a-zA-Z0-9]*
 
 %%
@@ -25,7 +25,7 @@ ID   [_a-zA-Z][_a-zA-Z0-9]*
 "graph"    { return TOK_GRAPH;    }
 "chan"     { return TOK_CHAN;     }
 "node"     { return TOK_NODE;     }
-"latency"  { return TOK_LATENCY;  }
+"#"        { return TOK_SHARP;    }
 "="        { return TOK_ASSIGN;   }
 "=>"       { return TOK_ARROW;    }
 ","        { return TOK_COMMA;    }
