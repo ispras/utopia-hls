@@ -34,8 +34,60 @@ namespace eda::hls::debugger {
       to_expr(fGraph, ctx, nodes);
       to_expr(sGraph, ctx, nodes);
 
-      // TODO: add input bindings to nodes
-      // TODO: add output bindings to nodes
+      // add input bindings to nodes
+      std::vector<Node*> fInputs = getSources(fGraph);
+      std::vector<Node*> sInputs = getSources(sGraph);
+      std::list<std::pair<Node*, Node*>> inMatch;
+
+      if (match(fInputs, sInputs, inMatch)) {
+
+        for (const auto &inPair : inMatch) {
+
+          Node *fIn = inPair.first;
+          Node *sIn = inPair.second;
+
+          const NodeType &fType = fIn->type;
+          const NodeType &sType = sIn->type;
+
+          assert(&fType == &sType);
+
+          sort fSort = ctx.uninterpreted_sort(fIn->type.name.c_str());
+          func_decl fFunc = mkFunction(fIn->name, fSort);
+          func_decl sFunc = mkFunction(sIn->name, fSort);
+          expr inEq = fFunc() == sFunc();
+
+          nodes.push_back(&inEq);
+        }
+      } else {
+        std::cout << "Cannot match graphs inputs" << std::endl;
+      }
+
+      // add output bindings to nodes
+      std::vector<Node*> fOutputs = getSinks(fGraph);
+      std::vector<Node*> sOutputs = getSinks(sGraph);
+      std::list<std::pair<Node*, Node*>> outMatch;
+
+      if (match(fOutputs, sOutputs, outMatch)) {
+        for (const auto &outPair : outMatch) {
+
+          Node *fOut = outPair.first;
+          Node *sOut = outPair.second;
+
+          const NodeType &fType = fOut->type;
+          const NodeType &sType = sOut->type;
+
+          assert(&fType == &sType);
+
+          sort fSort = ctx.uninterpreted_sort(fOut->type.name.c_str());
+          func_decl fFunc = mkFunction(fOut->name, fSort);
+          func_decl sFunc = mkFunction(sOut->name, fSort);
+          expr outEq = fFunc() == sFunc();
+
+          nodes.push_back(&outEq);
+        }
+      } else {
+        std::cout << "Cannot match graphs outputs" << std::endl;
+      }
     }
 
     solver s(ctx);
@@ -82,6 +134,35 @@ namespace eda::hls::debugger {
       }
       if (!hasMatch) {
         std::cout << "No match for graphs " + lGraph->name << std:: endl;
+        return false;
+      }
+    }
+    return false;
+  }
+
+  bool Verifier::match(std::vector<Node*> left,
+      std::vector<Node*> right,
+      std::list<std::pair<Node*, Node*>> &matches) const {
+    size_t lSize = left.size();
+    size_t rSize = right.size();
+
+    if (lSize != rSize)
+      return false;
+
+    for (size_t i = 0; i < lSize; i++) {
+      Node *lNode = left[i];
+      bool hasMatch = false;
+
+      for (size_t j = 0; j < rSize; j++) {
+        Node *rNode = right[j];
+
+        if (lNode->name == rNode->name) {
+          matches.push_back(std::make_pair(lNode, rNode));
+          hasMatch = true;
+        }
+      }
+      if (!hasMatch) {
+        std::cout << "No match for graphs " + lNode->name << std:: endl;
         return false;
       }
     }
@@ -139,8 +220,7 @@ namespace eda::hls::debugger {
 
       } else if (node->is_kernel()) {
 
-        // TODO: set function name here
-        std::string funcName = "kernel";
+        std::string funcName = node->name;
 
         std::vector<Chan*> nodeOuts = node->outputs;
 
@@ -270,7 +350,7 @@ namespace eda::hls::debugger {
         }
 
         nodes.push_back(&mergeExpr);
-        
+
       } else if (node->is_split()) {
 
         //split has the only input
@@ -281,7 +361,7 @@ namespace eda::hls::debugger {
         std::vector< Chan*> nodeOutputs = node->outputs;
 
         for (const auto &nodeOut : nodeOutputs) {
-          
+
           std::string outName = nodeOut->source.node->name;
           func_decl outFunc = mkFunction(outName, fSort);
 
@@ -294,5 +374,37 @@ namespace eda::hls::debugger {
         assert(node->is_sink() || node->is_source());
       }
     }
+  }
+
+  std::vector<Node*> Verifier::getSources(Graph *graph) const {
+
+    std::vector<Node*> result;
+
+    std::vector<Node*> graphNodes = graph->nodes;
+
+    for (const auto &node : graphNodes) {
+
+      if (node->is_source()) {
+        result.push_back(node);
+      }
+    }
+
+    return result;
+  }
+
+  std::vector<Node*> Verifier::getSinks(Graph *graph) const {
+
+    std::vector<Node*> result;
+
+    std::vector<Node*> graphNodes = graph->nodes;
+
+    for (const auto &node : graphNodes) {
+
+      if (node->is_sink()) {
+        result.push_back(node);
+      }
+    }
+
+    return result;
   }
 } // namespace eda::hls::debugger

@@ -41,9 +41,16 @@ private:
       std::vector<Graph*> right,
       std::list<std::pair<Graph*, Graph*>> &matches) const;
 
+  bool match(std::vector<Node*> left,
+      std::vector<Node*> right,
+      std::list<std::pair<Node*, Node*>> &matches) const;
+
   void to_expr(Graph *graph, context &ctx, std::vector<expr *> nodes) const;
 
   func_decl mkFunction(const std::string name, const Chan *channel, context &ctx) const;
   func_decl mkFunction(const std::string name, sort fSort) const;
+
+  std::vector<Node*> getSources(Graph *graph) const;
+  std::vector<Node*> getSinks(Graph *graph) const;
 };
 } // namespace eda::hls::debugger
