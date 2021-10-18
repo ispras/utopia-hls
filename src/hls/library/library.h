@@ -26,13 +26,23 @@ struct Port {
   unsigned width;
 }; */
 
-struct VerilogPrinter final {
-  VerilogPrinter(const eda::hls::model::NodeType &type) : type(type) {};
+struct VerilogNodeTypePrinter final {
+  VerilogNodeTypePrinter(const eda::hls::model::NodeType &rt) : t(rt) {};
   void print(std::ostream &out) const;
 
-  const eda::hls::model::NodeType type;
+  const eda::hls::model::NodeType t;
 };
 
-std::ostream& operator <<(std::ostream &out, const VerilogPrinter &printer);
+struct VerilogGraphPrinter final {
+  VerilogGraphPrinter(const eda::hls::model::Graph &rg) : g(rg) {};
+
+  void printChan(std::ostream &out, const eda::hls::model::Chan *chan) const;
+  void print(std::ostream &out) const;
+
+  const eda::hls::model::Graph g;
+};
+
+std::ostream& operator <<(std::ostream &out, const VerilogNodeTypePrinter &printer);
+std::ostream& operator <<(std::ostream &out, const VerilogGraphPrinter &printer);
 
 } // namespace eda::hls::library

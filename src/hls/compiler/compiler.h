@@ -18,7 +18,6 @@ struct Compiler final {
   Compiler(const eda::hls::model::Model &model) :
     model(model) {}
 
-  void printChan(std::ostream &out, const eda::hls::model::Chan *chan) const;
   void print(std::ostream &out) const;
 
   const eda::hls::model::Model model;

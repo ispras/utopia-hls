@@ -34,12 +34,12 @@ int hilTestGraphs(const std::string &filename) {
   return (parse(filename))->graphs.size();
 }
 
-int hilTestVerilogPrinter(const std::string &filename) {
+int hilTestVerilogNodeTypePrinter(const std::string &filename) {
   auto nodetypes = parse(filename)->nodetypes;
 
   std::cout << "------ Verilog RTL-model ------" << std::endl;
   for (const auto *nodetype: nodetypes) {
-    auto printer = std::make_unique<VerilogPrinter>(*nodetype);
+    auto printer = std::make_unique<VerilogNodeTypePrinter>(*nodetype);
     std::cout << *printer;
   }
 
@@ -64,8 +64,8 @@ TEST(HilTest, GraphsTest) {
   EXPECT_EQ(hilTestGraphs("test/hil/test.hil"), 1);
 }
 
-TEST(HilTest, VerilogPrinterTest) {
-  EXPECT_EQ(hilTestVerilogPrinter("test/hil/test.hil"), 0);
+TEST(HilTest, VerilogNodeTypePrinterTest) {
+  EXPECT_EQ(hilTestVerilogNodeTypePrinter("test/hil/test.hil"), 0);
 }
 
 TEST(HilTest, CompilerTest) {

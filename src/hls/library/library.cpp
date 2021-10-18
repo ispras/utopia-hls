@@ -10,28 +10,67 @@
 
 namespace eda::hls::library {
 
-void VerilogPrinter::print(std::ostream &out) const
+void VerilogNodeTypePrinter::print(std::ostream &out) const
 {
-  out << "module " << type.name << "(" << std::endl;
+  out << "module " << t.name << "(" << std::endl;
 
-  for (const auto *arg: type.inputs) {
+  for (const auto *arg: t.inputs) {
     out << "  input " << arg->name; // TODO print arg->length
-    if (!(arg == type.inputs.back() && type.outputs.empty())) {
+    if (!(arg == t.inputs.back() && t.outputs.empty())) {
       out << "," << std::endl;
     }
   }
 
-  for (const auto *arg: type.outputs) {
+  for (const auto *arg: t.outputs) {
     out << "  output " << arg->name; // TODO print arg->length
-    if (arg != type.outputs.back()) {
+    if (arg != t.outputs.back()) {
       out << "," << std::endl;
     }
   }
   out << ");" << std::endl;
-  out << "endmodule" << " // " << type.name << std::endl;
+  out << "endmodule" << " // " << t.name << std::endl;
 }
 
-std::ostream& operator <<(std::ostream &out, const VerilogPrinter &printer) {
+void VerilogGraphPrinter::printChan(std::ostream &out, const eda::hls::model::Chan *chan) const {
+  // TODO: chan.type is ignored
+  out << "." << chan->source.node->name << "(" << chan->target.node->name << ")";
+}
+
+void VerilogGraphPrinter::print(std::ostream &out) const
+{
+  out << "module " << g.name << "();" << std::endl;
+
+  for (const auto *chan : g.chans) {
+    out << "wire " << chan->name << ";" << std::endl;
+  }
+  for (const auto *node : g.nodes) {
+    // TODO: node.type is ignored
+    out << node->type.name << " _" << node->type.name << "(";
+
+    bool comma = false;
+
+    for (const auto *input : node->inputs) {
+      out << (comma ? ", " : "");
+      printChan(out, input);
+      comma = true;
+    }
+
+    for (const auto *output: node->outputs) {
+      out << (comma ? ", " : "");
+      printChan(out, output);
+      comma = true;
+    }
+    out << ");" << std::endl;
+  }
+  out << "endmodule // " << g.name << std::endl;
+}
+
+std::ostream& operator <<(std::ostream &out, const VerilogNodeTypePrinter &printer) {
+  printer.print(out);
+  return out;
+}
+
+std::ostream& operator <<(std::ostream &out, const VerilogGraphPrinter &printer) {
   printer.print(out);
   return out;
 }
