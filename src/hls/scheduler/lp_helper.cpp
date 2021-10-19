@@ -10,32 +10,30 @@
 
 namespace eda::hls::scheduler {
 
-void LpSolverHelper::solve() {
+void LpSolverHelper::solve(int verbosity) {
   addAllConstraints();
 
-  // Only important messages on screen while solving
-  set_verbose(lp, IMPORTANT);
+  set_verbose(lp, verbosity);
 
   // Calculate a solution
   status = ::solve(lp);
 }
 
+std::vector<double> LpSolverHelper::getResults() {
+  int size = get_Ncolumns(lp);
+  double* values = new double[size];
+  get_variables(lp, values);
+  std::vector<double> vec_values(*values);
+  return vec_values;
+}
+
 void LpSolverHelper::addConstraint(std::vector<std::string> names, 
     std::vector<double> values, OperationType operation, double rhs) {
-  std::vector<SolverVariable*> vars;
-  std::cout<<"Adding constraint for: ";
-  for (const std::string &name : names) {
-    std::cout<<name<<" ";
-  }
-  std::cout<<"\n";
-  for (const std::string &name : names) {
-    auto it = variables.find(name);
-    assert(it != variables.end());
-    vars.push_back(it->second);
-  }
-
-  constraints.push_back(new SolverConstraint(vars, values, 
-      static_cast<int>(operation), rhs));
+  std::vector<SolverVariable*> vars = findVariables(names);
+  SolverConstraint *constraint = new SolverConstraint(vars, values, 
+      static_cast<int>(operation), rhs);
+  constraints.push_back(constraint);
+  std::cout<<"Added constraint: "<<*constraint<<"\n";
 }
 
 void LpSolverHelper::addVariable(const std::string &name, Node* node) {
@@ -56,20 +54,51 @@ std::vector<SolverVariable*> LpSolverHelper::getVariables() {
   return result;
 }
 
+int* getColumnNumbers(const std::vector<SolverVariable*> &variables) {
+  int* colno = new int[variables.size()];
+  int i = 0;
+  for (const auto* var : variables) {
+    colno[i++] = var->column_number;
+  }
+  return colno;
+}
+
 void LpSolverHelper::addAllConstraints() {
   set_add_rowmode(lp, TRUE);
   for (const auto* constraint : constraints) {
     int exprs = constraint->variables.size();
-    int* colno = new int[exprs];
-    int i = 0;
-    for (const auto* var : constraint->variables) {
-      colno[i++] = var->column_number;
-    }
     std::vector<double> values = constraint->values;
-    add_constraintex(lp, exprs, &values[0], colno, 
-        constraint->operation, constraint->rhs);
+    assert(add_constraintex(lp, exprs, &values[0], 
+        getColumnNumbers(constraint->variables), constraint->operation, 
+        constraint->rhs));
   }
   set_add_rowmode(lp, FALSE);
+}
+
+void LpSolverHelper::setObjective(const std::vector<std::string> &names, 
+      double *vals) {
+  
+  set_obj_fnex(lp, names.size(), vals, getColumnNumbers(findVariables(names)));
+}
+
+std::vector<SolverVariable*> LpSolverHelper::findVariables(
+    const std::vector<std::string> &names) {
+  std::vector<SolverVariable*> vars;
+  for (const std::string &name : names) {
+    //std::cout<<"Searching for: "<<name<<"\n";
+    auto it = variables.find(name);
+    assert(it != variables.end());
+    vars.push_back(it->second);
+  }
+  return vars;
+}
+
+void LpSolverHelper::setMax() {
+  set_maxim(lp);
+}
+
+void LpSolverHelper::setMin() {
+  set_minim(lp);
 }
 
 int LpSolverHelper::getStatus() {
@@ -126,6 +155,36 @@ void LpSolverHelper::printStatus() {
       std::cout<<"Unexpected\n";
       break;
     }
+}
+
+std::ostream& operator <<(std::ostream &out, 
+    const SolverConstraint &constraint) {
+
+  
+  for (unsigned int i = 0; i < constraint.variables.size(); i++) {
+    if (i != 0) {
+      out << " + ";
+    }
+    out << constraint.values[i] << "*" << constraint.variables[i]->name;
+  }
+
+  switch (constraint.operation)
+  {
+  case 1:
+    out << " <= ";
+    break;
+
+  case 2:
+    out << " >= ";
+    break;
+
+  case 3:
+    out << " = ";
+    break;
+  }
+
+  return out << constraint.rhs << "\n";
+
 }
 
 } // namespace eda::hls::scheduler

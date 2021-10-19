@@ -43,9 +43,9 @@ public:
   }
 
   /// Solves the formulated problem.
-  void solve(); 
+  void solve(int verbosity = 4); 
 
-  void getResults();
+  std::vector<double> getResults();
 
   /// Constructs a constraint
   /// 
@@ -70,6 +70,12 @@ public:
 
   int getStatus();
 
+  void setObjective(const std::vector<std::string> &names, double *vals);
+
+  void setMax();
+
+  void setMin();
+
   /// Get the existing variables
   std::vector<SolverVariable*> getVariables();
 
@@ -79,6 +85,9 @@ public:
 private:
   /// Adds all existing constraints to the problem.
   void addAllConstraints();
+
+  std::vector<SolverVariable*> findVariables(
+      const std::vector<std::string> &names);
 
   lprec* lp;
   std::map<std::string, SolverVariable*> variables;
