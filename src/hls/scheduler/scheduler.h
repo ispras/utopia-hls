@@ -20,17 +20,19 @@ class LpSolver final {
 
 public:
 
-  LpSolver(Model* model_arg) : model(model_arg) { 
-    helper = new LpSolverHelper;
+  LpSolver(Model* model_arg) : model(model_arg), helper(new LpSolverHelper) { 
+    helper->setVerbosity(Verbosity::Full);
   }
 
-  LpSolver() { helper = new LpSolverHelper; }
+  LpSolver() : helper(new LpSolverHelper) {
+    helper->setVerbosity(Verbosity::Full);
+  }
 
   void setModel(Model* model_arg) { model = model_arg; }
 
   void balance();
 
-  int getResult();
+  int getResult() { return helper->getStatus(); }
 
 private:
 
@@ -40,7 +42,5 @@ private:
   LpSolverHelper* helper;
 
 };
-
-float sumFlows(std::vector<Argument*> args);
 
 } // namespace eda::hls::scheduler

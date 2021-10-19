@@ -27,7 +27,7 @@ int lpsolveTest(const std::string &filename) {
   return solver->getResult();
 }
 
-TEST(SchedulerTest, Solve) {
-  EXPECT_EQ(lpsolveTest("test/hil/test.hil"), 0);
+TEST(SchedulerTest, SolveInfeasible) {
+  EXPECT_EQ(lpsolveTest("test/hil/test.hil"), INFEASIBLE);
 }
 

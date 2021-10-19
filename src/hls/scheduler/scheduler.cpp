@@ -12,6 +12,9 @@
 
 namespace eda::hls::scheduler {
 
+double *makeCoeffs(const std::vector<std::string> &);
+float sumFlows(const std::vector<Argument*> &);
+
 void LpSolver::balance() {
 
   for (const Graph* graph : model->graphs) {
@@ -25,9 +28,9 @@ void LpSolver::balance() {
       std::vector<std::string> names{nodeName};
       std::vector<double> valOne{1.0};
 
-      // Add 'coeff > 0'
-      helper->addConstraint(names, valOne, OperationType::GreaterOrEqual, 0.1);
-      // Add 'coeff < 1'
+      // Add 'coeff >= 0.01'
+      helper->addConstraint(names, valOne, OperationType::GreaterOrEqual, 0.01);
+      // Add 'coeff <= 1'
       helper->addConstraint(names, valOne, OperationType::LessOrEqual, 1);
 
       if (node->is_sink()) {
@@ -35,6 +38,8 @@ void LpSolver::balance() {
       }     
     }
 
+    // Add constraints for channels
+    // flow_src*coeff_src == flow_dst*coeff_dst
     for (const Chan* channel : graph->chans) {
       const Binding from = channel->source;
       const Binding to = channel->target;
@@ -44,16 +49,14 @@ void LpSolver::balance() {
       helper->addConstraint(names, values, OperationType::Equal,0);
     }
 
-    double* sinkCoeffs = new double[sinks.size()];
-    for (unsigned int i = 0; i < sinks.size(); i++) {
-      sinkCoeffs[i] = 1.0;
-    }
-
-    helper->setObjective(sinks, sinkCoeffs);
+    // Maximize output flow & solve
+    helper->setObjective(sinks, makeCoeffs(sinks));
     helper->setMax();
-    helper->solve(6);
+    helper->solve();
     helper->printProblem();
     helper->printStatus();
+
+    // Print results
     std::vector<double> values = helper->getResults();
     for (double val : values) {
       std::cout<<val<<" ";  
@@ -62,19 +65,21 @@ void LpSolver::balance() {
   }
 }
 
-int LpSolver::getResult() {
-  return helper->getStatus();
+double* makeCoeffs(const std::vector<std::string> &sinks) {
+  double* sinkCoeffs = new double[sinks.size()];
+    for (unsigned int i = 0; i < sinks.size(); i++) {
+      sinkCoeffs[i] = 1.0;
+    }
+  return sinkCoeffs;
 }
 
 void LpSolver::checkFlows(const Node* node) {
   if (node->is_merge() || node->is_split()) {
-    float inputFlow = sumFlows(node->type.inputs);
-    float outputFlow = sumFlows(node->type.outputs);
-    assert(inputFlow == outputFlow);
+    assert(sumFlows(node->type.inputs) == sumFlows(node->type.outputs));
   }
 }
 
-float sumFlows(std::vector<Argument*> args) {
+float sumFlows(const std::vector<Argument*> &args) {
   float sum = 0;
   for (const auto* arg : args) {
     sum += arg->flow;

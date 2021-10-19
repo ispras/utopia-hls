@@ -25,10 +25,22 @@ using namespace eda::hls::model;
 
 namespace eda::hls::scheduler {
 
+// Values from lp_lib.h
 enum OperationType {
-  LessOrEqual = 1,
-  GreaterOrEqual = 2,
-  Equal = 3
+  LessOrEqual = LE,
+  GreaterOrEqual = GE,
+  Equal = EQ
+};
+
+// Values from lp_lib.h
+enum Verbosity {
+  Neutral = NEUTRAL,
+  Critical = CRITICAL,
+  Severe = SEVERE,
+  Important = IMPORTANT,
+  Normal = NORMAL,
+  Detailed = DETAILED,
+  Full = FULL
 };
 
 struct SolverVariable;
@@ -37,63 +49,71 @@ struct SolverConstraint;
 class LpSolverHelper final {
 
 public:
-  LpSolverHelper() : current_column(0), status(-10) {
-    lp = make_lp(0, 0);
-    set_maxim(lp);
-  }
+  LpSolverHelper() : 
+      lp(make_lp(0, 0)), current_column(0), status(-10), verbosity(Normal) { }
 
   /// Solves the formulated problem.
-  void solve(int verbosity = 4); 
+  void solve(); 
 
+  /// Returns the solution results.
   std::vector<double> getResults();
 
-  /// Constructs a constraint
+  /// Constructs a constraint.
   /// 
   /// \param names variable names
   /// \param values variable coefficients
   /// \param operation operation
   /// \param rhs right-hand side value
-  void addConstraint(std::vector<std::string> names, 
-    std::vector<double> values, OperationType operation, double rhs);
+  void addConstraint(const std::vector<std::string> &names, 
+    const std::vector<double> &values, OperationType operation, double rhs);
 
-  /// Constructs and adds a variable to the problem
+  /// Constructs and adds a variable to the problem.
   ///
   /// \param name variable name
   /// \param node corresponding graph node
-  void addVariable(const std::string&, Node*);
+  void addVariable(const std::string&, Node* const);
 
-  /// Prints the problem
+  /// Prints the problem.
   void printProblem() { write_LP(lp, stdout); }
 
-  /// Prints the last solution status
+  /// Prints the last solution status.
   void printStatus();
 
+  /// Returns the solution status.
   int getStatus();
 
+  /// Sets the optimization objective.
   void setObjective(const std::vector<std::string> &names, double *vals);
 
+  /// Maximizes the solution.
   void setMax();
 
+  /// Minimizes the solution.
   void setMin();
 
-  /// Get the existing variables
+  /// Sets the output verbosity.
+  void setVerbosity(Verbosity verb) { verbosity = verb; }
+
+  /// Get the existing variables.
   std::vector<SolverVariable*> getVariables();
 
-  /// Get the existing constraints
+  /// Get the existing constraints.
   std::vector<SolverConstraint*> getConstraints() { return constraints; }
 
 private:
   /// Adds all existing constraints to the problem.
   void addAllConstraints();
 
-  std::vector<SolverVariable*> findVariables(
-      const std::vector<std::string> &names);
+  /// Searches for the variables with the given names.
+  std::vector<SolverVariable*> 
+      findVariables(const std::vector<std::string> &names);
 
   lprec* lp;
   std::map<std::string, SolverVariable*> variables;
   std::vector<SolverConstraint*> constraints;
   int current_column;
   int status;
+  Verbosity verbosity;
 };
 
 struct SolverVariable final {
@@ -109,16 +129,15 @@ struct SolverVariable final {
 struct SolverConstraint final {
 
   SolverConstraint(std::vector<SolverVariable*> variables, 
-      std::vector<double> values, int operation, double rhs) : 
+      std::vector<double> values, OperationType operation, double rhs) : 
       variables(variables), values(values), operation(operation), rhs(rhs) {
     
     assert(variables.size() == values.size());
-    assert((operation == 1) || (operation == 2) || (operation == 3));
   }
 
   std::vector<SolverVariable*> variables;
   std::vector<double> values;
-  int operation;
+  OperationType operation;
   double rhs;
 
 };

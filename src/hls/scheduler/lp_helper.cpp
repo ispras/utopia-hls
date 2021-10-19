@@ -10,7 +10,7 @@
 
 namespace eda::hls::scheduler {
 
-void LpSolverHelper::solve(int verbosity) {
+void LpSolverHelper::solve() {
   addAllConstraints();
 
   set_verbose(lp, verbosity);
@@ -27,16 +27,15 @@ std::vector<double> LpSolverHelper::getResults() {
   return vec_values;
 }
 
-void LpSolverHelper::addConstraint(std::vector<std::string> names, 
-    std::vector<double> values, OperationType operation, double rhs) {
-  std::vector<SolverVariable*> vars = findVariables(names);
-  SolverConstraint *constraint = new SolverConstraint(vars, values, 
-      static_cast<int>(operation), rhs);
+void LpSolverHelper::addConstraint(const std::vector<std::string> &names, 
+    const std::vector<double> &values, OperationType operation, double rhs) {
+  SolverConstraint *constraint = new SolverConstraint(findVariables(names), 
+      values, operation, rhs);
   constraints.push_back(constraint);
   std::cout<<"Added constraint: "<<*constraint<<"\n";
 }
 
-void LpSolverHelper::addVariable(const std::string &name, Node* node) {
+void LpSolverHelper::addVariable(const std::string &name, Node* const node) {
   std::cout<<"Adding variable: "<<name<<"\n";
   SolverVariable* new_variable = 
       new SolverVariable(name, ++current_column, node);
@@ -66,9 +65,8 @@ int* getColumnNumbers(const std::vector<SolverVariable*> &variables) {
 void LpSolverHelper::addAllConstraints() {
   set_add_rowmode(lp, TRUE);
   for (const auto* constraint : constraints) {
-    int exprs = constraint->variables.size();
     std::vector<double> values = constraint->values;
-    assert(add_constraintex(lp, exprs, &values[0], 
+    assert(add_constraintex(lp, constraint->variables.size(), &values[0], 
         getColumnNumbers(constraint->variables), constraint->operation, 
         constraint->rhs));
   }
@@ -76,7 +74,7 @@ void LpSolverHelper::addAllConstraints() {
 }
 
 void LpSolverHelper::setObjective(const std::vector<std::string> &names, 
-      double *vals) {
+    double *vals) {
   
   set_obj_fnex(lp, names.size(), vals, getColumnNumbers(findVariables(names)));
 }
@@ -85,7 +83,6 @@ std::vector<SolverVariable*> LpSolverHelper::findVariables(
     const std::vector<std::string> &names) {
   std::vector<SolverVariable*> vars;
   for (const std::string &name : names) {
-    //std::cout<<"Searching for: "<<name<<"\n";
     auto it = variables.find(name);
     assert(it != variables.end());
     vars.push_back(it->second);
@@ -106,44 +103,45 @@ int LpSolverHelper::getStatus() {
 }
 
 void LpSolverHelper::printStatus() {
+  // Values from lp_lib.h
   switch (status) {
-    case -2:
+    case NOMEMORY:
       std::cout<<"Out of memory\n";
       break;
     
-    case 0:
+    case OPTIMAL:
       std::cout<<"An optimal solution was obtained\n";
       break;
 
-    case 1:
+    case SUBOPTIMAL:
       std::cout<<"A sub-optimal solution was obtained\n";
       break;
 
-    case 2:
+    case INFEASIBLE:
       std::cout<<"The model is infeasible\n";
       break;
 
-    case 3:
+    case UNBOUNDED:
       std::cout<<"The model is unbounded\n";
       break;
 
-    case 4:
+    case DEGENERATE:
       std::cout<<"The model is degenerative\n";
       break;
 
-    case 5:
+    case NUMFAILURE:
       std::cout<<"Numerical failure encountered\n";
       break;
 
-    case 6:
+    case USERABORT:
       std::cout<<"The abort routine returned TRUE\n";
       break;
 
-    case 7:
+    case TIMEOUT:
       std::cout<<"A timeout occurred\n";
       break;
 
-    case 9:
+    case PRESOLVED:
       std::cout<<"The model could be solved by presolve\n";
       break;
 
