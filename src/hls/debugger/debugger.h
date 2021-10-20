@@ -45,11 +45,12 @@ private:
       std::vector<Node*> right,
       std::list<std::pair<Node*, Node*>> &matches) const;
 
-  void to_expr(Graph *graph, context &ctx, std::vector<expr *> nodes) const;
-
-  func_decl mkFunction(const std::string name, const Chan *channel, context &ctx) const;
-  func_decl mkFunction(const std::string name, sort fSort) const;
-
+  void to_expr(Graph *graph, context &ctx, expr_vector nodes) const;
+  expr toConst(const Argument *port, context &ctx) const;
+  expr toConst(const Node *node, context &ctx) const;
+  sort getSort(const Node *node, context &ctx) const;
+  sort_vector getInSorts(const Node *node, context &ctx) const;
+  expr_vector getArgs(const Node *node, context &ctx) const;
   std::vector<Node*> getSources(Graph *graph) const;
   std::vector<Node*> getSinks(Graph *graph) const;
 };

@@ -17,94 +17,99 @@ namespace eda::hls::debugger {
 
   bool Verifier::equivalent(Model &left, Model &right) const {
 
+    std::cout << "Graph matching.." << "\n";
     std::list<std::pair<Graph*, Graph*>> matchedGraphs;
 
     // If graphs are not completely matched
-    if (!match(left.graphs, right.graphs, matchedGraphs))
+    if (!match(left.graphs, right.graphs, matchedGraphs)) {
+      std::cout << "Cannot match graphs!" << "\n";
       return false;
+    }
 
     context ctx;
-    std::vector<expr *> nodes;
+    expr_vector nodes(ctx);
 
+    std::cout << "Check graph equivalence..." << "\n";
     for (const auto &pair : matchedGraphs) {
 
       Graph *fGraph = pair.first;
       Graph *sGraph = pair.second;
 
+      std::cout << "generate expr for graph: " << fGraph->name << "\n";
       to_expr(fGraph, ctx, nodes);
+      std::cout << "generate expr for graph: " << sGraph->name << "\n";
       to_expr(sGraph, ctx, nodes);
 
-      // add input bindings to nodes
+      std::cout << "add input bindings to nodes" << "\n";
       std::vector<Node*> fInputs = getSources(fGraph);
       std::vector<Node*> sInputs = getSources(sGraph);
-      std::list<std::pair<Node*, Node*>> inMatch;
+      std::list<std::pair<Node*, Node*>> sources;
 
-      if (match(fInputs, sInputs, inMatch)) {
+      if (match(fInputs, sInputs, sources)) {
 
-        for (const auto &inPair : inMatch) {
+        for (const auto &inPair : sources) {
 
-          Node *fIn = inPair.first;
-          Node *sIn = inPair.second;
+          expr first = toConst(inPair.first, ctx);
+          expr second = toConst(inPair.second, ctx);
+          expr inEq = first == second;
 
-          const NodeType &fType = fIn->type;
-          const NodeType &sType = sIn->type;
-
-          assert(&fType == &sType);
-
-          sort fSort = ctx.uninterpreted_sort(fIn->type.name.c_str());
-          func_decl fFunc = mkFunction(fIn->name, fSort);
-          func_decl sFunc = mkFunction(sIn->name, fSort);
-          expr inEq = fFunc() == sFunc();
-
-          nodes.push_back(&inEq);
+          nodes.push_back(inEq);
         }
       } else {
-        std::cout << "Cannot match graphs inputs" << std::endl;
+        std::cout << "Cannot match graphs inputs" << "\n";
       }
 
-      // add output bindings to nodes
+      std::cout << "add output bindings to nodes" << "\n";
       std::vector<Node*> fOutputs = getSinks(fGraph);
       std::vector<Node*> sOutputs = getSinks(sGraph);
       std::list<std::pair<Node*, Node*>> outMatch;
 
       if (match(fOutputs, sOutputs, outMatch)) {
+
         for (const auto &outPair : outMatch) {
 
           Node *fOut = outPair.first;
           Node *sOut = outPair.second;
 
-          const NodeType &fType = fOut->type;
-          const NodeType &sType = sOut->type;
+          const char *fName = fOut->name.c_str();
+          const char *sName = sOut->name.c_str();
 
-          assert(&fType == &sType);
+          sort fSort = getSort(fOut, ctx);
+          sort sSort = getSort(sOut, ctx);
 
-          sort fSort = ctx.uninterpreted_sort(fOut->type.name.c_str());
-          func_decl fFunc = mkFunction(fOut->name, fSort);
-          func_decl sFunc = mkFunction(sOut->name, fSort);
-          expr outEq = fFunc() == sFunc();
+          sort_vector fInSorts = getInSorts(fOut, ctx);
+          sort_vector sInSorts = getInSorts(sOut, ctx);
 
-          nodes.push_back(&outEq);
+          func_decl fFunc = function(fName, fInSorts, fSort);
+          expr_vector fArgs = getArgs(fOut, ctx);
+          func_decl sFunc = function(sName, sInSorts, sSort);
+          expr_vector sArgs = getArgs(sOut, ctx);
+
+          expr outExpr = fFunc(fArgs) != sFunc(sArgs);
+
+          nodes.push_back(outExpr);
         }
       } else {
-        std::cout << "Cannot match graphs outputs" << std::endl;
+        std::cout << "Cannot match graphs outputs" << "\n";
       }
     }
 
+    std::cout << "Create solver instance..." << "\n";
     solver s(ctx);
-    for (const auto &node : nodes) {
-      s.add(*node);
-    }
+    s.add(nodes);
+
+    std::cout << s.to_smt2() << "\n";
 
     switch (s.check()) {
       case sat:
-        std::cout << "Models are equivalent" << std::endl;
+        std::cout << "Models are NOT equivalent" << "\n";
         return true;
       case unsat:
-        std::cout << "Models are not equivalent" << std::endl;
+        std::cout << "Models are equivalent" << "\n";
         return false;
       case unknown:
       default:
-        std::cout << "Z3 solver says \"unknown\"" << std::endl;
+        std::cout << "Z3 solver says \"unknown\"" << "\n";
         return false;
         break;
     }
@@ -117,8 +122,10 @@ namespace eda::hls::debugger {
     size_t lSize = left.size();
     size_t rSize = right.size();
 
-    if (lSize != rSize)
+    if (lSize != rSize) {
+      std::cout << "Graph collections are of different size!" << "\n";
       return false;
+    }
 
     for (size_t i = 0; i < lSize; i++) {
       Graph *lGraph = left[i];
@@ -133,11 +140,11 @@ namespace eda::hls::debugger {
         }
       }
       if (!hasMatch) {
-        std::cout << "No match for graphs " + lGraph->name << std:: endl;
+        std::cout << "No match for graphs " + lGraph->name << "\n";
         return false;
       }
     }
-    return false;
+    return true;
   }
 
   bool Verifier::match(std::vector<Node*> left,
@@ -162,61 +169,46 @@ namespace eda::hls::debugger {
         }
       }
       if (!hasMatch) {
-        std::cout << "No match for graphs " + lNode->name << std:: endl;
+        std::cout << "No match for graphs " + lNode->name << "\n";
         return false;
       }
     }
-    return false;
-  }
-
-  func_decl Verifier::mkFunction(const std::string name, sort fSort) const {
-    return function(name.c_str(), fSort, fSort);
-  }
-
-  func_decl Verifier::mkFunction(const std::string name, const Chan *channel, context &ctx) const {
-
-    sort fSort = ctx.uninterpreted_sort(channel->type.c_str());
-    return mkFunction(name, fSort);
+    return true;
   }
 
   void Verifier::to_expr(Graph *graph,
     context &ctx,
-    std::vector<expr*> nodes) const {
+    expr_vector nodes) const {
 
-    // create equations for channels
+    std::cout << "Create equations for channels: " + graph->name << "\n";
     std::vector<Chan*> gChannels = graph->chans;
 
     for (const auto &channel : gChannels) {
 
-      std::string srcName = channel->source.node->name;
-      std::string tgtName = channel->target.node->name;
+      expr src = toConst(channel->source.port, ctx);
+      expr tgt = toConst(channel->target.port, ctx);
 
-      func_decl srcFunc = mkFunction(srcName, channel, ctx);
-      func_decl tgtFunc = mkFunction(tgtName, channel, ctx);
-
-      expr chanExpr = srcFunc() == tgtFunc();
-      nodes.push_back(&chanExpr);
+      expr chanExpr = src == tgt;
+      nodes.push_back(chanExpr);
     }
 
-    // create equations for nodes
+    std::cout << "Create equations for nodes: " + graph->name << "\n";
     std::vector<Node*> gNodes = graph->nodes;
 
     for (const auto &node : gNodes) {
 
-      sort fSort = ctx.uninterpreted_sort(node->type.name.c_str());
-
       if (node->is_delay()) {
 
         // treat delay node as in-to-out channel
-        std::string input = node->inputs[0]->target.node->name;
-        std::string output = node->outputs[0]->source.node->name;
+        const Argument *input = node->inputs[0]->target.port;
+        const Argument *output = node->outputs[0]->source.port;
 
-        func_decl inFunc = mkFunction(input.c_str(), fSort);
-        func_decl outFunc = mkFunction(output.c_str(), fSort);
+        expr in = toConst(input, ctx);
+        expr out = toConst(output, ctx);
 
-        expr delayExpr = inFunc() == outFunc();
+        expr delayExpr = in == out;
 
-        nodes.push_back(&delayExpr);
+        nodes.push_back(delayExpr);
 
       } else if (node->is_kernel()) {
 
@@ -226,149 +218,59 @@ namespace eda::hls::debugger {
 
         for (const auto &nodeOut : nodeOuts) {
 
+          const Argument *outPort = nodeOut->source.port;
           const char* funcIdxName = nodeOut->name.c_str();
+          sort_vector sorts = getInSorts(node, ctx);
+          std::string kerName = funcName + "_" + funcIdxName;
+          const char *fName = kerName.c_str();
+          const char *sortName =outPort->type.c_str();
+          sort fSort = ctx.uninterpreted_sort(sortName);
+          func_decl kernelFunc = function(fName, sorts, fSort);
+          const expr_vector kernelArgs = getArgs(node, ctx);
+          expr nodeOutConst = ctx.constant(outPort->type.c_str(), fSort);
+          expr kernelEq = kernelFunc(kernelArgs) == nodeOutConst;
 
-          size_t arity = node->inputs.size();
-
-          switch (arity) {
-
-            case 1:
-            {
-              std::string arg0Name = node->inputs[0]->target.node->name;
-              func_decl arg0 = mkFunction(arg0Name, node->inputs[0], ctx);
-              func_decl kernelFunc = mkFunction(funcName + "_" + funcIdxName, fSort);
-              func_decl val = mkFunction(funcIdxName, fSort);
-
-              expr result = kernelFunc(arg0()) == val();
-              nodes.push_back(&result);
-
-              break;
-            }
-            case 2:
-            {
-              std::string arg0Name = node->inputs[0]->target.node->name;
-              func_decl arg0 = mkFunction(arg0Name, node->inputs[0], ctx);
-
-              std::string arg1Name = node->inputs[1]->target.node->name;
-              func_decl arg1 = mkFunction(arg1Name, node->inputs[1], ctx);
-
-              func_decl kernelFunc = mkFunction(funcName + "_" + funcIdxName, fSort);
-              func_decl val = mkFunction(funcIdxName, fSort);
-
-              expr result = kernelFunc(arg0(), arg1()) == val();
-              nodes.push_back(&result);
-
-              break;
-            }
-            case 3:
-            {
-              std::string arg0Name = node->inputs[0]->target.node->name;
-              func_decl arg0 = mkFunction(arg0Name, node->inputs[0], ctx);
-
-              std::string arg1Name = node->inputs[1]->target.node->name;
-              func_decl arg1 = mkFunction(arg1Name, node->inputs[1], ctx);
-
-              std::string arg2Name = node->inputs[2]->target.node->name;
-              func_decl arg2 = mkFunction(arg2Name, node->inputs[2], ctx);
-
-              func_decl kernelFunc = mkFunction(funcName + "_" + funcIdxName, fSort);
-              func_decl val = mkFunction(funcIdxName, fSort);
-
-              expr result = kernelFunc(arg0(), arg1(), arg2()) == val();
-              nodes.push_back(&result);
-
-              break;
-            }
-            case 4:
-            {
-              std::string arg0Name = node->inputs[0]->target.node->name;
-              func_decl arg0 = mkFunction(arg0Name, node->inputs[0], ctx);
-
-              std::string arg1Name = node->inputs[1]->target.node->name;
-              func_decl arg1 = mkFunction(arg1Name, node->inputs[1], ctx);
-
-              std::string arg2Name = node->inputs[2]->target.node->name;
-              func_decl arg2 = mkFunction(arg2Name, node->inputs[2], ctx);
-
-              std::string arg3Name = node->inputs[3]->target.node->name;
-              func_decl arg3 = mkFunction(arg3Name, node->inputs[3], ctx);
-
-              func_decl kernelFunc = mkFunction(funcName + "_" + funcIdxName, fSort);
-              func_decl val = mkFunction(funcIdxName, fSort);
-
-              expr result = kernelFunc(arg0(), arg1(), arg2(), arg3()) == val();
-              nodes.push_back(&result);
-
-              break;
-            }
-            case 5:
-            {
-              std::string arg0Name = node->inputs[0]->target.node->name;
-              func_decl arg0 = mkFunction(arg0Name, node->inputs[0], ctx);
-
-              std::string arg1Name = node->inputs[1]->target.node->name;
-              func_decl arg1 = mkFunction(arg1Name, node->inputs[1], ctx);
-
-              std::string arg2Name = node->inputs[2]->target.node->name;
-              func_decl arg2 = mkFunction(arg2Name, node->inputs[2], ctx);
-
-              std::string arg3Name = node->inputs[3]->target.node->name;
-              func_decl arg3 = mkFunction(arg3Name, node->inputs[3], ctx);
-
-              std::string arg4Name = node->inputs[4]->target.node->name;
-              func_decl arg4 = mkFunction(arg4Name, node->inputs[4], ctx);
-
-              func_decl kernelFunc = mkFunction(funcName + "_" + funcIdxName, fSort);
-              func_decl val = mkFunction(funcIdxName, fSort);
-
-              expr result = kernelFunc(arg0(), arg1(), arg2(), arg3()) == val();
-              nodes.push_back(&result);
-
-              break;
-            }
-            default:
-              std::cout << "Unsupported arity of " + funcName + " func node: "
-                  + std::to_string(arity) << std::endl;
-              break;
-          }
+          nodes.push_back(kernelEq);
         }
       } else if (node->is_merge()) {
 
         // merge has the only output
         Chan *nodeOut = node->outputs[0];
-        func_decl val = mkFunction(nodeOut->source.node->name, fSort);
+        const char *outSortName = nodeOut->source.node->type.name.c_str();
+        sort outSort = ctx.uninterpreted_sort(outSortName);
 
-        expr mergeExpr = expr(ctx);
+        expr outConst = toConst(nodeOut->source.port, ctx);
+
+        expr_vector mergeVec(ctx);
         std::vector< Chan*> nodeInputs = node->inputs;
 
         for (const auto &nodeInput : nodeInputs) {
 
-          std::string inputName = nodeInput->target.node->name;
-          func_decl inputFunc = mkFunction(inputName, fSort);
+          expr inConst = toConst(nodeInput->target.port, ctx);
 
-          mergeExpr = mergeExpr || (inputFunc() == val());
+          mergeVec.push_back(outConst == inConst);
         }
 
-        nodes.push_back(&mergeExpr);
+        expr mergeExpr = mk_or(mergeVec);
+        nodes.push_back(mergeExpr);
 
       } else if (node->is_split()) {
 
-        //split has the only input
+        // split has the only input
         Chan *nodeInput = node->inputs[0];
-        func_decl arg = mkFunction(nodeInput->target.node->name, fSort);
-
-        expr splitExpr = expr(ctx);
+        expr inConst = toConst(nodeInput->target.port, ctx);
+        expr_vector splitVec(ctx);
         std::vector< Chan*> nodeOutputs = node->outputs;
 
         for (const auto &nodeOut : nodeOutputs) {
 
-          std::string outName = nodeOut->source.node->name;
-          func_decl outFunc = mkFunction(outName, fSort);
-
-          splitExpr = splitExpr || (arg() == outFunc());
+          expr outConst = toConst(nodeOut->source.port, ctx);
+          expr outEq = inConst == outConst;
+          splitVec.push_back(outEq);
         }
 
-        nodes.push_back(&splitExpr);
+        expr splitExpr = mk_or(splitVec);
+        nodes.push_back(splitExpr);
       } else {
         // sink or source, do nothing
         assert(node->is_sink() || node->is_source());
@@ -379,7 +281,6 @@ namespace eda::hls::debugger {
   std::vector<Node*> Verifier::getSources(Graph *graph) const {
 
     std::vector<Node*> result;
-
     std::vector<Node*> graphNodes = graph->nodes;
 
     for (const auto &node : graphNodes) {
@@ -388,14 +289,12 @@ namespace eda::hls::debugger {
         result.push_back(node);
       }
     }
-
     return result;
   }
 
   std::vector<Node*> Verifier::getSinks(Graph *graph) const {
 
     std::vector<Node*> result;
-
     std::vector<Node*> graphNodes = graph->nodes;
 
     for (const auto &node : graphNodes) {
@@ -404,7 +303,53 @@ namespace eda::hls::debugger {
         result.push_back(node);
       }
     }
-
     return result;
+  }
+
+  sort Verifier::getSort(const Node *node, context &ctx) const {
+    return ctx.uninterpreted_sort(node->type.name.c_str());
+  }
+
+  expr Verifier::toConst(const Argument *port, context &ctx) const {
+
+    const char *typeName = port->type.c_str();
+    sort fInSort = ctx.uninterpreted_sort(typeName);
+
+    return ctx.constant(port->name.c_str(), fInSort);
+  }
+
+  expr Verifier::toConst(const Node *node, context &ctx) const {
+
+    const NodeType &fType = node->type;
+    const char *typeName = fType.name.c_str();
+    sort fInSort = ctx.uninterpreted_sort(typeName);
+
+    return ctx.constant(typeName, fInSort);
+  }
+
+  sort_vector Verifier::getInSorts(const Node *node, context &ctx) const {
+    unsigned arity = node->inputs.size();
+    sort_vector sorts(ctx);
+
+    for (size_t i = 0; i < arity; i++) {
+
+      const char *sortName = node->inputs[i]->target.port->type.c_str();
+      sorts.push_back(ctx.uninterpreted_sort(sortName));
+    }
+    return sorts;
+  }
+
+  expr_vector Verifier::getArgs(const Node *node, context &ctx) const {
+
+    std::vector<Chan*> inputs = node->inputs;
+    unsigned arity = inputs.size();
+
+    expr_vector args(ctx);
+
+    for (size_t i = 0; i < arity; i++) {
+      args.push_back(toConst(inputs[i]->target.port, ctx));
+    }
+
+    return args;
   }
 } // namespace eda::hls::debugger
