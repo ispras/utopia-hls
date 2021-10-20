@@ -1,24 +1,26 @@
-nodetype source  ()                       => (X<1.00> #0 x,  Y<1.00> #0 y);
-nodetype split   (X<1.00> x)              => (X<0.50> #1 x1, X<0.50> #1 x2);
-nodetype kernel1 (X<1.00> x,  Y<0.50> y)  => (Z<0.25> #1 z,  W<1.00> #2 w);
-nodetype kernel2 (X<0.50> x,  W<0.50> w)  => (Z<0.25> #1 z);
-nodetype merge   (Z<0.50> z1, Z<0.50> z2) => (Z<1.00> #1 z);
-nodetype sink    (Z<1.00> z)              => ();
+model M {
+  nodetype source  ()                       => (X<1.00> #0 x,  Y<1.00> #0 y);
+  nodetype split   (X<1.00> x)              => (X<0.50> #1 x1, X<0.50> #1 x2);
+  nodetype kernel1 (X<1.00> x,  Y<0.50> y)  => (Z<0.25> #1 z,  W<1.00> #2 w);
+  nodetype kernel2 (X<0.50> x,  W<0.50> w)  => (Z<0.25> #1 z);
+  nodetype merge   (Z<0.50> z1, Z<0.50> z2) => (Z<1.00> #1 z);
+  nodetype sink    (Z<1.00> z)              => ();
 
-graph G {
-  chan X x1;
-  chan X x2;
-  chan X x;
-  chan Y y;
-  chan Z z1;
-  chan Z z2;
-  chan Z z;
-  chan W w;
+  graph G {
+    chan X x1;
+    chan X x2;
+    chan X x;
+    chan Y y;
+    chan Z z1;
+    chan Z z2;
+    chan Z z;
+    chan W w;
 
-  node source  n1()       => (x, y);
-  node split   n2(x)      => (x1, x2);
-  node kernel1 n3(x1, y)  => (z1, w);
-  node kernel2 n4(x2, w)  => (z2);
-  node merge   n5(z1, z2) => (z);
-  node sink    n6(z)      => ();
+    node source  n1()       => (x, y);
+    node split   n2(x)      => (x1, x2);
+    node kernel1 n3(x1, y)  => (z1, w);
+    node kernel2 n4(x2, w)  => (z2);
+    node merge   n5(z1, z2) => (z);
+    node sink    n6(z)      => ();
+  }
 }

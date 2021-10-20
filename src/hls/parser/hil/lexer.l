@@ -21,6 +21,7 @@ INT  [0-9]+
 ID   [_a-zA-Z][_a-zA-Z0-9]*
 
 %%
+"model"    { return TOK_MODEL;    }
 "nodetype" { return TOK_NODETYPE; }
 "graph"    { return TOK_GRAPH;    }
 "chan"     { return TOK_CHAN;     }

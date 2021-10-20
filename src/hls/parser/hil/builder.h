@@ -35,10 +35,10 @@ public:
 
   std::unique_ptr<Model> create();
 
-  void start_model() {
+  void start_model(const std::string &name) {
     assert(_model == nullptr);
 
-    _model = new Model();
+    _model = new Model(name);
     _nodetypes.clear();
     _chans.clear();
   }
@@ -46,9 +46,10 @@ public:
   void end_model() {}
 
   void start_nodetype(const std::string &name) {
+    assert(_model != nullptr);
     assert(_nodetype == nullptr);
 
-    _nodetype = new NodeType(name);
+    _nodetype = new NodeType(name, *_model);
     _nodetypes.insert({ name, _nodetype });
     _outputs = false;
   }
@@ -79,8 +80,9 @@ public:
   }
 
   void start_graph(const std::string &name) {
+    assert(_model != nullptr);
     assert(_graph == nullptr);
-    _graph = new Graph(name);
+    _graph = new Graph(name, *_model);
   }
 
   void end_graph() {
@@ -93,18 +95,19 @@ public:
   void add_chan(const std::string &type, const std::string &name) {
     assert(_graph != nullptr);
 
-    Chan *chan = new Chan(name, type);
+    Chan *chan = new Chan(name, type, *_graph);
     _chans[name] = chan;
     _graph->add_chan(chan);
   }
 
   void start_node(const std::string &type, const std::string &name) {
+    assert(_graph != nullptr);
     assert(_node == nullptr);
 
     const auto &i = _nodetypes.find(type);
     assert(i != _nodetypes.end());
  
-    _node = new Node(name, *(i->second));
+    _node = new Node(name, *(i->second), *_graph);
     _outputs = false;
   }
 

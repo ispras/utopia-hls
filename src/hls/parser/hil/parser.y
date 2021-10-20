@@ -30,6 +30,7 @@
 %define api.value.type {std::string*}
 %define api.token.prefix {TOK_}
 %token
+  MODEL
   NODETYPE
   GRAPH
   CHAN
@@ -54,10 +55,15 @@
 %%
 
 model:
-  { Builder::get().start_model(); }
+  MODEL ID[name] LCURLY {
+    Builder::get().start_model(*$name);
+    delete $name;
+  }
   nodetypes
   graphs
-  { Builder::get().end_model(); }
+  RCURLY {
+    Builder::get().end_model();
+  }
 ;
 
 nodetypes:

@@ -26,7 +26,7 @@ static std::ostream& operator <<(std::ostream &out, const std::vector<Argument *
 }
 
 std::ostream& operator <<(std::ostream &out, const NodeType &nodetype) {
-  out << "nodetype " << nodetype.name;
+  out << "  nodetype " << nodetype.name;
   return out << "(" << nodetype.inputs << ") => (" << nodetype.outputs << ");";
 }
 
@@ -50,20 +50,22 @@ std::ostream& operator <<(std::ostream &out, const Node &node) {
 }
 
 std::ostream& operator <<(std::ostream &out, const Graph &graph) {
-  out << "graph " << graph.name << " {" << std::endl;
+  out << "  graph " << graph.name << " {" << std::endl;
 
   for (const Chan *chan: graph.chans) {
-    out << "  " << *chan << std::endl;
+    out << "    " << *chan << std::endl;
   }
 
   for (const Node *node: graph.nodes) {
-    out << "  " << *node << std::endl;
+    out << "    " << *node << std::endl;
   }
 
-  return out << "}";
+  return out << "  }";
 }
 
 std::ostream& operator <<(std::ostream &out, const Model &model) {
+  out << "model " << model.name << "{" << std::endl;
+
   for (const NodeType *nodetype: model.nodetypes) {
     out << *nodetype << std::endl;
   }
@@ -72,7 +74,7 @@ std::ostream& operator <<(std::ostream &out, const Model &model) {
     out << *graph << std::endl;
   }
 
-  return out;
+  return out << "}";
 }
 
 } // namespace eda::hls::model

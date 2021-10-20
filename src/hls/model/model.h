@@ -18,6 +18,10 @@ using namespace eda::utils;
 
 namespace eda::hls::model {
 
+struct Model;
+struct Graph;
+struct Node;
+
 struct Argument final {
   Argument(const std::string &name, const std::string &type, float flow, unsigned latency):
     name(name), type(type), flow(flow), latency(latency) {}
@@ -29,8 +33,8 @@ struct Argument final {
 };
 
 struct NodeType final {
-  NodeType(const std::string &name):
-    name(name) {}
+  NodeType(const std::string &name, const Model &model):
+    name(name), model(model) {}
 
   void add_input(Argument *input) {
     inputs.push_back(input);
@@ -74,9 +78,10 @@ struct NodeType final {
   std::string name;
   std::vector<Argument *> inputs;
   std::vector<Argument *> outputs;
-};
 
-struct Node;
+  // Reference to the parent.
+  const Model &model;
+};
 
 struct Binding final {
   Binding():
@@ -93,18 +98,21 @@ struct Binding final {
 };
 
 struct Chan final {
-  Chan(const std::string &name, const std::string &type):
-    name(name), type(type) {}
+  Chan(const std::string &name, const std::string &type, const Graph &graph):
+    name(name), type(type), graph(graph) {}
 
   std::string name;
   std::string type;
   Binding source;
   Binding target;
+
+  // Reference to the parent.
+  const Graph &graph;
 };
 
 struct Node final {
-  Node(const std::string &name, const NodeType &type):
-    name(name), type(type) {}
+  Node(const std::string &name, const NodeType &type, const Graph &graph):
+    name(name), type(type), graph(graph) {}
 
   void add_input(Chan *input) {
     inputs.push_back(input);
@@ -125,11 +133,14 @@ struct Node final {
   const NodeType &type;
   std::vector<Chan *> inputs;
   std::vector<Chan *> outputs;
+
+  // Reference to the parent.
+  const Graph &graph;
 };
 
 struct Graph final {
-  Graph(const std::string &name):
-    name(name) {}
+  Graph(const std::string &name, const Model &model):
+    name(name), model(model) {}
 
   void add_chan(Chan *chan) {
     chans.push_back(chan);
@@ -142,10 +153,14 @@ struct Graph final {
   std::string name;
   std::vector<Chan *> chans;
   std::vector<Node *> nodes;
+
+  // Reference to the parent.
+  const Model &model;
 };
 
 struct Model final {
-  Model() = default;
+  Model(const std::string &name):
+    name(name) {}
 
   void add_nodetype(NodeType *nodetype) {
     nodetypes.push_back(nodetype);
@@ -155,6 +170,7 @@ struct Model final {
     graphs.push_back(graph);
   }
 
+  std::string name;
   std::vector<NodeType *> nodetypes;
   std::vector<Graph *> graphs;
 };
