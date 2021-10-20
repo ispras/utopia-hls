@@ -16,18 +16,21 @@ using namespace eda::hls::model;
 using namespace eda::hls::parser::hil;
 using namespace eda::hls::scheduler;
 
-int lpsolveTest(const std::string &filename) {
+int lpsolveTest(const std::string &filename, BalanceMode mode) {
 
   std::unique_ptr<Model> model = parse(filename);
   LpSolver* solver = new LpSolver();
   solver->setModel(model.get());
 
-  solver->balance();
+  solver->balance(mode, Verbosity::Full);
 
   return solver->getResult();
 }
 
-TEST(SchedulerTest, SolveInfeasible) {
-  EXPECT_EQ(lpsolveTest("test/hil/test.hil"), INFEASIBLE);
+TEST(SchedulerTest, SolveSimpleInfeasible) {
+  EXPECT_EQ(lpsolveTest("test/hil/test.hil", BalanceMode::Simple), INFEASIBLE);
 }
 
+TEST(SchedulerTest, SolveBlocking) {
+  EXPECT_EQ(lpsolveTest("test/hil/test.hil", BalanceMode::Blocking), OPTIMAL);
+}

@@ -49,8 +49,9 @@ struct SolverConstraint;
 class LpSolverHelper final {
 
 public:
-  LpSolverHelper() : 
-      lp(make_lp(0, 0)), current_column(0), status(-10), verbosity(Normal) { }
+  LpSolverHelper() : lp(make_lp(0, 0)), current_column(0), status(-10) {
+    set_verbose(lp, Normal);
+  }
 
   /// Solves the formulated problem.
   void solve(); 
@@ -79,6 +80,8 @@ public:
   /// Prints the last solution status.
   void printStatus();
 
+  void printResults();
+
   /// Returns the solution status.
   int getStatus();
 
@@ -92,7 +95,7 @@ public:
   void setMin();
 
   /// Sets the output verbosity.
-  void setVerbosity(Verbosity verb) { verbosity = verb; }
+  void setVerbosity(Verbosity verb) { set_verbose(lp, verb); }
 
   /// Get the existing variables.
   std::vector<SolverVariable*> getVariables();
@@ -113,7 +116,6 @@ private:
   std::vector<SolverConstraint*> constraints;
   int current_column;
   int status;
-  Verbosity verbosity;
 };
 
 struct SolverVariable final {

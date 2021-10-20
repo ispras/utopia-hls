@@ -15,54 +15,57 @@ namespace eda::hls::scheduler {
 double *makeCoeffs(const std::vector<std::string> &);
 float sumFlows(const std::vector<Argument*> &);
 
-void LpSolver::balance() {
+void LpSolver::balance(BalanceMode mode, Verbosity verbosity) {
+  helper->setVerbosity(verbosity);
 
   for (const Graph* graph : model->graphs) {
-    std::vector<std::string> sinks;
     
+    // Generate a problem to solve
+    switch (mode) {
+    case Latency:
+      balanceLatency(graph);
+      break;
+    default:
+      balanceFlows(mode, graph);
+    }
+
+    // Solve
+    helper->printProblem();
+    helper->solve();
+    helper->printStatus();
+    helper->printResults();
+  }
+}
+
+void LpSolver::balanceLatency(const Graph* graph) { }
+
+void LpSolver::balanceFlows(BalanceMode mode, const Graph* graph) {
+    
+    std::vector<std::string> sinks;
     for (Node* node : graph->nodes) {
       checkFlows(node);
       std::string nodeName = node->name;
       helper->addVariable(nodeName, node);
-
-      std::vector<std::string> names{nodeName};
-      std::vector<double> valOne{1.0};
-
-      // Add 'coeff >= 0.01'
-      helper->addConstraint(names, valOne, OperationType::GreaterOrEqual, 0.01);
-      // Add 'coeff <= 1'
-      helper->addConstraint(names, valOne, OperationType::LessOrEqual, 1);
-
+      genNodeConstraints(nodeName);
       if (node->is_sink()) {
         sinks.push_back(node->name);
       }     
     }
 
     // Add constraints for channels
-    // flow_src*coeff_src == flow_dst*coeff_dst
-    for (const Chan* channel : graph->chans) {
-      const Binding from = channel->source;
-      const Binding to = channel->target;
-
-      std::vector<std::string> names{from.node->name, to.node->name};
-      std::vector<double> values{from.port->flow, -1.0 * to.port->flow};
-      helper->addConstraint(names, values, OperationType::Equal,0);
+    if (mode == Simple) {
+      // flow_src*coeff_src == flow_dst*coeff_dst
+      genFlowConstraints(graph, OperationType::Equal);
     }
 
-    // Maximize output flow & solve
+    if (mode == Blocking) {
+      // flow_src*coeff_src >= flow_dst*coeff_dst
+      genFlowConstraints(graph, OperationType::GreaterOrEqual);
+    }
+
+    // Maximize sink flow
     helper->setObjective(sinks, makeCoeffs(sinks));
     helper->setMax();
-    helper->solve();
-    helper->printProblem();
-    helper->printStatus();
-
-    // Print results
-    std::vector<double> values = helper->getResults();
-    for (double val : values) {
-      std::cout<<val<<" ";  
-    }
-    std::cout<<"\n";
-  }
 }
 
 double* makeCoeffs(const std::vector<std::string> &sinks) {
@@ -71,6 +74,27 @@ double* makeCoeffs(const std::vector<std::string> &sinks) {
       sinkCoeffs[i] = 1.0;
     }
   return sinkCoeffs;
+}
+
+void LpSolver::genNodeConstraints(const std::string &nodeName) {
+  std::vector<std::string> names{nodeName};
+  std::vector<double> valOne{1.0};
+
+  // Add 'coeff >= 0.01'
+  helper->addConstraint(names, valOne, OperationType::GreaterOrEqual, 0.01);
+  // Add 'coeff <= 1'
+  helper->addConstraint(names, valOne, OperationType::LessOrEqual, 1);
+}
+
+void LpSolver::genFlowConstraints(const Graph* graph, OperationType type) {
+  for (const Chan* channel : graph->chans) {
+    const Binding from = channel->source;
+    const Binding to = channel->target;
+    std::vector<std::string> names{from.node->name, to.node->name};
+    std::vector<double> values{from.port->flow, -1.0 * to.port->flow};
+
+    helper->addConstraint(names, values, type,0);
+  }
 }
 
 void LpSolver::checkFlows(const Node* node) {

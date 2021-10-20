@@ -13,8 +13,6 @@ namespace eda::hls::scheduler {
 void LpSolverHelper::solve() {
   addAllConstraints();
 
-  set_verbose(lp, verbosity);
-
   // Calculate a solution
   status = ::solve(lp);
 }
@@ -23,7 +21,8 @@ std::vector<double> LpSolverHelper::getResults() {
   int size = get_Ncolumns(lp);
   double* values = new double[size];
   get_variables(lp, values);
-  std::vector<double> vec_values(*values);
+  std::vector<double> vec_values;
+  vec_values.assign(values, values + size);
   return vec_values;
 }
 
@@ -100,6 +99,14 @@ void LpSolverHelper::setMin() {
 
 int LpSolverHelper::getStatus() {
   return status;
+}
+
+void LpSolverHelper::printResults() {
+  std::cout<<"Solution results:\n";
+  for (double val : getResults()) {
+    std::cout<<val<<" ";  
+  }
+  std::cout<<"\n";
 }
 
 void LpSolverHelper::printStatus() {
