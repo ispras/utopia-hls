@@ -9,6 +9,7 @@
 #ifndef STANDALONE_STANDALONEOPS_H
 #define STANDALONE_STANDALONEOPS_H
 
+#include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/OpDefinition.h"
@@ -16,5 +17,6 @@
 
 #define GET_OP_CLASSES
 #include "Standalone/StandaloneOps.h.inc"
+
 
 #endif // STANDALONE_STANDALONEOPS_H

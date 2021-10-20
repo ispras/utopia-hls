@@ -33,4 +33,8 @@ def Standalone_Dialect : Dialect {
 class Standalone_Op<string mnemonic, list<OpTrait> traits = []> :
         Op<Standalone_Dialect, mnemonic, traits>;
 
+/* class Standalone_Type<Pred condition, string descr=""> : */
+/*         DialectType<Standalone_Dialect, condition, descr>; */
+class Standalone_Type<string name> : TypeDef<Standalone_Dialect, name> { }
+
 #endif // STANDALONE_DIALECT
