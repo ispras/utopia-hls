@@ -108,7 +108,6 @@ namespace eda::hls::debugger {
         std::cout << "Models are equivalent" << "\n";
         return false;
       case unknown:
-      default:
         std::cout << "Z3 solver says \"unknown\"" << "\n";
         return false;
         break;
