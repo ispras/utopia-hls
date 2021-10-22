@@ -26,10 +26,10 @@ struct Argument final {
   Argument(const std::string &name, const std::string &type, float flow, unsigned latency):
     name(name), type(type), flow(flow), latency(latency) {}
 
-  std::string name;
-  std::string type;
-  float flow;
-  unsigned latency;
+  const std::string name;
+  const std::string type;
+  const float flow;
+  const unsigned latency;
 };
 
 struct NodeType final {
@@ -75,7 +75,7 @@ struct NodeType final {
         && !is_delay();
   }
 
-  std::string name;
+  const std::string name;
   std::vector<Argument *> inputs;
   std::vector<Argument *> outputs;
 
@@ -101,8 +101,9 @@ struct Chan final {
   Chan(const std::string &name, const std::string &type, const Graph &graph):
     name(name), type(type), graph(graph) {}
 
-  std::string name;
-  std::string type;
+  const std::string name;
+  const std::string type;
+
   Binding source;
   Binding target;
 
@@ -129,7 +130,7 @@ struct Node final {
   bool is_delay()  const { return type.is_delay();  }
   bool is_kernel() const { return type.is_kernel(); }
 
-  std::string name;
+  const std::string name;
   const NodeType &type;
   std::vector<Chan *> inputs;
   std::vector<Chan *> outputs;
@@ -150,7 +151,7 @@ struct Graph final {
     nodes.push_back(node);
   }
 
-  std::string name;
+  const std::string name;
   std::vector<Chan *> chans;
   std::vector<Node *> nodes;
 
@@ -170,7 +171,7 @@ struct Model final {
     graphs.push_back(graph);
   }
 
-  std::string name;
+  const std::string name;
   std::vector<NodeType *> nodetypes;
   std::vector<Graph *> graphs;
 };
