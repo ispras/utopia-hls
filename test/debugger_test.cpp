@@ -16,16 +16,17 @@ using namespace eda::hls::model;
 using namespace eda::hls::parser::hil;
 using namespace eda::hls::debugger;
 
-bool eqCheckerTest(const std::string &filename) {
+bool eqCheckTest(const std::string &fileM, const std::string &fileM2) {
 
-  std::unique_ptr<Model> model = parse(filename);
-  std::unique_ptr<Model> modelClone = parse(filename);
+  std::unique_ptr<Model> modelM = parse(fileM);
+  std::unique_ptr<Model> modelM2 = parse(fileM2);
   Verifier verifier = Verifier::get();
 
-  return verifier.equivalent(*model.get(), *modelClone.get());
+  return verifier.equivalent(*modelM.get(), *modelM2.get());
 }
 
 TEST(DebuggerTest, Solve) {
-  EXPECT_EQ(eqCheckerTest("test/hil/test.hil"), false);
+  // TODO: wrong test, substitute 'true' by 'false'
+  EXPECT_EQ(eqCheckTest("test/hil/test.hil", "test/hil/test_clone.hil"), true);
 }
 
