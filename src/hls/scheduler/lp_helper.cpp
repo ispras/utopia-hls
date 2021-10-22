@@ -7,8 +7,22 @@
 //===----------------------------------------------------------------------===//
 
 #include <hls/scheduler/lp_helper.h>
+#include <memory>
 
 namespace eda::hls::scheduler {
+
+LpSolverHelper::~LpSolverHelper() {
+
+    for (SolverConstraint* constraint : constraints) {
+      delete constraint;
+    }
+
+    for (auto var : variables) {
+      delete var.second;
+    }
+
+    delete_lp(lp);
+  }
 
 void LpSolverHelper::solve() {
   addAllConstraints();
@@ -23,6 +37,7 @@ std::vector<double> LpSolverHelper::getResults() {
   get_variables(lp, values);
   std::vector<double> vec_values;
   vec_values.assign(values, values + size);
+  delete [] values;
   return vec_values;
 }
 
@@ -52,10 +67,10 @@ std::vector<SolverVariable*> LpSolverHelper::getVariables() {
   return result;
 }
 
-int* getColumnNumbers(const std::vector<SolverVariable*> &variables) {
-  int* colno = new int[variables.size()];
+std::shared_ptr<int[]> getColumnNumbers(const std::vector<SolverVariable*> &variables) {
+  std::shared_ptr<int[]> colno(new int[variables.size()]);
   int i = 0;
-  for (const auto* var : variables) {
+  for (auto* const var : variables) {
     colno[i++] = var->column_number;
   }
   return colno;
@@ -63,10 +78,10 @@ int* getColumnNumbers(const std::vector<SolverVariable*> &variables) {
 
 void LpSolverHelper::addAllConstraints() {
   set_add_rowmode(lp, TRUE);
-  for (const auto* constraint : constraints) {
+  for (auto* const constraint : constraints) {
     std::vector<double> values = constraint->values;
     assert(add_constraintex(lp, constraint->variables.size(), &values[0], 
-        getColumnNumbers(constraint->variables), constraint->operation, 
+        getColumnNumbers(constraint->variables).get(), constraint->operation, 
         constraint->rhs));
   }
   set_add_rowmode(lp, FALSE);
@@ -75,7 +90,8 @@ void LpSolverHelper::addAllConstraints() {
 void LpSolverHelper::setObjective(const std::vector<std::string> &names, 
     double *vals) {
   
-  set_obj_fnex(lp, names.size(), vals, getColumnNumbers(findVariables(names)));
+  set_obj_fnex(lp, names.size(), vals, 
+      getColumnNumbers(findVariables(names)).get());
 }
 
 std::vector<SolverVariable*> LpSolverHelper::findVariables(

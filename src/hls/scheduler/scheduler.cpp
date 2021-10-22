@@ -12,13 +12,13 @@
 
 namespace eda::hls::scheduler {
 
-double *makeCoeffs(const std::vector<std::string> &);
+std::shared_ptr<double[]> makeCoeffs(const std::vector<std::string> &);
 float sumFlows(const std::vector<Argument*> &);
 
 void LpSolver::balance(BalanceMode mode, Verbosity verbosity) {
   helper->setVerbosity(verbosity);
 
-  for (const Graph* graph : model->graphs) {
+  for (Graph* const graph : model->graphs) {
     
     // Generate a problem to solve
     switch (mode) {
@@ -42,7 +42,7 @@ void LpSolver::balanceLatency(const Graph* graph) { }
 void LpSolver::balanceFlows(BalanceMode mode, const Graph* graph) {
     
     std::vector<std::string> sinks;
-    for (Node* node : graph->nodes) {
+    for (Node* const node : graph->nodes) {
       checkFlows(node);
       std::string nodeName = node->name;
       helper->addVariable(nodeName, node);
@@ -64,12 +64,12 @@ void LpSolver::balanceFlows(BalanceMode mode, const Graph* graph) {
     }
 
     // Maximize sink flow
-    helper->setObjective(sinks, makeCoeffs(sinks));
+    helper->setObjective(sinks, makeCoeffs(sinks).get());
     helper->setMax();
 }
 
-double* makeCoeffs(const std::vector<std::string> &sinks) {
-  double* sinkCoeffs = new double[sinks.size()];
+std::shared_ptr<double[]> makeCoeffs(const std::vector<std::string> &sinks) {
+  std::shared_ptr<double[]> sinkCoeffs(new double[sinks.size()]);
     for (unsigned int i = 0; i < sinks.size(); i++) {
       sinkCoeffs[i] = 1.0;
     }
@@ -87,7 +87,7 @@ void LpSolver::genNodeConstraints(const std::string &nodeName) {
 }
 
 void LpSolver::genFlowConstraints(const Graph* graph, OperationType type) {
-  for (const Chan* channel : graph->chans) {
+  for (Chan* const channel : graph->chans) {
     const Binding from = channel->source;
     const Binding to = channel->target;
     std::vector<std::string> names{from.node->name, to.node->name};
@@ -105,7 +105,7 @@ void LpSolver::checkFlows(const Node* node) {
 
 float sumFlows(const std::vector<Argument*> &args) {
   float sum = 0;
-  for (const auto* arg : args) {
+  for (auto* const arg : args) {
     sum += arg->flow;
   }
   return sum;

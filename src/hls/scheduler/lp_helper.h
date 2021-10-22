@@ -53,6 +53,8 @@ public:
     set_verbose(lp, Normal);
   }
 
+  ~LpSolverHelper();
+
   /// Solves the formulated problem.
   void solve(); 
 

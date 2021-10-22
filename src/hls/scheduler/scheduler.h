@@ -30,6 +30,8 @@ public:
 
   LpSolver() : helper(new LpSolverHelper) { }
 
+  ~LpSolver() { delete helper; }
+
   void setModel(Model* model_arg) { model = model_arg; }
 
   void balance(BalanceMode mode, Verbosity verbosity);
