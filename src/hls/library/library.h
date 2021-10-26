@@ -36,7 +36,7 @@ struct VerilogNodeTypePrinter final {
 struct VerilogGraphPrinter final {
   VerilogGraphPrinter(const eda::hls::model::Graph &rg) : g(rg) {};
 
-  void printChan(std::ostream &out, const eda::hls::model::Chan *chan) const;
+  void printChan(std::ostream &out, const eda::hls::model::Chan &chan) const;
   void print(std::ostream &out) const;
 
   const eda::hls::model::Graph g;

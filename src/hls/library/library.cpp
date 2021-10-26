@@ -31,9 +31,9 @@ void VerilogNodeTypePrinter::print(std::ostream &out) const
   out << "endmodule" << " // " << t.name << std::endl;
 }
 
-void VerilogGraphPrinter::printChan(std::ostream &out, const eda::hls::model::Chan *chan) const {
+void VerilogGraphPrinter::printChan(std::ostream &out, const eda::hls::model::Chan &chan) const {
   // TODO: chan.type is ignored
-  out << "." << chan->source.node->name << "(" << chan->target.node->name << ")";
+  out << "." << chan.source.node->name << "(" << chan.target.node->name << ")";
 }
 
 void VerilogGraphPrinter::print(std::ostream &out) const
@@ -45,19 +45,19 @@ void VerilogGraphPrinter::print(std::ostream &out) const
   }
   for (const auto *node : g.nodes) {
     // TODO: node.type is ignored
-    out << node->type.name << " _" << node->type.name << "(";
+    out << node->type.name << " " << node->name << "(";
 
     bool comma = false;
 
     for (const auto *input : node->inputs) {
       out << (comma ? ", " : "");
-      printChan(out, input);
+      printChan(out, *input);
       comma = true;
     }
 
     for (const auto *output: node->outputs) {
       out << (comma ? ", " : "");
-      printChan(out, output);
+      printChan(out, *output);
       comma = true;
     }
     out << ");" << std::endl;
