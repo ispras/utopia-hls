@@ -20,7 +20,15 @@ REAL [0-9]+.[0-9]+
 INT  [0-9]+
 ID   [_a-zA-Z][_a-zA-Z0-9]*
 
+%x SKIP
+
 %%
+"//".*\n   {                      }
+"/*"       { BEGIN(SKIP);         }
+<SKIP>"*/" { BEGIN(INITIAL);      }
+<SKIP>.    {                      }
+<SKIP>\n   {                      }
+
 "model"    { return TOK_MODEL;    }
 "nodetype" { return TOK_NODETYPE; }
 "graph"    { return TOK_GRAPH;    }
@@ -37,6 +45,7 @@ ID   [_a-zA-Z][_a-zA-Z0-9]*
 ">"        { return TOK_RANGLE;   }
 "{"        { return TOK_LCURLY;   }
 "}"        { return TOK_RCURLY;   }
+
 {INT}      {
              hhlval = new std::string(yytext);
              return TOK_INT;
