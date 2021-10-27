@@ -67,8 +67,10 @@ add_library(${MAIN_LIBRARY}
   hls/model/model.cpp
   hls/parser/hil/builder.cpp
   hls/parser/hil/parser.cpp
+  hls/scheduler/dijkstra.cpp
   hls/scheduler/lp_helper.cpp
   hls/scheduler/scheduler.cpp
+  hls/scheduler/solver.cpp
   rtl/compiler/compiler.cpp
   rtl/library/flibrary.cpp
   rtl/model/event.cpp

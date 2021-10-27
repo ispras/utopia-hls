@@ -31,6 +31,23 @@ void LpSolverHelper::solve() {
   status = ::solve(lp);
 }
 
+LpSolverHelper* LpSolverHelper::instance = nullptr;
+
+LpSolverHelper* LpSolverHelper::getInstance() {
+  if (instance == nullptr) {
+    instance = new LpSolverHelper();
+  }
+  return instance;
+}
+
+LpSolverHelper* LpSolverHelper::resetInstance() {
+  if (instance != nullptr) {
+    delete instance;
+    instance = nullptr;
+  }
+  return getInstance();
+}
+
 std::vector<double> LpSolverHelper::getResults() {
   int size = get_Ncolumns(lp);
   double* values = new double[size];
@@ -41,22 +58,24 @@ std::vector<double> LpSolverHelper::getResults() {
   return vec_values;
 }
 
-void LpSolverHelper::addConstraint(const std::vector<std::string> &names, 
+SolverConstraint* LpSolverHelper::addConstraint(const std::vector<std::string> &names, 
     const std::vector<double> &values, OperationType operation, double rhs) {
-  SolverConstraint *constraint = new SolverConstraint(findVariables(names), 
+  SolverConstraint *constraint = new SolverConstraint(getVariables(names), 
       values, operation, rhs);
   constraints.push_back(constraint);
   std::cout<<"Added constraint: "<<*constraint<<"\n";
+  return constraint;
 }
 
-void LpSolverHelper::addVariable(const std::string &name, Node* const node) {
+SolverVariable* LpSolverHelper::addVariable(const std::string &name, const Node* node) {
   std::cout<<"Adding variable: "<<name<<"\n";
-  SolverVariable* new_variable = 
-      new SolverVariable(name, ++current_column, node);
-  variables[name] = new_variable;
+  SolverVariable* newVariable = 
+      new SolverVariable(name, ++currentColumn, node);
+  variables[name] = newVariable;
   add_column(lp, NULL);
-  std::string name_loc = name;
-  set_col_name(lp, current_column, &name_loc[0]);
+  std::string nameLoc = name;
+  set_col_name(lp, currentColumn, &nameLoc[0]);
+  return newVariable;
 }
 
 std::vector<SolverVariable*> LpSolverHelper::getVariables() {
@@ -70,7 +89,7 @@ std::vector<SolverVariable*> LpSolverHelper::getVariables() {
 std::shared_ptr<int[]> getColumnNumbers(const std::vector<SolverVariable*> &variables) {
   std::shared_ptr<int[]> colno(new int[variables.size()]);
   int i = 0;
-  for (auto* const var : variables) {
+  for (const auto* var : variables) {
     colno[i++] = var->column_number;
   }
   return colno;
@@ -78,7 +97,7 @@ std::shared_ptr<int[]> getColumnNumbers(const std::vector<SolverVariable*> &vari
 
 void LpSolverHelper::addAllConstraints() {
   set_add_rowmode(lp, TRUE);
-  for (auto* const constraint : constraints) {
+  for (const auto* constraint : constraints) {
     std::vector<double> values = constraint->values;
     assert(add_constraintex(lp, constraint->variables.size(), &values[0], 
         getColumnNumbers(constraint->variables).get(), constraint->operation, 
@@ -91,13 +110,14 @@ void LpSolverHelper::setObjective(const std::vector<std::string> &names,
     double *vals) {
   
   set_obj_fnex(lp, names.size(), vals, 
-      getColumnNumbers(findVariables(names)).get());
+      getColumnNumbers(getVariables(names)).get());
 }
 
-std::vector<SolverVariable*> LpSolverHelper::findVariables(
+std::vector<SolverVariable*> LpSolverHelper::getVariables(
     const std::vector<std::string> &names) {
   std::vector<SolverVariable*> vars;
   for (const std::string &name : names) {
+    std::cout<<"Searching "<<name<<"\n";
     auto it = variables.find(name);
     assert(it != variables.end());
     vars.push_back(it->second);

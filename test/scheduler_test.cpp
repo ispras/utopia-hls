@@ -11,6 +11,7 @@
 #include "hls/model/model.h"
 #include "hls/parser/hil/parser.h"
 #include "hls/scheduler/scheduler.h"
+#include "hls/scheduler/solver.h"
 
 using namespace eda::hls::model;
 using namespace eda::hls::parser::hil;
@@ -33,4 +34,8 @@ TEST(SchedulerTest, SolveSimpleInfeasible) {
 
 TEST(SchedulerTest, SolveBlocking) {
   EXPECT_EQ(lpsolveTest("test/hil/test.hil", BalanceMode::Blocking), OPTIMAL);
+}
+
+TEST(SchedulerTest, SolveLatency) {
+  EXPECT_EQ(lpsolveTest("test/hil/test.hil", BalanceMode::LatencyLinear), OPTIMAL);
 }

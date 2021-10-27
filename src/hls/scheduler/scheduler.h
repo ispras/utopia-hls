@@ -9,8 +9,8 @@
 #pragma once
 
 #include <hls/model/model.h>
-#include <hls/scheduler/lp_helper.h>
 #include <string>
+#include <vector>
 
 using namespace eda::hls::model;
 
@@ -19,36 +19,41 @@ namespace eda::hls::scheduler {
 enum BalanceMode {
   Simple,
   Blocking,
-  Latency
+  LatencyLinear,
+  LatencyDijkstra
 };
 
-class LpSolver final {
+struct Buffer;
 
+class LatencyBalancer {
 public:
-
-  LpSolver(Model* model_arg) : model(model_arg), helper(new LpSolverHelper) { }
-
-  LpSolver() : helper(new LpSolverHelper) { }
-
-  ~LpSolver() { delete helper; }
-
+  LatencyBalancer() { }
+  LatencyBalancer(Model* model_arg) : model(model_arg) { }
+  ~LatencyBalancer() {
+    for (auto buf : buffers) {
+      delete buf;
+    }
+  }
   void setModel(Model* model_arg) { model = model_arg; }
+  void balance();
 
-  void balance(BalanceMode mode, Verbosity verbosity);
+protected:
+  void insertBuffers(const Graph* graph, const std::vector<double> &latencies);
 
-  int getResult() { return helper->getStatus(); }
-
-private:
-
-  void checkFlows(const Node* node);
-  void balanceFlows(BalanceMode mode, const Graph* graph);
-  void genNodeConstraints(const std::string &nodeName);
-  void genFlowConstraints(const Graph* graph, OperationType type);
-  void balanceLatency(const Graph* graph);
-  
   Model* model;
-  LpSolverHelper* helper;
+  std::vector<Buffer*> buffers;
+};
 
+struct Buffer final {
+
+  /*Buffer(const Node* src, const Node* dst, const Chan* chan, 
+      const SolverVariable* var) : source(src), destination(dst), channel(chan),
+      variable(var) { }*/
+
+  const Node* source;
+  const Node* destination;
+  const Chan* channel;
+  //const SolverVariable* variable;
 };
 
 } // namespace eda::hls::scheduler

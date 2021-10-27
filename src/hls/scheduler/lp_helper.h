@@ -49,9 +49,6 @@ struct SolverConstraint;
 class LpSolverHelper final {
 
 public:
-  LpSolverHelper() : lp(make_lp(0, 0)), current_column(0), status(-10) {
-    set_verbose(lp, Normal);
-  }
 
   ~LpSolverHelper();
 
@@ -67,14 +64,14 @@ public:
   /// \param values variable coefficients
   /// \param operation operation
   /// \param rhs right-hand side value
-  void addConstraint(const std::vector<std::string> &names, 
+  SolverConstraint* addConstraint(const std::vector<std::string> &names, 
     const std::vector<double> &values, OperationType operation, double rhs);
 
   /// Constructs and adds a variable to the problem.
   ///
   /// \param name variable name
   /// \param node corresponding graph node
-  void addVariable(const std::string&, Node* const);
+  SolverVariable* addVariable(const std::string&, const Node*);
 
   /// Prints the problem.
   void printProblem() { write_LP(lp, stdout); }
@@ -102,38 +99,49 @@ public:
   /// Get the existing variables.
   std::vector<SolverVariable*> getVariables();
 
+  /// Searches for the variables with the given names.
+  std::vector<SolverVariable*> 
+      getVariables(const std::vector<std::string> &names);
+
   /// Get the existing constraints.
   std::vector<SolverConstraint*> getConstraints() { return constraints; }
 
+  static LpSolverHelper* getInstance();
+  static LpSolverHelper* resetInstance();
+
 private:
+  LpSolverHelper() : lp(make_lp(0, 0)), currentColumn(0), status(-10) {
+    set_verbose(lp, Normal);
+  }
+
+  LpSolverHelper(LpSolverHelper &other) = delete;
+  void operator=(const LpSolverHelper &other) = delete;
+
   /// Adds all existing constraints to the problem.
   void addAllConstraints();
 
-  /// Searches for the variables with the given names.
-  std::vector<SolverVariable*> 
-      findVariables(const std::vector<std::string> &names);
-
+  static LpSolverHelper* instance;
   lprec* lp;
   std::map<std::string, SolverVariable*> variables;
   std::vector<SolverConstraint*> constraints;
-  int current_column;
+  int currentColumn;
   int status;
 };
 
 struct SolverVariable final {
 
-  SolverVariable(const std::string &name, int column_number, Node* node) :
+  SolverVariable(const std::string &name, int column_number, const Node* node) :
     name(name), column_number(column_number), node(node) {}
 
   std::string name;
   int column_number;
-  Node* node;
+  const Node* node;
 };
 
 struct SolverConstraint final {
 
-  SolverConstraint(std::vector<SolverVariable*> variables, 
-      std::vector<double> values, OperationType operation, double rhs) : 
+  SolverConstraint(const std::vector<SolverVariable*> &variables, 
+      const std::vector<double> &values, OperationType operation, double rhs) : 
       variables(variables), values(values), operation(operation), rhs(rhs) {
     
     assert(variables.size() == values.size());
