@@ -69,12 +69,19 @@ public:
       const std::string &name,
       const std::string &type,
       const std::string &flow,
-      const std::string &latency = "0") {
-    Argument *argument = new Argument(name, type, std::stof(flow), std::stoi(latency));
+      const std::string &latency,
+      const std::string &value = "") {
+    Argument *argument = new Argument(name,
+                                      type,
+                                      std::stof(flow),
+                                      std::stoi(latency),
+                                      !value.empty(),
+                                      value.empty() ? -1u : std::stoi(value));
 
     if (_outputs) {
       _nodetype->add_output(argument);
     } else {
+      assert(!argument->is_const);
       _nodetype->add_input(argument);
     }
   }

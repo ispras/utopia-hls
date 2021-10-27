@@ -23,13 +23,21 @@ struct Graph;
 struct Node;
 
 struct Argument final {
-  Argument(const std::string &name, const std::string &type, float flow, unsigned latency):
-    name(name), type(type), flow(flow), latency(latency) {}
+  Argument(
+    const std::string &name,
+    const std::string &type,
+    float flow,
+    unsigned latency,
+    bool is_const,
+    unsigned value):
+      name(name), type(type), flow(flow), latency(latency), is_const(is_const), value(value) {}
 
   const std::string name;
   const std::string type;
   const float flow;
   const unsigned latency;
+  const bool is_const;
+  const unsigned value;
 };
 
 struct NodeType final {

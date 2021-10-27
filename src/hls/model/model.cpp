@@ -12,7 +12,11 @@ namespace eda::hls::model {
 
 std::ostream& operator <<(std::ostream &out, const Argument &argument) {
   out << argument.type << "<" << argument.flow << ">" << " ";
-  return out << "#" << argument.latency << " " << argument.name;
+  out << "#" << argument.latency << " " << argument.name;
+  if (argument.is_const) {
+    out << "=" << argument.value;
+  }
+  return out;
 }
 
 static std::ostream& operator <<(std::ostream &out, const std::vector<Argument *> &args) {
