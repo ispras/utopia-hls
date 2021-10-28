@@ -14,7 +14,7 @@ model M {
   nodetype merge   (Z<0.50> z1, Z<0.50> z2) => (Z<1.00> #1 z);
   nodetype sink    (Z<1.00> z)              => ();
 
-  graph G {
+  graph main {
     chan X x1;
     chan X x2;
     chan X x;

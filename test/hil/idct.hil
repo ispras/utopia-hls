@@ -643,4 +643,415 @@ model IDCT {
     node OUT n_out_6 (out_6) => (); // blk[8*6]
     node OUT n_out_7 (out_7) => (); // blk[8*7]
   } // graph IDCT_col
+
+  graph main {
+    chan INT16 in_0_0;
+    chan INT16 in_0_1;
+    chan INT16 in_0_2;
+    chan INT16 in_0_3;
+    chan INT16 in_0_4;
+    chan INT16 in_0_5;
+    chan INT16 in_0_6;
+    chan INT16 in_0_7;
+    chan INT16 in_1_0;
+    chan INT16 in_1_1;
+    chan INT16 in_1_2;
+    chan INT16 in_1_3;
+    chan INT16 in_1_4;
+    chan INT16 in_1_5;
+    chan INT16 in_1_6;
+    chan INT16 in_1_7;
+    chan INT16 in_2_0;
+    chan INT16 in_2_1;
+    chan INT16 in_2_2;
+    chan INT16 in_2_3;
+    chan INT16 in_2_4;
+    chan INT16 in_2_5;
+    chan INT16 in_2_6;
+    chan INT16 in_2_7;
+    chan INT16 in_3_0;
+    chan INT16 in_3_1;
+    chan INT16 in_3_2;
+    chan INT16 in_3_3;
+    chan INT16 in_3_4;
+    chan INT16 in_3_5;
+    chan INT16 in_3_6;
+    chan INT16 in_3_7;
+    chan INT16 in_4_0;
+    chan INT16 in_4_1;
+    chan INT16 in_4_2;
+    chan INT16 in_4_3;
+    chan INT16 in_4_4;
+    chan INT16 in_4_5;
+    chan INT16 in_4_6;
+    chan INT16 in_4_7;
+    chan INT16 in_5_0;
+    chan INT16 in_5_1;
+    chan INT16 in_5_2;
+    chan INT16 in_5_3;
+    chan INT16 in_5_4;
+    chan INT16 in_5_5;
+    chan INT16 in_5_6;
+    chan INT16 in_5_7;
+    chan INT16 in_6_0;
+    chan INT16 in_6_1;
+    chan INT16 in_6_2;
+    chan INT16 in_6_3;
+    chan INT16 in_6_4;
+    chan INT16 in_6_5;
+    chan INT16 in_6_6;
+    chan INT16 in_6_7;
+    chan INT16 in_7_0;
+    chan INT16 in_7_1;
+    chan INT16 in_7_2;
+    chan INT16 in_7_3;
+    chan INT16 in_7_4;
+    chan INT16 in_7_5;
+    chan INT16 in_7_6;
+    chan INT16 in_7_7;
+
+    chan INT16 tmp_0_0;
+    chan INT16 tmp_0_1;
+    chan INT16 tmp_0_2;
+    chan INT16 tmp_0_3;
+    chan INT16 tmp_0_4;
+    chan INT16 tmp_0_5;
+    chan INT16 tmp_0_6;
+    chan INT16 tmp_0_7;
+    chan INT16 tmp_1_0;
+    chan INT16 tmp_1_1;
+    chan INT16 tmp_1_2;
+    chan INT16 tmp_1_3;
+    chan INT16 tmp_1_4;
+    chan INT16 tmp_1_5;
+    chan INT16 tmp_1_6;
+    chan INT16 tmp_1_7;
+    chan INT16 tmp_2_0;
+    chan INT16 tmp_2_1;
+    chan INT16 tmp_2_2;
+    chan INT16 tmp_2_3;
+    chan INT16 tmp_2_4;
+    chan INT16 tmp_2_5;
+    chan INT16 tmp_2_6;
+    chan INT16 tmp_2_7;
+    chan INT16 tmp_3_0;
+    chan INT16 tmp_3_1;
+    chan INT16 tmp_3_2;
+    chan INT16 tmp_3_3;
+    chan INT16 tmp_3_4;
+    chan INT16 tmp_3_5;
+    chan INT16 tmp_3_6;
+    chan INT16 tmp_3_7;
+    chan INT16 tmp_4_0;
+    chan INT16 tmp_4_1;
+    chan INT16 tmp_4_2;
+    chan INT16 tmp_4_3;
+    chan INT16 tmp_4_4;
+    chan INT16 tmp_4_5;
+    chan INT16 tmp_4_6;
+    chan INT16 tmp_4_7;
+    chan INT16 tmp_5_0;
+    chan INT16 tmp_5_1;
+    chan INT16 tmp_5_2;
+    chan INT16 tmp_5_3;
+    chan INT16 tmp_5_4;
+    chan INT16 tmp_5_5;
+    chan INT16 tmp_5_6;
+    chan INT16 tmp_5_7;
+    chan INT16 tmp_6_0;
+    chan INT16 tmp_6_1;
+    chan INT16 tmp_6_2;
+    chan INT16 tmp_6_3;
+    chan INT16 tmp_6_4;
+    chan INT16 tmp_6_5;
+    chan INT16 tmp_6_6;
+    chan INT16 tmp_6_7;
+    chan INT16 tmp_7_0;
+    chan INT16 tmp_7_1;
+    chan INT16 tmp_7_2;
+    chan INT16 tmp_7_3;
+    chan INT16 tmp_7_4;
+    chan INT16 tmp_7_5;
+    chan INT16 tmp_7_6;
+    chan INT16 tmp_7_7;
+
+    chan INT16 out_0_0;
+    chan INT16 out_0_1;
+    chan INT16 out_0_2;
+    chan INT16 out_0_3;
+    chan INT16 out_0_4;
+    chan INT16 out_0_5;
+    chan INT16 out_0_6;
+    chan INT16 out_0_7;
+    chan INT16 out_1_0;
+    chan INT16 out_1_1;
+    chan INT16 out_1_2;
+    chan INT16 out_1_3;
+    chan INT16 out_1_4;
+    chan INT16 out_1_5;
+    chan INT16 out_1_6;
+    chan INT16 out_1_7;
+    chan INT16 out_2_0;
+    chan INT16 out_2_1;
+    chan INT16 out_2_2;
+    chan INT16 out_2_3;
+    chan INT16 out_2_4;
+    chan INT16 out_2_5;
+    chan INT16 out_2_6;
+    chan INT16 out_2_7;
+    chan INT16 out_3_0;
+    chan INT16 out_3_1;
+    chan INT16 out_3_2;
+    chan INT16 out_3_3;
+    chan INT16 out_3_4;
+    chan INT16 out_3_5;
+    chan INT16 out_3_6;
+    chan INT16 out_3_7;
+    chan INT16 out_4_0;
+    chan INT16 out_4_1;
+    chan INT16 out_4_2;
+    chan INT16 out_4_3;
+    chan INT16 out_4_4;
+    chan INT16 out_4_5;
+    chan INT16 out_4_6;
+    chan INT16 out_4_7;
+    chan INT16 out_5_0;
+    chan INT16 out_5_1;
+    chan INT16 out_5_2;
+    chan INT16 out_5_3;
+    chan INT16 out_5_4;
+    chan INT16 out_5_5;
+    chan INT16 out_5_6;
+    chan INT16 out_5_7;
+    chan INT16 out_6_0;
+    chan INT16 out_6_1;
+    chan INT16 out_6_2;
+    chan INT16 out_6_3;
+    chan INT16 out_6_4;
+    chan INT16 out_6_5;
+    chan INT16 out_6_6;
+    chan INT16 out_6_7;
+    chan INT16 out_7_0;
+    chan INT16 out_7_1;
+    chan INT16 out_7_2;
+    chan INT16 out_7_3;
+    chan INT16 out_7_4;
+    chan INT16 out_7_5;
+    chan INT16 out_7_6;
+    chan INT16 out_7_7;
+
+    // Inputs.
+    node IN n_in_0_0 () => (in_0_0);
+    node IN n_in_0_1 () => (in_0_1);
+    node IN n_in_0_2 () => (in_0_2);
+    node IN n_in_0_3 () => (in_0_3);
+    node IN n_in_0_4 () => (in_0_4);
+    node IN n_in_0_5 () => (in_0_5);
+    node IN n_in_0_6 () => (in_0_6);
+    node IN n_in_0_7 () => (in_0_7);
+    node IN n_in_1_0 () => (in_1_0);
+    node IN n_in_1_1 () => (in_1_1);
+    node IN n_in_1_2 () => (in_1_2);
+    node IN n_in_1_3 () => (in_1_3);
+    node IN n_in_1_4 () => (in_1_4);
+    node IN n_in_1_5 () => (in_1_5);
+    node IN n_in_1_6 () => (in_1_6);
+    node IN n_in_1_7 () => (in_1_7);
+    node IN n_in_2_0 () => (in_2_0);
+    node IN n_in_2_1 () => (in_2_1);
+    node IN n_in_2_2 () => (in_2_2);
+    node IN n_in_2_3 () => (in_2_3);
+    node IN n_in_2_4 () => (in_2_4);
+    node IN n_in_2_5 () => (in_2_5);
+    node IN n_in_2_6 () => (in_2_6);
+    node IN n_in_2_7 () => (in_2_7);
+    node IN n_in_3_0 () => (in_3_0);
+    node IN n_in_3_1 () => (in_3_1);
+    node IN n_in_3_2 () => (in_3_2);
+    node IN n_in_3_3 () => (in_3_3);
+    node IN n_in_3_4 () => (in_3_4);
+    node IN n_in_3_5 () => (in_3_5);
+    node IN n_in_3_6 () => (in_3_6);
+    node IN n_in_3_7 () => (in_3_7);
+    node IN n_in_4_0 () => (in_4_0);
+    node IN n_in_4_1 () => (in_4_1);
+    node IN n_in_4_2 () => (in_4_2);
+    node IN n_in_4_3 () => (in_4_3);
+    node IN n_in_4_4 () => (in_4_4);
+    node IN n_in_4_5 () => (in_4_5);
+    node IN n_in_4_6 () => (in_4_6);
+    node IN n_in_4_7 () => (in_4_7);
+    node IN n_in_5_0 () => (in_5_0);
+    node IN n_in_5_1 () => (in_5_1);
+    node IN n_in_5_2 () => (in_5_2);
+    node IN n_in_5_3 () => (in_5_3);
+    node IN n_in_5_4 () => (in_5_4);
+    node IN n_in_5_5 () => (in_5_5);
+    node IN n_in_5_6 () => (in_5_6);
+    node IN n_in_5_7 () => (in_5_7);
+    node IN n_in_6_0 () => (in_6_0);
+    node IN n_in_6_1 () => (in_6_1);
+    node IN n_in_6_2 () => (in_6_2);
+    node IN n_in_6_3 () => (in_6_3);
+    node IN n_in_6_4 () => (in_6_4);
+    node IN n_in_6_5 () => (in_6_5);
+    node IN n_in_6_6 () => (in_6_6);
+    node IN n_in_6_7 () => (in_6_7);
+    node IN n_in_7_0 () => (in_7_0);
+    node IN n_in_7_1 () => (in_7_1);
+    node IN n_in_7_2 () => (in_7_2);
+    node IN n_in_7_3 () => (in_7_3);
+    node IN n_in_7_4 () => (in_7_4);
+    node IN n_in_7_5 () => (in_7_5);
+    node IN n_in_7_6 () => (in_7_6);
+    node IN n_in_7_7 () => (in_7_7);
+
+    // Outputs.
+    node OUT n_out_0_0 (out_0_0) => ();
+    node OUT n_out_0_1 (out_0_1) => ();
+    node OUT n_out_0_2 (out_0_2) => ();
+    node OUT n_out_0_3 (out_0_3) => ();
+    node OUT n_out_0_4 (out_0_4) => ();
+    node OUT n_out_0_5 (out_0_5) => ();
+    node OUT n_out_0_6 (out_0_6) => ();
+    node OUT n_out_0_7 (out_0_7) => ();
+    node OUT n_out_1_0 (out_1_0) => ();
+    node OUT n_out_1_1 (out_1_1) => ();
+    node OUT n_out_1_2 (out_1_2) => ();
+    node OUT n_out_1_3 (out_1_3) => ();
+    node OUT n_out_1_4 (out_1_4) => ();
+    node OUT n_out_1_5 (out_1_5) => ();
+    node OUT n_out_1_6 (out_1_6) => ();
+    node OUT n_out_1_7 (out_1_7) => ();
+    node OUT n_out_2_0 (out_2_0) => ();
+    node OUT n_out_2_1 (out_2_1) => ();
+    node OUT n_out_2_2 (out_2_2) => ();
+    node OUT n_out_2_3 (out_2_3) => ();
+    node OUT n_out_2_4 (out_2_4) => ();
+    node OUT n_out_2_5 (out_2_5) => ();
+    node OUT n_out_2_6 (out_2_6) => ();
+    node OUT n_out_2_7 (out_2_7) => ();
+    node OUT n_out_3_0 (out_3_0) => ();
+    node OUT n_out_3_1 (out_3_1) => ();
+    node OUT n_out_3_2 (out_3_2) => ();
+    node OUT n_out_3_3 (out_3_3) => ();
+    node OUT n_out_3_4 (out_3_4) => ();
+    node OUT n_out_3_5 (out_3_5) => ();
+    node OUT n_out_3_6 (out_3_6) => ();
+    node OUT n_out_3_7 (out_3_7) => ();
+    node OUT n_out_4_0 (out_4_0) => ();
+    node OUT n_out_4_1 (out_4_1) => ();
+    node OUT n_out_4_2 (out_4_2) => ();
+    node OUT n_out_4_3 (out_4_3) => ();
+    node OUT n_out_4_4 (out_4_4) => ();
+    node OUT n_out_4_5 (out_4_5) => ();
+    node OUT n_out_4_6 (out_4_6) => ();
+    node OUT n_out_4_7 (out_4_7) => ();
+    node OUT n_out_5_0 (out_5_0) => ();
+    node OUT n_out_5_1 (out_5_1) => ();
+    node OUT n_out_5_2 (out_5_2) => ();
+    node OUT n_out_5_3 (out_5_3) => ();
+    node OUT n_out_5_4 (out_5_4) => ();
+    node OUT n_out_5_5 (out_5_5) => ();
+    node OUT n_out_5_6 (out_5_6) => ();
+    node OUT n_out_5_7 (out_5_7) => ();
+    node OUT n_out_6_0 (out_6_0) => ();
+    node OUT n_out_6_1 (out_6_1) => ();
+    node OUT n_out_6_2 (out_6_2) => ();
+    node OUT n_out_6_3 (out_6_3) => ();
+    node OUT n_out_6_4 (out_6_4) => ();
+    node OUT n_out_6_5 (out_6_5) => ();
+    node OUT n_out_6_6 (out_6_6) => ();
+    node OUT n_out_6_7 (out_6_7) => ();
+    node OUT n_out_7_0 (out_7_0) => ();
+    node OUT n_out_7_1 (out_7_1) => ();
+    node OUT n_out_7_2 (out_7_2) => ();
+    node OUT n_out_7_3 (out_7_3) => ();
+    node OUT n_out_7_4 (out_7_4) => ();
+    node OUT n_out_7_5 (out_7_5) => ();
+    node OUT n_out_7_6 (out_7_6) => ();
+    node OUT n_out_7_7 (out_7_7) => ();
+
+    graph IDCT_row row_0
+      (n_in_0 (in_0_0),  n_in_1 (in_0_1),  n_in_2 (in_0_2),  n_in_3 (in_0_3),
+       n_in_4 (in_0_4),  n_in_5 (in_0_5),  n_in_6 (in_0_6),  n_in_7 (in_0_7)) =>
+      (n_out_0(tmp_0_0), n_out_1(tmp_0_1), n_out_2(tmp_0_2), n_out_3(tmp_0_3),
+       n_out_4(tmp_0_4), n_out_5(tmp_0_5), n_out_6(tmp_0_6), n_out_7(tmp_0_7));
+    graph IDCT_row row_1
+      (n_in_0 (in_1_0),  n_in_1 (in_1_1),  n_in_2 (in_1_2),  n_in_3 (in_1_3),
+       n_in_4 (in_1_4),  n_in_5 (in_1_5),  n_in_6 (in_1_6),  n_in_7 (in_1_7)) =>
+      (n_out_0(tmp_1_0), n_out_1(tmp_1_1), n_out_2(tmp_1_2), n_out_3(tmp_1_3),
+       n_out_4(tmp_1_4), n_out_5(tmp_1_5), n_out_6(tmp_1_6), n_out_7(tmp_1_7));
+    graph IDCT_row row_2
+      (n_in_0 (in_2_0),  n_in_1 (in_2_1),  n_in_2 (in_2_2),  n_in_3 (in_2_3),
+       n_in_4 (in_2_4),  n_in_5 (in_2_5),  n_in_6 (in_2_6),  n_in_7 (in_2_7)) =>
+      (n_out_0(tmp_2_0), n_out_1(tmp_2_1), n_out_2(tmp_2_2), n_out_3(tmp_2_3),
+       n_out_4(tmp_2_4), n_out_5(tmp_2_5), n_out_6(tmp_2_6), n_out_7(tmp_2_7));
+    graph IDCT_row row_3
+      (n_in_0 (in_3_0),  n_in_1 (in_3_1),  n_in_2 (in_3_2),  n_in_3 (in_3_3),
+       n_in_4 (in_3_4),  n_in_5 (in_3_5),  n_in_6 (in_3_6),  n_in_7 (in_3_7)) =>
+      (n_out_0(tmp_3_0), n_out_1(tmp_3_1), n_out_2(tmp_3_2), n_out_3(tmp_3_3),
+       n_out_4(tmp_3_4), n_out_5(tmp_3_5), n_out_6(tmp_3_6), n_out_7(tmp_3_7));
+    graph IDCT_row row_4
+      (n_in_0 (in_4_0),  n_in_1 (in_4_1),  n_in_2 (in_4_2),  n_in_3 (in_4_3),
+       n_in_4 (in_4_4),  n_in_5 (in_4_5),  n_in_6 (in_4_6),  n_in_7 (in_4_7)) =>
+      (n_out_0(tmp_4_0), n_out_1(tmp_4_1), n_out_2(tmp_4_2), n_out_3(tmp_4_3),
+       n_out_4(tmp_4_4), n_out_5(tmp_4_5), n_out_6(tmp_4_6), n_out_7(tmp_4_7));
+    graph IDCT_row row_5
+      (n_in_0 (in_5_0),  n_in_1 (in_5_1),  n_in_2 (in_5_2),  n_in_3 (in_5_3),
+       n_in_4 (in_5_4),  n_in_5 (in_5_5),  n_in_6 (in_5_6),  n_in_7 (in_5_7)) =>
+      (n_out_0(tmp_5_0), n_out_1(tmp_5_1), n_out_2(tmp_5_2), n_out_3(tmp_5_3),
+       n_out_4(tmp_5_4), n_out_5(tmp_5_5), n_out_6(tmp_5_6), n_out_7(tmp_5_7));
+    graph IDCT_row row_6
+      (n_in_0 (in_6_0),  n_in_1 (in_6_1),  n_in_2 (in_6_2),  n_in_3 (in_6_3),
+       n_in_4 (in_6_4),  n_in_5 (in_6_5),  n_in_6 (in_6_6),  n_in_7 (in_6_7)) =>
+      (n_out_0(tmp_6_0), n_out_1(tmp_6_1), n_out_2(tmp_6_2), n_out_3(tmp_6_3),
+       n_out_4(tmp_6_4), n_out_5(tmp_6_5), n_out_6(tmp_6_6), n_out_7(tmp_6_7));
+    graph IDCT_row row_7
+      (n_in_0 (in_7_0),  n_in_1 (in_7_1),  n_in_2 (in_7_2),  n_in_3 (in_7_3),
+       n_in_4 (in_7_4),  n_in_5 (in_7_5),  n_in_6 (in_7_6),  n_in_7 (in_7_7)) =>
+      (n_out_0(tmp_7_0), n_out_1(tmp_7_1), n_out_2(tmp_7_2), n_out_3(tmp_7_3),
+       n_out_4(tmp_7_4), n_out_5(tmp_7_5), n_out_6(tmp_7_6), n_out_7(tmp_7_7));
+
+    graph IDCT_col col_0
+      (n_in_0 (tmp_0_0), n_in_1 (tmp_1_0), n_in_2 (tmp_2_0), n_in_3 (tmp_3_0),
+       n_in_4 (tmp_4_0), n_in_5 (tmp_5_0), n_in_6 (tmp_6_0), n_in_7 (tmp_7_0)) =>
+      (n_out_0(out_0_0), n_out_1(out_1_0), n_out_2(out_2_0), n_out_3(out_3_0),
+       n_out_4(out_4_0), n_out_5(out_5_0), n_out_6(out_6_0), n_out_7(out_7_0));
+    graph IDCT_col col_1
+      (n_in_0 (tmp_0_1), n_in_1 (tmp_1_1), n_in_2 (tmp_2_1), n_in_3 (tmp_3_1),
+       n_in_4 (tmp_4_1), n_in_5 (tmp_5_1), n_in_6 (tmp_6_1), n_in_7 (tmp_7_1)) =>
+      (n_out_0(out_0_1), n_out_1(out_1_1), n_out_2(out_2_1), n_out_3(out_3_1),
+       n_out_4(out_4_1), n_out_5(out_5_1), n_out_6(out_6_1), n_out_7(out_7_1));
+    graph IDCT_col col_2
+      (n_in_0 (tmp_0_2), n_in_1 (tmp_1_2), n_in_2 (tmp_2_2), n_in_3 (tmp_3_2),
+       n_in_4 (tmp_4_2), n_in_5 (tmp_5_2), n_in_6 (tmp_6_2), n_in_7 (tmp_7_2)) =>
+      (n_out_0(out_0_2), n_out_1(out_1_2), n_out_2(out_2_2), n_out_3(out_3_2),
+       n_out_4(out_4_2), n_out_5(out_5_2), n_out_6(out_6_2), n_out_7(out_7_2));
+    graph IDCT_col col_3
+      (n_in_0 (tmp_0_3), n_in_1 (tmp_1_3), n_in_2 (tmp_2_3), n_in_3 (tmp_3_3),
+       n_in_4 (tmp_4_3), n_in_5 (tmp_5_3), n_in_6 (tmp_6_3), n_in_7 (tmp_7_3)) =>
+      (n_out_0(out_0_3), n_out_1(out_1_3), n_out_2(out_2_3), n_out_3(out_3_3),
+       n_out_4(out_4_3), n_out_5(out_5_3), n_out_6(out_6_3), n_out_7(out_7_3));
+    graph IDCT_col col_4
+      (n_in_0 (tmp_0_4), n_in_1 (tmp_1_4), n_in_2 (tmp_2_4), n_in_3 (tmp_3_4),
+       n_in_4 (tmp_4_4), n_in_5 (tmp_5_4), n_in_6 (tmp_6_4), n_in_7 (tmp_7_4)) =>
+      (n_out_0(out_0_4), n_out_1(out_1_4), n_out_2(out_2_4), n_out_3(out_3_4),
+       n_out_4(out_4_4), n_out_5(out_5_4), n_out_6(out_6_4), n_out_7(out_7_4));
+    graph IDCT_col col_5
+      (n_in_0 (tmp_0_5), n_in_1 (tmp_1_5), n_in_2 (tmp_2_5), n_in_3 (tmp_3_5),
+       n_in_4 (tmp_4_5), n_in_5 (tmp_5_5), n_in_6 (tmp_6_5), n_in_7 (tmp_7_5)) =>
+      (n_out_0(out_0_5), n_out_1(out_1_5), n_out_2(out_2_5), n_out_3(out_3_5),
+       n_out_4(out_4_5), n_out_5(out_5_5), n_out_6(out_6_5), n_out_7(out_7_5));
+    graph IDCT_col col_6
+      (n_in_0 (tmp_0_6), n_in_1 (tmp_1_6), n_in_2 (tmp_2_6), n_in_3 (tmp_3_6),
+       n_in_4 (tmp_4_6), n_in_5 (tmp_5_6), n_in_6 (tmp_6_6), n_in_7 (tmp_7_6)) =>
+      (n_out_0(out_0_6), n_out_1(out_1_6), n_out_2(out_2_6), n_out_3(out_3_6),
+       n_out_4(out_4_6), n_out_5(out_5_6), n_out_6(out_6_6), n_out_7(out_7_6));
+    graph IDCT_col col_7
+      (n_in_0 (tmp_0_7), n_in_1 (tmp_1_7), n_in_2 (tmp_2_7), n_in_3 (tmp_3_7),
+       n_in_4 (tmp_4_7), n_in_5 (tmp_5_7), n_in_6 (tmp_6_7), n_in_7 (tmp_7_7)) =>
+      (n_out_0(out_0_7), n_out_1(out_1_7), n_out_2(out_2_7), n_out_3(out_3_7),
+       n_out_4(out_4_7), n_out_5(out_5_7), n_out_6(out_6_7), n_out_7(out_7_7));
+  } // graph main
 } // model IDCT

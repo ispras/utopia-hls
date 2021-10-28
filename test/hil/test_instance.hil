@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-model MClone {
+model M {
   nodetype source  ()                       => (X<1.00> #0 x,  Y<1.00> #0 y);
   nodetype split   (X<1.00> x)              => (X<0.50> #1 x1, X<0.50> #1 x2);
   nodetype kernel1 (X<1.00> x,  Y<0.50> y)  => (Z<0.25> #1 z,  W<1.00> #2 w);
@@ -14,7 +14,7 @@ model MClone {
   nodetype merge   (Z<0.50> z1, Z<0.50> z2) => (Z<1.00> #1 z);
   nodetype sink    (Z<1.00> z)              => ();
 
-  graph main {
+  graph G {
     chan X x1;
     chan X x2;
     chan X x;
@@ -30,5 +30,16 @@ model MClone {
     node kernel2 n4(x2, w)  => (z2);
     node merge   n5(z1, z2) => (z);
     node sink    n6(z)      => ();
+  }
+
+  graph main {
+    chan X xx;
+    chan Y yy;
+    chan Z zz;
+
+    node source ii()   => (xx, yy);
+    node sink   oo(zz) => ();
+
+    graph G g(n1(xx, yy)) => (n6(zz));
   }
 }

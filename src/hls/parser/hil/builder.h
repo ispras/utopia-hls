@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <memory>
 #include <ostream>
@@ -47,6 +48,7 @@ public:
 
     _model = new Model(name);
     _nodetypes.clear();
+    _graphs.clear();
   }
 
   void end_model() {}
@@ -97,6 +99,8 @@ public:
     CHECK(_graph == nullptr, "Graph is not null");
 
     _graph = new Graph(name, *_model);
+    _graphs.insert({ name, _graph });
+
     _chans.clear();
   }
 
@@ -119,7 +123,7 @@ public:
     CHECK(_graph != nullptr, "Graph is null");
     CHECK(_node == nullptr, "Node is not null");
 
-    const auto &i = _nodetypes.find(type);
+    auto i = _nodetypes.find(type);
     CHECK(i != _nodetypes.end(), "NodeType is not found: " << type);
  
     _node = new Node(name, *(i->second), *_graph);
@@ -134,21 +138,82 @@ public:
   }
 
   void add_param(const std::string &name) {
-    CHECK(_node != nullptr, "Node is null");
-
-    const auto &i = _chans.find(name);
+    auto i = _chans.find(name);
     CHECK(i != _chans.end(), "Chan is not found: " << name);
 
     Chan *chan = i->second;
-    if (_outputs) {
-      CHECK(!chan->source.is_linked(), "Chan is already linked: " << *chan);
-      chan->source = { _node, _node->type.outputs[_node->outputs.size()] };
-      _node->add_output(chan);
+    if (_inst_graph == nullptr) {
+      CHECK(_node != nullptr, "Node is null");
+
+      // Node parameter.
+      if (_outputs) {
+        CHECK(!chan->source.is_linked(), "Chan is already linked: " << *chan);
+        chan->source = { _node, _node->type.outputs[_node->outputs.size()] };
+        _node->add_output(chan);
+      } else {
+        CHECK(!chan->target.is_linked(), "Chan is already linked: " << *chan);
+        chan->target = { _node, _node->type.inputs[_node->inputs.size()] };
+        _node->add_input(chan);
+      }
     } else {
-      CHECK(!chan->target.is_linked(), "Chan is already linked: " << *chan);
-      chan->target = { _node, _node->type.inputs[_node->inputs.size()] };
-      _node->add_input(chan);
+      // Instance parameter.
+      CHECK(_inst_node != nullptr, "Instance node is null");
+
+      if (_outputs) {
+        // Outputs are sink inputs.
+        const Port *port = _inst_node->type.inputs[_inst_node_binds.size()];
+        _inst_node_binds.insert({ port->name, chan });
+      } else {
+        // Inputs are source outputs.
+        const Port *port = _inst_node->type.outputs[_inst_node_binds.size()];
+        _inst_node_binds.insert({ port->name, chan });
+      }
     }
+  }
+
+  void start_inst(const std::string &type, const std::string &name) {
+    CHECK(_inst_graph == nullptr, "Instance graph is not null");
+
+    auto i = _graphs.find(type);
+    CHECK(i != _graphs.end(), "Graph is not found: " << name);
+
+    _inst_graph = i->second;
+    _inst_name = name;
+
+    _inst_inputs.clear();
+    _inst_outputs.clear();
+
+    _outputs = false;
+  }
+
+  void end_inst() {
+    CHECK(_graph != nullptr, "Graph is null");
+    CHECK(_inst_graph != nullptr, "Instance graph is null");
+
+    _graph->instantiate(*_inst_graph, _inst_name, _inst_inputs, _inst_outputs);
+    _inst_graph = nullptr;
+  }
+
+  void start_bind(const std::string &name) {
+    CHECK(_inst_node == nullptr, "Instance node is not null");
+    CHECK(_inst_graph != nullptr, "Instance graph is null");
+
+    auto i = std::find_if(_inst_graph->nodes.begin(),
+                          _inst_graph->nodes.end(),
+                          [&name](Node *node) { return node->name == name; });
+    CHECK(i != _inst_graph->nodes.end(), "Node is not found: " << name);
+
+    _inst_node = *i;
+    _inst_node_binds.clear();
+  }
+
+  void end_bind() {
+    if (_outputs) {
+      _inst_outputs.insert({ _inst_node->name, _inst_node_binds });
+    } else {
+      _inst_inputs.insert({ _inst_node->name, _inst_node_binds });
+    }
+    _inst_node = nullptr;
   }
 
 private:
@@ -160,8 +225,16 @@ private:
   Node *_node = nullptr;
   bool _outputs = false;
 
+  Graph *_inst_graph = nullptr;
+  std::string _inst_name;
+  std::map<std::string, std::map<std::string, Chan *>> _inst_inputs;
+  std::map<std::string, std::map<std::string, Chan *>> _inst_outputs;
+  Node *_inst_node;
+  std::map<std::string, Chan *> _inst_node_binds;
+
   std::unordered_map<std::string, NodeType *> _nodetypes;
   std::unordered_map<std::string, Chan *> _chans;
+  std::unordered_map<std::string, Graph *> _graphs;
 
   static std::unique_ptr<Builder> _instance;
 };

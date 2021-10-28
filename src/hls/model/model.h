@@ -53,8 +53,20 @@ struct NodeType final {
     outputs.push_back(output);
   }
 
+  bool is_const() const {
+    if (!inputs.empty()) {
+      return false;
+    }
+    for (const auto *output: outputs) {
+      if (!output->is_const) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   bool is_source() const {
-    return inputs.empty();
+    return inputs.empty() && !is_const();
   }
 
   bool is_sink() const {
@@ -82,7 +94,8 @@ struct NodeType final {
   }
 
   bool is_kernel() const {
-    return !is_source()
+    return !is_const()
+        && !is_source()
         && !is_sink()
         && !is_merge()
         && !is_split()
@@ -138,6 +151,7 @@ struct Node final {
     outputs.push_back(output);
   }
 
+  bool is_const()  const { return type.is_const();  }
   bool is_source() const { return type.is_source(); }
   bool is_sink()   const { return type.is_sink();   }
   bool is_merge()  const { return type.is_merge();  }

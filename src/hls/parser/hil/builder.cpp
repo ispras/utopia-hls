@@ -6,7 +6,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <cassert>
 #include <iostream>
 #include <memory>
 
@@ -19,36 +18,41 @@ namespace eda::hls::parser::hil {
 std::unique_ptr<Builder> Builder::_instance = nullptr;
 
 std::unique_ptr<Model> Builder::create() {
-  assert(_model != nullptr);
+  CHECK(_model != nullptr, "Model is null");
 
   for (const NodeType *nodetype: _model->nodetypes) {
-    assert(nodetype != nullptr);
+    CHECK(nodetype != nullptr, "NodeType is null");
 
     // The nodetype allows consuming or producing data.
-    assert(!nodetype->inputs.empty() || !nodetype->outputs.empty());
+    CHECK(!nodetype->inputs.empty() || !nodetype->outputs.empty(),
+      "NodeType w/o inputs and outputs: " << *nodetype);
   }
 
   for (const Graph *graph: _model->graphs) {
     for (const Chan *chan: graph->chans) {
-      assert(chan != nullptr);
+      CHECK(chan != nullptr, "Chan is null");
 
       // The channel is attached to nodes.
-      assert(chan->source.is_linked());
-      assert(chan->target.is_linked());
+      CHECK(chan->source.is_linked(), "Chan source is not linked: " << *chan);
+      CHECK(chan->target.is_linked(), "Chan target is not linked: " << *chan);
 
       // The channel is not a loopback.
-      assert(chan->source.node != chan->target.node);
+      CHECK(chan->source.node != chan->target.node,
+        "Chan is a self-loop: " << chan);
 
       // The source and target datatypes are the same.
-      assert(chan->source.port->type == chan->target.port->type);
+      CHECK(chan->source.port->type == chan->target.port->type,
+        "Chan source and target are of different types: " << *chan);
     }
 
     for (const Node *node: graph->nodes) {
-      assert(node != nullptr);
+      CHECK(node != nullptr, "Node is null");
 
       // The node corresponds to its type.
-      assert(node->inputs.size() == node->type.inputs.size());
-      assert(node->outputs.size() == node->type.outputs.size());
+      CHECK(node->inputs.size() == node->type.inputs.size(),
+        "Wrong number of inputs: " << *node);
+      CHECK(node->outputs.size() == node->type.outputs.size(),
+        "Wrong number of outputs: " << *node);
     }
   }
 

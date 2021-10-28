@@ -30,7 +30,7 @@ void Graph::instantiate(
 
     Chan *copy = new Chan(name + "." + chan->name, chan->type, *this);
 
-    chans.insert({ name, copy });
+    chans.insert({ chan->name, copy });
     add_chan(copy);
   }
 
@@ -77,6 +77,7 @@ void Graph::instantiate(
       } else {
         // Connect w/ the internal channel instance.
         auto i = chans.find(output->name);
+        if (i == chans.end()) std::cerr << "CHANNEL NOT FOUND: " << *output << std::endl;
         assert(i != chans.end());
         chan = i->second;
       }

@@ -121,6 +121,7 @@ graph:
   }
   chans
   nodes
+  insts
   RCURLY {
     Builder::get().end_graph();
   }
@@ -143,7 +144,7 @@ nodes:
 ;
 
 node:
-  // There are special types of nodes: merge*, split*, and delay*.
+  // There are special types of nodes: merge*, split*, dup*, and delay*.
   NODE ID[type] ID[name] {
     Builder::get().start_node(*$type, *$name);
     delete $type; delete $name;
@@ -166,6 +167,40 @@ param:
   ID[name] {
     Builder::get().add_param(*$name);
     delete $name;
+  }
+;
+
+insts:
+  %empty
+| insts inst
+;
+
+inst:
+  GRAPH ID[type] ID[name] {
+    Builder::get().start_inst(*$type, *$name);
+    delete $type; delete $name;
+  }
+  LBRACK binds RBRACK ARROW {
+    Builder::get().start_outputs();
+  }
+  LBRACK binds RBRACK SEMI {
+    Builder::get().end_inst();
+  }
+;
+
+binds:
+  %empty
+| bind
+| binds COMMA bind
+;
+
+bind:
+  ID[name] {
+    Builder::get().start_bind(*$name);
+    delete $name;
+  }
+  LBRACK params RBRACK {
+    Builder::get().end_bind();
   }
 ;
 
