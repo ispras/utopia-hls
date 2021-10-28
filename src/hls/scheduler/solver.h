@@ -19,13 +19,15 @@ class LpSolver final : public LatencyBalancer {
 
 public:
 
-  LpSolver(Model* model_arg) : LatencyBalancer(model_arg), helper(LpSolverHelper::resetInstance()) { }
+  LpSolver(Model* modelArg) : LatencyBalancer(modelArg), helper(LpSolverHelper::resetInstance()) { }
 
   LpSolver() : helper(LpSolverHelper::resetInstance()) { }
 
   ~LpSolver() { }
 
   void balance(BalanceMode mode, Verbosity verbosity);
+
+  void balance() override { balance(BalanceMode::LatencyLinear, Verbosity::Full); }
 
   int getResult() { return helper->getStatus(); }
 

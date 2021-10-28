@@ -28,14 +28,10 @@ struct Buffer;
 class LatencyBalancer {
 public:
   LatencyBalancer() { }
-  LatencyBalancer(Model* model_arg) : model(model_arg) { }
-  ~LatencyBalancer() {
-    for (auto buf : buffers) {
-      delete buf;
-    }
-  }
-  void setModel(Model* model_arg) { model = model_arg; }
-  void balance();
+  LatencyBalancer(Model* modelArg) : model(modelArg) { }
+  virtual ~LatencyBalancer();
+  void setModel(Model* modelArg) { model = modelArg; }
+  virtual void balance() { }
 
 protected:
   void insertBuffers(const Graph* graph, const std::vector<double> &latencies);

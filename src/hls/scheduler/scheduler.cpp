@@ -12,6 +12,12 @@
 
 namespace eda::hls::scheduler {
 
+LatencyBalancer::~LatencyBalancer() {
+    for (auto* buf : buffers) {
+      delete buf;
+    }
+  }
+
 void LatencyBalancer::insertBuffers(const Graph* graph, const std::vector<double> &latencies) {
   /*for (auto const buf : buffers) {
     if (latencies[buf->variable->column_number] != 0.0) {
