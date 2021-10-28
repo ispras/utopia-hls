@@ -6,6 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include <algorithm>
+#include <memory>
+#include <stdexcept>
+
 #include <hls/library/library.h>
 
 namespace eda::hls::library {
@@ -73,6 +77,61 @@ std::ostream& operator <<(std::ostream &out, const VerilogNodeTypePrinter &print
 std::ostream& operator <<(std::ostream &out, const VerilogGraphPrinter &printer) {
   printer.print(out);
   return out;
+}
+
+const MetaElementDescriptor& Library::find(const std::string &name) const {
+  unsigned i = 0;
+  for (; i < library.size(); i++) {
+    if (library[i].name == name) {
+      return library[i];
+    }
+  }
+
+  throw std::runtime_error(std::string("Current version of library doesn't include element ") + name);
+}
+
+std::shared_ptr<ElementDescriptor> Library::construct(const ElementArguments &args, unsigned f) const {
+  std::shared_ptr<ElementDescriptor> ed = std::make_shared<ElementDescriptor>(args);
+  std::string ir;
+
+  for (auto port : args) {
+    ir += std::string(port.direction == Port::IN ? "input" : port.direction == Port::OUT ? "output" : "inout") + " " + 
+           port.name + ": " + std::to_string(port.width) + " f=" + std::to_string(f);
+  }
+  // TODO: implementation of the scheme by using f.
+  ed->ir = ir;
+
+  return ed;
+}
+
+std::shared_ptr<ElementCharacteristics> Library::estimate(const ElementArguments &args) const {
+  ExtendedElementArguments latencies;
+
+  // TODO: estimations of l, f, p, a
+  for (const auto &p : args) {
+    latencies.push_back(ExtendedPort(p, 1));
+  }
+
+  unsigned frequency = 100;
+  unsigned power = 5;
+  unsigned area = 10000;
+
+  std::shared_ptr<ElementCharacteristics> ec =
+    std::make_shared<ElementCharacteristics>(latencies, frequency, power, area);
+
+  return ec;
+}
+
+Library::Library() {
+  Parameters p;
+
+  p.push_back(Parameter(Port("clock", Port::IN, 1), Constraint(1, 1)));
+  p.push_back(Parameter(Port("reset", Port::IN, 1), Constraint(1, 1)));
+  p.push_back(Parameter(Port("in", Port::IN, 3), Constraint(2, 4)));
+  p.push_back(Parameter(Port("out", Port::OUT, 2), Constraint(1, 3)));
+
+  library.push_back(MetaElementDescriptor("add", p));
+  library.push_back(MetaElementDescriptor("sub", p));
 }
 
 } // namespace eda::hls::library
