@@ -23,7 +23,7 @@ public:
 
   LpSolver() : helper(LpSolverHelper::resetInstance()) { }
 
-  ~LpSolver() { }
+  ~LpSolver() = default;
 
   void balance(BalanceMode mode, Verbosity verbosity);
 
