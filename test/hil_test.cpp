@@ -54,6 +54,7 @@ int hilTestCompiler(const std::string &filename) {
 
 TEST(HilTest, SimpleTest) {
   EXPECT_EQ(hilTest("test/hil/test.hil"), 0);
+  EXPECT_EQ(hilTest("test/hil/idct.hil"), 0);
 }
 
 TEST(HilTest, NodeTypesTest) {
@@ -71,3 +72,4 @@ TEST(HilTest, VerilogNodeTypePrinterTest) {
 TEST(HilTest, CompilerTest) {
   EXPECT_EQ(hilTestCompiler("test/hil/test.hil"), 0);
 }
+

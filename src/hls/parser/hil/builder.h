@@ -10,11 +10,18 @@
 
 #include <cassert>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "hls/model/model.h"
+
+#define CHECK(expr, message) \
+  do {\
+    if (!(expr)) std::cerr << message << std::endl; \
+    assert(expr); \
+  } while(false)
 
 using namespace eda::hls::model;
 
@@ -36,18 +43,17 @@ public:
   std::unique_ptr<Model> create();
 
   void start_model(const std::string &name) {
-    assert(_model == nullptr);
+    CHECK(_model == nullptr, "Model is not null");
 
     _model = new Model(name);
     _nodetypes.clear();
-    _chans.clear();
   }
 
   void end_model() {}
 
   void start_nodetype(const std::string &name) {
-    assert(_model != nullptr);
-    assert(_nodetype == nullptr);
+    CHECK(_model != nullptr, "Model is null");
+    CHECK(_nodetype == nullptr, "NodeType is not null");
 
     _nodetype = new NodeType(name, *_model);
     _nodetypes.insert({ name, _nodetype });
@@ -55,7 +61,7 @@ public:
   }
 
   void end_nodetype() {
-    assert(_nodetype != nullptr);
+    CHECK(_nodetype != nullptr, "NodeType is null");
 
     _model->add_nodetype(_nodetype);
     _nodetype = nullptr; 
@@ -81,26 +87,28 @@ public:
     if (_outputs) {
       _nodetype->add_output(argument);
     } else {
-      assert(!argument->is_const);
+      CHECK(!argument->is_const, "Input is const");
       _nodetype->add_input(argument);
     }
   }
 
   void start_graph(const std::string &name) {
-    assert(_model != nullptr);
-    assert(_graph == nullptr);
+    CHECK(_model != nullptr, "Model is null");
+    CHECK(_graph == nullptr, "Graph is not null");
+
     _graph = new Graph(name, *_model);
+    _chans.clear();
   }
 
   void end_graph() {
-    assert(_graph != nullptr);
+    CHECK(_graph != nullptr, "Graph is null");
 
     _model->add_graph(_graph);
     _graph = nullptr;
   }
 
   void add_chan(const std::string &type, const std::string &name) {
-    assert(_graph != nullptr);
+    CHECK(_graph != nullptr, "Graph is null");
 
     Chan *chan = new Chan(name, type, *_graph);
     _chans[name] = chan;
@@ -108,36 +116,36 @@ public:
   }
 
   void start_node(const std::string &type, const std::string &name) {
-    assert(_graph != nullptr);
-    assert(_node == nullptr);
+    CHECK(_graph != nullptr, "Graph is null");
+    CHECK(_node == nullptr, "Node is not null");
 
     const auto &i = _nodetypes.find(type);
-    assert(i != _nodetypes.end());
+    CHECK(i != _nodetypes.end(), "NodeType is not found: " << type);
  
     _node = new Node(name, *(i->second), *_graph);
     _outputs = false;
   }
 
   void end_node() {
-    assert(_node != nullptr);
+    CHECK(_node != nullptr, "Node is null");
 
     _graph->add_node(_node);
     _node = nullptr;
   }
 
   void add_param(const std::string &name) {
-    assert(_node != nullptr);
+    CHECK(_node != nullptr, "Node is null");
 
     const auto &i = _chans.find(name);
-    assert(i != _chans.end());
+    CHECK(i != _chans.end(), "Chan is not found: " << name);
 
     Chan *chan = i->second;
     if (_outputs) {
-      assert(!chan->source.is_linked());
+      CHECK(!chan->source.is_linked(), "Chan is already linked: " << *chan);
       chan->source = { _node, _node->type.outputs[_node->outputs.size()] };
       _node->add_output(chan);
     } else {
-      assert(!chan->target.is_linked());
+      CHECK(!chan->target.is_linked(), "Chan is already linked: " << *chan);
       chan->target = { _node, _node->type.inputs[_node->inputs.size()] };
       _node->add_input(chan);
     }
