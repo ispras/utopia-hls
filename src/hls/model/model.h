@@ -70,6 +70,11 @@ struct NodeType final {
         && starts_with(name, "split");
   }
 
+  bool is_dup() const {
+    return inputs.size() == 1
+        && starts_with(name, "dup");
+  }
+
   bool is_delay() const {
     return inputs.size() == 1 && outputs.size() == 1
         && starts_with(name, "delay");
@@ -80,6 +85,7 @@ struct NodeType final {
         && !is_sink()
         && !is_merge()
         && !is_split()
+        && !is_dup()
         && !is_delay();
   }
 
@@ -135,6 +141,7 @@ struct Node final {
   bool is_sink()   const { return type.is_sink();   }
   bool is_merge()  const { return type.is_merge();  }
   bool is_split()  const { return type.is_split();  }
+  bool is_dup()    const { return type.is_dup();    }
   bool is_delay()  const { return type.is_delay();  }
   bool is_kernel() const { return type.is_kernel(); }
 
