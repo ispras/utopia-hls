@@ -76,35 +76,35 @@ nodetype:
     Builder::get().start_nodetype(*$name);
     delete $name;
   }
-  LBRACK args RBRACK ARROW {
+  LBRACK ports RBRACK ARROW {
     Builder::get().start_outputs();
   }
-  LBRACK args RBRACK SEMI {
+  LBRACK ports RBRACK SEMI {
     Builder::get().end_nodetype();
   }
 ;
 
-args:
+ports:
   %empty
-| arg
-| args COMMA arg
+| port
+| ports COMMA port
 ;
 
-arg:
+port:
   ID[type] LANGLE REAL[flow] RANGLE ID[name] {
-    Builder::get().add_argument(*$name, *$type, *$flow, "0");
+    Builder::get().add_port(*$name, *$type, *$flow, "0");
     delete $type; delete $flow; delete $name;
   }
 | ID[type] LANGLE REAL[flow] RANGLE SHARP INT[latency] ID[name] {
-    Builder::get().add_argument(*$name, *$type, *$flow, *$latency);
+    Builder::get().add_port(*$name, *$type, *$flow, *$latency);
     delete $type; delete $flow; delete $latency; delete $name;
   }
 | ID[type] LANGLE REAL[flow] RANGLE ID[name] ASSIGN INT[value] {
-    Builder::get().add_argument(*$name, *$type, *$flow, "0", *$value);
+    Builder::get().add_port(*$name, *$type, *$flow, "0", *$value);
     delete $type; delete $flow; delete $name; delete $value;
   }
 | ID[type] LANGLE REAL[flow] RANGLE SHARP INT[latency] ID[name] ASSIGN INT[value] {
-    Builder::get().add_argument(*$name, *$type, *$flow, *$latency, *$value);
+    Builder::get().add_port(*$name, *$type, *$flow, *$latency, *$value);
     delete $type; delete $flow; delete $latency; delete $name; delete $value;
   }
 ;

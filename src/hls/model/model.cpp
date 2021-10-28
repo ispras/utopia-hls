@@ -10,19 +10,19 @@
 
 namespace eda::hls::model {
 
-std::ostream& operator <<(std::ostream &out, const Argument &argument) {
-  out << argument.type << "<" << argument.flow << ">" << " ";
-  out << "#" << argument.latency << " " << argument.name;
-  if (argument.is_const) {
-    out << "=" << argument.value;
+std::ostream& operator <<(std::ostream &out, const Port &port) {
+  out << port.type << "<" << port.flow << ">" << " ";
+  out << "#" << port.latency << " " << port.name;
+  if (port.is_const) {
+    out << "=" << port.value;
   }
   return out;
 }
 
-static std::ostream& operator <<(std::ostream &out, const std::vector<Argument *> &args) {
+static std::ostream& operator <<(std::ostream &out, const std::vector<Port *> &ports) {
   bool comma = false;
-  for (const Argument *argument: args) {
-    out << (comma ? ", " : "") << *argument;
+  for (const Port *port: ports) {
+    out << (comma ? ", " : "") << *port;
     comma = true;
   }
 

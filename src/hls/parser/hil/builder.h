@@ -71,24 +71,24 @@ public:
     _outputs = true;
   }
 
-  void add_argument(
+  void add_port(
       const std::string &name,
       const std::string &type,
       const std::string &flow,
       const std::string &latency,
       const std::string &value = "") {
-    Argument *argument = new Argument(name,
-                                      type,
-                                      std::stof(flow),
-                                      std::stoi(latency),
-                                      !value.empty(),
-                                      value.empty() ? -1u : std::stoi(value));
+    Port *port = new Port(name,
+                          type,
+                          std::stof(flow),
+                          std::stoi(latency),
+                          !value.empty(),
+                          value.empty() ? -1u : std::stoi(value));
 
     if (_outputs) {
-      _nodetype->add_output(argument);
+      _nodetype->add_output(port);
     } else {
-      CHECK(!argument->is_const, "Input is const");
-      _nodetype->add_input(argument);
+      CHECK(!port->is_const, "Input is const");
+      _nodetype->add_input(port);
     }
   }
 

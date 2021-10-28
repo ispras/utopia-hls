@@ -234,7 +234,7 @@ namespace eda::hls::debugger {
 
         for (const auto &nodeOut : nodeOuts) {
 
-          const Argument *outPort = nodeOut->source.port;
+          const Port *outPort = nodeOut->source.port;
           std::string funcIdxName = nodeOut->name;
           std::string modelName = nodeOut->graph.model.name;
           sort_vector sorts = getInSorts(node, ctx);
@@ -329,7 +329,7 @@ namespace eda::hls::debugger {
 
   expr Verifier::toConst(const Binding &bnd, context &ctx) const {
 
-    const Argument *port = bnd.port;
+    const Port *port = bnd.port;
     const char *typeName = port->type.c_str();
     sort fInSort = ctx.uninterpreted_sort(typeName);
     std::string modelName = bnd.node->graph.model.name;
@@ -352,7 +352,7 @@ namespace eda::hls::debugger {
   expr Verifier::toFunc(const Node *node, const Chan *ch, context &ctx) const {
 
     const Binding src = ch->source;
-    const Argument *fPort = src.port;
+    const Port *fPort = src.port;
     std::string outIdx = ch->name;
     sort_vector sorts(ctx);
     std::string modelName = node->graph.model.name;

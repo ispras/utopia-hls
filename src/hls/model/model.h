@@ -22,8 +22,8 @@ struct Model;
 struct Graph;
 struct Node;
 
-struct Argument final {
-  Argument(
+struct Port final {
+  Port(
     const std::string &name,
     const std::string &type,
     float flow,
@@ -44,11 +44,11 @@ struct NodeType final {
   NodeType(const std::string &name, const Model &model):
     name(name), model(model) {}
 
-  void add_input(Argument *input) {
+  void add_input(Port *input) {
     inputs.push_back(input);
   }
 
-  void add_output(Argument *output) {
+  void add_output(Port *output) {
     outputs.push_back(output);
   }
 
@@ -84,8 +84,8 @@ struct NodeType final {
   }
 
   const std::string name;
-  std::vector<Argument *> inputs;
-  std::vector<Argument *> outputs;
+  std::vector<Port *> inputs;
+  std::vector<Port *> outputs;
 
   // Reference to the parent.
   const Model &model;
@@ -94,7 +94,7 @@ struct NodeType final {
 struct Binding final {
   Binding():
     node(nullptr), port(nullptr) {}
-  Binding(const Node *node, const Argument *port):
+  Binding(const Node *node, const Port *port):
     node(node), port(port) {}
 
   bool is_linked() const {
@@ -102,7 +102,7 @@ struct Binding final {
   }
 
   const Node *node;
-  const Argument *port;
+  const Port *port;
 };
 
 struct Chan final {
@@ -184,7 +184,7 @@ struct Model final {
   std::vector<Graph *> graphs;
 };
 
-std::ostream& operator <<(std::ostream &out, const Argument &argument);
+std::ostream& operator <<(std::ostream &out, const Port &port);
 std::ostream& operator <<(std::ostream &out, const NodeType &nodetype);
 std::ostream& operator <<(std::ostream &out, const Chan &chan);
 std::ostream& operator <<(std::ostream &out, const Node &node);

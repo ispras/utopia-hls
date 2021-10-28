@@ -13,7 +13,7 @@
 namespace eda::hls::scheduler {
 
 std::shared_ptr<double[]> makeCoeffs(const std::vector<std::string> &);
-float sumFlows(const std::vector<Argument*> &);
+float sumFlows(const std::vector<Port*> &);
 
 void LpSolver::balance(BalanceMode mode, Verbosity verbosity) {
   helper->setVerbosity(verbosity);
@@ -151,10 +151,10 @@ void LpSolver::checkFlows(const Node* node) {
   }
 }
 
-float sumFlows(const std::vector<Argument*> &args) {
+float sumFlows(const std::vector<Port*> &ports) {
   float sum = 0;
-  for (auto* const arg : args) {
-    sum += arg->flow;
+  for (auto* const port : ports) {
+    sum += port->flow;
   }
   return sum;
 }
