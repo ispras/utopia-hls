@@ -9,6 +9,7 @@
 #pragma once
 
 #include <iostream>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -165,6 +166,12 @@ struct Graph final {
   void add_node(Node *node) {
     nodes.push_back(node);
   }
+
+  void instantiate(
+    const Graph &graph,
+    const std::string &name,
+    const std::map<std::string, std::map<std::string, Chan *>> &inputs,
+    const std::map<std::string, std::map<std::string, Chan *>> &outputs);
 
   const std::string name;
   std::vector<Chan *> chans;
