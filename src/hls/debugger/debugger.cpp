@@ -51,8 +51,6 @@ namespace eda::hls::debugger {
 
           Node *fIn = inPair.first;
           Node *sIn = inPair.second;
-          std::string fModelName = fIn->graph.model.name;
-          std::string sModelName = sIn->graph.model.name;
           std::vector<Chan*> fOuts = fIn->outputs;
           std::vector<Chan*> sOuts = sIn->outputs;
           assert(fOuts.size() == sOuts.size());
@@ -85,8 +83,8 @@ namespace eda::hls::debugger {
 
           std::string fModelName = fOut->graph.model.name;
           std::string sModelName = sOut->graph.model.name;
-          std::string fName = fOut->name + "_" + fModelName;
-          std::string sName = sOut->name + "_" + sModelName;
+          std::string fName = fModelName + "_" + fOut->name;
+          std::string sName = sModelName + "_" + sOut->name;
 
           sort fSort = getSort(fOut, ctx);
           sort sSort = getSort(sOut, ctx);
@@ -117,8 +115,8 @@ namespace eda::hls::debugger {
     switch (solver.check()) {
       case sat:
         std::cout << "Models are NOT equivalent" << "\n";
-        std::cout << "Model is:" << "\n";
-        std::cout << solver.get_model().to_string() << "\n";
+        //std::cout << "Model is:" << "\n";
+        //std::cout << solver.get_model().to_string() << "\n";
         return true;
       case unsat:
         std::cout << "Models are equivalent" << "\n";
@@ -237,13 +235,14 @@ namespace eda::hls::debugger {
           const Port *outPort = nodeOut->source.port;
           std::string funcIdxName = nodeOut->name;
           std::string modelName = nodeOut->graph.model.name;
+          std::string modelFuncPrefix = modelName + "_" + funcName;
           sort_vector sorts = getInSorts(node, ctx);
-          std::string kerName = funcName + "_" + funcIdxName + "_" + modelName;
+          std::string kerName = modelFuncPrefix + "_" + funcIdxName;
           const char *sortName =outPort->type.c_str();
           sort fSort = ctx.uninterpreted_sort(sortName);
           func_decl kernelFunc = function(kerName.c_str(), sorts, fSort);
           const expr_vector kernelArgs = getArgs(node, ctx);
-          std::string constName = outPort->type + "_" + modelName;
+          std::string constName = modelFuncPrefix + "_" + outPort->type;
           expr nodeOutConst = ctx.constant(constName.c_str(), fSort);
           expr kernelEq = kernelFunc(kernelArgs) == nodeOutConst;
 
@@ -268,7 +267,7 @@ namespace eda::hls::debugger {
           mergeVec.push_back(outConst == inConst);
         }
 
-        expr mergeExpr = mk_or(mergeVec);
+        expr mergeExpr = mk_and(mergeVec);
         nodes.push_back(mergeExpr);
 
       } else if (node->is_split()) {
@@ -286,7 +285,7 @@ namespace eda::hls::debugger {
           splitVec.push_back(outEq);
         }
 
-        expr splitExpr = mk_or(splitVec);
+        expr splitExpr = mk_and(splitVec);
         nodes.push_back(splitExpr);
       } else {
         // sink or source, do nothing
@@ -329,11 +328,11 @@ namespace eda::hls::debugger {
 
   expr Verifier::toConst(const Binding &bnd, context &ctx) const {
 
-    const Port *port = bnd.port;
-    const char *typeName = port->type.c_str();
+    const char *typeName = bnd.port->type.c_str();
     sort fInSort = ctx.uninterpreted_sort(typeName);
     std::string modelName = bnd.node->graph.model.name;
-    std::string constName = port->name + "_" + modelName;
+    std::string nodeName = bnd.node->name;
+    std::string constName = modelName + "_" + nodeName + "_" + bnd.port->name;
 
     return ctx.constant(constName.c_str(), fInSort);
   }
@@ -344,7 +343,7 @@ namespace eda::hls::debugger {
     std::string typeName = fType.name;
     sort fInSort = ctx.uninterpreted_sort(typeName.c_str());
     std::string modelName = node->graph.model.name;
-    std::string constName = node->name + "_" + modelName;
+    std::string constName = modelName + "_" + node->name;
 
     return ctx.constant(constName.c_str(), fInSort);
   }
@@ -356,7 +355,8 @@ namespace eda::hls::debugger {
     std::string outIdx = ch->name;
     sort_vector sorts(ctx);
     std::string modelName = node->graph.model.name;
-    std::string funcName = node->name + "_" + outIdx + "_" + modelName;
+    std::string nodeName = node->name;
+    std::string funcName = modelName + "_" + nodeName + "_" + outIdx;
     const char *sortName = fPort->type.c_str();
     sort fSort = ctx.uninterpreted_sort(sortName);
     func_decl func = function(funcName.c_str(), sorts, fSort);
