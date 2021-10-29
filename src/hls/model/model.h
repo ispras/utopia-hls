@@ -190,8 +190,8 @@ struct Graph final {
   void instantiate(
     const Graph &graph,
     const std::string &name,
-    const std::map<std::string, std::map<std::string, Chan *>> &inputs,
-    const std::map<std::string, std::map<std::string, Chan *>> &outputs);
+    const std::map<std::string, std::map<std::string, Chan*>> &inputs,
+    const std::map<std::string, std::map<std::string, Chan*>> &outputs);
 
   const std::string name;
   std::vector<Chan*> chans;

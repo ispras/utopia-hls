@@ -29,44 +29,44 @@ namespace eda::hls::parser::hil {
 class Builder final {
 public:
   static Builder& get() {
-    if (_instance == nullptr)
-      _instance = std::unique_ptr<Builder>(new Builder());
-    return *_instance;
+    if (instance == nullptr)
+      instance = std::unique_ptr<Builder>(new Builder());
+    return *instance;
   }
 
   std::unique_ptr<Model> create();
 
-  void start_model(const std::string &name) {
-    assert(_model == nullptr && "Model is inside another model");
+  void startModel(const std::string &name) {
+    assert(currentModel == nullptr && "Model is inside another model");
 
-    _model = new Model(name);
-    _nodetypes.clear();
-    _graphs.clear();
+    currentModel = new Model(name);
+    nodetypes.clear();
+    graphs.clear();
   }
 
-  void end_model() {}
+  void endModel() {}
 
-  void start_nodetype(const std::string &name) {
-    assert(_model != nullptr && "Nodetype is outside a model");
-    assert(_nodetype == nullptr && "Previous nodetype has not been ended");
+  void startNodetype(const std::string &name) {
+    assert(currentModel != nullptr && "Nodetype is outside a model");
+    assert(currentNodetype == nullptr && "Previous nodetype has not been ended");
 
-    _nodetype = new NodeType(name, *_model);
-    _nodetypes.insert({ name, _nodetype });
-    _outputs = false;
+    currentNodetype = new NodeType(name, *currentModel);
+    nodetypes.insert({ name, currentNodetype });
+    outputsStarted = false;
   }
 
-  void end_nodetype() {
-    assert(_nodetype != nullptr && "Nodetype has not been started");
+  void endNodetype() {
+    assert(currentNodetype != nullptr && "Nodetype has not been started");
 
-    _model->addNodetype(_nodetype);
-    _nodetype = nullptr; 
+    currentModel->addNodetype(currentNodetype);
+    currentNodetype = nullptr; 
   }
 
-  void start_outputs() {
-    _outputs = true;
+  void startOutputs() {
+    outputsStarted = true;
   }
 
-  void add_port(
+  void addPort(
       const std::string &name,
       const std::string &type,
       const std::string &flow,
@@ -79,157 +79,165 @@ public:
                           !value.empty(),
                           value.empty() ? -1u : std::stoi(value));
 
-    if (_outputs) {
-      _nodetype->addOutput(port);
+    if (outputsStarted) {
+      currentNodetype->addOutput(port);
     } else {
       assert(!port->isConst && "Input cannot be a const");
-      _nodetype->addInput(port);
+      currentNodetype->addInput(port);
     }
   }
 
-  void start_graph(const std::string &name) {
-    assert(_model != nullptr && "Graph is outside a model");
-    assert(_graph == nullptr && "Previous graph has not been finished");
+  void startGraph(const std::string &name) {
+    assert(currentModel != nullptr && "Graph is outside a model");
+    assert(currentGraph == nullptr && "Previous graph has not been finished");
 
-    _graph = new Graph(name, *_model);
-    _graphs.insert({ name, _graph });
+    currentGraph = new Graph(name, *currentModel);
+    graphs.insert({ name, currentGraph });
 
-    _chans.clear();
+    chans.clear();
   }
 
-  void end_graph() {
-    assert(_graph != nullptr);
+  void endGraph() {
+    assert(currentGraph != nullptr);
 
-    _model->addGraph(_graph);
-    _graph = nullptr;
+    currentModel->addGraph(currentGraph);
+    currentGraph = nullptr;
   }
 
-  void add_chan(const std::string &type, const std::string &name) {
-    assert(_graph != nullptr && "Chan is outside a graph");
+  void addChan(const std::string &type, const std::string &name) {
+    assert(currentGraph != nullptr && "Chan is outside a graph");
 
-    Chan *chan = new Chan(name, type, *_graph);
-    _chans[name] = chan;
-    _graph->addChan(chan);
+    Chan *chan = new Chan(name, type, *currentGraph);
+    chans.insert({ name, chan });
+    currentGraph->addChan(chan);
   }
 
-  void start_node(const std::string &type, const std::string &name) {
-    assert(_graph != nullptr && "Node is outside a graph");
-    assert(_node == nullptr && "Previous node has not been ended");
+  void startNode(const std::string &type, const std::string &name) {
+    assert(currentGraph != nullptr && "Node is outside a graph");
+    assert(currentNode == nullptr && "Previous node has not been ended");
 
-    auto i = _nodetypes.find(type);
-    uassert(i != _nodetypes.end(), "Nodetype is not found: " << type);
+    auto i = nodetypes.find(type);
+    uassert(i != nodetypes.end(), "Nodetype is not found: " << type);
  
-    _node = new Node(name, *(i->second), *_graph);
-    _outputs = false;
+    currentNode = new Node(name, *(i->second), *currentGraph);
+    outputsStarted = false;
   }
 
-  void end_node() {
-    assert(_node != nullptr);
+  void endNode() {
+    assert(currentNode != nullptr);
 
-    _graph->addNode(_node);
-    _node = nullptr;
+    currentGraph->addNode(currentNode);
+    currentNode = nullptr;
   }
 
-  void add_param(const std::string &name) {
-    auto i = _chans.find(name);
-    uassert(i != _chans.end(), "Chan is not found: " << name);
+  void addParam(const std::string &name) {
+    auto i = chans.find(name);
+    uassert(i != chans.end(), "Chan is not found: " << name);
 
     Chan *chan = i->second;
-    if (_inst_graph == nullptr) {
-      assert(_node != nullptr && "Param is outside a node");
+    if (currentInstance == nullptr) {
+      assert(currentNode != nullptr && "Param is outside a node");
 
       // Node parameter.
-      if (_outputs) {
+      if (outputsStarted) {
         uassert(!chan->source.isLinked(), "Chan is already linked: " << *chan);
-        chan->source = { _node, _node->type.outputs[_node->outputs.size()] };
-        _node->addOutput(chan);
+        chan->source = {
+          currentNode,
+          currentNode->type.outputs[currentNode->outputs.size()]
+        };
+        currentNode->addOutput(chan);
       } else {
         uassert(!chan->target.isLinked(), "Chan is already linked: " << *chan);
-        chan->target = { _node, _node->type.inputs[_node->inputs.size()] };
-        _node->addInput(chan);
+        chan->target = {
+          currentNode,
+          currentNode->type.inputs[currentNode->inputs.size()]
+        };
+        currentNode->addInput(chan);
       }
     } else {
       // Instance parameter.
-      assert(_inst_node != nullptr && "Param is outside an instance node");
+      assert(currentInstanceNode != nullptr && "Param is outside an instance node");
 
-      if (_outputs) {
+      if (outputsStarted) {
         // Outputs are sink inputs.
-        const Port *port = _inst_node->type.inputs[_inst_node_binds.size()];
-        _inst_node_binds.insert({ port->name, chan });
+        const Port *port = currentInstanceNode->type.inputs[currentBindings.size()];
+        currentBindings.insert({ port->name, chan });
       } else {
         // Inputs are source outputs.
-        const Port *port = _inst_node->type.outputs[_inst_node_binds.size()];
-        _inst_node_binds.insert({ port->name, chan });
+        const Port *port = currentInstanceNode->type.outputs[currentBindings.size()];
+        currentBindings.insert({ port->name, chan });
       }
     }
   }
 
-  void start_inst(const std::string &type, const std::string &name) {
-    assert(_inst_graph == nullptr && "Previous instance has not been ended");
+  void startInstance(const std::string &type, const std::string &name) {
+    assert(currentInstance == nullptr && "Previous instance has not been ended");
 
-    auto i = _graphs.find(type);
-    uassert(i != _graphs.end(), "Graph is not found: " << name);
+    auto i = graphs.find(type);
+    uassert(i != graphs.end(), "Graph is not found: " << name);
 
-    _inst_graph = i->second;
-    _inst_name = name;
+    currentInstance = i->second;
+    currentInstanceName = name;
 
-    _inst_inputs.clear();
-    _inst_outputs.clear();
+    currentInputs.clear();
+    currentOutputs.clear();
 
-    _outputs = false;
+    outputsStarted = false;
   }
 
-  void end_inst() {
-    assert(_graph != nullptr && "Graph has not been setup");
-    assert(_inst_graph != nullptr && "Instance graph is null");
+  void endInstance() {
+    assert(currentGraph != nullptr && "Graph has not been setup");
+    assert(currentInstance != nullptr && "Instance graph is null");
 
-    _graph->instantiate(*_inst_graph, _inst_name, _inst_inputs, _inst_outputs);
-    _inst_graph = nullptr;
+    currentGraph->instantiate(
+      *currentInstance, currentInstanceName, currentInputs, currentOutputs);
+    currentInstance = nullptr;
   }
 
-  void start_bind(const std::string &name) {
-    assert(_inst_node == nullptr && "Bind is outside an instance node");
-    assert(_inst_graph != nullptr && "Instance node is outside an instance");
+  void startBinding(const std::string &name) {
+    assert(currentInstanceNode == nullptr && "Bind is outside an instance node");
+    assert(currentInstance != nullptr && "Instance node is outside an instance");
 
-    auto i = std::find_if(_inst_graph->nodes.begin(),
-                          _inst_graph->nodes.end(),
+    auto i = std::find_if(currentInstance->nodes.begin(),
+                          currentInstance->nodes.end(),
                           [&name](Node *node) { return node->name == name; });
-    uassert(i != _inst_graph->nodes.end(), "Node is not found: " << name);
+    uassert(i != currentInstance->nodes.end(), "Node is not found: " << name);
 
-    _inst_node = *i;
-    _inst_node_binds.clear();
+    currentInstanceNode = *i;
+    currentBindings.clear();
   }
 
-  void end_bind() {
-    if (_outputs) {
-      _inst_outputs.insert({ _inst_node->name, _inst_node_binds });
+  void endBinding() {
+    if (outputsStarted) {
+      currentOutputs.insert({ currentInstanceNode->name, currentBindings });
     } else {
-      _inst_inputs.insert({ _inst_node->name, _inst_node_binds });
+      currentInputs.insert({ currentInstanceNode->name, currentBindings });
     }
-    _inst_node = nullptr;
+    currentInstanceNode = nullptr;
   }
 
 private:
   Builder() {}
 
-  Model *_model = nullptr;
-  NodeType *_nodetype = nullptr;
-  Graph *_graph = nullptr;
-  Node *_node = nullptr;
-  bool _outputs = false;
+  Model *currentModel = nullptr;
+  NodeType *currentNodetype = nullptr;
+  Graph *currentGraph = nullptr;
+  Node *currentNode = nullptr;
+  bool outputsStarted = false;
 
-  Graph *_inst_graph = nullptr;
-  std::string _inst_name;
-  std::map<std::string, std::map<std::string, Chan*>> _inst_inputs;
-  std::map<std::string, std::map<std::string, Chan*>> _inst_outputs;
-  Node *_inst_node;
-  std::map<std::string, Chan*> _inst_node_binds;
+  Graph *currentInstance = nullptr;
+  std::string currentInstanceName;
+  Node *currentInstanceNode = nullptr;
+  std::map<std::string, Chan*> currentBindings;
 
-  std::unordered_map<std::string, NodeType*> _nodetypes;
-  std::unordered_map<std::string, Chan*> _chans;
-  std::unordered_map<std::string, Graph*> _graphs;
+  std::map<std::string, std::map<std::string, Chan*>> currentInputs;
+  std::map<std::string, std::map<std::string, Chan*>> currentOutputs;
 
-  static std::unique_ptr<Builder> _instance;
+  std::unordered_map<std::string, NodeType*> nodetypes;
+  std::unordered_map<std::string, Chan*> chans;
+  std::unordered_map<std::string, Graph*> graphs;
+
+  static std::unique_ptr<Builder> instance;
 };
 
 } // namespace eda::hls::parser::hil

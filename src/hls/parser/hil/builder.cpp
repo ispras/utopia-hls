@@ -15,12 +15,12 @@ using namespace eda::hls;
 
 namespace eda::hls::parser::hil {
 
-std::unique_ptr<Builder> Builder::_instance = nullptr;
+std::unique_ptr<Builder> Builder::instance = nullptr;
 
 std::unique_ptr<Model> Builder::create() {
-  assert(_model != nullptr && "No model found");
+  assert(currentModel != nullptr && "No model found");
 
-  for (const NodeType *nodetype: _model->nodetypes) {
+  for (const NodeType *nodetype: currentModel->nodetypes) {
     assert(nodetype != nullptr);
 
     // The nodetype allows consuming or producing data.
@@ -28,7 +28,7 @@ std::unique_ptr<Model> Builder::create() {
       "Nodetype w/o inputs and outputs: " << *nodetype);
   }
 
-  for (const Graph *graph: _model->graphs) {
+  for (const Graph *graph: currentModel->graphs) {
     for (const Chan *chan: graph->chans) {
       assert(chan != nullptr);
 
@@ -56,8 +56,8 @@ std::unique_ptr<Model> Builder::create() {
     }
   }
 
-  auto model = std::unique_ptr<Model>(_model);
-  _model = nullptr;
+  auto model = std::unique_ptr<Model>(currentModel);
+  currentModel = nullptr;
 
   return model;
 }

@@ -56,13 +56,13 @@
 
 model:
   MODEL ID[name] LCURLY {
-    Builder::get().start_model(*$name);
+    Builder::get().startModel(*$name);
     delete $name;
   }
   nodetypes
   graphs
   RCURLY {
-    Builder::get().end_model();
+    Builder::get().endModel();
   }
 ;
 
@@ -73,14 +73,14 @@ nodetypes:
 
 nodetype:
   NODETYPE ID[name] {
-    Builder::get().start_nodetype(*$name);
+    Builder::get().startNodetype(*$name);
     delete $name;
   }
   LBRACK ports RBRACK ARROW {
-    Builder::get().start_outputs();
+    Builder::get().startOutputs();
   }
   LBRACK ports RBRACK SEMI {
-    Builder::get().end_nodetype();
+    Builder::get().endNodetype();
   }
 ;
 
@@ -92,19 +92,19 @@ ports:
 
 port:
   ID[type] LANGLE REAL[flow] RANGLE ID[name] {
-    Builder::get().add_port(*$name, *$type, *$flow, "0");
+    Builder::get().addPort(*$name, *$type, *$flow, "0");
     delete $type; delete $flow; delete $name;
   }
 | ID[type] LANGLE REAL[flow] RANGLE SHARP INT[latency] ID[name] {
-    Builder::get().add_port(*$name, *$type, *$flow, *$latency);
+    Builder::get().addPort(*$name, *$type, *$flow, *$latency);
     delete $type; delete $flow; delete $latency; delete $name;
   }
 | ID[type] LANGLE REAL[flow] RANGLE ID[name] ASSIGN INT[value] {
-    Builder::get().add_port(*$name, *$type, *$flow, "0", *$value);
+    Builder::get().addPort(*$name, *$type, *$flow, "0", *$value);
     delete $type; delete $flow; delete $name; delete $value;
   }
 | ID[type] LANGLE REAL[flow] RANGLE SHARP INT[latency] ID[name] ASSIGN INT[value] {
-    Builder::get().add_port(*$name, *$type, *$flow, *$latency, *$value);
+    Builder::get().addPort(*$name, *$type, *$flow, *$latency, *$value);
     delete $type; delete $flow; delete $latency; delete $name; delete $value;
   }
 ;
@@ -116,14 +116,14 @@ graphs:
 
 graph:
   GRAPH ID[name] LCURLY {
-    Builder::get().start_graph(*$name);
+    Builder::get().startGraph(*$name);
     delete $name;
   }
   chans
   nodes
   insts
   RCURLY {
-    Builder::get().end_graph();
+    Builder::get().endGraph();
   }
 ;
 
@@ -134,7 +134,7 @@ chans:
 
 chan:
   CHAN ID[type] ID[name] SEMI {
-    Builder::get().add_chan(*$type, *$name);
+    Builder::get().addChan(*$type, *$name);
     delete $type; delete $name;
   }
 
@@ -146,14 +146,14 @@ nodes:
 node:
   // There are special types of nodes: merge*, split*, dup*, and delay*.
   NODE ID[type] ID[name] {
-    Builder::get().start_node(*$type, *$name);
+    Builder::get().startNode(*$type, *$name);
     delete $type; delete $name;
   }
   LBRACK params RBRACK ARROW {
-    Builder::get().start_outputs();
+    Builder::get().startOutputs();
   }
   LBRACK params RBRACK SEMI {
-    Builder::get().end_node();
+    Builder::get().endNode();
   }
 ;
 
@@ -165,7 +165,7 @@ params:
 
 param:
   ID[name] {
-    Builder::get().add_param(*$name);
+    Builder::get().addParam(*$name);
     delete $name;
   }
 ;
@@ -177,14 +177,14 @@ insts:
 
 inst:
   GRAPH ID[type] ID[name] {
-    Builder::get().start_inst(*$type, *$name);
+    Builder::get().startInstance(*$type, *$name);
     delete $type; delete $name;
   }
   LBRACK binds RBRACK ARROW {
-    Builder::get().start_outputs();
+    Builder::get().startOutputs();
   }
   LBRACK binds RBRACK SEMI {
-    Builder::get().end_inst();
+    Builder::get().endInstance();
   }
 ;
 
@@ -196,11 +196,11 @@ binds:
 
 bind:
   ID[name] {
-    Builder::get().start_bind(*$name);
+    Builder::get().startBinding(*$name);
     delete $name;
   }
   LBRACK params RBRACK {
-    Builder::get().end_bind();
+    Builder::get().endBinding();
   }
 ;
 
