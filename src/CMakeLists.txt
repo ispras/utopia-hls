@@ -12,6 +12,12 @@ set(Z3_LIBRARY z3)
 set(LPSOLVE55_LIBRARY lpsolve55)
 set(DL_LIBRARY dl)
 set(COLAMD_LIBRARY colamd)
+if(defined $ENV{Z3_PATH})
+  set(Z3_PATH $ENV{Z3_PATH})
+  set(Z3_LIB_PATH "${Z3_PATH}lib")
+  set(CMAKE_CXX_FLAGS "-I${Z3_PATH}include")
+  set(CMAKE_EXE_LINKER_FLAGS "-L${Z3_LIB_PATH}")
+endif()
 
 # The project requires flex/bison.
 find_package(FLEX REQUIRED)
