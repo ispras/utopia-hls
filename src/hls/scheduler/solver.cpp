@@ -17,31 +17,33 @@ float sumFlows(const std::vector<Port*> &);
 
 void LpSolver::balance(BalanceMode mode, Verbosity verbosity) {
   for (Graph* graph : model->graphs) {
-    helper->setVerbosity(verbosity);
+    if (graph->name == "main") {
+      helper->setVerbosity(verbosity);
 
-    // Generate a problem to solve
-    switch (mode) {
-    case LatencyLP:
-      balanceLatency(graph);
-      break;
-    default:
-      balanceFlows(mode, graph);
-    }
+      // Generate a problem to solve
+      switch (mode) {
+      case LatencyLP:
+        balanceLatency(graph);
+        break;
+      default:
+        balanceFlows(mode, graph);
+      }
 
-    // Solve
-    helper->printProblem();
-    helper->solve();
-    helper->printStatus();
-    helper->printResults();
+      // Solve
+      helper->printProblem();
+      helper->solve();
+      helper->printStatus();
+      helper->printResults();
 
-    if (mode == LatencyLP) {
-      insertBuffers(graph, helper->getResults());
-    }
-    lastStatus = helper->getStatus();
+      if (mode == LatencyLP) {
+        insertBuffers(graph, helper->getResults());
+      }
+      lastStatus = helper->getStatus();
 
-    // Reset solver for next problem
-    if (model->graphs.size() > 1) {
-      helper = LpSolverHelper::reset();
+      // Reset solver for next problem
+      if (model->graphs.size() > 1) {
+        helper = LpSolverHelper::reset();
+      }
     }
   }
 }
