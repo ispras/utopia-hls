@@ -1,4 +1,4 @@
-//===- StandaloneDialect.td - Standalone dialect -----------*- tablegen -*-===//
+//===- HILDialect.td - HIL dialect -----------*- tablegen -*-===//
 //
 // This file is licensed under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -12,29 +12,29 @@
 include "mlir/IR/OpBase.td"
 
 //===----------------------------------------------------------------------===//
-// Standalone dialect definition.
+// HIL dialect definition.
 //===----------------------------------------------------------------------===//
 
-def Standalone_Dialect : Dialect {
-    let name = "standalone";
-    let summary = "A standalone out-of-tree MLIR dialect.";
+def HIL_Dialect : Dialect {
+    let name = "hil";
+    let summary = "A hil out-of-tree MLIR dialect.";
     let description = [{
         This dialect is an example of an out-of-tree MLIR dialect designed to
         illustrate the basic setup required to develop MLIR-based tools without
         working inside of the LLVM source tree.
     }];
-    let cppNamespace = "::mlir::standalone";
+    let cppNamespace = "::mlir::hil";
 }
 
 //===----------------------------------------------------------------------===//
-// Base standalone operation definition.
+// Base hil operation definition.
 //===----------------------------------------------------------------------===//
 
-class Standalone_Op<string mnemonic, list<OpTrait> traits = []> :
-        Op<Standalone_Dialect, mnemonic, traits>;
+class HIL_Op<string mnemonic, list<OpTrait> traits = []> :
+        Op<HIL_Dialect, mnemonic, traits>;
 
-/* class Standalone_Type<Pred condition, string descr=""> : */
-/*         DialectType<Standalone_Dialect, condition, descr>; */
-class Standalone_Type<string name> : TypeDef<Standalone_Dialect, name> { }
+/* class HIL_Type<Pred condition, string descr=""> : */
+/*         DialectType<HIL_Dialect, condition, descr>; */
+class HIL_Type<string name> : TypeDef<HIL_Dialect, name> { }
 
 #endif // STANDALONE_DIALECT

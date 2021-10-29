@@ -1,4 +1,4 @@
-//===- StandaloneDialect.h - Standalone dialect -----------------*- C++ -*-===//
+//===- HILDialect.h - HIL dialect -----------------*- C++ -*-===//
 //
 // This file is licensed under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -11,8 +11,8 @@
 
 #include "mlir/IR/Dialect.h"
 
-#include "Standalone/StandaloneOpsDialect.h.inc"
+#include "HIL/HILOpsDialect.h.inc"
 #define GET_TYPEDEF_CLASSES
-#include "Standalone/StandaloneOpsTypes.h.inc"
+#include "HIL/HILOpsTypes.h.inc"
 
 #endif // STANDALONE_STANDALONEDIALECT_H
