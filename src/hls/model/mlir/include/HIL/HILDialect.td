@@ -16,7 +16,7 @@ include "mlir/IR/OpBase.td"
 //===----------------------------------------------------------------------===//
 
 def HIL_Dialect : Dialect {
-    let name = "eda";
+    let name = "hil";
     let summary = "A hil out-of-tree MLIR dialect.";
     let description = [{
         This dialect is an example of an out-of-tree MLIR dialect designed to
