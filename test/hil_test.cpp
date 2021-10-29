@@ -11,9 +11,10 @@
 
 #include "gtest/gtest.h"
 
-#include "hls/model/model.h"
 #include "hls/compiler/compiler.h"
 #include "hls/library/library.h"
+#include "hls/model/model.h"
+#include "hls/model/printer.h"
 #include "hls/parser/hil/parser.h"
 
 using namespace eda::hls::compiler;
@@ -22,7 +23,14 @@ using namespace eda::hls::model;
 using namespace eda::hls::parser::hil;
 
 int hilTest(const std::string &filename) {
-  std::cout << *parse(filename);
+  std::unique_ptr<Model> model = parse(filename);
+
+  if (!model)
+    return -1;
+
+  std::cout << *model;
+  printDot(std::cout, *model);
+
   return 0;
 }
 

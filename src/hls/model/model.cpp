@@ -27,7 +27,7 @@ void Graph::instantiate(
     if (chan->source.node->isSource() || chan->target.node->isSink())
       continue;
 
-    Chan *copy = new Chan(name + "." + chan->name, chan->type, *this);
+    Chan *copy = new Chan(name + "_" + chan->name, chan->type, *this);
 
     chans.insert({ chan->name, copy });
     addChan(copy);
@@ -38,7 +38,7 @@ void Graph::instantiate(
     if (node->isSource() || node->isSink())
       continue;
 
-    Node *copy = new Node(name + "." + node->name, node->type, *this);
+    Node *copy = new Node(name + "_" + node->name, node->type, *this);
 
     for (const auto *input: node->inputs) {
       Chan *chan;
@@ -139,9 +139,9 @@ std::ostream& operator <<(std::ostream &out, const Chan &chan) {
   return out << "chan " << chan.type << " " << chan.name << ";";
 }
 
-static std::ostream& operator <<(std::ostream &out, const std::vector<Chan*> &params) {
+static std::ostream& operator <<(std::ostream &out, const std::vector<Chan*> &chans) {
   bool comma = false;
-  for (const Chan *chan: params) {
+  for (const Chan *chan: chans) {
     out << (comma ? ", " : "") << chan->name;
     comma = true;
   }
@@ -179,7 +179,7 @@ std::ostream& operator <<(std::ostream &out, const Model &model) {
     out << *graph << std::endl;
   }
 
-  return out << "}";
+  return out << "}" << std::endl;
 }
 
 } // namespace eda::hls::model
