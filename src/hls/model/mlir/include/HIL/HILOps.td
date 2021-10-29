@@ -1,4 +1,4 @@
-//===- StandaloneOps.td - Standalone dialect ops -----------*- tablegen -*-===//
+//===- HILOps.td - HIL dialect ops -----------*- tablegen -*-===//
 //
 // This file is licensed under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -9,13 +9,13 @@
 #ifndef STANDALONE_OPS
 #define STANDALONE_OPS
 
-include "StandaloneDialect.td"
+include "HILDialect.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 
-def Standalone_Model : Standalone_Op<"model", [NoTerminator]> {
+def HIL_Model : HIL_Op<"model", [NoTerminator]> {
   let summary = "Model container.";
   let description = [{
-    The `standalone.model` operation
+    The `hil.model` operation
   }];
 
   let regions = (region AnyRegion:$region);
@@ -24,7 +24,7 @@ def Standalone_Model : Standalone_Op<"model", [NoTerminator]> {
   }];
 }
 
-def InputArgType : Standalone_Type<"StandaloneInputArg"> {
+def InputArgType : HIL_Type<"HILInputArg"> {
   let mnemonic = "input";
 
   let summary = "Input argument";
@@ -67,7 +67,7 @@ def InputArgType : Standalone_Type<"StandaloneInputArg"> {
   }];
 }
 
-def OutputArgType : Standalone_Type<"StandaloneOutputArg"> {
+def OutputArgType : HIL_Type<"HILOutputArg"> {
   let mnemonic = "output";
 
   let summary = "Output argument";
@@ -113,13 +113,13 @@ def OutputArgType : Standalone_Type<"StandaloneOutputArg"> {
   }];
 }
 
-def InputArgTypeAttr : TypeAttrBase<"StandaloneInputArgType", "input arg attribute">;
-def OutputArgTypeAttr : TypeAttrBase<"StandaloneOutputArgType", "output arg attribute">;
+def InputArgTypeAttr : TypeAttrBase<"HILInputArgType", "input arg attribute">;
+def OutputArgTypeAttr : TypeAttrBase<"HILOutputArgType", "output arg attribute">;
 
-def Standalone_NodeType : Standalone_Op<"nodetype", [NoSideEffect]> {
+def HIL_NodeType : HIL_Op<"nodetype", [NoSideEffect]> {
   let summary = "Node type.";
   let description = [{
-    The `standalone.nodetype` operation for defining types of nodes
+    The `hil.nodetype` operation for defining types of nodes
   }];
 
   let arguments = (ins
@@ -131,10 +131,10 @@ def Standalone_NodeType : Standalone_Op<"nodetype", [NoSideEffect]> {
   }];
 }
 
-def Standalone_Node : Standalone_Op<"node", [NoSideEffect]> {
+def HIL_Node : HIL_Op<"node", [NoSideEffect]> {
   let summary = "Node.";
   let description = [{
-    The `standalone.nodetype` operation for defining types of nodes
+    The `hil.nodetype` operation for defining types of nodes
   }];
 
   let arguments = (ins
@@ -147,10 +147,10 @@ def Standalone_Node : Standalone_Op<"node", [NoSideEffect]> {
   }];
 }
 
-def Standalone_Chan : Standalone_Op<"chan", [NoSideEffect]> {
+def HIL_Chan : HIL_Op<"chan", [NoSideEffect]> {
   let summary = "Channel.";
   let description = [{
-    The `standalone.nodetype` operation for defining types of nodes
+    The `hil.nodetype` operation for defining types of nodes
   }];
 
   let arguments = (ins

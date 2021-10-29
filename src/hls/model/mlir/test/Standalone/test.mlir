@@ -1,57 +1,57 @@
-// RUN: standalone-opt %s | standalone-opt | FileCheck %s
+// RUN: hil-opt %s | hil-opt | FileCheck %s
 
 module {
     // CHECK-LABEL: func @bar()
     func @bar() {
-        standalone.model {
-            standalone.nodetype "source" [] => [
-              !standalone.output<"X"<1.0> 0 "x">,
-              !standalone.output<"Y"<1.0> 0 "y">
+        hil.model {
+            hil.nodetype "source" [] => [
+              !hil.output<"X"<1.0> 0 "x">,
+              !hil.output<"Y"<1.0> 0 "y">
             ]
-            standalone.nodetype "split" [
-              !standalone.input<"X"<1.0> "x">
+            hil.nodetype "split" [
+              !hil.input<"X"<1.0> "x">
             ] => [
-              !standalone.output<"X"<0.5> 1 "x1">,
-              !standalone.output<"X"<0.5> 1 "x2">
+              !hil.output<"X"<0.5> 1 "x1">,
+              !hil.output<"X"<0.5> 1 "x2">
             ]
-            standalone.nodetype "kernel1" [
-              !standalone.input<"X"<1.0> "x">,
-              !standalone.input<"Y"<0.5> "y">
+            hil.nodetype "kernel1" [
+              !hil.input<"X"<1.0> "x">,
+              !hil.input<"Y"<0.5> "y">
             ] => [
-              !standalone.output<"Z"<0.25> 1 "z">,
-              !standalone.output<"W"<1.0> 2 "w">
+              !hil.output<"Z"<0.25> 1 "z">,
+              !hil.output<"W"<1.0> 2 "w">
             ]
-            standalone.nodetype "kernel2" [
-              !standalone.input<"X"<0.5> "x">,
-              !standalone.input<"W"<0.5> "w">
+            hil.nodetype "kernel2" [
+              !hil.input<"X"<0.5> "x">,
+              !hil.input<"W"<0.5> "w">
             ] => [
-              !standalone.output<"Z"<0.25> 1 "z">
+              !hil.output<"Z"<0.25> 1 "z">
             ]
-            standalone.nodetype "merge" [
-              !standalone.input<"Z"<0.5> "z1">,
-              !standalone.input<"Z"<0.5> "z2">
+            hil.nodetype "merge" [
+              !hil.input<"Z"<0.5> "z1">,
+              !hil.input<"Z"<0.5> "z2">
             ] => [
-              !standalone.output<"Z"<1.0> 1 "z">
+              !hil.output<"Z"<1.0> 1 "z">
             ]
-            standalone.nodetype "sink" [
-              !standalone.input<"Z"<1.0> "z">
+            hil.nodetype "sink" [
+              !hil.input<"Z"<1.0> "z">
             ] => []
         }
-        standalone.chan "X" "x1"
-        standalone.chan "X" "x2"
-        standalone.chan "X" "x"
-        standalone.chan "Y" "y"
-        standalone.chan "Z" "z1"
-        standalone.chan "Z" "z2"
-        standalone.chan "Z" "z"
-        standalone.chan "W" "w"
+        hil.chan "X" "x1"
+        hil.chan "X" "x2"
+        hil.chan "X" "x"
+        hil.chan "Y" "y"
+        hil.chan "Z" "z1"
+        hil.chan "Z" "z2"
+        hil.chan "Z" "z"
+        hil.chan "W" "w"
 
-        standalone.node "source"  "n1" []           => ["x", "y"]
-        standalone.node "split"   "n2" ["x"]        => ["x1", "x2"]
-        standalone.node "kernel1" "n3" ["x1", "y"]  => ["z1", "w"]
-        standalone.node "kernel2" "n4" ["x2", "w"]  => ["z2"]
-        standalone.node "merge"   "n5" ["z1", "z2"] => ["z"]
-        standalone.node "sink"    "n6" ["x"]        => []
+        hil.node "source"  "n1" []           => ["x", "y"]
+        hil.node "split"   "n2" ["x"]        => ["x1", "x2"]
+        hil.node "kernel1" "n3" ["x1", "y"]  => ["z1", "w"]
+        hil.node "kernel2" "n4" ["x2", "w"]  => ["z2"]
+        hil.node "merge"   "n5" ["z1", "z2"] => ["z"]
+        hil.node "sink"    "n6" ["x"]        => []
         return
     }
 }
