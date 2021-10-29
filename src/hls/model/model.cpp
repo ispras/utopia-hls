@@ -88,6 +88,29 @@ void Graph::instantiate(
   } // for nodes.
 }
 
+void Graph::insertDelay(Chan &chan, unsigned latency) {
+  std::string typeName = "delay_" + chan.type + "_" + std::to_string(latency);
+  NodeType *nodetype = model.findNodetype(typeName);
+
+  if (nodetype == nullptr) {
+    nodetype = new NodeType(typeName, model);
+    nodetype->addInput(new Port("in", chan.type, 1.0, 0, false, 0));
+    nodetype->addOutput(new Port("out", chan.type, 1.0, latency, false, 0));
+    const_cast<Model&>(model).addNodetype(nodetype);
+  }
+
+  std::string nodeName = typeName + "_" + std::to_string(nodes.size());
+  Node *node = new Node(nodeName, *nodetype, *this);
+
+  Chan *from = new Chan(nodeName + "_out", chan.type, *this);
+  from->source = { node, nodetype->findOutput("out") };
+  from->target = chan.target;
+  chan.target = { node, nodetype->findInput("in") };
+
+  addChan(from);
+  addNode(node);
+}
+
 std::ostream& operator <<(std::ostream &out, const Port &port) {
   out << port.type << "<" << port.flow << ">" << " ";
   out << "#" << port.latency << " " << port.name;

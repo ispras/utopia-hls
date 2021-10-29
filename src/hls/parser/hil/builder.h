@@ -198,12 +198,9 @@ public:
     assert(currentInstanceNode == nullptr && "Bind is outside an instance node");
     assert(currentInstance != nullptr && "Instance node is outside an instance");
 
-    auto i = std::find_if(currentInstance->nodes.begin(),
-                          currentInstance->nodes.end(),
-                          [&name](Node *node) { return node->name == name; });
-    uassert(i != currentInstance->nodes.end(), "Node is not found: " << name);
+    currentInstanceNode = currentInstance->findNode(name);
+    uassert(currentInstanceNode != nullptr, "Node is not found: " << name);
 
-    currentInstanceNode = *i;
     currentBindings.clear();
   }
 

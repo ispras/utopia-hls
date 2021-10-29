@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <map>
 #include <ostream>
 #include <string>
@@ -47,7 +48,7 @@ struct Port final {
 };
 
 struct NodeType final {
-  NodeType(const std::string &name, const Model &model):
+  NodeType(const std::string &name, Model &model):
     name(name), model(model) {}
 
   void addInput(Port *input) {
@@ -56,6 +57,18 @@ struct NodeType final {
 
   void addOutput(Port *output) {
     outputs.push_back(output);
+  }
+
+  Port* findInput(const std::string &name) const {
+    auto i = std::find_if(inputs.begin(), inputs.end(),
+      [&name](Port *port) { return port->name == name; });
+    return i != inputs.end() ? *i : nullptr;
+  }
+
+  Port* findOutput(const std::string &name) const {
+    auto i = std::find_if(outputs.begin(), outputs.end(),
+      [&name](Port *port) { return port->name == name; });
+    return i != outputs.end() ? *i : nullptr;
   }
 
   bool isConst() const {
@@ -114,7 +127,7 @@ struct NodeType final {
   std::vector<Port*> outputs;
 
   // Reference to the parent.
-  const Model &model;
+  Model &model;
 };
 
 struct Binding final {
@@ -132,7 +145,7 @@ struct Binding final {
 };
 
 struct Chan final {
-  Chan(const std::string &name, const std::string &type, const Graph &graph):
+  Chan(const std::string &name, const std::string &type, Graph &graph):
     name(name), type(type), graph(graph) {}
 
   const std::string name;
@@ -142,11 +155,11 @@ struct Chan final {
   Binding target;
 
   // Reference to the parent.
-  const Graph &graph;
+  Graph &graph;
 };
 
 struct Node final {
-  Node(const std::string &name, const NodeType &type, const Graph &graph):
+  Node(const std::string &name, const NodeType &type, Graph &graph):
     name(name), type(type), graph(graph) {}
 
   void addInput(Chan *input) {
@@ -155,6 +168,18 @@ struct Node final {
 
   void addOutput(Chan *output) {
     outputs.push_back(output);
+  }
+
+  Chan* findInput(const std::string &name) const {
+    auto i = std::find_if(inputs.begin(), inputs.end(),
+      [&name](Chan *chan) { return chan->name == name; });
+    return i != inputs.end() ? *i : nullptr;
+  }
+
+  Chan* findOutput(const std::string &name) const {
+    auto i = std::find_if(outputs.begin(), outputs.end(),
+      [&name](Chan *chan) { return chan->name == name; });
+    return i != outputs.end() ? *i : nullptr;
   }
 
   bool isConst()  const { return type.isConst();  }
@@ -172,11 +197,11 @@ struct Node final {
   std::vector<Chan*> outputs;
 
   // Reference to the parent.
-  const Graph &graph;
+  Graph &graph;
 };
 
 struct Graph final {
-  Graph(const std::string &name, const Model &model):
+  Graph(const std::string &name, Model &model):
     name(name), model(model) {}
 
   void addChan(Chan *chan) {
@@ -187,18 +212,32 @@ struct Graph final {
     nodes.push_back(node);
   }
 
+  Chan* findChan(const std::string &name) const {
+    auto i = std::find_if(chans.begin(), chans.end(),
+      [&name](Chan *chan) { return chan->name == name; });
+    return i != chans.end() ? *i : nullptr;
+  }
+
+  Node* findNode(const std::string &name) const {
+    auto i = std::find_if(nodes.begin(), nodes.end(),
+      [&name](Node *node) { return node->name == name; });
+    return i != nodes.end() ? *i : nullptr;
+  }
+
   void instantiate(
     const Graph &graph,
     const std::string &name,
     const std::map<std::string, std::map<std::string, Chan*>> &inputs,
     const std::map<std::string, std::map<std::string, Chan*>> &outputs);
 
+  void insertDelay(Chan &chan, unsigned latency);
+
   const std::string name;
   std::vector<Chan*> chans;
   std::vector<Node*> nodes;
 
   // Reference to the parent.
-  const Model &model;
+  Model &model;
 };
 
 struct Model final {
@@ -211,6 +250,18 @@ struct Model final {
 
   void addGraph(Graph *graph) {
     graphs.push_back(graph);
+  }
+ 
+  NodeType* findNodetype(const std::string &name) const {
+    auto i = std::find_if(nodetypes.begin(), nodetypes.end(),
+      [&name](NodeType *nodetype) { return nodetype->name == name; });
+    return i != nodetypes.end() ? *i : nullptr;
+  }
+
+  Graph* findGraph(const std::string &name) const {
+    auto i = std::find_if(graphs.begin(), graphs.end(),
+      [&name](Graph *graph) { return graph->name == name; });
+    return i != graphs.end() ? *i : nullptr;
   }
 
   const std::string name;
