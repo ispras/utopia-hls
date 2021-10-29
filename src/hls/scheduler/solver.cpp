@@ -75,7 +75,8 @@ void LpSolver::genLatencyConstraints(const std::string &dstName,
   std::vector<double> values{1.0, -1.0};
 
   // t_next >= t_prev + prev_latency
-  helper->addConstraint(names, values, OperationType::GreaterOrEqual, srcLatency);
+  helper->addConstraint(names, values, OperationType::GreaterOrEqual, 
+      srcLatency);
 }
 
 void LpSolver::genDeltaConstraints(const std::string &dstName, 
@@ -106,32 +107,31 @@ void LpSolver::genBufferConstraints(const std::string &dstName,
 }
 
 void LpSolver::balanceFlows(BalanceMode mode, const Graph* graph) {
-    
-    std::vector<std::string> sinks;
-    for (Node* const node : graph->nodes) {
-      checkFlows(node);
-      std::string nodeName = node->name;
-      helper->addVariable(nodeName, node);
-      genNodeConstraints(nodeName);
-      if (node->isSink()) {
-        sinks.push_back(node->name);
-      }     
-    }
+  std::vector<std::string> sinks;
+  for (Node* const node : graph->nodes) {
+    checkFlows(node);
+    std::string nodeName = node->name;
+    helper->addVariable(nodeName, node);
+    genNodeConstraints(nodeName);
+    if (node->isSink()) {
+      sinks.push_back(node->name);
+    }     
+  }
 
-    // Add constraints for channels
-    if (mode == Simple) {
-      // flow_src*coeff_src == flow_dst*coeff_dst
-      genFlowConstraints(graph, OperationType::Equal);
-    }
+  // Add constraints for channels
+  if (mode == Simple) {
+    // flow_src*coeff_src == flow_dst*coeff_dst
+    genFlowConstraints(graph, OperationType::Equal);
+  }
 
-    if (mode == Blocking) {
-      // flow_src*coeff_src >= flow_dst*coeff_dst
-      genFlowConstraints(graph, OperationType::GreaterOrEqual);
-    }
+  if (mode == Blocking) {
+    // flow_src*coeff_src >= flow_dst*coeff_dst
+    genFlowConstraints(graph, OperationType::GreaterOrEqual);
+  }
 
-    // Maximize sink flow
-    helper->setObjective(sinks, makeCoeffs(sinks).get());
-    helper->setMax();
+  // Maximize sink flow
+  helper->setObjective(sinks, makeCoeffs(sinks).get());
+  helper->setMax();
 }
 
 std::shared_ptr<double[]> makeCoeffs(const std::vector<std::string> &sinks) {

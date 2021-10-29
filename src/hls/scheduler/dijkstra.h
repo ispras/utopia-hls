@@ -23,7 +23,8 @@ struct PathNode final {
   PathNode(unsigned startTime) : nodeTime(startTime) { }
   
   static unsigned getInitialValue(const Node* node) {
-    return (node->type.name == "source") ? 0 : std::numeric_limits<unsigned>::infinity();
+    return (node->type.name == "source") ? 
+        0 : std::numeric_limits<unsigned>::infinity();
   }
 
   struct PathNodeCmp final {
@@ -48,7 +49,8 @@ private:
   void init(const Graph* graph);
   void relax(const PathNode* src, std::pair<const Node*, unsigned> &dst);
 
-  std::priority_queue<PathNode*, std::vector<PathNode*>, PathNode::PathNodeCmp> pathElements;
+  std::priority_queue<PathNode*, std::vector<PathNode*>, PathNode::PathNodeCmp> 
+      pathElements;
   std::vector<PathNode*> ready;
   std::map<const Node*, PathNode*> nodeMap; 
 

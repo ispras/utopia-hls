@@ -18,7 +18,8 @@ LatencyBalancer::~LatencyBalancer() {
     }
   }
 
-void LatencyBalancer::insertBuffers(const Graph* graph, const std::vector<double> &latencies) {
+void LatencyBalancer::insertBuffers(const Graph* graph, 
+    const std::vector<double> &latencies) {
   /*for (auto const buf : buffers) {
     if (latencies[buf->variable->column_number] != 0.0) {
       NodeType* type = findType("delay");

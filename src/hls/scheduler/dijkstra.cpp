@@ -33,7 +33,8 @@ void DijkstraBalancer::reset() {
   deleteEntries();  
 
   // Reset the queues
-  pathElements = std::priority_queue<PathNode*, std::vector<PathNode*>, PathNode::PathNodeCmp>();
+  pathElements = std::priority_queue<PathNode*, std::vector<PathNode*>, 
+      PathNode::PathNodeCmp>();
   ready = std::vector<PathNode*>();
   nodeMap = std::map<const Node*, PathNode*>();
 }
@@ -52,7 +53,8 @@ void DijkstraBalancer::init(const Graph* graph) {
   }
 }
 
-void DijkstraBalancer::relax(const PathNode* src, std::pair<const Node*, unsigned> &dst) {
+void DijkstraBalancer::relax(const PathNode* src, std::pair<const Node*, 
+    unsigned> &dst) {
   unsigned curTime = src->nodeTime;
   PathNode* dstNode = nodeMap[dst.first];
   unsigned dstTime = curTime + dst.second;
