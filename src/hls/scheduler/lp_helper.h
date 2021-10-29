@@ -111,7 +111,7 @@ public:
 
 private:
   LpSolverHelper() : lp(make_lp(0, 0)), currentColumn(0), status(-10) {
-    set_verbose(lp, Normal);
+    setVerbosity(Normal);
   }
 
   LpSolverHelper(LpSolverHelper &other) = delete;

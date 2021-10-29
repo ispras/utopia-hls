@@ -19,7 +19,7 @@ namespace eda::hls::scheduler {
 enum BalanceMode {
   Simple,
   Blocking,
-  LatencyLinear,
+  LatencyLP,
   LatencyDijkstra
 };
 

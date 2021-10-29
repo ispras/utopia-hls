@@ -19,7 +19,8 @@ class LpSolver final : public LatencyBalancer {
 
 public:
 
-  LpSolver(Model* modelArg) : LatencyBalancer(modelArg), helper(LpSolverHelper::resetInstance()) { }
+  LpSolver(Model* modelArg) : LatencyBalancer(modelArg), 
+      helper(LpSolverHelper::resetInstance()), lastStatus(getStatus()) { }
 
   LpSolver() : helper(LpSolverHelper::resetInstance()) { }
 
@@ -27,19 +28,23 @@ public:
 
   void balance(BalanceMode mode, Verbosity verbosity);
 
-  void balance() override { balance(BalanceMode::LatencyLinear, Verbosity::Full); }
+  void balance() override { balance(BalanceMode::LatencyLP, Verbosity::Full); }
 
-  int getResult() { return helper->getStatus(); }
+  int getStatus() { return lastStatus; }
 
 private:
+  void genLatencyConstraints(const std::string &nextName, 
+      const std::string &prevName, unsigned latency);
+  void genDeltaConstraints(const std::string &dstName, 
+      const std::string &srcName, std::vector<std::string> &deltas);
+  void genBufferConstraints(const std::string &nextName, 
+      const std::string &prevName, unsigned latency);
+  void balanceLatency(const Graph* graph);
 
   void checkFlows(const Node* node);
   void balanceFlows(BalanceMode mode, const Graph* graph);
   void genNodeConstraints(const std::string &nodeName);
   void genFlowConstraints(const Graph* graph, OperationType type);
-  void balanceLatency(const Graph* graph);
-
-  //NodeType* findType(const std::string &name);
 
   const std::string TimePrefix = "t_";
   const std::string FlowPrefix = "f_";
@@ -47,6 +52,7 @@ private:
   const std::string BufferPrefix = "buf_";
   
   LpSolverHelper* helper;
+  int lastStatus;
 };
 
 } // namespace eda::hls::scheduler

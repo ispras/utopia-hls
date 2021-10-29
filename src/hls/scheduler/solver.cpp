@@ -16,13 +16,12 @@ std::shared_ptr<double[]> makeCoeffs(const std::vector<std::string> &);
 float sumFlows(const std::vector<Port*> &);
 
 void LpSolver::balance(BalanceMode mode, Verbosity verbosity) {
-  helper->setVerbosity(verbosity);
-
   for (Graph* graph : model->graphs) {
-    
+    helper->setVerbosity(verbosity);
+
     // Generate a problem to solve
     switch (mode) {
-    case LatencyLinear:
+    case LatencyLP:
       balanceLatency(graph);
       break;
     default:
@@ -35,8 +34,14 @@ void LpSolver::balance(BalanceMode mode, Verbosity verbosity) {
     helper->printStatus();
     helper->printResults();
 
-    if (mode == LatencyLinear) {
+    if (mode == LatencyLP) {
       insertBuffers(graph, helper->getResults());
+    }
+    lastStatus = helper->getStatus();
+
+    // Reset solver for next problem
+    if (model->graphs.size() > 1) {
+      helper = LpSolverHelper::resetInstance();
     }
   }
 }
@@ -50,41 +55,54 @@ void LpSolver::balanceLatency(const Graph* graph) {
 
   std::vector<std::string> deltas;
   for (Chan* const channel : graph->chans) {
-    const Binding from = channel->source;
-    const Binding to = channel->target;
-    const std::string nextName = to.node->name;
-    const std::string prevName = from.node->name;
-    std::vector<std::string> names{TimePrefix + nextName, TimePrefix + 
-        prevName};
-    std::vector<double> values{1.0, -1.0};
+    const std::string dstName = channel->target.node->name;
+    const std::string srcName = channel->source.node->name;
+    unsigned srcLatency = channel->source.port->latency;
 
-    // t_cur >= t_prev + prev_latency
-    helper->addConstraint(names, values, OperationType::GreaterOrEqual, 
-        from.port->latency);
-
-    const std::string deltaName = DeltaPrefix + nextName + "_" + prevName;
-    helper->addVariable(deltaName, nullptr);
-    deltas.push_back(deltaName);
-    values.push_back(1.0);
-    std::vector<std::string> constrNames{deltaName};
-    constrNames.push_back(TimePrefix + nextName);
-    constrNames.push_back(TimePrefix + prevName);
-
-    // delta_t = t_next - t_prev
-    helper->addConstraint(constrNames, values, OperationType::Equal, 0);
-
-    const std::string bufName = BufferPrefix + nextName + "_" + prevName;
-    helper->addVariable(bufName, nullptr);
-    buffers.push_back(new Buffer/*{from.node, to.node, channel, 
-        helper->addVariable(bufName, nullptr)}*/);
-    constrNames[0] = bufName;
-    helper->addConstraint(constrNames, values, OperationType::Equal, 
-        -1.0 * from.port->latency);
+    genLatencyConstraints(dstName, srcName, srcLatency);
+    genDeltaConstraints(dstName, srcName, deltas);
+    genBufferConstraints(dstName, srcName, srcLatency);
   }
 
+  // Minimize deltas
   helper->setObjective(deltas, makeCoeffs(deltas).get());
   helper->setMin();
+}
 
+void LpSolver::genLatencyConstraints(const std::string &dstName, 
+    const std::string &srcName, unsigned srcLatency) {
+  std::vector<std::string> names{TimePrefix + dstName, TimePrefix + srcName};
+  std::vector<double> values{1.0, -1.0};
+
+  // t_next >= t_prev + prev_latency
+  helper->addConstraint(names, values, OperationType::GreaterOrEqual, srcLatency);
+}
+
+void LpSolver::genDeltaConstraints(const std::string &dstName, 
+    const std::string &srcName, std::vector<std::string> &deltas) {
+  std::vector<double> values{1.0, -1.0, 1.0};
+  const std::string deltaName = DeltaPrefix + dstName + "_" + srcName;
+  helper->addVariable(deltaName, nullptr);
+  deltas.push_back(deltaName);
+  std::vector<std::string> constrNames{deltaName, TimePrefix + dstName, 
+      TimePrefix + srcName};
+
+  // delta_t = t_next - t_prev
+  helper->addConstraint(constrNames, values, OperationType::Equal, 0);
+}
+
+void LpSolver::genBufferConstraints(const std::string &dstName, 
+    const std::string &srcName, unsigned srcLatency) {
+  std::vector<double> values{1.0, -1.0, 1.0};
+  const std::string bufName = BufferPrefix + dstName + "_" + srcName;
+  std::vector<std::string> constrNames{bufName, TimePrefix + dstName, 
+      TimePrefix + srcName};
+  helper->addVariable(bufName, nullptr);
+  buffers.push_back(new Buffer/*{src.node, dst.node, channel, 
+      helper->addVariable(bufName, nullptr)}*/);
+  // buf_next_prev = t_next - (t_prev + prev_latency)
+  helper->addConstraint(constrNames, values, OperationType::Equal, 
+      -1.0 * srcLatency);
 }
 
 void LpSolver::balanceFlows(BalanceMode mode, const Graph* graph) {
@@ -136,10 +154,10 @@ void LpSolver::genNodeConstraints(const std::string &nodeName) {
 
 void LpSolver::genFlowConstraints(const Graph* graph, OperationType type) {
   for (Chan* const channel : graph->chans) {
-    const Binding from = channel->source;
-    const Binding to = channel->target;
-    std::vector<std::string> names{from.node->name, to.node->name};
-    std::vector<double> values{from.port->flow, -1.0 * to.port->flow};
+    const Binding src = channel->source;
+    const Binding dst = channel->target;
+    std::vector<std::string> names{src.node->name, dst.node->name};
+    std::vector<double> values{src.port->flow, -1.0 * dst.port->flow};
 
     helper->addConstraint(names, values, type,0);
   }

@@ -25,7 +25,7 @@ int lpsolveTest(const std::string &filename, BalanceMode mode) {
 
   solver->balance(mode, Verbosity::Full);
 
-  return solver->getResult();
+  return solver->getStatus();
 }
 
 int dijkstraTest(const std::string &filename) {
@@ -44,13 +44,13 @@ TEST(SchedulerTest, SolveBlocking) {
 }
 
 TEST(SchedulerTest, SolveLatency) {
-  EXPECT_EQ(lpsolveTest("test/hil/test.hil", BalanceMode::LatencyLinear), OPTIMAL);
+  EXPECT_EQ(lpsolveTest("test/hil/test.hil", BalanceMode::LatencyLP), OPTIMAL);
 }
 
 TEST(SchedulerTest, DijkstraLatency) {
   EXPECT_EQ(dijkstraTest("test/hil/test.hil"), 0);
 }
 
-/*TEST(SchedulerTest, IdctSolveLatency) {
-
-}*/
+TEST(SchedulerTest, IdctSolveLatency) {
+  EXPECT_EQ(lpsolveTest("test/hil/idct.hil", BalanceMode::LatencyLP), OPTIMAL);
+}

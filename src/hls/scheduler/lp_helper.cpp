@@ -24,6 +24,7 @@ LpSolverHelper::~LpSolverHelper() {
     }
 
     delete_lp(lp);
+    std::cout<<"LP deleted\n";
   }
 
 void LpSolverHelper::solve() {
@@ -65,12 +66,12 @@ SolverConstraint* LpSolverHelper::addConstraint(const std::vector<std::string> &
   SolverConstraint *constraint = new SolverConstraint(getVariables(names), 
       values, operation, rhs);
   constraints.push_back(constraint);
-  std::cout<<"Added constraint: "<<*constraint<<"\n";
+  //std::cout<<"Added constraint: "<<*constraint<<"\n";
   return constraint;
 }
 
 SolverVariable* LpSolverHelper::addVariable(const std::string &name, const Node* node) {
-  std::cout<<"Adding variable: "<<name<<"\n";
+  //std::cout<<"Adding variable: "<<name<<"\n";
   SolverVariable* newVariable = 
       new SolverVariable(name, ++currentColumn, node);
   variables[name] = newVariable;
@@ -119,7 +120,6 @@ std::vector<SolverVariable*> LpSolverHelper::getVariables(
     const std::vector<std::string> &names) {
   std::vector<SolverVariable*> vars;
   for (const std::string &name : names) {
-    std::cout<<"Searching "<<name<<"\n";
     auto it = variables.find(name);
     assert(it != variables.end());
     vars.push_back(it->second);
@@ -227,6 +227,11 @@ std::ostream& operator <<(std::ostream &out,
   }
 
   return out << constraint.rhs << "\n";
+
+}
+
+std::ostream& operator <<(std::ostream &out, const LpSolverHelper &problem) {
+  
 
 }
 
