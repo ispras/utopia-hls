@@ -49,6 +49,15 @@ int hilTestVerilogNodeTypePrinter(const std::string &filename) {
 int hilTestCompiler(const std::string &filename) {
   auto compiler = std::make_unique<Compiler>(*parse(filename));
   std::cout << *compiler;
+
+  auto library = std::make_unique<Library>();
+  MetaElementDescriptor med = library->find(std::string("add"));
+  ElementArguments ea;
+  for (auto e : med.parameters) {
+    ea.push_back(e.port);
+  }
+  auto element = library->construct(ea, 3);
+  std::cout << element->ir << std::endl;
   return 0;
 }
 

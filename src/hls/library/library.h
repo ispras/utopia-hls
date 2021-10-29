@@ -99,10 +99,10 @@ struct Library {
 
   // Return a module with the selected set of parameters
   // (where f is an additional parameter).
-  std::shared_ptr<ElementDescriptor> construct(const ElementArguments &args, unsigned f) const;
+  std::unique_ptr<ElementDescriptor> construct(const ElementArguments &args, unsigned f) const;
 
   // Return characteristics for the selected set of parameters.
-  std::shared_ptr<ElementCharacteristics> estimate(const ElementArguments &args) const;
+  std::unique_ptr<ElementCharacteristics> estimate(const ElementArguments &args) const;
 
   std::vector<MetaElementDescriptor> library;
 };
