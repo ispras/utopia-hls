@@ -55,5 +55,5 @@ Type StandaloneDialect::parseType(DialectAsmParser &parser) const {
 
 void StandaloneDialect::printType(mlir::Type type,
                            mlir::DialectAsmPrinter &printer) const {
-  generatedTypePrinter(type, printer);
+  (void)generatedTypePrinter(type, printer);
 }
