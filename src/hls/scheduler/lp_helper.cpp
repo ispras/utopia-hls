@@ -24,7 +24,7 @@ LpSolverHelper::~LpSolverHelper() {
     }
 
     delete_lp(lp);
-    std::cout<<"LP deleted\n";
+    //std::cout<<"LP deleted\n";
   }
 
 void LpSolverHelper::solve() {
@@ -36,19 +36,19 @@ void LpSolverHelper::solve() {
 
 LpSolverHelper* LpSolverHelper::instance = nullptr;
 
-LpSolverHelper* LpSolverHelper::getInstance() {
+LpSolverHelper* LpSolverHelper::get() {
   if (instance == nullptr) {
     instance = new LpSolverHelper();
   }
   return instance;
 }
 
-LpSolverHelper* LpSolverHelper::resetInstance() {
+LpSolverHelper* LpSolverHelper::reset() {
   if (instance != nullptr) {
     delete instance;
     instance = nullptr;
   }
-  return getInstance();
+  return get();
 }
 
 std::vector<double> LpSolverHelper::getResults() {
@@ -233,9 +233,9 @@ std::ostream& operator <<(std::ostream &out,
 
 }
 
-std::ostream& operator <<(std::ostream &out, const LpSolverHelper &problem) {
+/*std::ostream& operator <<(std::ostream &out, const LpSolverHelper &problem) {
   
 
-}
+}*/
 
 } // namespace eda::hls::scheduler

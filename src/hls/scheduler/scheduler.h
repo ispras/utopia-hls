@@ -31,24 +31,23 @@ public:
   LatencyBalancer(Model* modelArg) : model(modelArg) { }
   virtual ~LatencyBalancer();
   void setModel(Model* modelArg) { model = modelArg; }
+  Model* getModel() { return model; }
   virtual void balance() { }
 
 protected:
-  void insertBuffers(const Graph* graph, const std::vector<double> &latencies);
+  void insertBuffers(Graph* graph, const std::vector<double> &latencies);
 
   Model* model;
   std::vector<Buffer*> buffers;
 };
 
 struct Buffer final {
+  Buffer(Chan* chan, unsigned latency, unsigned position) : channel(chan), 
+      latency(latency), position(position) { }
 
-  /*Buffer(const Node* src, const Node* dst, const Chan* chan, 
-      const SolverVariable* var) : source(src), destination(dst), channel(chan),
-      variable(var) { }*/
-
-  const Node* source;
-  const Node* destination;
-  const Chan* channel;
+  Chan* channel;
+  unsigned latency;
+  unsigned position;
   //const SolverVariable* variable;
 };
 

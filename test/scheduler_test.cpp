@@ -13,6 +13,7 @@
 #include "hls/scheduler/dijkstra.h"
 #include "hls/scheduler/scheduler.h"
 #include "hls/scheduler/solver.h"
+#include <iostream>
 
 using namespace eda::hls::model;
 using namespace eda::hls::parser::hil;
@@ -24,7 +25,7 @@ int lpsolveTest(const std::string &filename, BalanceMode mode) {
   LpSolver* solver = new LpSolver(model.get());
 
   solver->balance(mode, Verbosity::Full);
-
+  std::cout<<*model.get();
   return solver->getStatus();
 }
 

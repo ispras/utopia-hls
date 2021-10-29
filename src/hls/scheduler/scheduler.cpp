@@ -8,6 +8,7 @@
 
 #include <cassert>
 #include <hls/scheduler/scheduler.h>
+#include <iostream>
 #include <memory>
 
 namespace eda::hls::scheduler {
@@ -18,18 +19,16 @@ LatencyBalancer::~LatencyBalancer() {
     }
   }
 
-void LatencyBalancer::insertBuffers(const Graph* graph, 
+void LatencyBalancer::insertBuffers(Graph* graph, 
     const std::vector<double> &latencies) {
-  /*for (auto const buf : buffers) {
-    if (latencies[buf->variable->column_number] != 0.0) {
-      NodeType* type = findType("delay");
-      assert(type != nullptr);
-      Node* delay = new Node{buf->variable->name, *type, *graph};
-      const Chan* preDelay = buf->channel;
-      (preDelay->target.node) = delay;
-      Chan* postDelay = new Chan{}
+  for (const auto* buf : buffers) {
+    // lp_solve positions start with 1
+    unsigned latency = latencies[buf->position - 1];
+    if (latency != 0) {
+      graph->insertDelay(*(buf->channel), latency);
+      std::cout<<"Inserted buffer: "<<*(buf->channel)<<" with latency "<<latency<<"\n";
     }
-  }*/
+  }
 }
 
 }  // namespace eda::hls::scheduler

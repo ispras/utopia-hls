@@ -106,8 +106,8 @@ public:
   /// Get the existing constraints.
   std::vector<SolverConstraint*> getConstraints() { return constraints; }
 
-  static LpSolverHelper* getInstance();
-  static LpSolverHelper* resetInstance();
+  static LpSolverHelper* get();
+  static LpSolverHelper* reset();
 
 private:
   LpSolverHelper() : lp(make_lp(0, 0)), currentColumn(0), status(-10) {
@@ -124,17 +124,18 @@ private:
   lprec* lp;
   std::map<std::string, SolverVariable*> variables;
   std::vector<SolverConstraint*> constraints;
-  int currentColumn;
+  unsigned currentColumn;
   int status;
 };
 
 struct SolverVariable final {
 
-  SolverVariable(const std::string &name, int column_number, const Node* node) :
-    name(name), column_number(column_number), node(node) {}
+  SolverVariable(const std::string &name, unsigned column_number, 
+      const Node* node) : name(name), column_number(column_number), 
+      node(node) { }
 
   std::string name;
-  int column_number;
+  unsigned column_number;
   const Node* node;
 };
 

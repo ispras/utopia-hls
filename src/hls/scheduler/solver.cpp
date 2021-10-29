@@ -41,27 +41,27 @@ void LpSolver::balance(BalanceMode mode, Verbosity verbosity) {
 
     // Reset solver for next problem
     if (model->graphs.size() > 1) {
-      helper = LpSolverHelper::resetInstance();
+      helper = LpSolverHelper::reset();
     }
   }
 }
 
 void LpSolver::balanceLatency(const Graph* graph) { 
 
-  for (Node const* node : graph->nodes) {
+  for (const Node* node : graph->nodes) {
     std::string nodeName = node->name;
     helper->addVariable(TimePrefix + nodeName, node);
   }
 
   std::vector<std::string> deltas;
-  for (Chan* const channel : graph->chans) {
+  for (Chan* channel : graph->chans) {
     const std::string dstName = channel->target.node->name;
     const std::string srcName = channel->source.node->name;
     unsigned srcLatency = channel->source.port->latency;
 
     genLatencyConstraints(dstName, srcName, srcLatency);
     genDeltaConstraints(dstName, srcName, deltas);
-    genBufferConstraints(dstName, srcName, srcLatency);
+    genBufferConstraints(dstName, srcName, srcLatency, channel);
   }
 
   // Minimize deltas
@@ -93,14 +93,13 @@ void LpSolver::genDeltaConstraints(const std::string &dstName,
 }
 
 void LpSolver::genBufferConstraints(const std::string &dstName, 
-    const std::string &srcName, unsigned srcLatency) {
+    const std::string &srcName, unsigned srcLatency, Chan* channel) {
   std::vector<double> values{1.0, -1.0, 1.0};
   const std::string bufName = BufferPrefix + dstName + "_" + srcName;
   std::vector<std::string> constrNames{bufName, TimePrefix + dstName, 
       TimePrefix + srcName};
-  helper->addVariable(bufName, nullptr);
-  buffers.push_back(new Buffer/*{src.node, dst.node, channel, 
-      helper->addVariable(bufName, nullptr)}*/);
+  SolverVariable *bufVar = helper->addVariable(bufName, nullptr);
+  buffers.push_back(new Buffer{channel, 0, bufVar->column_number});
   // buf_next_prev = t_next - (t_prev + prev_latency)
   helper->addConstraint(constrNames, values, OperationType::Equal, 
       -1.0 * srcLatency);

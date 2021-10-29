@@ -20,9 +20,9 @@ class LpSolver final : public LatencyBalancer {
 public:
 
   LpSolver(Model* modelArg) : LatencyBalancer(modelArg), 
-      helper(LpSolverHelper::resetInstance()), lastStatus(getStatus()) { }
+      helper(LpSolverHelper::reset()), lastStatus(getStatus()) { }
 
-  LpSolver() : helper(LpSolverHelper::resetInstance()) { }
+  LpSolver() : helper(LpSolverHelper::reset()) { }
 
   ~LpSolver() = default;
 
@@ -38,7 +38,7 @@ private:
   void genDeltaConstraints(const std::string &dstName, 
       const std::string &srcName, std::vector<std::string> &deltas);
   void genBufferConstraints(const std::string &nextName, 
-      const std::string &prevName, unsigned latency);
+      const std::string &prevName, unsigned latency, Chan* channel);
   void balanceLatency(const Graph* graph);
 
   void checkFlows(const Node* node);
