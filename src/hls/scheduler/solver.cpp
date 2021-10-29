@@ -95,7 +95,7 @@ void LpSolver::balanceFlows(BalanceMode mode, const Graph* graph) {
       std::string nodeName = node->name;
       helper->addVariable(nodeName, node);
       genNodeConstraints(nodeName);
-      if (node->is_sink()) {
+      if (node->isSink()) {
         sinks.push_back(node->name);
       }     
     }
@@ -146,7 +146,7 @@ void LpSolver::genFlowConstraints(const Graph* graph, OperationType type) {
 }
 
 void LpSolver::checkFlows(const Node* node) {
-  if (node->is_merge() || node->is_split()) {
+  if (node->isMerge() || node->isSplit()) {
     assert(sumFlows(node->type.inputs) == sumFlows(node->type.outputs));
   }
 }

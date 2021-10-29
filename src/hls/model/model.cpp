@@ -16,36 +16,34 @@ namespace eda::hls::model {
 void Graph::instantiate(
     const Graph &graph,
     const std::string &name,
-    const std::map<std::string, std::map<std::string, Chan *>> &inputs,
-    const std::map<std::string, std::map<std::string, Chan *>> &outputs) {
+    const std::map<std::string, std::map<std::string, Chan*>> &inputs,
+    const std::map<std::string, std::map<std::string, Chan*>> &outputs) {
 
   // Maps original channel names to the created channel instances.
   std::unordered_map<std::string, Chan*> chans;
 
   // Clone the channels (except for the source outputs and the sink inputs).
   for (const auto *chan: graph.chans) {
-    if (chan->source.node->is_source() || chan->target.node->is_sink()) {
+    if (chan->source.node->isSource() || chan->target.node->isSink())
       continue;
-    }
 
     Chan *copy = new Chan(name + "." + chan->name, chan->type, *this);
 
     chans.insert({ chan->name, copy });
-    add_chan(copy);
+    addChan(copy);
   }
 
   // Clone the nodes (except for the sources and sinks).
   for (const auto *node: graph.nodes) {
-    if (node->is_source() || node->is_sink()) {
+    if (node->isSource() || node->isSink())
       continue;
-    }
 
     Node *copy = new Node(name + "." + node->name, node->type, *this);
 
     for (const auto *input: node->inputs) {
       Chan *chan;
 
-      if (input->source.node->is_source()) {
+      if (input->source.node->isSource()) {
         // Connect w/ the external channel from the bindings.
         auto i = inputs.find(input->source.node->name);
         assert(i != inputs.end());
@@ -59,15 +57,15 @@ void Graph::instantiate(
         chan = i->second;
       }
 
-      assert(!chan->target.is_linked());
+      assert(!chan->target.isLinked());
       chan->target = { copy, copy->type.inputs[copy->inputs.size()] };
-      copy->add_input(chan);
+      copy->addInput(chan);
     } // for inputs.
 
     for (const auto *output: node->outputs) {
       Chan *chan;
 
-      if (output->target.node->is_sink()) {
+      if (output->target.node->isSink()) {
         // Connect w/ the external channel from the bindings.
         auto i = outputs.find(output->target.node->name);
         assert(i != outputs.end());
@@ -77,30 +75,29 @@ void Graph::instantiate(
       } else {
         // Connect w/ the internal channel instance.
         auto i = chans.find(output->name);
-        if (i == chans.end()) std::cerr << "CHANNEL NOT FOUND: " << *output << std::endl;
         assert(i != chans.end());
         chan = i->second;
       }
 
-      assert(!chan->source.is_linked());
+      assert(!chan->source.isLinked());
       chan->source = { copy, copy->type.outputs[copy->outputs.size()] };
-      copy->add_output(chan);
+      copy->addOutput(chan);
     } // for outputs.
 
-    add_node(copy);
+    addNode(copy);
   } // for nodes.
 }
 
 std::ostream& operator <<(std::ostream &out, const Port &port) {
   out << port.type << "<" << port.flow << ">" << " ";
   out << "#" << port.latency << " " << port.name;
-  if (port.is_const) {
+  if (port.isConst) {
     out << "=" << port.value;
   }
   return out;
 }
 
-static std::ostream& operator <<(std::ostream &out, const std::vector<Port *> &ports) {
+static std::ostream& operator <<(std::ostream &out, const std::vector<Port*> &ports) {
   bool comma = false;
   for (const Port *port: ports) {
     out << (comma ? ", " : "") << *port;
@@ -119,7 +116,7 @@ std::ostream& operator <<(std::ostream &out, const Chan &chan) {
   return out << "chan " << chan.type << " " << chan.name << ";";
 }
 
-static std::ostream& operator <<(std::ostream &out, const std::vector<Chan *> &params) {
+static std::ostream& operator <<(std::ostream &out, const std::vector<Chan*> &params) {
   bool comma = false;
   for (const Chan *chan: params) {
     out << (comma ? ", " : "") << chan->name;

@@ -18,40 +18,40 @@ namespace eda::hls::parser::hil {
 std::unique_ptr<Builder> Builder::_instance = nullptr;
 
 std::unique_ptr<Model> Builder::create() {
-  CHECK(_model != nullptr, "Model is null");
+  assert(_model != nullptr && "No model found");
 
   for (const NodeType *nodetype: _model->nodetypes) {
-    CHECK(nodetype != nullptr, "NodeType is null");
+    assert(nodetype != nullptr);
 
     // The nodetype allows consuming or producing data.
-    CHECK(!nodetype->inputs.empty() || !nodetype->outputs.empty(),
-      "NodeType w/o inputs and outputs: " << *nodetype);
+    uassert(!nodetype->inputs.empty() || !nodetype->outputs.empty(),
+      "Nodetype w/o inputs and outputs: " << *nodetype);
   }
 
   for (const Graph *graph: _model->graphs) {
     for (const Chan *chan: graph->chans) {
-      CHECK(chan != nullptr, "Chan is null");
+      assert(chan != nullptr);
 
       // The channel is attached to nodes.
-      CHECK(chan->source.is_linked(), "Chan source is not linked: " << *chan);
-      CHECK(chan->target.is_linked(), "Chan target is not linked: " << *chan);
+      uassert(chan->source.isLinked(), "Chan source is not linked: " << *chan);
+      uassert(chan->target.isLinked(), "Chan target is not linked: " << *chan);
 
       // The channel is not a loopback.
-      CHECK(chan->source.node != chan->target.node,
-        "Chan is a self-loop: " << chan);
+      uassert(chan->source.node != chan->target.node,
+        "Chan is a self-loop: " << *chan);
 
       // The source and target datatypes are the same.
-      CHECK(chan->source.port->type == chan->target.port->type,
+      uassert(chan->source.port->type == chan->target.port->type,
         "Chan source and target are of different types: " << *chan);
     }
 
     for (const Node *node: graph->nodes) {
-      CHECK(node != nullptr, "Node is null");
+      assert(node != nullptr);
 
       // The node corresponds to its type.
-      CHECK(node->inputs.size() == node->type.inputs.size(),
+      uassert(node->inputs.size() == node->type.inputs.size(),
         "Wrong number of inputs: " << *node);
-      CHECK(node->outputs.size() == node->type.outputs.size(),
+      uassert(node->outputs.size() == node->type.outputs.size(),
         "Wrong number of outputs: " << *node);
     }
   }

@@ -7,6 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 #include <hls/scheduler/lp_helper.h>
+
+#include <iostream>
 #include <memory>
 
 namespace eda::hls::scheduler {

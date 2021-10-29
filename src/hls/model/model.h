@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include <iostream>
 #include <map>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -29,15 +29,20 @@ struct Port final {
     const std::string &type,
     float flow,
     unsigned latency,
-    bool is_const,
+    bool isConst,
     unsigned value):
-      name(name), type(type), flow(flow), latency(latency), is_const(is_const), value(value) {}
+      name(name),
+      type(type),
+      flow(flow),
+      latency(latency),
+      isConst(isConst),
+      value(value) {}
 
   const std::string name;
   const std::string type;
   const float flow;
   const unsigned latency;
-  const bool is_const;
+  const bool isConst;
   const unsigned value;
 };
 
@@ -45,67 +50,68 @@ struct NodeType final {
   NodeType(const std::string &name, const Model &model):
     name(name), model(model) {}
 
-  void add_input(Port *input) {
+  void addInput(Port *input) {
     inputs.push_back(input);
   }
 
-  void add_output(Port *output) {
+  void addOutput(Port *output) {
     outputs.push_back(output);
   }
 
-  bool is_const() const {
-    if (!inputs.empty()) {
+  bool isConst() const {
+    if (!inputs.empty())
       return false;
-    }
+
     for (const auto *output: outputs) {
-      if (!output->is_const) {
+      if (!output->isConst)
         return false;
-      }
     }
+
     return true;
   }
 
-  bool is_source() const {
-    return inputs.empty() && !is_const();
+  bool isSource() const {
+    return inputs.empty() && !isConst();
   }
 
-  bool is_sink() const {
+  bool isSink() const {
     return outputs.empty();
   }
 
-  bool is_merge() const {
+  bool isMerge() const {
     return outputs.size() == 1
         && starts_with(name, "merge");
   }
 
-  bool is_split() const {
+  bool isSplit() const {
     return inputs.size() == 1
         && starts_with(name, "split");
   }
 
-  bool is_dup() const {
+  bool isDup() const {
     return inputs.size() == 1
         && starts_with(name, "dup");
   }
 
-  bool is_delay() const {
-    return inputs.size() == 1 && outputs.size() == 1
+  bool isDelay() const {
+    return inputs.size() == 1
+        && outputs.size() == 1
         && starts_with(name, "delay");
   }
 
-  bool is_kernel() const {
-    return !is_const()
-        && !is_source()
-        && !is_sink()
-        && !is_merge()
-        && !is_split()
-        && !is_dup()
-        && !is_delay();
+  bool isKernel() const {
+    return !isConst()
+        && !isSource()
+        && !isSink()
+        && !isMerge()
+        && !isSplit()
+        && !isDup()
+        && !isDelay();
   }
 
   const std::string name;
-  std::vector<Port *> inputs;
-  std::vector<Port *> outputs;
+  std::vector<Port*> inputs;
+  std::vector<Port*> outputs;
 
   // Reference to the parent.
   const Model &model;
@@ -117,7 +123,7 @@ struct Binding final {
   Binding(const Node *node, const Port *port):
     node(node), port(port) {}
 
-  bool is_linked() const {
+  bool isLinked() const {
     return node != nullptr;
   }
 
@@ -143,27 +149,27 @@ struct Node final {
   Node(const std::string &name, const NodeType &type, const Graph &graph):
     name(name), type(type), graph(graph) {}
 
-  void add_input(Chan *input) {
+  void addInput(Chan *input) {
     inputs.push_back(input);
   }
 
-  void add_output(Chan *output) {
+  void addOutput(Chan *output) {
     outputs.push_back(output);
   }
 
-  bool is_const()  const { return type.is_const();  }
-  bool is_source() const { return type.is_source(); }
-  bool is_sink()   const { return type.is_sink();   }
-  bool is_merge()  const { return type.is_merge();  }
-  bool is_split()  const { return type.is_split();  }
-  bool is_dup()    const { return type.is_dup();    }
-  bool is_delay()  const { return type.is_delay();  }
-  bool is_kernel() const { return type.is_kernel(); }
+  bool isConst()  const { return type.isConst();  }
+  bool isSource() const { return type.isSource(); }
+  bool isSink()   const { return type.isSink();   }
+  bool isMerge()  const { return type.isMerge();  }
+  bool isSplit()  const { return type.isSplit();  }
+  bool isDup()    const { return type.isDup();    }
+  bool isDelay()  const { return type.isDelay();  }
+  bool isKernel() const { return type.isKernel(); }
 
   const std::string name;
   const NodeType &type;
-  std::vector<Chan *> inputs;
-  std::vector<Chan *> outputs;
+  std::vector<Chan*> inputs;
+  std::vector<Chan*> outputs;
 
   // Reference to the parent.
   const Graph &graph;
@@ -173,11 +179,11 @@ struct Graph final {
   Graph(const std::string &name, const Model &model):
     name(name), model(model) {}
 
-  void add_chan(Chan *chan) {
+  void addChan(Chan *chan) {
     chans.push_back(chan);
   }
 
-  void add_node(Node *node) {
+  void addNode(Node *node) {
     nodes.push_back(node);
   }
 
@@ -188,8 +194,8 @@ struct Graph final {
     const std::map<std::string, std::map<std::string, Chan *>> &outputs);
 
   const std::string name;
-  std::vector<Chan *> chans;
-  std::vector<Node *> nodes;
+  std::vector<Chan*> chans;
+  std::vector<Node*> nodes;
 
   // Reference to the parent.
   const Model &model;
@@ -199,11 +205,11 @@ struct Model final {
   Model(const std::string &name):
     name(name) {}
 
-  void add_nodetype(NodeType *nodetype) {
+  void addNodetype(NodeType *nodetype) {
     nodetypes.push_back(nodetype);
   }
 
-  void add_graph(Graph *graph) {
+  void addGraph(Graph *graph) {
     graphs.push_back(graph);
   }
 

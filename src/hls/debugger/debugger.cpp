@@ -212,7 +212,7 @@ namespace eda::hls::debugger {
 
     for (const auto &node : gNodes) {
 
-      if (node->is_delay()) {
+      if (node->isDelay()) {
 
         // treat delay node as in-to-out channel
         const Binding input = node->inputs[0]->target;
@@ -225,7 +225,7 @@ namespace eda::hls::debugger {
 
         nodes.push_back(delayExpr);
 
-      } else if (node->is_kernel()) {
+      } else if (node->isKernel()) {
 
         std::string funcName = node->name;
         std::vector<Chan*> nodeOuts = node->outputs;
@@ -248,7 +248,7 @@ namespace eda::hls::debugger {
 
           nodes.push_back(kernelEq);
         }
-      } else if (node->is_merge()) {
+      } else if (node->isMerge()) {
 
         // merge has the only output
         Chan *nodeOut = node->outputs[0];
@@ -270,7 +270,7 @@ namespace eda::hls::debugger {
         expr mergeExpr = mk_and(mergeVec);
         nodes.push_back(mergeExpr);
 
-      } else if (node->is_split()) {
+      } else if (node->isSplit()) {
 
         // split has the only input
         Chan *nodeInput = node->inputs[0];
@@ -289,7 +289,7 @@ namespace eda::hls::debugger {
         nodes.push_back(splitExpr);
       } else {
         // sink or source, do nothing
-        assert(node->is_sink() || node->is_source());
+        assert(node->isSink() || node->isSource());
       }
     }
   }
@@ -301,7 +301,7 @@ namespace eda::hls::debugger {
 
     for (const auto &node : graphNodes) {
 
-      if (node->is_source()) {
+      if (node->isSource()) {
         result.push_back(node);
       }
     }
@@ -315,7 +315,7 @@ namespace eda::hls::debugger {
 
     for (const auto &node : graphNodes) {
 
-      if (node->is_sink()) {
+      if (node->isSink()) {
         result.push_back(node);
       }
     }
