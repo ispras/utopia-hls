@@ -108,19 +108,21 @@ struct Library {
 };
 
 struct VerilogNodeTypePrinter final {
-  explicit VerilogNodeTypePrinter(const eda::hls::model::NodeType &rt) : t(rt) {};
+  explicit VerilogNodeTypePrinter(const eda::hls::model::NodeType &rt, const Library &library) : t(rt), library(library) {};
   void print(std::ostream &out) const;
 
   const eda::hls::model::NodeType t;
+  const Library library;
 };
 
 struct VerilogGraphPrinter final {
-  explicit VerilogGraphPrinter(const eda::hls::model::Graph &rg) : g(rg) {};
+  explicit VerilogGraphPrinter(const eda::hls::model::Graph &rg, const Library &library) : g(rg), library(library) {};
 
   void printChan(std::ostream &out, const eda::hls::model::Chan &chan) const;
   void print(std::ostream &out) const;
 
   const eda::hls::model::Graph g;
+  const Library library;
 };
 
 std::ostream& operator <<(std::ostream &out, const VerilogNodeTypePrinter &printer);

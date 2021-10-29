@@ -43,11 +43,12 @@ int hilTestGraphs(const std::string &filename) {
 }
 
 int hilTestVerilogNodeTypePrinter(const std::string &filename) {
+  auto library = std::make_unique<Library>();
   auto nodetypes = parse(filename)->nodetypes;
 
   std::cout << "------ Verilog RTL-model ------" << std::endl;
   for (const auto *nodetype: nodetypes) {
-    auto printer = std::make_unique<VerilogNodeTypePrinter>(*nodetype);
+    auto printer = std::make_unique<VerilogNodeTypePrinter>(*nodetype, *library);
     std::cout << *printer;
   }
 
@@ -55,10 +56,10 @@ int hilTestVerilogNodeTypePrinter(const std::string &filename) {
 }
 
 int hilTestCompiler(const std::string &filename) {
-  auto compiler = std::make_unique<Compiler>(*parse(filename));
+  auto library = std::make_unique<Library>();
+  auto compiler = std::make_unique<Compiler>(*parse(filename), *library);
   std::cout << *compiler;
 
-  auto library = std::make_unique<Library>();
   MetaElementDescriptor med = library->find(std::string("add"));
   ElementArguments ea;
   for (auto e : med.parameters) {

@@ -10,17 +10,20 @@
 
 #include <iostream>
 
+#include "hls/library/library.h"
 #include "hls/model/model.h"
 
 namespace eda::hls::compiler {
 
 struct Compiler final {
-  Compiler(const eda::hls::model::Model &model) :
-    model(model) {}
+  Compiler(const eda::hls::model::Model &model,
+           const eda::hls::library::Library &library) :
+    model(model), library(library) {}
 
   void print(std::ostream &out) const;
 
   const eda::hls::model::Model model;
+  const eda::hls::library::Library library;
 };
 
 std::ostream& operator <<(std::ostream &out, const Compiler &compiler);

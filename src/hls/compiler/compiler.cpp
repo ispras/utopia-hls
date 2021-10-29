@@ -16,13 +16,13 @@ namespace eda::hls::compiler {
 void Compiler::print(std::ostream &out) const {
   // print model.nodetypes
   for (const auto *nodetype : model.nodetypes) {
-    auto printer = std::make_unique<library::VerilogNodeTypePrinter>(*nodetype);
+    auto printer = std::make_unique<library::VerilogNodeTypePrinter>(*nodetype, library);
     out << *printer;
   }
 
   // print model.graphs
   for (const auto *graph : model.graphs) {
-    auto printer = std::make_unique<library::VerilogGraphPrinter>(*graph);
+    auto printer = std::make_unique<library::VerilogGraphPrinter>(*graph, library);
     out << *printer;
   }
 }

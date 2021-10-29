@@ -16,22 +16,32 @@ namespace eda::hls::library {
 
 void VerilogNodeTypePrinter::print(std::ostream &out) const
 {
+  ElementArguments ea;
+  ea.push_back(Port("clock", Port::IN, 1));
+  ea.push_back(Port("reset", Port::IN, 1));
+
   out << "module " << t.name << "(" << std::endl;
 
   for (const auto *arg: t.inputs) {
-    out << "  input " << arg->name; // TODO print arg->length
+    out << arg->name;
     if (!(arg == t.inputs.back() && t.outputs.empty())) {
-      out << "," << std::endl;
+      out << ", ";
     }
+    ea.push_back(Port(arg->name, Port::IN, 1 /*arg->length*/));
   }
 
   for (const auto *arg: t.outputs) {
-    out << "  output " << arg->name; // TODO print arg->length
+    out << arg->name;
     if (arg != t.outputs.back()) {
-      out << "," << std::endl;
+      out << ",";
     }
+    ea.push_back(Port(arg->name, Port::OUT, 1 /*arg->length*/));
   }
   out << ");" << std::endl;
+
+  auto element = library.construct(ea, 3);
+  out << element->ir << std::endl;
+
   out << "endmodule" << " // " << t.name << std::endl;
 }
 
