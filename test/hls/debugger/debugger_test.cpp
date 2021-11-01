@@ -27,6 +27,6 @@ bool eqCheckTest(const std::string &fileM, const std::string &fileM2) {
 
 TEST(DebuggerTest, Solve) {
   // TODO: wrong test, substitute 'true' by 'false'
-  EXPECT_EQ(eqCheckTest("test/hil/test.hil", "test/hil/test_clone.hil"), true);
+  EXPECT_EQ(eqCheckTest("test/data/hil/test.hil", "test/data/hil/test_clone.hil"), true);
 }
 

@@ -31,11 +31,11 @@ endif()
 enable_testing()
 
 add_executable(${TEST_TARGET}
-  hil_test.cpp
-  ril_test.cpp
+  hls/debugger/debugger_test.cpp
+  hls/parser/hil/hil_test.cpp
+  hls/scheduler/scheduler_test.cpp
+  rtl/parser/ril/ril_test.cpp
   test_main.cpp
-  scheduler_test.cpp
-  debugger_test.cpp
 )
 
 target_link_libraries(${TEST_TARGET} PRIVATE gtest_main ${MAIN_LIBRARY} ${Z3_LIBRARY})

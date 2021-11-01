@@ -71,23 +71,23 @@ int hilTestCompiler(const std::string &filename) {
 }
 
 TEST(HilTest, SimpleTest) {
-  EXPECT_EQ(hilTest("test/hil/test.hil"), 0);
-  EXPECT_EQ(hilTest("test/hil/idct.hil"), 0);
+  EXPECT_EQ(hilTest("test/data/hil/test.hil"), 0);
+  EXPECT_EQ(hilTest("test/data/hil/idct.hil"), 0);
 }
 
 TEST(HilTest, NodeTypesTest) {
-  EXPECT_EQ(hilTestNodeTypes("test/hil/test.hil"), 6);
+  EXPECT_EQ(hilTestNodeTypes("test/data/hil/test.hil"), 6);
 }
 
 TEST(HilTest, GraphsTest) {
-  EXPECT_EQ(hilTestGraphs("test/hil/test.hil"), 1);
+  EXPECT_EQ(hilTestGraphs("test/data/hil/test.hil"), 1);
 }
 
 TEST(HilTest, VerilogNodeTypePrinterTest) {
-  EXPECT_EQ(hilTestVerilogNodeTypePrinter("test/hil/test.hil"), 0);
+  EXPECT_EQ(hilTestVerilogNodeTypePrinter("test/data/hil/test.hil"), 0);
 }
 
 TEST(HilTest, CompilerTest) {
-  EXPECT_EQ(hilTestCompiler("test/hil/test.hil"), 0);
+  EXPECT_EQ(hilTestCompiler("test/data/hil/test.hil"), 0);
 }
 

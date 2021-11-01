@@ -37,21 +37,21 @@ int dijkstraTest(const std::string &filename) {
 }
 
 TEST(SchedulerTest, SolveSimpleInfeasible) {
-  EXPECT_EQ(lpsolveTest("test/hil/test.hil", BalanceMode::Simple), INFEASIBLE);
+  EXPECT_EQ(lpsolveTest("test/data/hil/test.hil", BalanceMode::Simple), INFEASIBLE);
 }
 
 TEST(SchedulerTest, SolveBlocking) {
-  EXPECT_EQ(lpsolveTest("test/hil/test.hil", BalanceMode::Blocking), OPTIMAL);
+  EXPECT_EQ(lpsolveTest("test/data/hil/test.hil", BalanceMode::Blocking), OPTIMAL);
 }
 
 TEST(SchedulerTest, SolveLatency) {
-  EXPECT_EQ(lpsolveTest("test/hil/test.hil", BalanceMode::LatencyLP), OPTIMAL);
+  EXPECT_EQ(lpsolveTest("test/data/hil/test.hil", BalanceMode::LatencyLP), OPTIMAL);
 }
 
 TEST(SchedulerTest, DijkstraLatency) {
-  EXPECT_EQ(dijkstraTest("test/hil/test.hil"), 0);
+  EXPECT_EQ(dijkstraTest("test/data/hil/test.hil"), 0);
 }
 
 TEST(SchedulerTest, IdctSolveLatency) {
-  EXPECT_EQ(lpsolveTest("test/hil/idct.hil", BalanceMode::LatencyLP), OPTIMAL);
+  EXPECT_EQ(lpsolveTest("test/data/hil/idct.hil", BalanceMode::LatencyLP), OPTIMAL);
 }
