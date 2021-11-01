@@ -10,10 +10,9 @@ set(CMAKE_CXX_STANDARD 17)
 # Use custom build of Z3 if Z3_DIR env var is specified
 if(DEFINED ENV{Z3_DIR})
   set(Z3_DIR $ENV{Z3_DIR})
-  set(ENV{LD_LIBRARY_PATH} "$ENV{LD_LIBRARY_PATH}:$z3_DIR")
-  set(Z3_LIB_DIR "${Z3_DIR}/lib")
+  set(ENV{LD_LIBRARY_PATH} "$ENV{LD_LIBRARY_PATH}:$Z3_DIR")
   set(CMAKE_CXX_FLAGS "-I${Z3_DIR}/include")
-  set(CMAKE_EXE_LINKER_FLAGS "-L${Z3_LIB_DIR}")
+  set(CMAKE_EXE_LINKER_FLAGS "-L${Z3_DIR}/lib")
 endif()
 
 set(MAIN_LIBRARY ueda)

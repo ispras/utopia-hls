@@ -9,119 +9,124 @@
 #include <hls/debugger/debugger.h>
 
 using namespace eda::hls::model;
-using namespace z3;
 
 namespace eda::hls::debugger {
 
   std::unique_ptr<Verifier> Verifier::instance = nullptr;
 
-  bool Verifier::equivalent(Model &left, Model &right) const {
+  bool Verifier::equivalent(const Model &left, const Model &right) const {
 
     std::cout << "Graph matching.." << "\n";
-    std::list<std::pair<Graph*, Graph*>> matchedGraphs;
+    std::pair<Graph*, Graph*> pair;
 
     // If graphs are not completely matched
-    if (!match(left.graphs, right.graphs, matchedGraphs)) {
+    if (!match(left.graphs, right.graphs, pair)) {
       std::cout << "Cannot match graphs!" << "\n";
       return false;
     }
 
-    context ctx;
-    expr_vector nodes(ctx);
+    z3::context ctx;
+    z3::expr_vector nodes(ctx);
 
     std::cout << "Check graph equivalence..." << "\n";
-    for (const auto &pair : matchedGraphs) {
 
-      Graph *fGraph = pair.first;
-      Graph *sGraph = pair.second;
+    const Graph *fGraph = pair.first;
+    const Graph *sGraph = pair.second;
 
-      std::cout << "generate expr for graph: " << fGraph->name << "\n";
-      to_expr(fGraph, ctx, nodes);
-      std::cout << "generate expr for graph: " << sGraph->name << "\n";
-      to_expr(sGraph, ctx, nodes);
+    std::cout << "generate expr for graph: " << fGraph->name << "\n";
+    to_expr(*fGraph, ctx, nodes);
 
-      std::cout << "add input bindings to nodes" << "\n";
-      std::vector<Node*> fInputs = getSources(fGraph);
-      std::vector<Node*> sInputs = getSources(sGraph);
-      std::list<std::pair<Node*, Node*>> sources;
+    std::cout << "generate expr for graph: " << sGraph->name << "\n";
+    to_expr(*sGraph, ctx, nodes);
 
-      if (match(fInputs, sInputs, sources)) {
+    std::cout << "add input bindings to nodes" << "\n";
 
-        for (const auto &inPair : sources) {
+    const std::vector<Node*> fInputs = getSources(*fGraph);
+    const std::vector<Node*> sInputs = getSources(*sGraph);
+    std::list<std::pair<Node*, Node*>> sources;
 
-          Node *fIn = inPair.first;
-          Node *sIn = inPair.second;
-          std::vector<Chan*> fOuts = fIn->outputs;
-          std::vector<Chan*> sOuts = sIn->outputs;
-          assert(fOuts.size() == sOuts.size());
+    if (match(fInputs, sInputs, sources)) {
 
-          for (size_t i = 0; i < fOuts.size(); i++) {
+      for (const auto &inPair : sources) {
 
-            Chan *fOut = fOuts[i];
-            expr fFunc = toFunc(fIn, fOut, ctx);
-            Chan *sOut = sOuts[i];
-            expr sFunc = toFunc(sIn, sOut, ctx);
-            expr inEq = fFunc == sFunc;
-            nodes.push_back(inEq);
-          }
+        const Node *fIn = inPair.first;
+        const Node *sIn = inPair.second;
+
+        const std::vector<Chan*> fOuts = fIn->outputs;
+        const std::vector<Chan*> sOuts = sIn->outputs;
+
+        assert(fOuts.size() == sOuts.size());
+
+        for (size_t i = 0; i < fOuts.size(); i++) {
+
+          const Chan *fOut = fOuts[i];
+          const Chan *sOut = sOuts[i];
+
+          const z3::expr fFunc = toFunc(*fIn, *fOut, ctx);
+          const z3::expr sFunc = toFunc(*sIn, *sOut, ctx);
+          const z3::expr inEq = fFunc == sFunc;
+
+          nodes.push_back(inEq);
         }
-      } else {
-        std::cout << "Cannot match graphs inputs" << "\n";
       }
-
-      std::cout << "add output bindings to nodes" << "\n";
-      std::vector<Node*> fOutputs = getSinks(fGraph);
-      std::vector<Node*> sOutputs = getSinks(sGraph);
-      std::list<std::pair<Node*, Node*>> outMatch;
-
-      if (match(fOutputs, sOutputs, outMatch)) {
-
-        for (const auto &outPair : outMatch) {
-
-          Node *fOut = outPair.first;
-          Node *sOut = outPair.second;
-
-          std::string fModelName = fOut->graph.model.name;
-          std::string sModelName = sOut->graph.model.name;
-          std::string fName = fModelName + "_" + fOut->name;
-          std::string sName = sModelName + "_" + sOut->name;
-
-          sort fSort = getSort(fOut, ctx);
-          sort sSort = getSort(sOut, ctx);
-
-          sort_vector fInSorts = getInSorts(fOut, ctx);
-          sort_vector sInSorts = getInSorts(sOut, ctx);
-
-          func_decl fFunc = function(fName.c_str(), fInSorts, fSort);
-          expr_vector fArgs = getArgs(fOut, ctx);
-          func_decl sFunc = function(sName.c_str(), sInSorts, sSort);
-          expr_vector sArgs = getArgs(sOut, ctx);
-
-          expr outExpr = fFunc(fArgs) != sFunc(sArgs);
-
-          nodes.push_back(outExpr);
-        }
-      } else {
-        std::cout << "Cannot match graphs outputs" << "\n";
-      }
+    } else {
+      std::cout << "Cannot match graphs inputs" << "\n";
     }
 
-    solver solver(ctx);
+    std::cout << "add output bindings to nodes" << "\n";
+
+    const std::vector<Node*> fOutputs = getSinks(*fGraph);
+    const std::vector<Node*> sOutputs = getSinks(*sGraph);
+    std::list<std::pair<Node*, Node*>> outMatch;
+
+    if (match(fOutputs, sOutputs, outMatch)) {
+
+      for (const auto &outPair : outMatch) {
+
+        const Node *fOut = outPair.first;
+        const Node *sOut = outPair.second;
+
+        const std::string fModelName = fOut->graph.model.name;
+        const std::string sModelName = sOut->graph.model.name;
+        const std::string fName = fModelName + "_" + fOut->name;
+        const std::string sName = sModelName + "_" + sOut->name;
+
+        const z3::sort fSort = getSort(*fOut, ctx);
+        const z3::sort sSort = getSort(*sOut, ctx);
+
+        const z3::sort_vector fInSorts = getInSorts(*fOut, ctx);
+        const z3::sort_vector sInSorts = getInSorts(*sOut, ctx);
+
+        const z3::func_decl fFunc = function(fName.c_str(), fInSorts, fSort);
+        const z3::expr_vector fArgs = getFuncArgs(*fOut, ctx);
+        const z3::func_decl sFunc = function(sName.c_str(), sInSorts, sSort);
+        const z3::expr_vector sArgs = getFuncArgs(*sOut, ctx);
+
+        const z3::expr outExpr = fFunc(fArgs) != sFunc(sArgs);
+
+        nodes.push_back(outExpr);
+      }
+    } else {
+      std::cout << "Cannot match graphs outputs" << "\n";
+    }
+
+    z3::solver solver(ctx);
     solver.add(nodes);
 
     std::cout << "SMT-LIBv2 formula:" << "\n";
     std::cout << solver.to_smt2() << "\n";
 
     switch (solver.check()) {
-      case sat:
+      case z3::sat:
         std::cout << "Models are NOT equivalent" << "\n";
+        // TODO: debug print
         //std::cout << "Model is:" << "\n";
         //std::cout << solver.get_model().to_string() << "\n";
         return true;
-      case unsat:
+      case z3::unsat:
         std::cout << "Models are equivalent" << "\n";
         return false;
-      case unknown:
+      case z3::unknown:
         std::cout << "Z3 solver says \"unknown\"" << "\n";
         return false;
         break;
@@ -130,41 +135,40 @@ namespace eda::hls::debugger {
     return false;
   }
 
-  bool Verifier::match(std::vector<Graph*> left,
-      std::vector<Graph*> right,
-      std::list<std::pair<Graph*, Graph*>> &matches) const {
+  bool Verifier::match(const std::vector<Graph*> &left,
+      const std::vector<Graph*> &right,
+      std::pair<Graph*, Graph*> &matched) const {
 
     size_t lSize = left.size();
     size_t rSize = right.size();
 
-    if (lSize != rSize) {
-      std::cout << "Graph collections are of different size!" << "\n";
-      return false;
-    }
-
     for (size_t i = 0; i < lSize; i++) {
+
       Graph *lGraph = left[i];
-      bool hasMatch = false;
+
+      if (!lGraph->isMain()) {
+        continue;
+      }
 
       for (size_t j = 0; j < rSize; j++) {
+
         Graph *rGraph = right[j];
 
-        if (lGraph->name == rGraph->name) {
-          matches.push_back(std::make_pair(lGraph, rGraph));
-          hasMatch = true;
+        if (!rGraph->isMain()) {
+          continue;
         }
-      }
-      if (!hasMatch) {
-        std::cout << "No match for graphs " + lGraph->name << "\n";
-        return false;
+
+        matched.first = lGraph;
+        matched.second = rGraph;
+        return true;
       }
     }
-    return true;
+    return false;
   }
 
-  bool Verifier::match(std::vector<Node*> left,
-      std::vector<Node*> right,
-      std::list<std::pair<Node*, Node*>> &matches) const {
+  bool Verifier::match(const std::vector<Node*> &left,
+      const std::vector<Node*> &right,
+      std::list<std::pair<Node*, Node*>> &matched) const {
     size_t lSize = left.size();
     size_t rSize = right.size();
 
@@ -179,7 +183,7 @@ namespace eda::hls::debugger {
         Node *rNode = right[j];
 
         if (lNode->name == rNode->name) {
-          matches.push_back(std::make_pair(lNode, rNode));
+          matched.push_back(std::make_pair(lNode, rNode));
           hasMatch = true;
         }
       }
@@ -191,24 +195,25 @@ namespace eda::hls::debugger {
     return true;
   }
 
-  void Verifier::to_expr(Graph *graph,
-    context &ctx,
-    expr_vector nodes) const {
+  void Verifier::to_expr(const Graph &graph,
+    z3::context &ctx,
+    z3::expr_vector &nodes) const {
 
-    std::cout << "Create equations for channels: " + graph->name << "\n";
-    std::vector<Chan*> gChannels = graph->chans;
+    std::cout << "Create equations for channels: " + graph.name << "\n";
+
+    const std::vector<Chan*> gChannels = graph.chans;
 
     for (const auto &channel : gChannels) {
 
-      expr src = toConst(channel->source, ctx);
-      expr tgt = toConst(channel->target, ctx);
+      const z3::expr src = toConst(channel->source, ctx);
+      const z3::expr tgt = toConst(channel->target, ctx);
 
-      expr chanExpr = src == tgt;
+      const z3::expr chanExpr = src == tgt;
       nodes.push_back(chanExpr);
     }
 
-    std::cout << "Create equations for nodes: " + graph->name << "\n";
-    std::vector<Node*> gNodes = graph->nodes;
+    std::cout << "Create equations for nodes: " + graph.name << "\n";
+    const std::vector<Node*> gNodes = graph.nodes;
 
     for (const auto &node : gNodes) {
 
@@ -218,75 +223,73 @@ namespace eda::hls::debugger {
         const Binding input = node->inputs[0]->target;
         const Binding output = node->outputs[0]->source;
 
-        expr in = toConst(input, ctx);
-        expr out = toConst(output, ctx);
+        const z3::expr in = toConst(input, ctx);
+        const z3::expr out = toConst(output, ctx);
 
-        expr delayExpr = in == out;
+        const z3::expr delayExpr = in == out;
 
         nodes.push_back(delayExpr);
 
       } else if (node->isKernel()) {
 
-        std::string funcName = node->name;
-        std::vector<Chan*> nodeOuts = node->outputs;
+        const std::string funcName = node->name;
+        const std::vector<Chan*> nodeOuts = node->outputs;
 
         for (const auto &nodeOut : nodeOuts) {
 
           const Port *outPort = nodeOut->source.port;
-          std::string funcIdxName = nodeOut->name;
-          std::string modelName = nodeOut->graph.model.name;
-          std::string modelFuncPrefix = modelName + "_" + funcName;
-          sort_vector sorts = getInSorts(node, ctx);
-          std::string kerName = modelFuncPrefix + "_" + funcIdxName;
+          const std::string funcIdxName = nodeOut->name;
+          const std::string modelName = nodeOut->graph.model.name;
+          const std::string modelFuncPrefix = modelName + "_" + funcName;
+          const z3::sort_vector sorts = getInSorts(*node, ctx);
+          const std::string kerName = modelFuncPrefix + "_" + funcIdxName;
           const char *sortName =outPort->type.c_str();
-          sort fSort = ctx.uninterpreted_sort(sortName);
-          func_decl kernelFunc = function(kerName.c_str(), sorts, fSort);
-          const expr_vector kernelArgs = getArgs(node, ctx);
-          std::string constName = modelFuncPrefix + "_" + outPort->type;
-          expr nodeOutConst = ctx.constant(constName.c_str(), fSort);
-          expr kernelEq = kernelFunc(kernelArgs) == nodeOutConst;
+          const z3::sort fSort = ctx.uninterpreted_sort(sortName);
+          const z3::func_decl kernel = function(kerName.c_str(), sorts, fSort);
+          const z3::expr_vector kernelArgs = getFuncArgs(*node, ctx);
+          const std::string constName = modelFuncPrefix + "_" + outPort->type;
+          const z3::expr nodeOutConst = ctx.constant(constName.c_str(), fSort);
+          const z3::expr kernelEq = kernel(kernelArgs) == nodeOutConst;
 
           nodes.push_back(kernelEq);
         }
       } else if (node->isMerge()) {
 
         // merge has the only output
-        Chan *nodeOut = node->outputs[0];
+        const Chan *nodeOut = node->outputs[0];
         const char *outSortName = nodeOut->source.node->type.name.c_str();
-        sort outSort = ctx.uninterpreted_sort(outSortName);
+        const z3::sort outSort = ctx.uninterpreted_sort(outSortName);
 
-        expr outConst = toConst(nodeOut->source, ctx);
+        const z3::expr outConst = toConst(nodeOut->source, ctx);
 
-        expr_vector mergeVec(ctx);
-        std::vector< Chan*> nodeInputs = node->inputs;
+        z3::expr_vector mergeVec(ctx);
+        const std::vector< Chan*> nodeInputs = node->inputs;
 
         for (const auto &nodeInput : nodeInputs) {
 
-          expr inConst = toConst(nodeInput->target, ctx);
+          const z3::expr inConst = toConst(nodeInput->target, ctx);
 
           mergeVec.push_back(outConst == inConst);
         }
 
-        expr mergeExpr = mk_and(mergeVec);
-        nodes.push_back(mergeExpr);
+        nodes.push_back(mk_and(mergeVec));
 
       } else if (node->isSplit()) {
 
         // split has the only input
-        Chan *nodeInput = node->inputs[0];
-        expr inConst = toConst(nodeInput->target, ctx);
-        expr_vector splitVec(ctx);
+        const Chan *nodeInput = node->inputs[0];
+        const z3::expr inConst = toConst(nodeInput->target, ctx);
+        z3::expr_vector splitVec(ctx);
         std::vector< Chan*> nodeOutputs = node->outputs;
 
         for (const auto &nodeOut : nodeOutputs) {
 
-          expr outConst = toConst(nodeOut->source, ctx);
-          expr outEq = inConst == outConst;
+          const z3::expr outConst = toConst(nodeOut->source, ctx);
+          const z3::expr outEq = inConst == outConst;
           splitVec.push_back(outEq);
         }
 
-        expr splitExpr = mk_and(splitVec);
-        nodes.push_back(splitExpr);
+        nodes.push_back(mk_and(splitVec));
       } else {
         // sink or source, do nothing
         assert(node->isSink() || node->isSource());
@@ -294,10 +297,10 @@ namespace eda::hls::debugger {
     }
   }
 
-  std::vector<Node*> Verifier::getSources(Graph *graph) const {
+  std::vector<Node*> Verifier::getSources(const Graph &graph) const {
 
     std::vector<Node*> result;
-    std::vector<Node*> graphNodes = graph->nodes;
+    std::vector<Node*> graphNodes = graph.nodes;
 
     for (const auto &node : graphNodes) {
 
@@ -308,10 +311,10 @@ namespace eda::hls::debugger {
     return result;
   }
 
-  std::vector<Node*> Verifier::getSinks(Graph *graph) const {
+  std::vector<Node*> Verifier::getSinks(const Graph &graph) const {
 
     std::vector<Node*> result;
-    std::vector<Node*> graphNodes = graph->nodes;
+    std::vector<Node*> graphNodes = graph.nodes;
 
     for (const auto &node : graphNodes) {
 
@@ -322,66 +325,71 @@ namespace eda::hls::debugger {
     return result;
   }
 
-  sort Verifier::getSort(const Node *node, context &ctx) const {
-    return ctx.uninterpreted_sort(node->type.name.c_str());
+  z3::sort Verifier::getSort(const Node &node, z3::context &ctx) const {
+    return ctx.uninterpreted_sort(node.type.name.c_str());
   }
 
-  expr Verifier::toConst(const Binding &bnd, context &ctx) const {
+  z3::expr Verifier::toConst(const Binding &bnd, z3::context &ctx) const {
 
     const char *typeName = bnd.port->type.c_str();
-    sort fInSort = ctx.uninterpreted_sort(typeName);
-    std::string modelName = bnd.node->graph.model.name;
-    std::string nodeName = bnd.node->name;
-    std::string constName = modelName + "_" + nodeName + "_" + bnd.port->name;
+    const z3::sort fInSort = ctx.uninterpreted_sort(typeName);
+    const std::string modelName = bnd.node->graph.model.name;
+    const std::string nodeName = bnd.node->name;
+    const std::string constName =
+        modelName + "_" + nodeName + "_" + bnd.port->name;
 
     return ctx.constant(constName.c_str(), fInSort);
   }
 
-  expr Verifier::toConst(const Node *node, context &ctx) const {
+  z3::expr Verifier::toConst(const Node &node, z3::context &ctx) const {
 
-    const NodeType &fType = node->type;
-    std::string typeName = fType.name;
-    sort fInSort = ctx.uninterpreted_sort(typeName.c_str());
-    std::string modelName = node->graph.model.name;
-    std::string constName = modelName + "_" + node->name;
+    const NodeType &fType = node.type;
+    const std::string typeName = fType.name;
+    const z3::sort fInSort = ctx.uninterpreted_sort(typeName.c_str());
+    const std::string modelName = node.graph.model.name;
+    const std::string constName = modelName + "_" + node.name;
 
     return ctx.constant(constName.c_str(), fInSort);
   }
 
-  expr Verifier::toFunc(const Node *node, const Chan *ch, context &ctx) const {
+  z3::expr Verifier::toFunc(const Node &node, const Chan &ch,
+      z3::context &ctx) const {
 
-    const Binding src = ch->source;
+    const Binding src = ch.source;
     const Port *fPort = src.port;
-    std::string outIdx = ch->name;
-    sort_vector sorts(ctx);
-    std::string modelName = node->graph.model.name;
-    std::string nodeName = node->name;
-    std::string funcName = modelName + "_" + nodeName + "_" + outIdx;
+    const std::string outIdx = ch.name;
+    const std::string modelName = node.graph.model.name;
+    const std::string nodeName = node.name;
+    const std::string funcName = modelName + "_" + nodeName + "_" + outIdx;
     const char *sortName = fPort->type.c_str();
-    sort fSort = ctx.uninterpreted_sort(sortName);
-    func_decl func = function(funcName.c_str(), sorts, fSort);
-    const expr_vector fArgs = expr_vector(ctx);
+    const z3::sort fSort = ctx.uninterpreted_sort(sortName);
+    z3::sort_vector sorts(ctx);
+    const z3::func_decl func = function(funcName.c_str(), sorts, fSort);
+    const z3::expr_vector fArgs = z3::expr_vector(ctx);
     return func(fArgs);
   }
 
-  sort_vector Verifier::getInSorts(const Node *node, context &ctx) const {
-    unsigned arity = node->inputs.size();
-    sort_vector sorts(ctx);
+  z3::sort_vector Verifier::getInSorts(const Node &node,
+    z3::context &ctx) const {
+
+    const unsigned arity = node.inputs.size();
+    z3::sort_vector sorts(ctx);
 
     for (size_t i = 0; i < arity; i++) {
 
-      const char *sortName = node->inputs[i]->target.port->type.c_str();
+      const char *sortName = node.inputs[i]->target.port->type.c_str();
       sorts.push_back(ctx.uninterpreted_sort(sortName));
     }
     return sorts;
   }
 
-  expr_vector Verifier::getArgs(const Node *node, context &ctx) const {
+  z3::expr_vector Verifier::getFuncArgs(const Node &node,
+  z3::context &ctx) const {
 
-    std::vector<Chan*> inputs = node->inputs;
-    unsigned arity = inputs.size();
+    const std::vector<Chan*> inputs = node.inputs;
+    const unsigned arity = inputs.size();
 
-    expr_vector args(ctx);
+    z3::expr_vector args(ctx);
 
     for (size_t i = 0; i < arity; i++) {
       args.push_back(toConst(inputs[i]->target, ctx));

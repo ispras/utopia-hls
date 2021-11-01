@@ -16,7 +16,6 @@
 #include <memory>
 
 using namespace eda::hls::model;
-using namespace z3;
 
 namespace eda::hls::debugger {
 
@@ -30,29 +29,29 @@ public:
     return *instance;
   }
 
-  bool equivalent(Model &left, Model &right) const;
+  bool equivalent(const Model &left, const Model &right) const;
 
 private:
   Verifier() {}
 
   static std::unique_ptr<Verifier> instance;
 
-  bool match(std::vector<Graph*> left,
-      std::vector<Graph*> right,
-      std::list<std::pair<Graph*, Graph*>> &matches) const;
+  bool match(const std::vector<Graph*> &left,
+      const std::vector<Graph*> &right,
+      std::pair<Graph*, Graph*> &matched) const;
 
-  bool match(std::vector<Node*> left,
-      std::vector<Node*> right,
-      std::list<std::pair<Node*, Node*>> &matches) const;
+  bool match(const std::vector<Node*> &left,
+      const std::vector<Node*> &right,
+      std::list<std::pair<Node*, Node*>> &matched) const;
 
-  void to_expr(Graph *graph, context &ctx, expr_vector nodes) const;
-  expr toConst(const Binding &bnd, context &ctx) const;
-  expr toConst(const Node *node, context &ctx) const;
-  expr toFunc(const Node *node, const Chan *ch, context &ctx) const;
-  sort getSort(const Node *node, context &ctx) const;
-  sort_vector getInSorts(const Node *node, context &ctx) const;
-  expr_vector getArgs(const Node *node, context &ctx) const;
-  std::vector<Node*> getSources(Graph *graph) const;
-  std::vector<Node*> getSinks(Graph *graph) const;
+  void to_expr(const Graph &graph, z3::context &ctx, z3::expr_vector &nodes) const;
+  z3::expr toConst(const Binding &bnd, z3::context &ctx) const;
+  z3::expr toConst(const Node &node, z3::context &ctx) const;
+  z3::expr toFunc(const Node &node, const Chan &ch, z3::context &ctx) const;
+  z3::sort getSort(const Node &node, z3::context &ctx) const;
+  z3::sort_vector getInSorts(const Node &node, z3::context &ctx) const;
+  z3::expr_vector getFuncArgs(const Node &node, z3::context &ctx) const;
+  std::vector<Node*> getSources(const Graph &graph) const;
+  std::vector<Node*> getSinks(const Graph &graph) const;
 };
 } // namespace eda::hls::debugger
