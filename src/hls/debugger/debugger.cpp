@@ -34,10 +34,10 @@ namespace eda::hls::debugger {
     const Graph *sGraph = pair.second;
 
     std::cout << "generate expr for graph: " << fGraph->name << "\n";
-    to_expr(*fGraph, ctx, nodes);
+    createExprs(*fGraph, ctx, nodes);
 
     std::cout << "generate expr for graph: " << sGraph->name << "\n";
-    to_expr(*sGraph, ctx, nodes);
+    createExprs(*sGraph, ctx, nodes);
 
     std::cout << "add input bindings to nodes" << "\n";
 
@@ -195,7 +195,7 @@ namespace eda::hls::debugger {
     return true;
   }
 
-  void Verifier::to_expr(const Graph &graph,
+  void Verifier::createExprs(const Graph &graph,
     z3::context &ctx,
     z3::expr_vector &nodes) const {
 
