@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include <algorithm>
 #include <cassert>
 #include <unordered_map>
 
@@ -96,7 +97,7 @@ void Graph::insertDelay(Chan &chan, unsigned latency) {
     nodetype = new NodeType(typeName, model);
     nodetype->addInput(new Port("in", chan.type, 1.0, 0, false, 0));
     nodetype->addOutput(new Port("out", chan.type, 1.0, latency, false, 0));
-    const_cast<Model&>(model).addNodetype(nodetype);
+    model.addNodetype(nodetype);
   }
 
   std::string nodeName = typeName + "_" + std::to_string(nodes.size());
@@ -106,6 +107,12 @@ void Graph::insertDelay(Chan &chan, unsigned latency) {
   from->source = { node, nodetype->findOutput("out") };
   from->target = chan.target;
   chan.target = { node, nodetype->findInput("in") };
+
+  node->addInput(&chan);
+  node->addOutput(from);
+
+  auto &inputs = const_cast<std::vector<Chan*>&>(from->target.node->inputs);
+  std::replace(inputs.begin(), inputs.end(), &chan, from);
 
   addChan(from);
   addNode(node);

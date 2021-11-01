@@ -131,8 +131,7 @@ struct NodeType final {
 };
 
 struct Binding final {
-  Binding():
-    node(nullptr), port(nullptr) {}
+  Binding() = default;
   Binding(const Node *node, const Port *port):
     node(node), port(port) {}
 
@@ -140,8 +139,8 @@ struct Binding final {
     return node != nullptr;
   }
 
-  const Node *node;
-  const Port *port;
+  const Node *node = nullptr;
+  const Port *port = nullptr;
 };
 
 struct Chan final {
