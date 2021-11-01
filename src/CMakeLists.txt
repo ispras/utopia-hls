@@ -12,11 +12,17 @@ set(Z3_LIBRARY z3)
 set(LPSOLVE55_LIBRARY lpsolve55)
 set(DL_LIBRARY dl)
 set(COLAMD_LIBRARY colamd)
-if(DEFINED $ENV{Z3_PATH})
-  set(Z3_PATH $ENV{Z3_PATH})
-  set(Z3_LIB_PATH "${Z3_PATH}/lib")
-  set(CMAKE_CXX_FLAGS "-I${Z3_PATH}/include")
-  set(CMAKE_EXE_LINKER_FLAGS "-L${Z3_LIB_PATH}")
+
+# Use custom build of Z3 if Z3_DIR env var is specified
+if(DEFINED ENV{Z3_DIR})
+  message(STATUS "Z3_DIR env var is set.")
+  set(Z3_DIR $ENV{Z3_DIR})
+  set(ENV{LD_LIBRARY_PATH} "$ENV{LD_LIBRARY_PATH}:$z3_DIR")
+  set(Z3_LIB_DIR "${Z3_DIR}/lib")
+  set(CMAKE_CXX_FLAGS "-I${Z3_DIR}/include")
+  set(CMAKE_EXE_LINKER_FLAGS "-L${Z3_LIB_DIR}")
+else()
+  message(STATUS "Z3_DIR env var is not set.")
 endif()
 
 # The project requires flex/bison.

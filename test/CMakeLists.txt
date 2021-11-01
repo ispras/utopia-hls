@@ -5,12 +5,14 @@ project(UtopiaTest VERSION 0.0)
 
 set(TEST_TARGET utest)
 set(CMAKE_CXX_STANDARD 17)
-set(Z3_LIBRARY z3)
-if(DEFINED $ENV{Z3_PATH})
-  set(Z3_PATH $ENV{Z3_PATH})
-  set(Z3_LIB_PATH "${Z3_PATH}/lib")
-  set(CMAKE_CXX_FLAGS "-I${Z3_PATH}/include")
-  set(CMAKE_EXE_LINKER_FLAGS "-L${Z3_LIB_PATH}")
+
+# Use custom build of Z3 if Z3_DIR env var is specified
+if(DEFINED ENV{Z3_DIR})
+  set(Z3_DIR $ENV{Z3_DIR})
+  set(ENV{LD_LIBRARY_PATH} "$ENV{LD_LIBRARY_PATH}:$z3_DIR")
+  set(Z3_LIB_DIR "${Z3_DIR}/lib")
+  set(CMAKE_CXX_FLAGS "-I${Z3_DIR}/include")
+  set(CMAKE_EXE_LINKER_FLAGS "-L${Z3_LIB_DIR}")
 endif()
 
 set(MAIN_LIBRARY ueda)
@@ -38,7 +40,7 @@ add_executable(${TEST_TARGET}
   test_main.cpp
 )
 
-target_link_libraries(${TEST_TARGET} PRIVATE gtest_main ${MAIN_LIBRARY} ${Z3_LIBRARY})
+target_link_libraries(${TEST_TARGET} PRIVATE gtest_main ${MAIN_LIBRARY})
 
 include(GoogleTest)
 gtest_discover_tests(${TEST_TARGET})
