@@ -14,9 +14,11 @@
 
 #pragma once
 
+#include "hls/model/model.h"
+
+#include "lpsolve/lp_lib.h"
+
 #include <cassert>
-#include <hls/model/model.h>
-#include <lpsolve/lp_lib.h>
 #include <map>
 #include <string>
 #include <vector>
@@ -120,8 +122,8 @@ private:
   /// Adds all existing constraints to the problem.
   void addAllConstraints();
 
-  static LpSolverHelper* instance;
-  lprec* lp;
+  static LpSolverHelper *instance;
+  lprec *lp;
   std::map<std::string, SolverVariable*> variables;
   std::vector<SolverConstraint*> constraints;
   unsigned currentColumn;
@@ -131,12 +133,12 @@ private:
 struct SolverVariable final {
 
   SolverVariable(const std::string &name, unsigned column_number, 
-      const Node* node) : name(name), column_number(column_number), 
-      node(node) { }
+      const Node *node) : name(name), column_number(column_number), 
+      node(node) {}
 
   std::string name;
   unsigned column_number;
-  const Node* node;
+  const Node *node;
 };
 
 struct SolverConstraint final {

@@ -8,7 +8,8 @@
 
 #pragma once
 
-#include <hls/scheduler/scheduler.h>
+#include "hls/scheduler/scheduler.h"
+
 #include <limits>
 #include <map>
 #include <queue>
@@ -20,10 +21,10 @@ using namespace eda::hls::model;
 namespace eda::hls::scheduler {
 
 struct PathNode final {
-  PathNode(unsigned startTime) : nodeTime(startTime) { }
+  PathNode(unsigned startTime) : nodeTime(startTime) {}
   
-  static unsigned getInitialValue(const Node *node) {
-    return (node->isSource()) ? 
+  static unsigned getInitialValue(const Node &node) {
+    return (node.isSource()) ? 
         0 : std::numeric_limits<unsigned>::infinity();
   }
 
@@ -39,9 +40,8 @@ struct PathNode final {
 
 class DijkstraBalancer final : public LatencyBalancer {
 public:
-  DijkstraBalancer(Model *modelArg) : LatencyBalancer(modelArg) { }
   ~DijkstraBalancer();
-  void balance() override;
+  void balance(Model &model) override;
 
 private:
   void reset();

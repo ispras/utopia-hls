@@ -6,8 +6,9 @@
 //
 //===----------------------------------------------------------------------===
 
+#include "hls/scheduler/solver.h"
+
 #include <cassert>
-#include <hls/scheduler/solver.h>
 #include <memory>
 
 namespace eda::hls::scheduler {
@@ -15,9 +16,9 @@ namespace eda::hls::scheduler {
 std::shared_ptr<double[]> makeCoeffs(const std::vector<std::string> &);
 float sumFlows(const std::vector<Port*> &);
 
-void LpSolver::balance(BalanceMode mode, Verbosity verbosity) {
-  for (Graph* graph : model->graphs) {
-    if (graph->name == "main") { // FIXME: isMain
+void LpSolver::balance(Model &model, BalanceMode mode, Verbosity verbosity) {
+  for (auto* graph : model.graphs) {
+    if (graph->isMain()) {
       helper->setVerbosity(verbosity);
 
       // Generate a problem to solve
@@ -36,27 +37,27 @@ void LpSolver::balance(BalanceMode mode, Verbosity verbosity) {
       helper->printResults();
 
       if (mode == LatencyLP) {
-        insertBuffers(graph, helper->getResults());
+        insertBuffers(*graph, helper->getResults());
       }
       lastStatus = helper->getStatus();
 
       // Reset solver for next problem
-      if (model->graphs.size() > 1) {
+      if (model.graphs.size() > 1) {
         helper = LpSolverHelper::reset();
       }
     }
   }
 }
 
-void LpSolver::balanceLatency(const Graph* graph) { 
+void LpSolver::balanceLatency(const Graph *graph) { 
 
-  for (const Node* node : graph->nodes) {
+  for (const Node *node : graph->nodes) {
     std::string nodeName = node->name;
     helper->addVariable(TimePrefix + nodeName, node);
   }
 
   std::vector<std::string> deltas;
-  for (Chan* channel : graph->chans) {
+  for (auto *channel : graph->chans) {
     const std::string dstName = channel->target.node->name;
     const std::string srcName = channel->source.node->name;
     unsigned srcLatency = channel->source.port->latency;
@@ -95,21 +96,22 @@ void LpSolver::genDeltaConstraints(const std::string &dstName,
 }
 
 void LpSolver::genBufferConstraints(const std::string &dstName, 
-    const std::string &srcName, unsigned srcLatency, Chan* channel) {
+    const std::string &srcName, unsigned srcLatency, Chan *channel) {
   std::vector<double> values{1.0, -1.0, 1.0};
   const std::string bufName = BufferPrefix + dstName + "_" + srcName;
   std::vector<std::string> constrNames{bufName, TimePrefix + dstName, 
       TimePrefix + srcName};
-  SolverVariable *bufVar = helper->addVariable(bufName, nullptr);
-  buffers.push_back(new Buffer{channel, 0, bufVar->column_number});
+  SolverVariable *bufferVariable = helper->addVariable(bufName, nullptr);
+  buffers.push_back(new Buffer{channel, 0, bufferVariable->column_number});
+  
   // buf_next_prev = t_next - (t_prev + prev_latency)
   helper->addConstraint(constrNames, values, OperationType::Equal, 
       -1.0 * srcLatency);
 }
 
-void LpSolver::balanceFlows(BalanceMode mode, const Graph* graph) {
+void LpSolver::balanceFlows(BalanceMode mode, const Graph *graph) {
   std::vector<std::string> sinks;
-  for (Node* const node : graph->nodes) { // FIXME
+  for (const auto *node : graph->nodes) {
     checkFlows(node);
     std::string nodeName = node->name;
     helper->addVariable(nodeName, node);
@@ -153,8 +155,8 @@ void LpSolver::genNodeConstraints(const std::string &nodeName) {
   helper->addConstraint(names, valOne, OperationType::LessOrEqual, 1);
 }
 
-void LpSolver::genFlowConstraints(const Graph* graph, OperationType type) {
-  for (Chan* const channel : graph->chans) {
+void LpSolver::genFlowConstraints(const Graph *graph, OperationType type) {
+  for (const auto* channel : graph->chans) {
     const Binding src = channel->source;
     const Binding dst = channel->target;
     std::vector<std::string> names{src.node->name, dst.node->name};
@@ -164,7 +166,7 @@ void LpSolver::genFlowConstraints(const Graph* graph, OperationType type) {
   }
 }
 
-void LpSolver::checkFlows(const Node* node) {
+void LpSolver::checkFlows(const Node *node) {
   if (node->isMerge() || node->isSplit()) {
     assert(sumFlows(node->type.inputs) == sumFlows(node->type.outputs));
   }
@@ -172,7 +174,7 @@ void LpSolver::checkFlows(const Node* node) {
 
 float sumFlows(const std::vector<Port*> &ports) {
   float sum = 0;
-  for (auto* const port : ports) { // FIXME:
+  for (const auto *port : ports) {
     sum += port->flow;
   }
   return sum;

@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <hls/scheduler/lp_helper.h>
+#include "hls/scheduler/lp_helper.h"
 
 #include <iostream>
 #include <memory>
@@ -15,7 +15,7 @@ namespace eda::hls::scheduler {
 
 LpSolverHelper::~LpSolverHelper() {
 
-  for (SolverConstraint* constraint : constraints) {
+  for (auto *constraint : constraints) {
     delete constraint;
   }
 
@@ -23,8 +23,8 @@ LpSolverHelper::~LpSolverHelper() {
     delete var.second;
   }
 
-  delete_lp(lp);
-  //std::cout<<"LP deleted\n";
+  ::delete_lp(lp);
+  //std::cout << "LP deleted\n";
 }
 
 void LpSolverHelper::solve() {
@@ -52,9 +52,9 @@ LpSolverHelper* LpSolverHelper::reset() {
 }
 
 std::vector<double> LpSolverHelper::getResults() {
-  int size = get_Ncolumns(lp);
-  double* values = new double[size];
-  get_variables(lp, values);
+  int size = ::get_Ncolumns(lp);
+  double *values = new double[size];
+  ::get_variables(lp, values);
   std::vector<double> vec_values;
   vec_values.assign(values, values + size);
   delete [] values;
@@ -67,19 +67,19 @@ SolverConstraint* LpSolverHelper::addConstraint(
   SolverConstraint *constraint = new SolverConstraint(getVariables(names), 
       values, operation, rhs);
   constraints.push_back(constraint);
-  //std::cout<<"Added constraint: "<<*constraint<<"\n";
+  //std::cout << "Added constraint: " << *constraint << "\n";
   return constraint;
 }
 
 SolverVariable* LpSolverHelper::addVariable(const std::string &name, 
-    const Node* node) {
-  //std::cout<<"Adding variable: "<<name<<"\n";
-  SolverVariable* newVariable = 
+    const Node *node) {
+  //std::cout << "Adding variable: " << name << "\n";
+  SolverVariable *newVariable = 
       new SolverVariable(name, ++currentColumn, node);
   variables[name] = newVariable;
-  add_column(lp, NULL);
+  ::add_column(lp, NULL);
   std::string nameLoc = name;
-  set_col_name(lp, currentColumn, &nameLoc[0]);
+  ::set_col_name(lp, currentColumn, &nameLoc[0]);
   return newVariable;
 }
 
@@ -95,27 +95,27 @@ std::shared_ptr<int[]> getColumnNumbers(
       const std::vector<SolverVariable*> &variables) {
   std::shared_ptr<int[]> colno(new int[variables.size()]);
   int i = 0;
-  for (const auto* var : variables) {
+  for (const auto *var : variables) {
     colno[i++] = var->column_number;
   }
   return colno;
 }
 
 void LpSolverHelper::addAllConstraints() {
-  set_add_rowmode(lp, TRUE);
-  for (const auto* constraint : constraints) {
+  ::set_add_rowmode(lp, TRUE);
+  for (const auto *constraint : constraints) {
     std::vector<double> values = constraint->values;
-    assert(add_constraintex(lp, constraint->variables.size(), &values[0], 
+    assert(::add_constraintex(lp, constraint->variables.size(), &values[0], 
         getColumnNumbers(constraint->variables).get(), constraint->operation, 
         constraint->rhs));
   }
-  set_add_rowmode(lp, FALSE);
+  ::set_add_rowmode(lp, FALSE);
 }
 
 void LpSolverHelper::setObjective(const std::vector<std::string> &names, 
     double *vals) {
   
-  set_obj_fnex(lp, names.size(), vals, 
+  ::set_obj_fnex(lp, names.size(), vals, 
       getColumnNumbers(getVariables(names)).get());
 }
 
@@ -131,11 +131,11 @@ std::vector<SolverVariable*> LpSolverHelper::getVariables(
 }
 
 void LpSolverHelper::setMax() {
-  set_maxim(lp);
+  ::set_maxim(lp);
 }
 
 void LpSolverHelper::setMin() {
-  set_minim(lp);
+  ::set_minim(lp);
 }
 
 int LpSolverHelper::getStatus() {
@@ -143,62 +143,58 @@ int LpSolverHelper::getStatus() {
 }
 
 void LpSolverHelper::printResults() {
-  std::cout<<"Solution results:\n";
-  for (double val : getResults()) {
+  std::cout << "Solution results:" << std::endl;
+  for (auto val : getResults()) {
     std::cout << val << " ";  
   }
-  std::cout<<"\n";
+  std::cout << std::endl;
 }
 
 void LpSolverHelper::printStatus() {
   // Values from lp_lib.h
   switch (status) {
     case NOMEMORY:
-      std::cout<<"Out of memory\n";
+      std::cout << "Out of memory" << std::endl;
       break;
     
     case OPTIMAL:
-      std::cout<<"An optimal solution was obtained\n";
+      std::cout << "An optimal solution was obtained" << std::endl;
       break;
 
     case SUBOPTIMAL:
-      std::cout<<"A sub-optimal solution was obtained\n";
+      std::cout << "A sub-optimal solution was obtained" << std::endl;
       break;
 
     case INFEASIBLE:
-      std::cout<<"The model is infeasible\n";
+      std::cout << "The model is infeasible" << std::endl;
       break;
 
     case UNBOUNDED:
-      std::cout<<"The model is unbounded\n";
+      std::cout << "The model is unbounded" << std::endl;
       break;
 
     case DEGENERATE:
-      std::cout<<"The model is degenerative\n";
+      std::cout << "The model is degenerative" << std::endl;
       break;
 
     case NUMFAILURE:
-      std::cout<<"Numerical failure encountered\n";
+      std::cout << "Numerical failure encountered" << std::endl;
       break;
 
     case USERABORT:
-      std::cout<<"The abort routine returned TRUE\n";
+      std::cout << "The abort routine returned TRUE" << std::endl;
       break;
 
     case TIMEOUT:
-      std::cout<<"A timeout occurred\n";
+      std::cout << "A timeout occurred" << std::endl;
       break;
 
     case PRESOLVED:
-      std::cout<<"The model could be solved by presolve\n";
-      break;
-
-    case 25: // FIXME:
-      std::cout<<"Accuracy error encountered\n";
+      std::cout << "The model could be solved by presolve" << std::endl;
       break;
 
     default:
-      std::cout<<"Unexpected\n";
+      std::cout<<"Unexpected" << std::endl;
       break;
     }
 }
@@ -213,23 +209,15 @@ std::ostream& operator <<(std::ostream &out,
     out << constraint.values[i] << "*" << constraint.variables[i]->name;
   }
 
-  // FIXME:
-  switch (constraint.operation)
-  {
-  case 1: // FIXME:
+  if (constraint.operation == LessOrEqual) {
     out << " <= ";
-    break;
-
-  case 2:
+  } else if (constraint.operation == GreaterOrEqual) {
     out << " >= ";
-    break;
-
-  case 3:
+  } else if (constraint.operation == Equal) {
     out << " = ";
-    break;
   }
-
-  return out << constraint.rhs << "\n";
+  
+  return out << constraint.rhs << std::endl;
 }
 
 /*std::ostream& operator <<(std::ostream &out, const LpSolverHelper &problem) {

@@ -6,13 +6,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gtest/gtest.h"
-
 #include "hls/model/model.h"
 #include "hls/parser/hil/parser.h"
 #include "hls/scheduler/dijkstra.h"
 #include "hls/scheduler/scheduler.h"
 #include "hls/scheduler/solver.h"
+
+#include "gtest/gtest.h"
+
 #include <iostream>
 
 using namespace eda::hls::model;
@@ -22,17 +23,17 @@ using namespace eda::hls::scheduler;
 int lpsolveTest(const std::string &filename, BalanceMode mode) {
 
   std::unique_ptr<Model> model = parse(filename);
-  LpSolver* solver = new LpSolver(model.get());
+  LpSolver *solver = new LpSolver();
 
-  solver->balance(mode, Verbosity::Full);
-  std::cout<<*model.get();
+  solver->balance(*model, mode, Verbosity::Full);
+  std::cout<<*model;
   return solver->getStatus();
 }
 
 int dijkstraTest(const std::string &filename) {
   std::unique_ptr<Model> model = parse(filename);
-  DijkstraBalancer* balancer = new DijkstraBalancer(model.get());
-  balancer->balance();
+  DijkstraBalancer *balancer = new DijkstraBalancer();
+  balancer->balance(*model);
   return 0;
 }
 
