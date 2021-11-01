@@ -43,12 +43,11 @@ int hilTestGraphs(const std::string &filename) {
 }
 
 int hilTestVerilogNodeTypePrinter(const std::string &filename) {
-  auto library = std::make_unique<Library>();
   auto nodetypes = parse(filename)->nodetypes;
 
   std::cout << "------ Verilog RTL-model ------" << std::endl;
   for (const auto *nodetype: nodetypes) {
-    auto printer = std::make_unique<VerilogNodeTypePrinter>(*nodetype, *library);
+    auto printer = std::make_unique<VerilogNodeTypePrinter>(*nodetype);
     std::cout << *printer;
   }
 
@@ -56,18 +55,16 @@ int hilTestVerilogNodeTypePrinter(const std::string &filename) {
 }
 
 int hilTestCompiler(const std::string &filename) {
-  auto library = std::make_unique<Library>();
-  auto compiler = std::make_unique<Compiler>(*parse(filename), *library);
+  auto compiler = std::make_unique<Compiler>(*parse(filename));
   std::cout << *compiler;
 
-  ElementArguments ea(std::string("add"));
-  MetaElementDescriptor med = library->find(ea.name);
-  Parameter param = med.parameters[0];
-  unsigned f = (param.constraint.hiValue - param.constraint.loValue) >> 1;
-  ea.args.insert(std::pair<std::string, unsigned>("f", f));
+  Parameters params("add");
+  MetaElement meta = Library::get().find(params.elementName);
+  params.add(meta.params.get("f"));
 
-  auto element = library->construct(ea);
+  auto element = Library::get().construct(params);
   std::cout << element->ir << std::endl;
+
   return 0;
 }
 

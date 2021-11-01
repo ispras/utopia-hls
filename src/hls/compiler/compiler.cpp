@@ -11,18 +11,20 @@
 #include <hls/compiler/compiler.h>
 #include <hls/library/library.h>
 
+using namespace eda::hls::library;
+
 namespace eda::hls::compiler {
 
 void Compiler::print(std::ostream &out) const {
   // print model.nodetypes
   for (const auto *nodetype : model.nodetypes) {
-    auto printer = std::make_unique<library::VerilogNodeTypePrinter>(*nodetype, library);
+    auto printer = std::make_unique<VerilogNodeTypePrinter>(*nodetype);
     out << *printer;
   }
 
   // print model.graphs
   for (const auto *graph : model.graphs) {
-    auto printer = std::make_unique<library::VerilogGraphPrinter>(*graph, library);
+    auto printer = std::make_unique<VerilogGraphPrinter>(*graph);
     out << *printer;
   }
 }

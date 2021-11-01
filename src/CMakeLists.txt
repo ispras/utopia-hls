@@ -80,6 +80,7 @@ add_library(${MAIN_LIBRARY}
   hls/parser/hil/parser.cpp
   hls/scheduler/dijkstra.cpp
   hls/scheduler/lp_helper.cpp
+  hls/scheduler/param_optimizer.cpp
   hls/scheduler/scheduler.cpp
   hls/scheduler/solver.cpp
   rtl/compiler/compiler.cpp
