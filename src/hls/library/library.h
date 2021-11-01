@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include <iostream>
-
 #include "hls/model/model.h"
+
+#include <iostream>
 
 namespace eda::hls::library {
 
-// RTL port with name, direction, and width.
+/// RTL port with name, direction, and width.
 struct Port {
   enum Direction { IN, OUT, INOUT };
 
@@ -28,15 +28,15 @@ struct Port {
   const unsigned width;
 };
 
-struct Constraint {
-  Constraint(unsigned lo_value, unsigned hi_value):
-    lo_value(lo_value), hi_value(hi_value) {}
-  Constraint(const Constraint &c): lo_value(c.lo_value), hi_value(c.hi_value) {}
-  const unsigned lo_value;
-  const unsigned hi_value;
+struct Constraint final {
+  Constraint(unsigned loValue, unsigned hiValue):
+    loValue(loValue), hiValue(hiValue) {}
+  Constraint(const Constraint &c): loValue(c.loValue), hiValue(c.hiValue) {}
+  const unsigned loValue;
+  const unsigned hiValue;
 };
 
-struct Parameter {
+struct Parameter final {
   Parameter(const Port &port, const Constraint &constraint):
     port(port), constraint(constraint) {};
   Parameter(const Parameter &p): port(p.port), constraint(p.constraint) {}
@@ -47,9 +47,9 @@ struct Parameter {
 typedef std::vector<Port> ElementArguments;
 typedef std::vector<Parameter> Parameters;
 
-// Description of a class of modules with the given names,
-//  port list, and allowed ranges of their values.
-struct MetaElementDescriptor {
+/// Description of a class of modules with the given names,
+///  port list, and allowed ranges of their values.
+struct MetaElementDescriptor final {
   MetaElementDescriptor(const std::string &name, const Parameters &parameters):
     name(name), parameters(parameters) {}
   MetaElementDescriptor(const MetaElementDescriptor &med):
@@ -57,12 +57,12 @@ struct MetaElementDescriptor {
 
   const std::string name;
 
-  // List of parameters with ranges on their values.
+  /// List of parameters with ranges on their values.
   const Parameters parameters;
 };
 
-// Description of a module with the given name and values of parameters.
-struct ElementDescriptor {
+/// Description of a module with the given name and values of parameters.
+struct ElementDescriptor final {
   explicit ElementDescriptor(const ElementArguments &args): ports(args) {}
 
   // TODO add mutual relation between spec ports and impl ports
@@ -72,7 +72,7 @@ struct ElementDescriptor {
   std::string ir;
 };
 
-struct ExtendedPort : Port {
+struct ExtendedPort final : Port {
   ExtendedPort(const std::string &name, const Direction &direction,
                unsigned width, unsigned latency):
     Port(name, direction, width), latency(latency) {}
@@ -120,20 +120,22 @@ private:
 };
 
 struct VerilogNodeTypePrinter final {
-  VerilogNodeTypePrinter(const eda::hls::model::NodeType &rt, const Library &library) : t(rt), library(library) {}
+  VerilogNodeTypePrinter(const eda::hls::model::NodeType &type, const Library &library) :
+    type(type), library(library) {}
   void print(std::ostream &out) const;
 
-  const eda::hls::model::NodeType t;
+  const eda::hls::model::NodeType &type;
   const Library &library;
 };
 
 struct VerilogGraphPrinter final {
-  VerilogGraphPrinter(const eda::hls::model::Graph &rg, const Library &library) : g(rg), library(library) {}
+  VerilogGraphPrinter(const eda::hls::model::Graph &graph, const Library &library) :
+    graph(graph), library(library) {}
 
   void printChan(std::ostream &out, const eda::hls::model::Chan &chan) const;
   void print(std::ostream &out) const;
 
-  const eda::hls::model::Graph g;
+  const eda::hls::model::Graph &graph;
   const Library &library;
 };
 
