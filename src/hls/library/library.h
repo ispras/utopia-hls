@@ -20,6 +20,8 @@ struct Port {
 
   Port(const std::string &name, const Direction &direction, const unsigned &width) :
     name(name), direction(direction), width(width) {};
+  Port(const Port &port) :
+    name(port.name), direction(port.direction), width(port.width) {};
 
   const std::string name;
   const Direction direction;
@@ -29,6 +31,7 @@ struct Port {
 struct Constraint {
   Constraint(const unsigned &lo_value, const unsigned &hi_value):
     lo_value(lo_value), hi_value(hi_value) {};
+  Constraint(const Constraint &c): lo_value(c.lo_value), hi_value(c.hi_value) {};
   const unsigned lo_value;
   const unsigned hi_value;
 };
@@ -36,6 +39,7 @@ struct Constraint {
 struct Parameter {
   Parameter(const Port &port, const Constraint &constraint) :
     port(port), constraint(constraint) {};
+  Parameter(const Parameter &p): port(p.port), constraint(p.constraint) {};
   const Port port;
   const Constraint constraint;
 };
@@ -46,8 +50,10 @@ typedef std::vector<Parameter> Parameters;
 // Description of a class of modules with the given names,
 //  port list, and allowed ranges of their values.
 struct MetaElementDescriptor {
-  explicit MetaElementDescriptor(const std::string &name, const Parameters &parameters):
+  MetaElementDescriptor(const std::string &name, const Parameters &parameters):
     name(name), parameters(parameters) {};
+  MetaElementDescriptor(const MetaElementDescriptor &med) :
+    name(med.name), parameters(med.parameters) {};
 
   const std::string name;
 
@@ -73,6 +79,9 @@ struct ExtendedPort : Port {
 
   ExtendedPort(const Port &port, const unsigned latency) :
     Port(port), latency(latency) {};
+
+  ExtendedPort(const ExtendedPort &ep) :
+    Port(ep.name, ep.direction, ep.width), latency(ep.latency) {};
 
   const unsigned latency;
 };
