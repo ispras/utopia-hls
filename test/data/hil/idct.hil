@@ -38,13 +38,13 @@ model IDCT {
   // Functional Units.
   nodetype ADD    (INT16<1.0> x, INT16<1.0> y) => (INT16<1.0> #1 z); // z = x + y
   nodetype SUB    (INT16<1.0> x, INT16<1.0> y) => (INT16<1.0> #1 z); // z = x - y
-  nodetype MUL    (INT16<1.0> x, INT16<1.0> y) => (INT16<1.0> #1 z); // z = x * y
+  nodetype MUL    (INT16<1.0> x, INT16<1.0> y) => (INT16<1.0> #3 z); // z = x * y
   nodetype SHL_8  (INT16<1.0> x)               => (INT16<1.0> #1 z); // z = x << 8
   nodetype SHL_11 (INT16<1.0> x)               => (INT16<1.0> #1 z); // z = x << 11
   nodetype SHR_3  (INT16<1.0> x)               => (INT16<1.0> #1 z); // z = x >> 3
   nodetype SHR_8  (INT16<1.0> x)               => (INT16<1.0> #1 z); // z = x >> 8
   nodetype SHR_14 (INT16<1.0> x)               => (INT16<1.0> #1 z); // z = x >> 14
-  nodetype CLIP   (INT16<1.0> x)               => (INT16<1.0> #1 z); // z = x < -256 ? -256 : (x > 255 ? 255 : x)
+  nodetype CLIP   (INT16<1.0> x)               => (INT16<1.0> #2 z); // z = x < -256 ? -256 : (x > 255 ? 255 : x)
 
   // Special Units.
   nodetype dup_2 (INT16<1.0> x) => (INT16<1.0> y, INT16<1.0> z);
