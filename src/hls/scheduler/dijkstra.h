@@ -22,13 +22,13 @@ namespace eda::hls::scheduler {
 struct PathNode final {
   PathNode(unsigned startTime) : nodeTime(startTime) { }
   
-  static unsigned getInitialValue(const Node* node) {
-    return (node->type.name == "source") ? 
+  static unsigned getInitialValue(const Node *node) {
+    return (node->isSource()) ? 
         0 : std::numeric_limits<unsigned>::infinity();
   }
 
   struct PathNodeCmp final {
-    bool operator()(const PathNode* lhs, const PathNode* rhs) {
+    bool operator()(const PathNode *lhs, const PathNode *rhs) {
       return lhs->nodeTime < rhs->nodeTime;
     }
   };
@@ -39,21 +39,20 @@ struct PathNode final {
 
 class DijkstraBalancer final : public LatencyBalancer {
 public:
-  DijkstraBalancer(Model* modelArg) : LatencyBalancer(modelArg) { }
+  DijkstraBalancer(Model *modelArg) : LatencyBalancer(modelArg) { }
   ~DijkstraBalancer();
   void balance() override;
 
 private:
   void reset();
   void deleteEntries();
-  void init(const Graph* graph);
-  void relax(const PathNode* src, std::pair<const Node*, unsigned> &dst);
+  void init(const Graph *graph);
+  void relax(const PathNode *src, std::pair<const Node*, unsigned> &dst);
 
   std::priority_queue<PathNode*, std::vector<PathNode*>, PathNode::PathNodeCmp> 
       pathElements;
   std::vector<PathNode*> ready;
   std::map<const Node*, PathNode*> nodeMap; 
-
 };
 
 } // namespace eda::hls::scheduler

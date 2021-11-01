@@ -14,10 +14,10 @@
 namespace eda::hls::scheduler {
 
 LatencyBalancer::~LatencyBalancer() {
-    for (auto* buf : buffers) {
-      delete buf;
-    }
+  for (auto* buf : buffers) {
+    delete buf;
   }
+}
 
 void LatencyBalancer::insertBuffers(Graph* graph, 
     const std::vector<double> &latencies) {
@@ -26,7 +26,8 @@ void LatencyBalancer::insertBuffers(Graph* graph,
     unsigned latency = latencies[buf->position - 1];
     if (latency != 0) {
       graph->insertDelay(*(buf->channel), latency);
-      std::cout<<"Inserted buffer: "<<*(buf->channel)<<" with latency "<<latency<<"\n";
+      std::cout << "Inserted buffer: " << *(buf->channel)
+                << " with latency " << latency << std::endl;
     }
   }
 }

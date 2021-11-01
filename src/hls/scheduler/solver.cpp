@@ -17,7 +17,7 @@ float sumFlows(const std::vector<Port*> &);
 
 void LpSolver::balance(BalanceMode mode, Verbosity verbosity) {
   for (Graph* graph : model->graphs) {
-    if (graph->name == "main") {
+    if (graph->name == "main") { // FIXME: isMain
       helper->setVerbosity(verbosity);
 
       // Generate a problem to solve
@@ -109,7 +109,7 @@ void LpSolver::genBufferConstraints(const std::string &dstName,
 
 void LpSolver::balanceFlows(BalanceMode mode, const Graph* graph) {
   std::vector<std::string> sinks;
-  for (Node* const node : graph->nodes) {
+  for (Node* const node : graph->nodes) { // FIXME
     checkFlows(node);
     std::string nodeName = node->name;
     helper->addVariable(nodeName, node);
@@ -172,7 +172,7 @@ void LpSolver::checkFlows(const Node* node) {
 
 float sumFlows(const std::vector<Port*> &ports) {
   float sum = 0;
-  for (auto* const port : ports) {
+  for (auto* const port : ports) { // FIXME:
     sum += port->flow;
   }
   return sum;

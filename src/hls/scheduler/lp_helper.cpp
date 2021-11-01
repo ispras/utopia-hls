@@ -15,17 +15,17 @@ namespace eda::hls::scheduler {
 
 LpSolverHelper::~LpSolverHelper() {
 
-    for (SolverConstraint* constraint : constraints) {
-      delete constraint;
-    }
-
-    for (auto var : variables) {
-      delete var.second;
-    }
-
-    delete_lp(lp);
-    //std::cout<<"LP deleted\n";
+  for (SolverConstraint* constraint : constraints) {
+    delete constraint;
   }
+
+  for (auto var : variables) {
+    delete var.second;
+  }
+
+  delete_lp(lp);
+  //std::cout<<"LP deleted\n";
+}
 
 void LpSolverHelper::solve() {
   addAllConstraints();
@@ -145,7 +145,7 @@ int LpSolverHelper::getStatus() {
 void LpSolverHelper::printResults() {
   std::cout<<"Solution results:\n";
   for (double val : getResults()) {
-    std::cout<<val<<" ";  
+    std::cout << val << " ";  
   }
   std::cout<<"\n";
 }
@@ -193,7 +193,7 @@ void LpSolverHelper::printStatus() {
       std::cout<<"The model could be solved by presolve\n";
       break;
 
-    case 25:
+    case 25: // FIXME:
       std::cout<<"Accuracy error encountered\n";
       break;
 
@@ -205,7 +205,6 @@ void LpSolverHelper::printStatus() {
 
 std::ostream& operator <<(std::ostream &out, 
     const SolverConstraint &constraint) {
-
   
   for (unsigned int i = 0; i < constraint.variables.size(); i++) {
     if (i != 0) {
@@ -214,9 +213,10 @@ std::ostream& operator <<(std::ostream &out,
     out << constraint.values[i] << "*" << constraint.variables[i]->name;
   }
 
+  // FIXME:
   switch (constraint.operation)
   {
-  case 1:
+  case 1: // FIXME:
     out << " <= ";
     break;
 
@@ -230,7 +230,6 @@ std::ostream& operator <<(std::ostream &out,
   }
 
   return out << constraint.rhs << "\n";
-
 }
 
 /*std::ostream& operator <<(std::ostream &out, const LpSolverHelper &problem) {

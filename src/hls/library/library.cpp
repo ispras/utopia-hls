@@ -14,27 +14,25 @@
 
 namespace eda::hls::library {
 
-void VerilogNodeTypePrinter::print(std::ostream &out) const
-{
+void VerilogNodeTypePrinter::print(std::ostream &out) const {
   ElementArguments ea;
   ea.push_back(Port("clock", Port::IN, 1));
   ea.push_back(Port("reset", Port::IN, 1));
 
   out << "module " << t.name << "(" << std::endl;
 
+  bool comma = false;
   for (const auto *arg: t.inputs) {
+    out << (comma ? ", " : "");
     out << arg->name;
-    if (!(arg == t.inputs.back() && t.outputs.empty())) {
-      out << ", ";
-    }
+    comma = true;
     ea.push_back(Port(arg->name, Port::IN, 1 /*arg->length*/));
   }
 
   for (const auto *arg: t.outputs) {
+    out << (comma ? ", " : "");
     out << arg->name;
-    if (arg != t.outputs.back()) {
-      out << ",";
-    }
+    comma = true;
     ea.push_back(Port(arg->name, Port::OUT, 1 /*arg->length*/));
   }
   out << ");" << std::endl;
@@ -50,8 +48,7 @@ void VerilogGraphPrinter::printChan(std::ostream &out, const eda::hls::model::Ch
   out << "." << chan.source.node->name << "(" << chan.target.node->name << ")";
 }
 
-void VerilogGraphPrinter::print(std::ostream &out) const
-{
+void VerilogGraphPrinter::print(std::ostream &out) const {
   out << "module " << g.name << "();" << std::endl;
 
   for (const auto *chan : g.chans) {
@@ -177,11 +174,12 @@ std::unique_ptr<ElementCharacteristics> Library::estimate(const ElementArguments
   }
 
   unsigned frequency = 100;
+  unsigned throughput = 100;
   unsigned power = 5;
   unsigned area = 10000;
 
   std::unique_ptr<ElementCharacteristics> ec =
-    std::make_unique<ElementCharacteristics>(latencies, frequency, power, area);
+    std::make_unique<ElementCharacteristics>(latencies, frequency, throughput, power, area);
 
   return ec;
 }

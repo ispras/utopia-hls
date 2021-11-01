@@ -27,12 +27,12 @@ struct Buffer;
 
 class LatencyBalancer {
 public:
-  LatencyBalancer() { }
-  LatencyBalancer(Model* modelArg) : model(modelArg) { }
+  LatencyBalancer() {}
+  LatencyBalancer(Model* modelArg) : model(modelArg) {}
   virtual ~LatencyBalancer();
   void setModel(Model* modelArg) { model = modelArg; }
   Model* getModel() { return model; }
-  virtual void balance() { }
+  virtual void balance() {}
 
 protected:
   void insertBuffers(Graph* graph, const std::vector<double> &latencies);
@@ -43,7 +43,7 @@ protected:
 
 struct Buffer final {
   Buffer(Chan* chan, unsigned latency, unsigned position) : channel(chan), 
-      latency(latency), position(position) { }
+      latency(latency), position(position) {}
 
   Chan* channel;
   unsigned latency;
