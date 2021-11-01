@@ -15,9 +15,9 @@
 namespace eda::hls::library {
 
 void VerilogNodeTypePrinter::print(std::ostream &out) const {
-  ElementArguments ea;
-  ea.push_back(Port("clock", Port::IN, 1));
-  ea.push_back(Port("reset", Port::IN, 1));
+  //Ports ports;
+  //ports.push_back(Port("clock", Port::IN, 1));
+  //ports.push_back(Port("reset", Port::IN, 1));
 
   out << "module " << type.name << "(" << std::endl;
 
@@ -26,18 +26,20 @@ void VerilogNodeTypePrinter::print(std::ostream &out) const {
     out << (comma ? ", " : "");
     out << arg->name;
     comma = true;
-    ea.push_back(Port(arg->name, Port::IN, 1 /*arg->length*/));
+    //ports.push_back(Port(arg->name, Port::IN, 1 /*arg->length*/));
   }
 
   for (const auto *arg: type.outputs) {
     out << (comma ? ", " : "");
     out << arg->name;
     comma = true;
-    ea.push_back(Port(arg->name, Port::OUT, 1 /*arg->length*/));
+    //ports.push_back(Port(arg->name, Port::OUT, 1 /*arg->length*/));
   }
   out << ");" << std::endl;
 
-  auto element = library.construct(ea, 3);
+  ElementArguments ea(type.name);
+  ea.args.insert(std::pair<std::string, unsigned>("f", 3));
+  auto element = library.construct(ea);
   out << element->ir << std::endl;
 
   out << "endmodule" << " // " << type.name << std::endl;
@@ -97,12 +99,35 @@ const MetaElementDescriptor& Library::find(const std::string &name) const {
   throw std::runtime_error(std::string("Current version of library doesn't include element ") + name);
 }
 
-std::unique_ptr<ElementDescriptor> Library::construct(const ElementArguments &args, unsigned f) const {
-  std::unique_ptr<ElementDescriptor> ed = std::make_unique<ElementDescriptor>(args);
+std::unique_ptr<ElementDescriptor> Library::construct(const ElementArguments &args) const {
+  Ports ports;
+
+  /// Populate ports for different library elements
+  ports.push_back(Port("clock", Port::IN, 0, 1));
+  ports.push_back(Port("reset", Port::IN, 0, 1));
+  if (args.name == "merge") {
+    ports.push_back(Port("in1", Port::IN, 0, 1));
+    ports.push_back(Port("in2", Port::IN, 0, 1));
+    ports.push_back(Port("out", Port::OUT, 1, 1));
+  } else if (args.name == "split") {
+    ports.push_back(Port("in", Port::IN, 0, 1));
+    ports.push_back(Port("out1", Port::OUT, 1, 1));
+    ports.push_back(Port("out2", Port::OUT, 1, 1));
+  } else if (args.name == "delay") {
+    ports.push_back(Port("in", Port::IN, 0, 1));
+    ports.push_back(Port("out", Port::OUT, 1, 1));
+  } else if (args.name == "add" || args.name == "sub") {
+    ports.push_back(Port("a", Port::IN, 0, 4));
+    ports.push_back(Port("b", Port::IN, 0, 4));
+    ports.push_back(Port("c", Port::OUT, 2, 4));
+    ports.push_back(Port("d", Port::OUT, 2, 1));
+  }
+
+  std::unique_ptr<ElementDescriptor> ed = std::make_unique<ElementDescriptor>(ports);
   std::string inputs, outputs, iface_wires;
   unsigned int pos = 0, input_length = 0, output_length = 0;
 
-  for (auto port : args) {
+  for (auto port : ports) {
     if (port.name != "clock" && port.name != "reset") {
       if (port.direction == Port::IN || port.direction == Port::INOUT) {
         input_length += port.width;
@@ -119,7 +144,7 @@ std::unique_ptr<ElementDescriptor> Library::construct(const ElementArguments &ar
   }
 
   bool first_port = true;
-  for (auto port : args) {
+  for (auto port : ports) {
     if (port.name == "clock" || port.name == "reset") {
       iface_wires += std::string("input ") + port.name + ";\n";
       continue;
@@ -143,7 +168,7 @@ std::unique_ptr<ElementDescriptor> Library::construct(const ElementArguments &ar
     if (port.direction == Port::OUT || port.direction == Port::INOUT) {
       iface_wires += std::string("output [") + std::to_string(port.width - 1) + ":0] " + port.name + ";\n";
       outputs += std::string("wire [") + std::to_string(port.width - 1) + ":0] " + port.name +
-                 " = stage_" + std::to_string(f - 1) +
+                 " = stage_" + std::to_string(port.latency - 1) +
                  "[" + std::to_string((pos + port.width - 1) % output_length) + ":" +
                        std::to_string(pos % output_length) + "];\n";
       pos += port.width;
@@ -151,6 +176,9 @@ std::unique_ptr<ElementDescriptor> Library::construct(const ElementArguments &ar
   }
 
   inputs += std::string("};\n");
+
+  /// Extract frequency.
+  unsigned f = args.args.find("f")->second;
   for (unsigned int i = 1; i < f; i++) {
     if (input_length > 2) {
       inputs += std::string("reg [") + std::to_string(input_length - 1) + ":0] state_" + std::to_string(i) +
@@ -166,41 +194,27 @@ std::unique_ptr<ElementDescriptor> Library::construct(const ElementArguments &ar
 }
 
 std::unique_ptr<ElementCharacteristics> Library::estimate(const ElementArguments &args) const {
-  ExtendedElementArguments latencies;
-
   // TODO: estimations of l, f, p, a
-  for (const auto &p : args) {
-    latencies.push_back(ExtendedPort(p, 1));
-  }
-
-  unsigned frequency = 100;
-  unsigned throughput = 100;
+  unsigned frequency = args.args.find("f")->second;
+  unsigned throughput = frequency;
   unsigned power = 5;
   unsigned area = 10000;
 
   std::unique_ptr<ElementCharacteristics> ec =
-    std::make_unique<ElementCharacteristics>(latencies, frequency, throughput, power, area);
+    std::make_unique<ElementCharacteristics>(frequency, throughput, power, area);
 
   return ec;
 }
 
 Library::Library() {
-  Parameters p;
+  Parameters params;
 
-  p.push_back(Parameter(Port("clock", Port::IN, 1), Constraint(1, 1)));
-  p.push_back(Parameter(Port("reset", Port::IN, 1), Constraint(1, 1)));
-
-  library.push_back(MetaElementDescriptor("merge", p));
-  library.push_back(MetaElementDescriptor("split", p));
-  library.push_back(MetaElementDescriptor("delay", p));
-
-  p.push_back(Parameter(Port("a", Port::IN, 4), Constraint(4, 4)));
-  p.push_back(Parameter(Port("b", Port::IN, 4), Constraint(4, 4)));
-  p.push_back(Parameter(Port("c", Port::OUT, 4), Constraint(4, 4)));
-  p.push_back(Parameter(Port("d", Port::OUT, 1), Constraint(1, 1)));
-
-  library.push_back(MetaElementDescriptor("add", p));
-  library.push_back(MetaElementDescriptor("sub", p));
+  params.push_back(Parameter("f", Constraint(1, 10)));
+  library.push_back(MetaElementDescriptor("merge", params));
+  library.push_back(MetaElementDescriptor("split", params));
+  library.push_back(MetaElementDescriptor("delay", params));
+  library.push_back(MetaElementDescriptor("add", params));
+  library.push_back(MetaElementDescriptor("sub", params));
 }
 
 } // namespace eda::hls::library

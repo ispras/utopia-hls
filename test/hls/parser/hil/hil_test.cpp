@@ -60,12 +60,13 @@ int hilTestCompiler(const std::string &filename) {
   auto compiler = std::make_unique<Compiler>(*parse(filename), *library);
   std::cout << *compiler;
 
-  MetaElementDescriptor med = library->find(std::string("add"));
-  ElementArguments ea;
-  for (auto e : med.parameters) {
-    ea.push_back(e.port);
-  }
-  auto element = library->construct(ea, 3);
+  ElementArguments ea(std::string("add"));
+  MetaElementDescriptor med = library->find(ea.name);
+  Parameter param = med.parameters[0];
+  unsigned f = (param.constraint.hiValue - param.constraint.loValue) >> 1;
+  ea.args.insert(std::pair<std::string, unsigned>("f", f));
+
+  auto element = library->construct(ea);
   std::cout << element->ir << std::endl;
   return 0;
 }

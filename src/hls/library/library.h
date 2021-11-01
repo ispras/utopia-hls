@@ -14,20 +14,6 @@
 
 namespace eda::hls::library {
 
-/// RTL port with name, direction, and width.
-struct Port {
-  enum Direction { IN, OUT, INOUT };
-
-  Port(const std::string &name, const Direction &direction, unsigned width):
-    name(name), direction(direction), width(width) {}
-  Port(const Port &port) :
-    name(port.name), direction(port.direction), width(port.width) {}
-
-  const std::string name;
-  const Direction direction;
-  const unsigned width;
-};
-
 struct Constraint final {
   Constraint(unsigned loValue, unsigned hiValue):
     loValue(loValue), hiValue(hiValue) {}
@@ -37,18 +23,17 @@ struct Constraint final {
 };
 
 struct Parameter final {
-  Parameter(const Port &port, const Constraint &constraint):
-    port(port), constraint(constraint) {};
-  Parameter(const Parameter &p): port(p.port), constraint(p.constraint) {}
-  const Port port;
+  Parameter(const std::string &name, const Constraint &constraint):
+    name(name), constraint(constraint) {};
+  Parameter(const Parameter &p): name(p.name), constraint(p.constraint) {}
+  const std::string name;
   const Constraint constraint;
 };
 
-typedef std::vector<Port> ElementArguments;
 typedef std::vector<Parameter> Parameters;
 
 /// Description of a class of modules with the given names,
-///  port list, and allowed ranges of their values.
+///  parameter list, and allowed ranges of their values.
 struct MetaElementDescriptor final {
   MetaElementDescriptor(const std::string &name, const Parameters &parameters):
     name(name), parameters(parameters) {}
@@ -61,43 +46,51 @@ struct MetaElementDescriptor final {
   const Parameters parameters;
 };
 
+/// RTL port with name, direction, and width.
+struct Port {
+  enum Direction { IN, OUT, INOUT };
+
+  Port(const std::string &name, const Direction &direction,
+       unsigned latency, unsigned width):
+    name(name), direction(direction), latency(latency), width(width) {}
+  Port(const Port &port): name(port.name), direction(port.direction),
+    latency(port.latency), width(port.width) {}
+
+  const std::string name;
+  const Direction direction;
+  const unsigned latency;
+  const unsigned width;
+};
+
+typedef std::vector<Port> Ports;
+
 /// Description of a module with the given name and values of parameters.
 struct ElementDescriptor final {
-  explicit ElementDescriptor(const ElementArguments &args): ports(args) {}
+  explicit ElementDescriptor(const Ports &ports): ports(ports) {}
 
   // TODO add mutual relation between spec ports and impl ports
-  const ElementArguments ports;
+  const Ports ports;
 
   // TODO there should be different IRs: MLIR FIRRTL or Verilog|VHDL described in FIRRTL
   std::string ir;
 };
 
-struct ExtendedPort final : Port {
-  ExtendedPort(const std::string &name, const Direction &direction,
-               unsigned width, unsigned latency):
-    Port(name, direction, width), latency(latency) {}
-
-  ExtendedPort(const Port &port, unsigned latency):
-    Port(port), latency(latency) {}
-
-  ExtendedPort(const ExtendedPort &ep):
-    Port(ep.name, ep.direction, ep.width), latency(ep.latency) {}
-
-  const unsigned latency;
-};
-
-typedef std::vector<ExtendedPort> ExtendedElementArguments;
-
 struct ElementCharacteristics final {
-  ElementCharacteristics(const ExtendedElementArguments &latencies,
+  ElementCharacteristics(
     unsigned frequency, unsigned throughput, unsigned power, unsigned area):
-    latencies(latencies), frequency(frequency), throughput(throughput), power(power), area(area) {}
+    frequency(frequency), throughput(throughput), power(power), area(area) {}
 
-  const ExtendedElementArguments latencies;
   const unsigned frequency;
   const unsigned throughput;
   const unsigned power;
   const unsigned area;
+};
+
+struct ElementArguments final {
+  explicit ElementArguments(const std::string &name): name(name) {}
+
+  const std::string name;
+  std::map<const std::string, unsigned> args;
 };
 
 class Library final {
@@ -110,7 +103,7 @@ public:
 
   // Return a module with the selected set of parameters
   // (where f is an additional parameter).
-  std::unique_ptr<ElementDescriptor> construct(const ElementArguments &args, unsigned f) const;
+  std::unique_ptr<ElementDescriptor> construct(const ElementArguments &args) const;
 
   // Return characteristics for the selected set of parameters.
   std::unique_ptr<ElementCharacteristics> estimate(const ElementArguments &args) const;
@@ -120,7 +113,7 @@ private:
 };
 
 struct VerilogNodeTypePrinter final {
-  VerilogNodeTypePrinter(const eda::hls::model::NodeType &type, const Library &library) :
+  VerilogNodeTypePrinter(const eda::hls::model::NodeType &type, const Library &library):
     type(type), library(library) {}
   void print(std::ostream &out) const;
 
@@ -129,7 +122,7 @@ struct VerilogNodeTypePrinter final {
 };
 
 struct VerilogGraphPrinter final {
-  VerilogGraphPrinter(const eda::hls::model::Graph &graph, const Library &library) :
+  VerilogGraphPrinter(const eda::hls::model::Graph &graph, const Library &library):
     graph(graph), library(library) {}
 
   void printChan(std::ostream &out, const eda::hls::model::Chan &chan) const;
