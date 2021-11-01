@@ -19,9 +19,9 @@ class LpSolver final : public LatencyBalancer {
 
 public:
 
-  LpSolver() : helper(LpSolverHelper::reset()), lastStatus(helper->getStatus()) {}
+  LpSolver() : helper(LpSolverHelper::get()), lastStatus(helper.getStatus()) {}
 
-  ~LpSolver() = default;
+  ~LpSolver() { helper.reset(); }
 
   void balance(Model &model, BalanceMode mode, Verbosity verbosity);
 
@@ -50,7 +50,7 @@ private:
   const std::string DeltaPrefix = "delta_";
   const std::string BufferPrefix = "buf_";
   
-  LpSolverHelper *helper;
+  LpSolverHelper &helper;
   int lastStatus;
 };
 

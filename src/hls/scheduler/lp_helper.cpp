@@ -14,17 +14,7 @@
 namespace eda::hls::scheduler {
 
 LpSolverHelper::~LpSolverHelper() {
-
-  for (auto *constraint : constraints) {
-    delete constraint;
-  }
-
-  for (auto var : variables) {
-    delete var.second;
-  }
-
-  ::delete_lp(lp);
-  //std::cout << "LP deleted\n";
+  deleteFields();
 }
 
 void LpSolverHelper::solve() {
@@ -34,21 +24,28 @@ void LpSolverHelper::solve() {
   status = ::solve(lp);
 }
 
-LpSolverHelper* LpSolverHelper::instance = nullptr;
-
-LpSolverHelper* LpSolverHelper::get() {
-  if (instance == nullptr) {
-    instance = new LpSolverHelper();
-  }
-  return instance;
+void LpSolverHelper::reset() {
+  deleteFields();
+  initFields();
 }
 
-LpSolverHelper* LpSolverHelper::reset() {
-  if (instance != nullptr) {
-    delete instance;
-    instance = nullptr;
+void LpSolverHelper::deleteFields() {
+  for (auto *constraint : constraints) {
+    delete constraint;
   }
-  return get();
+  for (auto var : variables) {
+    delete var.second;
+  }
+  ::delete_lp(lp);
+}
+
+void LpSolverHelper::initFields() {
+  lp = ::make_lp(0, 0);
+  assert(lp != nullptr);
+  variables = std::map<std::string, SolverVariable*>();
+  constraints = std::vector<SolverConstraint*>();
+  currentColumn = 0;
+  status = -10;
 }
 
 std::vector<double> LpSolverHelper::getResults() {

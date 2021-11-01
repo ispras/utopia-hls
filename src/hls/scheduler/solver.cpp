@@ -19,7 +19,7 @@ float sumFlows(const std::vector<Port*> &);
 void LpSolver::balance(Model &model, BalanceMode mode, Verbosity verbosity) {
   for (auto* graph : model.graphs) {
     if (graph->isMain()) {
-      helper->setVerbosity(verbosity);
+      helper.setVerbosity(verbosity);
 
       // Generate a problem to solve
       switch (mode) {
@@ -31,20 +31,18 @@ void LpSolver::balance(Model &model, BalanceMode mode, Verbosity verbosity) {
       }
 
       // Solve
-      helper->printProblem();
-      helper->solve();
-      helper->printStatus();
-      helper->printResults();
+      helper.printProblem();
+      helper.solve();
+      helper.printStatus();
+      //helper.printResults();
 
       if (mode == LatencyLP) {
-        insertBuffers(*graph, helper->getResults());
+        insertBuffers(*graph, helper.getResults());
       }
-      lastStatus = helper->getStatus();
+      lastStatus = helper.getStatus();
 
       // Reset solver for next problem
-      if (model.graphs.size() > 1) {
-        helper = LpSolverHelper::reset();
-      }
+      helper.reset();
     }
   }
 }
@@ -53,7 +51,7 @@ void LpSolver::balanceLatency(const Graph *graph) {
 
   for (const Node *node : graph->nodes) {
     std::string nodeName = node->name;
-    helper->addVariable(TimePrefix + nodeName, node);
+    helper.addVariable(TimePrefix + nodeName, node);
   }
 
   std::vector<std::string> deltas;
@@ -68,8 +66,8 @@ void LpSolver::balanceLatency(const Graph *graph) {
   }
 
   // Minimize deltas
-  helper->setObjective(deltas, makeCoeffs(deltas).get());
-  helper->setMin();
+  helper.setObjective(deltas, makeCoeffs(deltas).get());
+  helper.setMin();
 }
 
 void LpSolver::genLatencyConstraints(const std::string &dstName, 
@@ -78,7 +76,7 @@ void LpSolver::genLatencyConstraints(const std::string &dstName,
   std::vector<double> values{1.0, -1.0};
 
   // t_next >= t_prev + prev_latency
-  helper->addConstraint(names, values, OperationType::GreaterOrEqual, 
+  helper.addConstraint(names, values, OperationType::GreaterOrEqual, 
       srcLatency);
 }
 
@@ -86,13 +84,13 @@ void LpSolver::genDeltaConstraints(const std::string &dstName,
     const std::string &srcName, std::vector<std::string> &deltas) {
   std::vector<double> values{1.0, -1.0, 1.0};
   const std::string deltaName = DeltaPrefix + dstName + "_" + srcName;
-  helper->addVariable(deltaName, nullptr);
+  helper.addVariable(deltaName, nullptr);
   deltas.push_back(deltaName);
   std::vector<std::string> constrNames{deltaName, TimePrefix + dstName, 
       TimePrefix + srcName};
 
   // delta_t = t_next - t_prev
-  helper->addConstraint(constrNames, values, OperationType::Equal, 0);
+  helper.addConstraint(constrNames, values, OperationType::Equal, 0);
 }
 
 void LpSolver::genBufferConstraints(const std::string &dstName, 
@@ -101,11 +99,11 @@ void LpSolver::genBufferConstraints(const std::string &dstName,
   const std::string bufName = BufferPrefix + dstName + "_" + srcName;
   std::vector<std::string> constrNames{bufName, TimePrefix + dstName, 
       TimePrefix + srcName};
-  SolverVariable *bufferVariable = helper->addVariable(bufName, nullptr);
+  SolverVariable *bufferVariable = helper.addVariable(bufName, nullptr);
   buffers.push_back(new Buffer{channel, 0, bufferVariable->column_number});
   
   // buf_next_prev = t_next - (t_prev + prev_latency)
-  helper->addConstraint(constrNames, values, OperationType::Equal, 
+  helper.addConstraint(constrNames, values, OperationType::Equal, 
       -1.0 * srcLatency);
 }
 
@@ -114,7 +112,7 @@ void LpSolver::balanceFlows(BalanceMode mode, const Graph *graph) {
   for (const auto *node : graph->nodes) {
     checkFlows(node);
     std::string nodeName = node->name;
-    helper->addVariable(nodeName, node);
+    helper.addVariable(nodeName, node);
     genNodeConstraints(nodeName);
     if (node->isSink()) {
       sinks.push_back(node->name);
@@ -133,8 +131,8 @@ void LpSolver::balanceFlows(BalanceMode mode, const Graph *graph) {
   }
 
   // Maximize sink flow
-  helper->setObjective(sinks, makeCoeffs(sinks).get());
-  helper->setMax();
+  helper.setObjective(sinks, makeCoeffs(sinks).get());
+  helper.setMax();
 }
 
 std::shared_ptr<double[]> makeCoeffs(const std::vector<std::string> &sinks) {
@@ -150,9 +148,9 @@ void LpSolver::genNodeConstraints(const std::string &nodeName) {
   std::vector<double> valOne{1.0};
 
   // Add 'coeff >= 0.01'
-  helper->addConstraint(names, valOne, OperationType::GreaterOrEqual, 0.01);
+  helper.addConstraint(names, valOne, OperationType::GreaterOrEqual, 0.01);
   // Add 'coeff <= 1'
-  helper->addConstraint(names, valOne, OperationType::LessOrEqual, 1);
+  helper.addConstraint(names, valOne, OperationType::LessOrEqual, 1);
 }
 
 void LpSolver::genFlowConstraints(const Graph *graph, OperationType type) {
@@ -162,7 +160,7 @@ void LpSolver::genFlowConstraints(const Graph *graph, OperationType type) {
     std::vector<std::string> names{src.node->name, dst.node->name};
     std::vector<double> values{src.port->flow, -1.0 * dst.port->flow};
 
-    helper->addConstraint(names, values, type,0);
+    helper.addConstraint(names, values, type,0);
   }
 }
 

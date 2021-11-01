@@ -15,15 +15,18 @@
 #pragma once
 
 #include "hls/model/model.h"
+#include "util/singleton.h"
 
 #include "lpsolve/lp_lib.h"
 
 #include <cassert>
+#include <iostream>
 #include <map>
 #include <string>
 #include <vector>
 
 using namespace eda::hls::model;
+using namespace eda::util;
 
 namespace eda::hls::scheduler {
 
@@ -48,9 +51,11 @@ enum Verbosity {
 struct SolverVariable;
 struct SolverConstraint;
 
-class LpSolverHelper final {
+class LpSolverHelper final : public Singleton<LpSolverHelper> {
 
 public:
+
+  friend Singleton<LpSolverHelper>;
 
   ~LpSolverHelper();
 
@@ -108,11 +113,10 @@ public:
   /// Get the existing constraints.
   std::vector<SolverConstraint*> getConstraints() { return constraints; }
 
-  static LpSolverHelper* get();
-  static LpSolverHelper* reset();
+  void reset();
 
 private:
-  LpSolverHelper() : lp(make_lp(0, 0)), currentColumn(0), status(-10) {
+  LpSolverHelper() : lp(::make_lp(0, 0)), currentColumn(0), status(-10) {
     setVerbosity(Normal);
   }
 
@@ -122,7 +126,9 @@ private:
   /// Adds all existing constraints to the problem.
   void addAllConstraints();
 
-  static LpSolverHelper *instance;
+  void deleteFields();
+  void initFields();
+
   lprec *lp;
   std::map<std::string, SolverVariable*> variables;
   std::vector<SolverConstraint*> constraints;

@@ -25,8 +25,8 @@ int lpsolveTest(const std::string &filename, BalanceMode mode) {
   std::unique_ptr<Model> model = parse(filename);
   LpSolver *solver = new LpSolver();
 
-  solver->balance(*model, mode, Verbosity::Full);
-  std::cout<<*model;
+  solver->balance(*model, mode, Verbosity::Normal);
+  //std::cout << *model;
   return solver->getStatus();
 }
 
