@@ -7,15 +7,12 @@
 //===----------------------------------------------------------------------===//
 
 #include <iostream>
-#include <memory>
 
 #include "hls/parser/hil/builder.h"
 
 using namespace eda::hls;
 
 namespace eda::hls::parser::hil {
-
-std::unique_ptr<Builder> Builder::instance = nullptr;
 
 std::unique_ptr<Model> Builder::create() {
   assert(currentModel != nullptr && "No model found");

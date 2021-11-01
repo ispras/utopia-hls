@@ -17,8 +17,10 @@
 
 #include "hls/model/model.h"
 #include "util/assert.h"
+#include "util/singleton.h"
 
 using namespace eda::hls::model;
+using namespace eda::util;
 
 namespace eda::hls::parser::hil {
 
@@ -26,14 +28,10 @@ namespace eda::hls::parser::hil {
  * \brief Helps to contruct the IR from source code.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
-class Builder final {
-public:
-  static Builder& get() {
-    if (instance == nullptr)
-      instance = std::unique_ptr<Builder>(new Builder());
-    return *instance;
-  }
+class Builder final : public Singleton<Builder> {
+  friend class Singleton<Builder>;
 
+public:
   std::unique_ptr<Model> create();
 
   void startModel(const std::string &name) {
@@ -233,8 +231,6 @@ private:
   std::unordered_map<std::string, NodeType*> nodetypes;
   std::unordered_map<std::string, Chan*> chans;
   std::unordered_map<std::string, Graph*> graphs;
-
-  static std::unique_ptr<Builder> instance;
 };
 
 } // namespace eda::hls::parser::hil
