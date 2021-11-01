@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.0)
 project(UtopiaTest VERSION 0.0)
 
 set(TEST_TARGET utest)
+set(Z3_LIBRARY z3)
 set(CMAKE_CXX_STANDARD 17)
 
 # Use custom build of Z3 if Z3_DIR env var is specified
@@ -40,7 +41,7 @@ add_executable(${TEST_TARGET}
   test_main.cpp
 )
 
-target_link_libraries(${TEST_TARGET} PRIVATE gtest_main ${MAIN_LIBRARY})
+target_link_libraries(${TEST_TARGET} PRIVATE gtest_main ${MAIN_LIBRARY} ${Z3_LIBRARY})
 
 include(GoogleTest)
 gtest_discover_tests(${TEST_TARGET})
