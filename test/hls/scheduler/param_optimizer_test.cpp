@@ -12,6 +12,8 @@
 
 #include "gtest/gtest.h"
 
+#include <limits>
+
 using namespace eda::hls::model;
 using namespace eda::hls::parser::hil;
 using namespace eda::hls::scheduler;
@@ -19,11 +21,11 @@ using namespace eda::hls::scheduler;
 void paramOptimizerTest(const std::string &filename) {
   // Optimization criterion and constraints.
   Criteria criteria(Throughput,
-    Constraint(1, 1000),  // Frequency
-    Constraint(1, 1000),  // Throughput
-    Constraint(0, 1000),  // Latency
-    Constraint(0, 1000),  // Power
-    Constraint(1, 1000)); // Area
+    Constraint(1000, 500000),                               // Frequency (kHz)
+    Constraint(1000, 500000),                               // Throughput (=frequency)
+    Constraint(0,    100),                                  // Latency (cycles)
+    Constraint(0,    std::numeric_limits<unsigned>::max()), // Power (does not matter)
+    Constraint(1,    150000));                              // Area (number of LUTs)
 
   // Model whose parameters need to be optimized.
   std::unique_ptr<Model> model = parse(filename);
@@ -36,19 +38,10 @@ void paramOptimizerTest(const std::string &filename) {
     ParametersOptimizer::get().optimize(*model, criteria, indicators);
 
   // Check the constrains.
-  EXPECT_TRUE(criteria.frequency.min <= indicators.frequency &&
-              criteria.frequency.max >= indicators.frequency);
-  EXPECT_TRUE(criteria.throughput.min <= indicators.throughput &&
-              criteria.throughput.max >= indicators.throughput);
-  EXPECT_TRUE(criteria.latency.min <= indicators.latency &&
-              criteria.latency.max >= indicators.latency);
-  EXPECT_TRUE(criteria.power.min <= indicators.power &&
-              criteria.power.max >= indicators.power);
-  EXPECT_TRUE(criteria.area.min <= indicators.area &&
-              criteria.area.max >= indicators.area);
+  EXPECT_TRUE(criteria.check(indicators));
 }
 
-TEST(SchedulerTest, ParamOptimizerSimple) {
+TEST(SchedulerTest, ParamOptimizerBase) {
   paramOptimizerTest("test/data/hil/test.hil");
 }
 

@@ -41,6 +41,15 @@ struct Criteria final {
   const Constraint latency;
   const Constraint power;
   const Constraint area;
+
+  /// Checks the constraints.
+  bool check(const Indicators &indicators) const {
+    return frequency.check(indicators.frequency)
+        && throughput.check(indicators.throughput)
+        && latency.check(indicators.latency)
+        && power.check(indicators.power)
+        && area.check(indicators.area);
+  }
 };
 
 class ParametersOptimizer final : public Singleton<ParametersOptimizer> {

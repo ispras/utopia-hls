@@ -6,7 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "hls/library/library.h"
+#include "hls/model/model.h"
 #include "hls/scheduler/param_optimizer.h"
+
+#include <cassert>
 
 namespace eda::hls::scheduler {
 
@@ -16,27 +20,66 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     Indicators &indicators) const {
   std::map<std::string, Parameters> params;
 
-  // TODO: Iterate over the model's nodes.
-  // model.nodes
+  // Get the main dataflow graph.
+  Graph *graph = model.main();
+  assert(graph != nullptr && "Main graph is not found");
 
-  // TODO: For each node:
+  // Collect the parameters for all nodes.
+  for (const auto *node : graph->nodes) {
+    if (node->isSource() || node->isSink())
+      continue;
 
-    // TODO: Get the node's parameters.
-    // Library::get().find(node.type.name)
+    const MetaElement &metaElement = Library::get().find(node->type.name);
+    Parameters nodeParams(node->name, metaElement.params);
+    params.insert({ node->name, nodeParams });
+  }
 
-    // TODO: Set the parameters' values.
-    // params.set(name, value)
+  // Optimization loop.
+  while (true) {
+    // Update the values of the parameters.
+    for (const auto *node : graph->nodes) {
+      // Ignore the source and sink nodes.
+      if (node->isSource() || node->isSink())
+        continue;
 
-    // TODO: Insert the buffers to align times.
+      auto i = params.find(node->name);
+      for (auto param : i->second.params) {
+        param.second.value++; // FIXME
+      }
+    }
 
-    // TODO: Estimate the indicators.
-    // Library::get().estimate(params, indicators)
+    // Balance flows and align times.
+    // TODO:
+    indicators.latency = 100; // FIXME
+    indicators.frequency = 100000; // FIXME
 
-  // TODO: Estimate the integral indicators.
+    // Estimate the integral indicators.
+    indicators.throughput = indicators.frequency;
+    indicators.power = 0;
+    indicators.area = 0;
 
-  // TODO: Check the constraints.
+    for (const auto *node : graph->nodes) {
+      // Ignore the source and sink nodes.
+      if (node->isSource() || node->isSink())
+        continue;
 
-  // TODO: Search for better solution.
+      auto i = params.find(node->name);
+      Indicators nodeIndicators;
+      Library::get().estimate(i->second, nodeIndicators);
+
+      indicators.power += nodeIndicators.power;
+      indicators.area += nodeIndicators.area;
+    }
+
+    // Check the constraints.
+    if (criteria.check(indicators)) {
+      // Acceptable.
+      break; // FIXME
+    } else {
+      // Unacceptable.
+      break; // FIXME
+    }
+  }
 
   return params;
 }

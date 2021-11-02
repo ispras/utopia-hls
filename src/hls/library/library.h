@@ -38,7 +38,12 @@ struct Indicators final {
 struct Constraint final {
   Constraint(unsigned min, unsigned max):
     min(min), max(max) {}
+
   Constraint(const Constraint &) = default;
+
+  bool check(unsigned value) const {
+    return min <= value && value <= max;
+  }
 
   const unsigned min;
   const unsigned max;
@@ -48,17 +53,22 @@ struct Parameter final {
   Parameter(const std::string &name, const Constraint &constraint,
             unsigned value):
     name(name), constraint(constraint), value(value) {}
+
   Parameter(const Parameter &) = default;
 
   const std::string name;
   const Constraint constraint;
-
   unsigned value;
 };
 
 struct Parameters final {
   explicit Parameters(const std::string &elementName):
     elementName(elementName) {}
+
+  Parameters(const Parameters &) = default;
+
+  Parameters(const std::string &elementName, const Parameters &params):
+    elementName(elementName), params(params.params) {}
 
   Parameter get(const std::string &name) const {
     auto i = params.find(name);

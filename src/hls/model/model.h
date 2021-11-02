@@ -267,6 +267,10 @@ struct Model final {
     return i != graphs.end() ? *i : nullptr;
   }
 
+  Graph* main() const {
+    return findGraph("main");
+  }
+
   const std::string name;
   std::vector<NodeType *> nodetypes;
   std::vector<Graph *> graphs;
