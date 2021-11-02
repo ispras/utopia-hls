@@ -26,10 +26,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
 
   // Collect the parameters for all nodes.
   for (const auto *node : graph->nodes) {
-    if (node->isSource() || node->isSink())
-      continue;
-
-    const MetaElement &metaElement = Library::get().find(node->type.name);
+    const MetaElement &metaElement = Library::get().find(node->type);
     Parameters nodeParams(node->name, metaElement.params);
     params.insert({ node->name, nodeParams });
   }
@@ -38,10 +35,6 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   while (true) {
     // Update the values of the parameters.
     for (const auto *node : graph->nodes) {
-      // Ignore the source and sink nodes.
-      if (node->isSource() || node->isSink())
-        continue;
-
       auto i = params.find(node->name);
       for (auto param : i->second.params) {
         param.second.value++; // FIXME
@@ -59,10 +52,6 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     indicators.area = 0;
 
     for (const auto *node : graph->nodes) {
-      // Ignore the source and sink nodes.
-      if (node->isSource() || node->isSink())
-        continue;
-
       auto i = params.find(node->name);
       Indicators nodeIndicators;
       Library::get().estimate(i->second, nodeIndicators);

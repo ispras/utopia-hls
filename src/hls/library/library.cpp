@@ -16,10 +16,6 @@
 namespace eda::hls::library {
 
 void VerilogNodeTypePrinter::print(std::ostream &out) const {
-  //Ports ports;
-  //ports.push_back(Port("clock", Port::IN, 1));
-  //ports.push_back(Port("reset", Port::IN, 1));
-
   out << "module " << type.name << "(" << std::endl;
 
   bool comma = false;
@@ -27,20 +23,19 @@ void VerilogNodeTypePrinter::print(std::ostream &out) const {
     out << (comma ? ", " : "");
     out << arg->name;
     comma = true;
-    //ports.push_back(Port(arg->name, Port::IN, 1 /*arg->length*/));
   }
 
   for (const auto *arg: type.outputs) {
     out << (comma ? ", " : "");
     out << arg->name;
     comma = true;
-    //ports.push_back(Port(arg->name, Port::OUT, 1 /*arg->length*/));
   }
   out << ");" << std::endl;
 
-  Parameters params(type.name);
-  params.add(Parameter("f", Constraint(1, 1000), 3)); // FIXME
-  auto element = Library::get().construct(params);
+  auto meta = Library::get().find(type);
+  // meta.params.value["f"] can be adjusted before calling construct
+  // meta.params.set(std::string("f"), 3);
+  auto element = Library::get().construct(meta);
   out << element->ir << std::endl;
 
   out << "endmodule" << " // " << type.name << std::endl;
@@ -96,35 +91,73 @@ const MetaElement& Library::find(const std::string &name) const {
   return *i;
 }
 
-std::unique_ptr<Element> Library::construct(const Parameters &params) const {
+const MetaElement& Library::find(const eda::hls::model::NodeType &type) {
+  const auto i = std::find_if(library.begin(), library.end(),
+    [&type](const MetaElement &meta) { return meta.name == type.name; });
+  /// TODO Dynamic population of the library should be prohibited
+  if (i == library.end()) {
+    library.push_back(createMetaElement(type));
+    return library.back();
+  }
+  return *i;
+}
+
+MetaElement Library::createMetaElement(const eda::hls::model::NodeType &type) const {
+  Parameters params("");
   Ports ports;
+
+  params.add(Parameter("f", Constraint(1, 1000), 100));
+
+  /// Copy ports from model
+  for (const auto *arg: type.inputs) {
+    ports.push_back(Port(arg->name, Port::IN, arg->latency, 1 /*arg->length*/));
+  }
+  for (const auto *arg: type.outputs) {
+    ports.push_back(Port(arg->name, Port::OUT, arg->latency, 1 /*arg->length*/));
+  }
+
+  return MetaElement(type.name, params, ports);
+}
+
+MetaElement Library::createMetaElement(const std::string &name) const {
+  Parameters params("");
+  Ports ports;
+
+  params.add(Parameter("f", Constraint(1, 1000), 100));
 
   /// Populate ports for different library elements
   ports.push_back(Port("clock", Port::IN, 0, 1));
   ports.push_back(Port("reset", Port::IN, 0, 1));
-  if (params.elementName == "merge") {
+
+  if (name == "merge") {
     ports.push_back(Port("in1", Port::IN, 0, 1));
     ports.push_back(Port("in2", Port::IN, 0, 1));
     ports.push_back(Port("out", Port::OUT, 1, 1));
-  } else if (params.elementName == "split") {
+  } else if (name == "split") {
     ports.push_back(Port("in", Port::IN, 0, 1));
     ports.push_back(Port("out1", Port::OUT, 1, 1));
     ports.push_back(Port("out2", Port::OUT, 1, 1));
-  } else if (params.elementName == "delay") {
+  } else if (name == "delay") {
     ports.push_back(Port("in", Port::IN, 0, 1));
     ports.push_back(Port("out", Port::OUT, 1, 1));
-  } else if (params.elementName == "add" || params.elementName == "sub") {
+  } else if (name == "add" || name == "sub") {
     ports.push_back(Port("a", Port::IN, 0, 4));
     ports.push_back(Port("b", Port::IN, 0, 4));
     ports.push_back(Port("c", Port::OUT, 2, 4));
     ports.push_back(Port("d", Port::OUT, 2, 1));
+  } else {
+    uassert(false, "Call createMetaElement by NodeType for element " << name);
   }
 
-  std::unique_ptr<Element> element = std::make_unique<Element>(ports);
+  return MetaElement(name, params, ports);
+}
+
+std::unique_ptr<Element> Library::construct(const MetaElement &meta) const {
+  std::unique_ptr<Element> element = std::make_unique<Element>(meta.ports);
   std::string inputs, outputs, iface_wires;
   unsigned int pos = 0, input_length = 0, output_length = 0;
 
-  for (auto port : ports) {
+  for (auto port : meta.ports) {
     if (port.name != "clock" && port.name != "reset") {
       if (port.direction == Port::IN || port.direction == Port::INOUT) {
         input_length += port.width;
@@ -141,7 +174,7 @@ std::unique_ptr<Element> Library::construct(const Parameters &params) const {
   }
 
   bool first_port = true;
-  for (auto port : ports) {
+  for (auto port : meta.ports) {
     if (port.name == "clock" || port.name == "reset") {
       iface_wires += std::string("input ") + port.name + ";\n";
       continue;
@@ -175,7 +208,7 @@ std::unique_ptr<Element> Library::construct(const Parameters &params) const {
   inputs += std::string("};\n");
 
   /// Extract frequency.
-  unsigned f = params.value("f");
+  unsigned f = meta.params.value("f");
   for (unsigned i = 1; i < f; i++) {
     if (input_length > 2) {
       inputs += std::string("reg [") + std::to_string(input_length - 1) + ":0] state_" + std::to_string(i) +
@@ -200,14 +233,11 @@ void Library::estimate(const Parameters &params, Indicators &indicators) const {
 }
 
 Library::Library() {
-  Parameters params("");
-  params.add(Parameter("f", Constraint(1, 1000), 100));
-
-  library.push_back(MetaElement("merge", params));
-  library.push_back(MetaElement("split", params));
-  library.push_back(MetaElement("delay", params));
-  library.push_back(MetaElement("add", params));
-  library.push_back(MetaElement("sub", params));
+  library.push_back(createMetaElement("merge"));
+  library.push_back(createMetaElement("split"));
+  library.push_back(createMetaElement("delay"));
+  library.push_back(createMetaElement("add"));
+  library.push_back(createMetaElement("sub"));
 }
 
 } // namespace eda::hls::library

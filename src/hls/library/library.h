@@ -96,18 +96,6 @@ struct Parameters final {
   std::map<std::string, Parameter> params;
 };
 
-
-/// Description of a class of modules with the given names,
-///  parameter list, and allowed ranges of their values.
-struct MetaElement final {
-  MetaElement(const std::string &name, const Parameters &params):
-    name(name), params(params) {}
-  MetaElement(const MetaElement &) = default;
-
-  const std::string name;
-  const Parameters params;
-};
-
 /// RTL port with name, direction, and width.
 struct Port {
   enum Direction { IN, OUT, INOUT };
@@ -126,6 +114,19 @@ struct Port {
 
 typedef std::vector<Port> Ports;
 
+/// Description of a class of modules with the given names,
+///  parameter list, and allowed ranges of their values.
+struct MetaElement final {
+  MetaElement(const std::string &name, const Parameters &params,
+              const Ports &ports):
+    name(name), params(params), ports(ports) {}
+  MetaElement(const MetaElement &) = default;
+
+  const std::string name;
+  const Parameters params;
+  const Ports ports;
+};
+
 /// Description of a module with the given name and values of parameters.
 struct Element final {
   explicit Element(const Ports &ports): ports(ports) {}
@@ -141,36 +142,47 @@ class Library final : public Singleton<Library> {
 public:
   Library();
 
-  // Return a list of parameters for the module with the given name
-  // (and correspodent functionality).
+  /// Return a list of parameters for the module with the given name
+  /// (and correspodent functionality).
+  const MetaElement& find(const eda::hls::model::NodeType &type);
+
+  /// Return a list of parameters iff the element is in the library.
   const MetaElement& find(const std::string &name) const;
 
-  // Return a module with the selected set of parameters
-  // (where f is an additional parameter).
-  std::unique_ptr<Element> construct(const Parameters &params) const;
+  /// Return a module with the selected set of parameters
+  /// (where f is an additional parameter).
+  std::unique_ptr<Element> construct(const MetaElement &meta) const;
 
-  // Return characteristics for the selected set of parameters.
+  /// Return characteristics for the selected set of parameters.
   void estimate(const Parameters &params, Indicators &indicators) const;
 
 private:
+  /// NodeType => MetaElement if the element is missing in the library.
+  MetaElement createMetaElement(const eda::hls::model::NodeType &type) const;
+  /// MetaElement to populate the library.
+  MetaElement createMetaElement(const std::string &name) const;
   std::vector<MetaElement> library;
 };
 
-struct VerilogNodeTypePrinter final {
+class VerilogNodeTypePrinter final {
+public:
   VerilogNodeTypePrinter(const eda::hls::model::NodeType &type):
     type(type) {}
   void print(std::ostream &out) const;
 
+private:
   const eda::hls::model::NodeType &type;
 };
 
-struct VerilogGraphPrinter final {
+class VerilogGraphPrinter final {
+public:
   VerilogGraphPrinter(const eda::hls::model::Graph &graph):
     graph(graph) {}
 
-  void printChan(std::ostream &out, const eda::hls::model::Chan &chan) const;
   void print(std::ostream &out) const;
 
+private:
+  void printChan(std::ostream &out, const eda::hls::model::Chan &chan) const;
   const eda::hls::model::Graph &graph;
 };
 
