@@ -272,8 +272,8 @@ struct Model final {
   }
 
   const std::string name;
-  std::vector<NodeType *> nodetypes;
-  std::vector<Graph *> graphs;
+  std::vector<NodeType*> nodetypes;
+  std::vector<Graph*> graphs;
 };
 
 std::ostream& operator <<(std::ostream &out, const Port &port);
