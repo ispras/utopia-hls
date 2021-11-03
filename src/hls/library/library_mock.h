@@ -49,11 +49,6 @@ inline std::unique_ptr<Element> MetaElementMock::construct(
     }
   }
 
-  if (output_length == 0) {
-    element->ir = iface_wires;
-    return element;
-  }
-
   // FSM can be create iff there is at least one input in the design.
   bool fsmNotCreated = true;
 
@@ -102,6 +97,11 @@ inline std::unique_ptr<Element> MetaElementMock::construct(
                  ":" + std::to_string(pos % output_length) + "];\n";
       pos += port.width;
     }
+  }
+
+  if (output_length == 0) {
+    element->ir = std::string("\n") + iface_wires + inputs;
+    return element;
   }
 
   // Finish creating the first stage of pipeline.

@@ -72,6 +72,7 @@ void VerilogGraphPrinter::print(std::ostream &out) const {
   for (const auto *chan : graph.chans) {
     out << "wire " << chan->name << ";" << std::endl;
   }
+  out << "wire clock;" << std::endl << "wire reset;" << std::endl;
   for (const auto *node : graph.nodes) {
     // TODO: node.type is ignored
     out << node->type.name << " " << node->name << "(";
@@ -89,7 +90,7 @@ void VerilogGraphPrinter::print(std::ostream &out) const {
       printChan(out, *output);
       comma = true;
     }
-    out << ");" << std::endl;
+    out << (comma ? ", " : "") << ".clock(clock), .reset(reset));" << std::endl;
   }
   out << "endmodule // " << graph.name << std::endl;
 }
