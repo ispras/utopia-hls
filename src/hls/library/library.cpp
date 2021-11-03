@@ -35,15 +35,6 @@ std::shared_ptr<MetaElement> Library::find(const std::string &name) const {
   return i == library.end() ? nullptr : *i;
 }
 
-Library::Library() {
-  // FIXME
-  library.push_back(MetaElementMock::create("merge"));
-  library.push_back(MetaElementMock::create("split"));
-  library.push_back(MetaElementMock::create("delay"));
-  library.push_back(MetaElementMock::create("add"));
-  library.push_back(MetaElementMock::create("sub"));
-}
-
 void VerilogNodeTypePrinter::print(std::ostream &out) const {
   out << "module " << type.name << "(" << std::endl;
 

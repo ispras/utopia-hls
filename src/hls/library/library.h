@@ -149,10 +149,14 @@ struct MetaElement {
 
 class Library final : public Singleton<Library> {
 public:
-  Library();
+  Library() {}
 
   std::shared_ptr<MetaElement> find(const NodeType &nodetype);
   std::shared_ptr<MetaElement> find(const std::string &name) const;
+
+  void add(const std::shared_ptr<MetaElement> &metaElement) {
+    library.push_back(metaElement);
+  }
 
 private:
   std::vector<std::shared_ptr<MetaElement>> library;

@@ -28,6 +28,16 @@ struct MetaElementMock final : public MetaElement {
 
   static std::shared_ptr<MetaElement> create(const std::string &name);
   static std::shared_ptr<MetaElement> create(const NodeType &nodetype);
+
+  static struct StaticInitializer {
+    StaticInitializer() {
+      Library::get().add(MetaElementMock::create("merge"));
+      Library::get().add(MetaElementMock::create("split"));
+      Library::get().add(MetaElementMock::create("delay"));
+      Library::get().add(MetaElementMock::create("add"));
+      Library::get().add(MetaElementMock::create("sub"));
+    }
+  } initializer;
 };
 
 inline std::unique_ptr<Element> MetaElementMock::construct(
