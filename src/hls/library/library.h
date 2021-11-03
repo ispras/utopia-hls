@@ -180,7 +180,7 @@ public:
   void print(std::ostream &out) const;
 
 private:
-  void printChan(std::ostream &out, const eda::hls::model::Chan &chan) const;
+  const std::string chanSourceToString(const eda::hls::model::Chan &chan) const;
   const eda::hls::model::Graph &graph;
 };
 

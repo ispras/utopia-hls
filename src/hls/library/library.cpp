@@ -61,38 +61,38 @@ void VerilogNodeTypePrinter::print(std::ostream &out) const {
   out << "endmodule" << " // " << type.name << std::endl;
 }
 
-void VerilogGraphPrinter::printChan(std::ostream &out, const eda::hls::model::Chan &chan) const {
+const std::string VerilogGraphPrinter::chanSourceToString(const eda::hls::model::Chan &chan) const {
   // TODO: chan.type is ignored
-  out << "." << chan.source.node->name << "(" << chan.target.node->name << ")";
+  return chan.source.node->name + "_" + chan.source.port->name;
 }
 
 void VerilogGraphPrinter::print(std::ostream &out) const {
-  out << "module " << graph.name << "();" << std::endl;
+  std::string top, wires, binds;
 
-  for (const auto *chan : graph.chans) {
-    out << "wire " << chan->name << ";" << std::endl;
-  }
-  out << "wire clock;" << std::endl << "wire reset;" << std::endl;
+  top = std::string("module ") + graph.name + "();\n";
+  wires += std::string("wire clock;\nwire reset;\n");
+
   for (const auto *node : graph.nodes) {
     // TODO: node.type is ignored
-    out << node->type.name << " " << node->name << "(";
+    binds += node->type.name + " " + node->name + "(";
 
     bool comma = false;
 
     for (const auto *input : node->inputs) {
-      out << (comma ? ", " : "");
-      printChan(out, *input);
+      std::string chanName = chanSourceToString(*input);
+      binds += std::string(comma ? ", " : "") + "." + input->target.port->name + "(" + chanName + ")";
+      wires += std::string("wire ") + chanName + ";\n";
       comma = true;
     }
 
     for (const auto *output: node->outputs) {
-      out << (comma ? ", " : "");
-      printChan(out, *output);
+      std::string chanName = chanSourceToString(*output);
+      binds += std::string(comma ? ", " : "") + "." + output->source.port->name + "(" + chanName + ")";
       comma = true;
     }
-    out << (comma ? ", " : "") << ".clock(clock), .reset(reset));" << std::endl;
+    binds += std::string(comma ? ", " : "") + ".clock(clock), .reset(reset));\n";
   }
-  out << "endmodule // " << graph.name << std::endl;
+  out << top << wires << binds << "endmodule // " << graph.name << std::endl;
 }
 
 } // namespace eda::hls::library
