@@ -184,7 +184,4 @@ private:
   const eda::hls::model::Graph &graph;
 };
 
-std::ostream& operator <<(std::ostream &out, const VerilogNodeTypePrinter &printer);
-std::ostream& operator <<(std::ostream &out, const VerilogGraphPrinter &printer);
-
 } // namespace eda::hls::library

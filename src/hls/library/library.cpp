@@ -95,14 +95,4 @@ void VerilogGraphPrinter::print(std::ostream &out) const {
   out << "endmodule // " << graph.name << std::endl;
 }
 
-std::ostream& operator <<(std::ostream &out, const VerilogNodeTypePrinter &printer) {
-  printer.print(out);
-  return out;
-}
-
-std::ostream& operator <<(std::ostream &out, const VerilogGraphPrinter &printer) {
-  printer.print(out);
-  return out;
-}
-
 } // namespace eda::hls::library

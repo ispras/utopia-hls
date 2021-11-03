@@ -48,7 +48,7 @@ int hilTestVerilogNodeTypePrinter(const std::string &filename) {
   std::cout << "------ Verilog RTL-model ------" << std::endl;
   for (const auto *nodetype: nodetypes) {
     auto printer = std::make_unique<VerilogNodeTypePrinter>(*nodetype);
-    std::cout << *printer;
+    printer->print(std::cout);
   }
 
   return 0;
