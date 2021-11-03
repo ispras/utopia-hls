@@ -9,14 +9,15 @@
 #include "hls/library/library.h"
 #include "hls/model/model.h"
 #include "hls/scheduler/param_optimizer.h"
+#include "hls/scheduler/solver.h"
 
 #include <cassert>
 
 namespace eda::hls::scheduler {
 
 std::map<std::string, Parameters> ParametersOptimizer::optimize(
-    const Model &model,
     const Criteria &criteria,
+    Model &model,
     Indicators &indicators) const {
   std::map<std::string, Parameters> params;
 
@@ -25,6 +26,9 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   assert(graph != nullptr && "Main graph is not found");
 
   // Collect the parameters for all nodes.
+  Parameters defaultParams("<default>");
+  defaultParams.add(Parameter("f", Constraint(1, 1000), 100)); // FIXME
+
   for (const auto *node : graph->nodes) {
     auto metaElement = Library::get().find(node->type);
     Parameters nodeParams(node->name, metaElement->params);
@@ -32,17 +36,23 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   }
 
   // Optimization loop.
-  while (true) {
+  const unsigned N = 2;
+  for (unsigned i = 0; i < N; i++) {
     // Update the values of the parameters.
     for (const auto *node : graph->nodes) {
-      auto i = params.find(node->name);
-      for (auto param : i->second.params) {
-        param.second.value++; // FIXME
+      auto nodeParams = params.find(node->name);
+      if (nodeParams == params.end())
+        continue;
+
+      for (auto param : nodeParams->second.params) {
+        param.second.value /= 2; // FIXME
       }
     }
 
     // Balance flows and align times.
-    // TODO:
+    LpSolver solver;
+    solver.balance(model);
+
     indicators.latency = 100; // FIXME
     indicators.frequency = 100000; // FIXME
 
@@ -53,10 +63,16 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
 
     for (const auto *node : graph->nodes) {
       auto metaElement = Library::get().find(node->type);
-      auto i = params.find(node->name);
+      assert(metaElement && "MetaElement is not found");
+      auto nodeParams = params.find(node->name);
 
       Indicators nodeIndicators;
-      metaElement->estimate(i->second, nodeIndicators);
+
+      metaElement->estimate(
+        nodeParams == params.end()
+          ? defaultParams       // For inserted nodes 
+          : nodeParams->second, // For existing nodes
+        nodeIndicators);
 
       indicators.power += nodeIndicators.power;
       indicators.area += nodeIndicators.area;
@@ -66,10 +82,10 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     if (criteria.check(indicators)) {
       // Acceptable.
       break; // FIXME
-    } else {
-      // Unacceptable.
-      break; // FIXME
     }
+
+    // Reset to the initial model state.
+    model.undo();
   }
 
   return params;

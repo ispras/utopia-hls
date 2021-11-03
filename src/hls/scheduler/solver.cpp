@@ -37,7 +37,7 @@ void LpSolver::balance(Model &model, BalanceMode mode, Verbosity verbosity) {
       //helper.printResults();
 
       if (mode == LatencyLP) {
-        insertBuffers(*graph, helper.getResults());
+        insertBuffers(model, helper.getResults());
       }
       lastStatus = helper.getStatus();
 

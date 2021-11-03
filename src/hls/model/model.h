@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <map>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -20,9 +21,10 @@ using namespace eda::utils;
 
 namespace eda::hls::model {
 
-struct Model;
 struct Graph;
+struct Model;
 struct Node;
+struct Transform;
 
 struct Port final {
   Port(
@@ -233,8 +235,6 @@ struct Graph final {
     const std::map<std::string, std::map<std::string, Chan*>> &inputs,
     const std::map<std::string, std::map<std::string, Chan*>> &outputs);
 
-  void insertDelay(Chan &chan, unsigned latency);
-
   const std::string name;
   std::vector<Chan*> chans;
   std::vector<Node*> nodes;
@@ -271,9 +271,16 @@ struct Model final {
     return findGraph("main");
   }
 
+  void save();
+  void undo();
+
+  void insertDelay(Chan &chan, unsigned latency);
+
   const std::string name;
   std::vector<NodeType*> nodetypes;
   std::vector<Graph*> graphs;
+
+  std::vector<Transform*> transforms;
 };
 
 std::ostream& operator <<(std::ostream &out, const Port &port);

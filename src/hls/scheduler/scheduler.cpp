@@ -20,13 +20,13 @@ LatencyBalancer::~LatencyBalancer() {
   }
 }
 
-void LatencyBalancer::insertBuffers(Graph &graph, 
+void LatencyBalancer::insertBuffers(Model &model, 
     const std::vector<double> &latencies) {
   for (const auto *buf : buffers) {
     // lp_solve positions start with 1
     unsigned latency = latencies[buf->position - 1];
     if (latency != 0) {
-      graph.insertDelay(*(buf->channel), latency);
+      model.insertDelay(*(buf->channel), latency);
       std::cout << "Inserted buffer: " << *(buf->channel)
                 << " with latency " << latency << std::endl;
     }

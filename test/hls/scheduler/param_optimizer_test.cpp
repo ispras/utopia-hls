@@ -35,7 +35,7 @@ void paramOptimizerTest(const std::string &filename) {
 
   // Optimize parameters.
   std::map<std::string, Parameters> params =
-    ParametersOptimizer::get().optimize(*model, criteria, indicators);
+    ParametersOptimizer::get().optimize(criteria, *model, indicators);
 
   // Check the constrains.
   EXPECT_TRUE(criteria.check(indicators));
