@@ -16,122 +16,118 @@ namespace eda::hls::debugger {
 
   bool Verifier::equivalent(const Model &left, const Model &right) const {
 
-    std::cout << "Graph matching.." << "\n";
-    std::pair<Graph*, Graph*> pair;
+    std::cout << "Graph matching.." << std::endl;
 
-    // If graphs are not completely matched
-    if (!match(left.graphs, right.graphs, pair)) {
-      std::cout << "Cannot match graphs!" << "\n";
+    // 'main' graphs pair
+    std::pair<Graph*, Graph*> mainPair;
+
+    if (!match(left.graphs, right.graphs, mainPair)) {
+      std::cout << "Can't match graphs!" << std::endl;
       return false;
     }
 
     z3::context ctx;
     z3::expr_vector nodes(ctx);
 
-    std::cout << "Check graph equivalence..." << "\n";
+    const Graph *fGraph = mainPair.first;
+    const Graph *sGraph = mainPair.second;
 
-    const Graph *fGraph = pair.first;
-    const Graph *sGraph = pair.second;
-
-    std::cout << "generate expr for graph: " << fGraph->name << "\n";
     createExprs(*fGraph, ctx, nodes);
-
-    std::cout << "generate expr for graph: " << sGraph->name << "\n";
     createExprs(*sGraph, ctx, nodes);
 
-    std::cout << "add input bindings to nodes" << "\n";
-
+    // create equations for graph inputs
     const std::vector<Node*> fInputs = getSources(*fGraph);
     const std::vector<Node*> sInputs = getSources(*sGraph);
     std::list<std::pair<Node*, Node*>> sources;
 
-    if (match(fInputs, sInputs, sources)) {
-
-      for (const auto &inPair : sources) {
-
-        const Node *fIn = inPair.first;
-        const Node *sIn = inPair.second;
-
-        const std::vector<Chan*> fOuts = fIn->outputs;
-        const std::vector<Chan*> sOuts = sIn->outputs;
-
-        assert(fOuts.size() == sOuts.size());
-
-        for (size_t i = 0; i < fOuts.size(); i++) {
-
-          const Chan *fOut = fOuts[i];
-          const Chan *sOut = sOuts[i];
-
-          const z3::expr fFunc = toFunc(*fIn, *fOut, ctx);
-          const z3::expr sFunc = toFunc(*sIn, *sOut, ctx);
-          const z3::expr inEq = fFunc == sFunc;
-
-          nodes.push_back(inEq);
-        }
-      }
-    } else {
-      std::cout << "Cannot match graphs inputs" << "\n";
+    if (!match(fInputs, sInputs, sources)) {
+      std::cout << "Cannot match graphs inputs!" << std::endl;
+      return false;
     }
 
-    std::cout << "add output bindings to nodes" << "\n";
+    for (const auto &inPair : sources) {
 
+      const Node *fIn = inPair.first;
+      const Node *sIn = inPair.second;
+
+      const std::vector<Chan*> fOuts = fIn->outputs;
+      const std::vector<Chan*> sOuts = sIn->outputs;
+
+      assert(fOuts.size() == sOuts.size());
+
+      for (size_t i = 0; i < fOuts.size(); i++) {
+
+        const Chan *fOut = fOuts[i];
+        const Chan *sOut = sOuts[i];
+
+        const z3::expr fFunc = toFunc(*fIn, *fOut, ctx);
+        const z3::expr sFunc = toFunc(*sIn, *sOut, ctx);
+        const z3::expr inEq = fFunc == sFunc;
+
+        nodes.push_back(inEq);
+      }
+    }
+
+    // create inequations for outputs
     const std::vector<Node*> fOutputs = getSinks(*fGraph);
     const std::vector<Node*> sOutputs = getSinks(*sGraph);
     std::list<std::pair<Node*, Node*>> outMatch;
 
-    if (match(fOutputs, sOutputs, outMatch)) {
+    if (!match(fOutputs, sOutputs, outMatch)) {
+      std::cout << "Cannot match graphs outputs" << std::endl;
+      return false;
+    }
 
-      for (const auto &outPair : outMatch) {
+    for (const auto &outPair : outMatch) {
 
-        const Node *fOut = outPair.first;
-        const Node *sOut = outPair.second;
+      const Node *fOut = outPair.first;
+      const Node *sOut = outPair.second;
 
-        const std::string fModelName = fOut->graph.model.name;
-        const std::string sModelName = sOut->graph.model.name;
-        const std::string fName = fModelName + "_" + fOut->name;
-        const std::string sName = sModelName + "_" + sOut->name;
+      const std::string fModelName = getModelName(*fOut);
+      const std::string sModelName = getModelName(*sOut);
+      const std::string fName = fModelName + "_" + fOut->name;
+      const std::string sName = sModelName + "_" + sOut->name;
 
-        const z3::sort fSort = getSort(*fOut, ctx);
-        const z3::sort sSort = getSort(*sOut, ctx);
+      const z3::sort fOutSort = getSort(*fOut, ctx);
+      const z3::sort sOutSort = getSort(*sOut, ctx);
 
-        const z3::sort_vector fInSorts = getInSorts(*fOut, ctx);
-        const z3::sort_vector sInSorts = getInSorts(*sOut, ctx);
+      const z3::sort_vector fInSorts = getInSorts(*fOut, ctx);
+      const z3::sort_vector sInSorts = getInSorts(*sOut, ctx);
 
-        const z3::func_decl fFunc = function(fName.c_str(), fInSorts, fSort);
-        const z3::expr_vector fArgs = getFuncArgs(*fOut, ctx);
-        const z3::func_decl sFunc = function(sName.c_str(), sInSorts, sSort);
-        const z3::expr_vector sArgs = getFuncArgs(*sOut, ctx);
+      const z3::func_decl fFunc = function(fName.c_str(), fInSorts, fOutSort);
+      const z3::expr_vector fArgs = getFuncArgs(*fOut, ctx);
 
-        const z3::expr outExpr = fFunc(fArgs) != sFunc(sArgs);
+      const z3::func_decl sFunc = function(sName.c_str(), sInSorts, sOutSort);
+      const z3::expr_vector sArgs = getFuncArgs(*sOut, ctx);
 
-        nodes.push_back(outExpr);
-      }
-    } else {
-      std::cout << "Cannot match graphs outputs" << "\n";
+      const z3::expr outExpr = fFunc(fArgs) != sFunc(sArgs);
+
+      nodes.push_back(outExpr);
     }
 
     z3::solver solver(ctx);
     solver.add(nodes);
 
-    std::cout << "SMT-LIBv2 formula:" << "\n";
-    std::cout << solver.to_smt2() << "\n";
+    // TODO: debug print
+    std::cout << "SMT-LIBv2 formula:" << std::endl;
+    std::cout << solver.to_smt2() << std::endl;
 
     switch (solver.check()) {
       case z3::sat:
-        std::cout << "Models are NOT equivalent" << "\n";
+        std::cout << "Models are NOT equivalent" << std::endl;
         // TODO: debug print
-        //std::cout << "Model is:" << "\n";
-        //std::cout << solver.get_model().to_string() << "\n";
+        //std::cout << "Model is:" << std::endl;
+        //std::cout << solver.get_model().to_string() << std::endl;
         return true;
       case z3::unsat:
-        std::cout << "Models are equivalent" << "\n";
+        std::cout << "Models are equivalent" << std::endl;
         return false;
       case z3::unknown:
-        std::cout << "Z3 solver says \"unknown\"" << "\n";
+        std::cout << "Z3 solver says \"unknown\"" << std::endl;
         return false;
         break;
     }
-    std::cout << "Z3 solver returns unexpected result" << "\n";
+    std::cout << "Z3 solver returns unexpected result" << std::endl;
     return false;
   }
 
@@ -188,7 +184,7 @@ namespace eda::hls::debugger {
         }
       }
       if (!hasMatch) {
-        std::cout << "No match for graphs " + lNode->name << "\n";
+        std::cout << "No match for graphs " + lNode->name << std::endl;
         return false;
       }
     }
@@ -196,11 +192,10 @@ namespace eda::hls::debugger {
   }
 
   void Verifier::createExprs(const Graph &graph,
-    z3::context &ctx,
-    z3::expr_vector &nodes) const {
+      z3::context &ctx,
+      z3::expr_vector &nodes) const {
 
-    std::cout << "Create equations for channels: " + graph.name << "\n";
-
+    // create equations for channels
     const std::vector<Chan*> gChannels = graph.chans;
 
     for (const auto &channel : gChannels) {
@@ -212,7 +207,7 @@ namespace eda::hls::debugger {
       nodes.push_back(chanExpr);
     }
 
-    std::cout << "Create equations for nodes: " + graph.name << "\n";
+    // create equations for nodes
     const std::vector<Node*> gNodes = graph.nodes;
 
     for (const auto &node : gNodes) {
@@ -232,24 +227,32 @@ namespace eda::hls::debugger {
 
       } else if (node->isKernel()) {
 
+        // prefix for kernel function name
+        const std::string modelName = getModelName(*node);
         const std::string funcName = node->name;
+        const std::string modelFuncPrefix = modelName + "_" + funcName;
+
         const std::vector<Chan*> nodeOuts = node->outputs;
 
+        // create equation for every output port of kernel node
         for (const auto &nodeOut : nodeOuts) {
 
-          const Port *outPort = nodeOut->source.port;
-          const std::string funcIdxName = nodeOut->name;
-          const std::string modelName = nodeOut->graph.model.name;
-          const std::string modelFuncPrefix = modelName + "_" + funcName;
+          const Binding srcBnd = nodeOut->source;
+
+          // input/output sorts for kernel function
           const z3::sort_vector sorts = getInSorts(*node, ctx);
-          const std::string kerName = modelFuncPrefix + "_" + funcIdxName;
-          const char *sortName =outPort->type.c_str();
+          const char *sortName = srcBnd.port->type.c_str();
           const z3::sort fSort = ctx.uninterpreted_sort(sortName);
+
+          // kernel function name
+          const std::string kerName = modelFuncPrefix + "_" + nodeOut->name;
+
+          // kernel function
           const z3::func_decl kernel = function(kerName.c_str(), sorts, fSort);
           const z3::expr_vector kernelArgs = getFuncArgs(*node, ctx);
-          const std::string constName = modelFuncPrefix + "_" + outPort->type;
-          const z3::expr nodeOutConst = ctx.constant(constName.c_str(), fSort);
-          const z3::expr kernelEq = kernel(kernelArgs) == nodeOutConst;
+
+          // create equation
+          const z3::expr kernelEq = kernel(kernelArgs) == toConst(srcBnd, ctx);
 
           nodes.push_back(kernelEq);
         }
@@ -257,14 +260,13 @@ namespace eda::hls::debugger {
 
         // merge has the only output
         const Chan *nodeOut = node->outputs[0];
-        const char *outSortName = nodeOut->source.node->type.name.c_str();
-        const z3::sort outSort = ctx.uninterpreted_sort(outSortName);
 
         const z3::expr outConst = toConst(nodeOut->source, ctx);
-
         z3::expr_vector mergeVec(ctx);
+
         const std::vector< Chan*> nodeInputs = node->inputs;
 
+        // create equation for every input of node
         for (const auto &nodeInput : nodeInputs) {
 
           const z3::expr inConst = toConst(nodeInput->target, ctx);
@@ -278,10 +280,13 @@ namespace eda::hls::debugger {
 
         // split has the only input
         const Chan *nodeInput = node->inputs[0];
+
         const z3::expr inConst = toConst(nodeInput->target, ctx);
         z3::expr_vector splitVec(ctx);
+
         std::vector< Chan*> nodeOutputs = node->outputs;
 
+        // create equation for every output of node
         for (const auto &nodeOut : nodeOutputs) {
 
           const z3::expr outConst = toConst(nodeOut->source, ctx);
@@ -325,6 +330,10 @@ namespace eda::hls::debugger {
     return result;
   }
 
+  std::string Verifier::getModelName(const Node &node) const {
+    return node.graph.model.name;
+  }
+
   z3::sort Verifier::getSort(const Node &node, z3::context &ctx) const {
     return ctx.uninterpreted_sort(node.type.name.c_str());
   }
@@ -333,7 +342,7 @@ namespace eda::hls::debugger {
 
     const char *typeName = bnd.port->type.c_str();
     const z3::sort fInSort = ctx.uninterpreted_sort(typeName);
-    const std::string modelName = bnd.node->graph.model.name;
+    const std::string modelName = getModelName(*bnd.node);
     const std::string nodeName = bnd.node->name;
     const std::string constName =
         modelName + "_" + nodeName + "_" + bnd.port->name;
@@ -346,7 +355,7 @@ namespace eda::hls::debugger {
     const NodeType &fType = node.type;
     const std::string typeName = fType.name;
     const z3::sort fInSort = ctx.uninterpreted_sort(typeName.c_str());
-    const std::string modelName = node.graph.model.name;
+    const std::string modelName = getModelName(node);
     const std::string constName = modelName + "_" + node.name;
 
     return ctx.constant(constName.c_str(), fInSort);
@@ -358,7 +367,7 @@ namespace eda::hls::debugger {
     const Binding src = ch.source;
     const Port *fPort = src.port;
     const std::string outIdx = ch.name;
-    const std::string modelName = node.graph.model.name;
+    const std::string modelName = getModelName(node);
     const std::string nodeName = node.name;
     const std::string funcName = modelName + "_" + nodeName + "_" + outIdx;
     const char *sortName = fPort->type.c_str();
@@ -370,7 +379,7 @@ namespace eda::hls::debugger {
   }
 
   z3::sort_vector Verifier::getInSorts(const Node &node,
-    z3::context &ctx) const {
+      z3::context &ctx) const {
 
     const unsigned arity = node.inputs.size();
     z3::sort_vector sorts(ctx);
@@ -384,7 +393,7 @@ namespace eda::hls::debugger {
   }
 
   z3::expr_vector Verifier::getFuncArgs(const Node &node,
-  z3::context &ctx) const {
+      z3::context &ctx) const {
 
     const std::vector<Chan*> inputs = node.inputs;
     const unsigned arity = inputs.size();

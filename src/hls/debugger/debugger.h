@@ -60,6 +60,7 @@ private:
 
   /* Utility methods to operate with model. */
 
+  std::string getModelName(const Node &node) const;
   std::vector<Node*> getSources(const Graph &graph) const;
   std::vector<Node*> getSinks(const Graph &graph) const;
 };
