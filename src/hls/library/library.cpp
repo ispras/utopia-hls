@@ -50,7 +50,7 @@ void VerilogNodeTypePrinter::print(std::ostream &out) const {
     out << arg->name;
     comma = true;
   }
-  out << ");" << std::endl;
+  out << (comma ? ", " : "") << "clock, reset);" << std::endl;
 
   auto meta = Library::get().find(type);
   // params.value["f"] can be adjusted before calling construct
