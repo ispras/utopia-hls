@@ -114,7 +114,7 @@ struct Port {
   const unsigned width;
 };
 
-typedef std::vector<Port> Ports;
+typedef std::vector<Port> Ports; // FIXME
 
 /// Description of a constructed element (module).
 struct Element final {

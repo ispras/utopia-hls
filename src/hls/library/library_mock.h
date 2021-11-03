@@ -11,6 +11,8 @@
 #include "hls/library/library.h"
 #include "util/assert.h"
 
+#include <cmath>
+
 using namespace eda::hls::model;
 
 namespace eda::hls::library {
@@ -28,16 +30,6 @@ struct MetaElementMock final : public MetaElement {
 
   static std::shared_ptr<MetaElement> create(const std::string &name);
   static std::shared_ptr<MetaElement> create(const NodeType &nodetype);
-
-  static struct StaticInitializer {
-    StaticInitializer() {
-      Library::get().add(MetaElementMock::create("merge"));
-      Library::get().add(MetaElementMock::create("split"));
-      Library::get().add(MetaElementMock::create("delay"));
-      Library::get().add(MetaElementMock::create("add"));
-      Library::get().add(MetaElementMock::create("sub"));
-    }
-  } initializer;
 };
 
 inline std::unique_ptr<Element> MetaElementMock::construct(
@@ -116,12 +108,28 @@ inline std::unique_ptr<Element> MetaElementMock::construct(
 
 inline void MetaElementMock::estimate(
     const Parameters &params, Indicators &indicators) const {
-  // TODO: estimations of l, f, p, a
-  indicators.frequency = params.value("f");
-  indicators.throughput = indicators.frequency;
-  indicators.latency = 1000000;
-  indicators.power = 5;
-  indicators.area = 10000;
+  unsigned inputCount = 0;
+  unsigned latencySum = 0;
+
+  for (const auto &port : ports) {
+    if (port.direction == Port::IN)
+      inputCount++;
+    else
+      latencySum += port.latency;
+  }
+
+  double F = params.value("f");
+  double Fmax = 1000000.0;
+  double C = inputCount * latencySum;
+  double N = (C == 0 ? 0 : C * std::log((Fmax / (Fmax - F)) * ((C - 1) / C)));
+  double A = C * std::sqrt(N);
+  double P = A;
+
+  indicators.frequency  = static_cast<unsigned>(F);
+  indicators.throughput = static_cast<unsigned>(F);
+  indicators.latency    = static_cast<unsigned>(N);
+  indicators.power      = static_cast<unsigned>(P);
+  indicators.area       = static_cast<unsigned>(A);
 }
 
 inline std::shared_ptr<MetaElement> MetaElementMock::create(
@@ -173,5 +181,15 @@ inline std::shared_ptr<MetaElement> MetaElementMock::create(
 
   return std::shared_ptr<MetaElement>(new MetaElementMock(nodetype.name, params, ports));
 }
+
+static struct LibraryInitializer {
+  LibraryInitializer() {
+    Library::get().add(MetaElementMock::create("merge"));
+    Library::get().add(MetaElementMock::create("split"));
+    Library::get().add(MetaElementMock::create("delay"));
+    Library::get().add(MetaElementMock::create("add"));
+    Library::get().add(MetaElementMock::create("sub"));
+  }
+} libraryInitializer;
 
 } // namespace eda::hls::library
