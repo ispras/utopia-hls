@@ -60,8 +60,8 @@ namespace eda::hls::debugger {
         const Chan *fOut = fOuts[i];
         const Chan *sOut = sOuts[i];
 
-        const z3::expr fFunc = toFunc(*fIn, *fOut, ctx);
-        const z3::expr sFunc = toFunc(*sIn, *sOut, ctx);
+        const z3::expr fFunc = toInFunc(*fIn, *fOut, ctx);
+        const z3::expr sFunc = toInFunc(*sIn, *sOut, ctx);
         const z3::expr inEq = fFunc == sFunc;
 
         nodes.push_back(inEq);
@@ -361,7 +361,7 @@ namespace eda::hls::debugger {
     return ctx.constant(constName.c_str(), fInSort);
   }
 
-  z3::expr Verifier::toFunc(const Node &node, const Chan &ch,
+  z3::expr Verifier::toInFunc(const Node &node, const Chan &ch,
       z3::context &ctx) const {
 
     const Binding src = ch.source;
