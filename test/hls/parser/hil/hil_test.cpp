@@ -59,8 +59,8 @@ int hilTestCompiler(const std::string &filename) {
   std::cout << *compiler;
 
   Parameters params("add");
-  MetaElement meta = Library::get().find(params.elementName);
-  auto element = Library::get().construct(meta);
+  auto metaElement = Library::get().find(params.elementName);
+  auto element = metaElement->construct(params);
   std::cout << element->ir << std::endl;
 
   return 0;

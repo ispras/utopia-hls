@@ -26,8 +26,8 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
 
   // Collect the parameters for all nodes.
   for (const auto *node : graph->nodes) {
-    const MetaElement &metaElement = Library::get().find(node->type);
-    Parameters nodeParams(node->name, metaElement.params);
+    auto metaElement = Library::get().find(node->type);
+    Parameters nodeParams(node->name, metaElement->params);
     params.insert({ node->name, nodeParams });
   }
 
@@ -52,9 +52,11 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     indicators.area = 0;
 
     for (const auto *node : graph->nodes) {
+      auto metaElement = Library::get().find(node->type);
       auto i = params.find(node->name);
+
       Indicators nodeIndicators;
-      Library::get().estimate(i->second, nodeIndicators);
+      metaElement->estimate(i->second, nodeIndicators);
 
       indicators.power += nodeIndicators.power;
       indicators.area += nodeIndicators.area;
