@@ -18,10 +18,10 @@
 #include "HIL/HILDialect.h"
 
 int main(int argc, char **argv) {
-  mlir::registerAllTranslations();
+    mlir::registerAllTranslations();
 
-  // TODO: Register hil translations here.
+    // TODO: Register hil translations here.
 
-  return failed(
-      mlir::mlirTranslateMain(argc, argv, "MLIR Translation Testing Tool"));
+    return failed(
+        mlir::mlirTranslateMain(argc, argv, "MLIR Translation Testing Tool"));
 }

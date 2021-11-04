@@ -10,6 +10,5 @@
 #include "HIL/HILDialect.h"
 #include "mlir/IR/OpImplementation.h"
 
-
 #define GET_OP_CLASSES
 #include "HIL/HILOps.cpp.inc"

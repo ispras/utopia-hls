@@ -37,21 +37,24 @@ module {
               !hil.input<"Z"<1.0> "z">
             ] => []
         }
-        hil.chan "X" "x1"
-        hil.chan "X" "x2"
-        hil.chan "X" "x"
-        hil.chan "Y" "y"
-        hil.chan "Z" "z1"
-        hil.chan "Z" "z2"
-        hil.chan "Z" "z"
-        hil.chan "W" "w"
 
-        hil.node "source"  "n1" []           => ["x", "y"]
-        hil.node "split"   "n2" ["x"]        => ["x1", "x2"]
-        hil.node "kernel1" "n3" ["x1", "y"]  => ["z1", "w"]
-        hil.node "kernel2" "n4" ["x2", "w"]  => ["z2"]
-        hil.node "merge"   "n5" ["z1", "z2"] => ["z"]
-        hil.node "sink"    "n6" ["x"]        => []
+        hil.graph "main" {
+          hil.chan "X" "x1"
+          hil.chan "X" "x2"
+          hil.chan "X" "x"
+          hil.chan "Y" "y"
+          hil.chan "Z" "z1"
+          hil.chan "Z" "z2"
+          hil.chan "Z" "z"
+          hil.chan "W" "w"
+
+          hil.node "source"  "n1" []           => ["x", "y"]
+          hil.node "split"   "n2" ["x"]        => ["x1", "x2"]
+          hil.node "kernel1" "n3" ["x1", "y"]  => ["z1", "w"]
+          hil.node "kernel2" "n4" ["x2", "w"]  => ["z2"]
+          hil.node "merge"   "n5" ["z1", "z2"] => ["z"]
+          hil.node "sink"    "n6" ["x"]        => []
+        }
         return
     }
 }

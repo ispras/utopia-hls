@@ -1,4 +1,4 @@
-//===- HILDialect.h - HIL dialect -----------------*- C++ -*-===//
+//===- HILCombine.h - HIL dialect -----------------*- C++ -*-===//
 //
 // This file is licensed under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -6,13 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef HIL_HILDIALECT_H
-#define HIL_HILDIALECT_H
+#ifndef HIL_HILCOMBINE_H
+#define HIL_HILCOMBINE_H
 
-#include "mlir/IR/Dialect.h"
+#include "mlir/Pass/Pass.h"
 
-#include "HIL/HILOpsDialect.h.inc"
-#define GET_TYPEDEF_CLASSES
-#include "HIL/HILOpsTypes.h.inc"
+std::unique_ptr<mlir::Pass> createGraphRewritePass();
 
-#endif // HIL_HILDIALECT_H
+#endif // HIL_HILCOMBINE_H
