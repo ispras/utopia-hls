@@ -31,7 +31,9 @@ endif()
 enable_testing()
 
 add_executable(${TEST_TARGET}
+  hls/compiler/compiler_test.cpp
   hls/debugger/debugger_test.cpp
+  hls/library/library_test.cpp
   hls/parser/hil/hil_test.cpp
   hls/scheduler/param_optimizer_test.cpp
   hls/scheduler/scheduler_test.cpp
