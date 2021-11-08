@@ -57,3 +57,7 @@ TEST(SchedulerTest, DijkstraLatency) {
 TEST(SchedulerTest, IdctSolveLatency) {
   EXPECT_EQ(lpsolveTest("test/data/hil/idct.hil", BalanceMode::LatencyLP), OPTIMAL);
 }
+
+TEST(SchedulerTest, IdctDijkstraLatency) {
+  EXPECT_EQ(dijkstraTest("test/data/hil/idct.hil"), 0);
+}
