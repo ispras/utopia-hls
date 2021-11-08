@@ -34,6 +34,7 @@ public:
 
 protected:
   void insertBuffers(Model &model, const std::vector<double> &latencies);
+  virtual void insertBuffers(Model &model) {};
 
   std::vector<Buffer*> buffers;
 };

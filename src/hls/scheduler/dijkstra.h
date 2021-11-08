@@ -10,6 +10,7 @@
 
 #include "hls/scheduler/scheduler.h"
 
+#include <deque>
 #include <limits>
 #include <map>
 #include <queue>
@@ -25,16 +26,17 @@ struct PathNode final {
   
   static unsigned getInitialValue(const Node &node) {
     return (node.isSource()) ? 
-        0 : std::numeric_limits<unsigned>::infinity();
+        0 : std::numeric_limits<unsigned>::max();
   }
 
   struct PathNodeCmp final {
     bool operator()(const PathNode *lhs, const PathNode *rhs) {
-      return lhs->nodeTime < rhs->nodeTime;
+      return lhs->nodeTime > rhs->nodeTime;
     }
   };
 
-  std::vector<std::pair<const Node*, unsigned>> successors;
+  std::vector<std::pair<Chan*, unsigned>> predessors;
+  std::vector<std::pair<Chan*, unsigned>> successors;
   unsigned nodeTime;
 };
 
@@ -43,15 +45,22 @@ public:
   ~DijkstraBalancer();
   void balance(Model &model) override;
 
+  
+
 private:
   void reset();
   void deleteEntries();
   void init(const Graph *graph);
-  void relax(const PathNode *src, std::pair<const Node*, unsigned> &dst);
+  //void relax(const PathNode *src, std::pair<const Node*, unsigned> &dst);
 
-  std::priority_queue<PathNode*, std::vector<PathNode*>, PathNode::PathNodeCmp> 
+  void visit(PathNode *node);
+  void insertBuffers(Model &model) override;
+
+  std::deque<std::pair<const Chan*, unsigned>> toVisit;
+
+  /*std::priority_queue<PathNode*, std::vector<PathNode*>, PathNode::PathNodeCmp> 
       pathElements;
-  std::vector<PathNode*> ready;
+  std::vector<PathNode*> ready;*/
   std::map<const Node*, PathNode*> nodeMap; 
 };
 

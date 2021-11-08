@@ -34,6 +34,7 @@ int dijkstraTest(const std::string &filename) {
   std::unique_ptr<Model> model = parse(filename);
   DijkstraBalancer *balancer = new DijkstraBalancer();
   balancer->balance(*model);
+  std::cout << *model;
   return 0;
 }
 
