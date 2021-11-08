@@ -90,6 +90,7 @@ inline std::unique_ptr<Element> MetaElementMock::construct(
       if (input_length < output_length && pos != 0) {
         pos -= port.width; // FIXME
       }
+      uassert(output_length != 0, "There were outputs with zero widthes!");
       assigns += std::string("assign ") + port.name +
                  " = state_" +
                  (port.latency == 0 ? "0" : std::to_string(port.latency - 1)) +

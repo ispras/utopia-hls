@@ -30,8 +30,8 @@ int printVerilogTest(const std::string &filename) {
   return 0;
 }
 
-int callLibraryElementTest() {
-  Parameters params("add");
+int callLibraryElementTest(const std::string &name) {
+  Parameters params(name);
   auto metaElement = Library::get().find(params.elementName);
   auto element = metaElement->construct(params);
   std::cout << element->ir << std::endl;
@@ -39,9 +39,15 @@ int callLibraryElementTest() {
   return 0;
 }
 
-TEST(HilTest, VerilogNodeTypePrinterTest) {
+TEST(LibraryTest, PrintTestHilTest) {
   EXPECT_EQ(printVerilogTest("test/data/hil/test.hil"), 0);
+}
+
+TEST(LibraryTest, PrintIDCTHilTest) {
   EXPECT_EQ(printVerilogTest("test/data/hil/idct.hil"), 0);
-  EXPECT_EQ(callLibraryElementTest(), 0);
+}
+
+TEST(LibraryTest, PrintAddTest) {
+  EXPECT_EQ(callLibraryElementTest("add"), 0);
 }
 

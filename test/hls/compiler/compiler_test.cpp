@@ -25,7 +25,7 @@ int compileSimpleHilTest(const std::string &filename) {
   return 0;
 }
 
-TEST(CompilerTest, CompileTestHil) {
+TEST(CompilerTest, CompileTestHilTest) {
   EXPECT_EQ(compileSimpleHilTest("test/data/hil/test.hil"), 0);
 }
 
