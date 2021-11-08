@@ -241,8 +241,7 @@ namespace eda::hls::debugger {
 
           // input/output sorts for kernel function
           const z3::sort_vector sorts = getInSorts(*node, ctx);
-          const char *sortName = srcBnd.port->type.c_str();
-          const z3::sort fSort = ctx.uninterpreted_sort(sortName);
+          const z3::sort fSort = getSort(*srcBnd.port, ctx);
 
           // kernel function name
           const std::string kerName = modelFuncPrefix + "_" + nodeOut->name;
@@ -338,10 +337,13 @@ namespace eda::hls::debugger {
     return ctx.uninterpreted_sort(node.type.name.c_str());
   }
 
+  z3::sort Verifier::getSort(const Port &port, z3::context &ctx) const {
+    return ctx.uninterpreted_sort(port.type.c_str());
+  }
+
   z3::expr Verifier::toConst(const Binding &bnd, z3::context &ctx) const {
 
-    const char *typeName = bnd.port->type.c_str();
-    const z3::sort fInSort = ctx.uninterpreted_sort(typeName);
+    const z3::sort fInSort = getSort(*bnd.port, ctx);
     const std::string modelName = getModelName(*bnd.node);
     const std::string nodeName = bnd.node->name;
     const std::string constName =
@@ -352,9 +354,7 @@ namespace eda::hls::debugger {
 
   z3::expr Verifier::toConst(const Node &node, z3::context &ctx) const {
 
-    const NodeType &fType = node.type;
-    const std::string typeName = fType.name;
-    const z3::sort fInSort = ctx.uninterpreted_sort(typeName.c_str());
+    const z3::sort fInSort = getSort(node, ctx);
     const std::string modelName = getModelName(node);
     const std::string constName = modelName + "_" + node.name;
 
@@ -364,14 +364,11 @@ namespace eda::hls::debugger {
   z3::expr Verifier::toInFunc(const Node &node, const Chan &ch,
       z3::context &ctx) const {
 
-    const Binding src = ch.source;
-    const Port *fPort = src.port;
     const std::string outIdx = ch.name;
     const std::string modelName = getModelName(node);
     const std::string nodeName = node.name;
     const std::string funcName = modelName + "_" + nodeName + "_" + outIdx;
-    const char *sortName = fPort->type.c_str();
-    const z3::sort fSort = ctx.uninterpreted_sort(sortName);
+    const z3::sort fSort = getSort(*ch.source.port, ctx);
     z3::sort_vector sorts(ctx);
     const z3::func_decl func = function(funcName.c_str(), sorts, fSort);
     const z3::expr_vector fArgs = z3::expr_vector(ctx);
@@ -386,8 +383,7 @@ namespace eda::hls::debugger {
 
     for (size_t i = 0; i < arity; i++) {
 
-      const char *sortName = node.inputs[i]->target.port->type.c_str();
-      sorts.push_back(ctx.uninterpreted_sort(sortName));
+      sorts.push_back(getSort(*node.inputs[i]->target.port, ctx));
     }
     return sorts;
   }
