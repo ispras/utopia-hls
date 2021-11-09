@@ -9,56 +9,32 @@
 #include "hls/scheduler/dijkstra.h"
 
 #include <cassert>
+#include <iostream>
 
 namespace eda::hls::scheduler {
 
-void addNeighbours(std::vector<std::pair<Chan*, unsigned>>&, const std::vector<Chan*>&);
-
-DijkstraBalancer::~DijkstraBalancer() {
-  deleteEntries();
-}
-
-void DijkstraBalancer::deleteEntries() {
-  for (auto entry : nodeMap) {
-    delete entry.second;
-  }
-}
-
 void DijkstraBalancer::reset() {
-  deleteEntries();  
-  nodeMap = std::map<const Node*, PathNode*>();
-}
-
-void addNeighbours(std::vector<std::pair<Chan*, unsigned>> &dest, 
-    const std::vector<Chan*> &neighbours) {
-  for (auto *chan : neighbours) {
-    unsigned latency = chan->source.port->latency;
-    dest.push_back(std::make_pair(chan, latency));
-  }
+   nodeMap = std::map<const Node*, unsigned>();
 }
 
 void DijkstraBalancer::init(const Graph* graph) {
   reset();
   // Init the elements
   for (const auto *node : graph->nodes) {
-    PathNode *pNode = new PathNode;
-    nodeMap[node] = pNode;
-    
-    addNeighbours(pNode->successors, node->outputs);
-    addNeighbours(pNode->predessors, node->inputs);
+    nodeMap[node] = 0;
   }
 }
 
-void DijkstraBalancer::visit(PathNode *node) {
+void DijkstraBalancer::visit(const Node *node) {
 
-  toVisit.insert(toVisit.end(), node->successors.begin(), node->successors.end());
+  toVisit.insert(toVisit.end(), node->outputs.begin(), node->outputs.end());
 
-  for (const auto &next : node->successors) {
-    unsigned curTime = node->nodeTime;
-    PathNode *dstNode = nodeMap[next.first->target.node];
-    unsigned dstTime = curTime + next.second;
-    if (dstTime > dstNode->nodeTime) {
-      dstNode->nodeTime = dstTime;
+  for (const auto &next : node->outputs) {
+    unsigned curTime = nodeMap[node];
+    const Node *dstNode = next->target.node;
+    unsigned dstTime = curTime + next->source.port->latency;
+    if (dstTime > nodeMap[dstNode]) {
+      nodeMap[dstNode] = dstTime;
     }
   }
 }
@@ -71,12 +47,12 @@ void DijkstraBalancer::balance(Model &model) {
       for (const auto *chan : graph->chans) {
         const Node *src = chan->source.node;
         if (src->isSource()) {
-          toVisit.push_back(std::make_pair(chan, chan->source.port->latency));
+          toVisit.push_back(chan);
         }
       }
 
       while (!toVisit.empty()) {
-        visit(nodeMap[toVisit.front().first->target.node]);
+        visit(toVisit.front()->target.node);
         toVisit.pop_front();
       }
     }
@@ -85,19 +61,20 @@ void DijkstraBalancer::balance(Model &model) {
 }
 
 void DijkstraBalancer::insertBuffers(Model &model) {
-
+  unsigned bufsInserted = 0;
   for (const auto &node : nodeMap) {
-    const unsigned curTime = node.second->nodeTime;
-    for (const auto &pred : node.second->predessors) {
-      const PathNode *predNode = nodeMap[pred.first->source.node];
-      int delta = curTime - (predNode->nodeTime + pred.second);
+    const unsigned curTime = node.second;
+    for (const auto &pred : node.first->inputs) {
+      const Node *predNode = pred->source.node;
+      int delta = curTime - (nodeMap[predNode] + pred->source.port->latency);
       assert(delta >= 0);
       if (delta > 0) {
-        model.insertDelay(*pred.first, delta);
+        model.insertDelay(*pred, delta);
+        bufsInserted++;
       }
     }
   }
-
+  std::cout << "Total buffers inserted: " << bufsInserted << std::endl;
 }
 
 } // namespace eda::hls::scheduler

@@ -9,6 +9,7 @@
 #include "hls/scheduler/solver.h"
 
 #include <cassert>
+#include <iostream>
 #include <memory>
 
 namespace eda::hls::scheduler {
@@ -37,7 +38,7 @@ void LpSolver::balance(Model &model, BalanceMode mode, Verbosity verbosity) {
       //helper.printResults();
 
       if (mode == LatencyLP) {
-        insertBuffers(model, helper.getResults());
+        insertBuffers(model);
       }
       lastStatus = helper.getStatus();
 
@@ -45,6 +46,21 @@ void LpSolver::balance(Model &model, BalanceMode mode, Verbosity verbosity) {
       helper.reset();
     }
   }
+}
+
+void LpSolver::insertBuffers(Model &model) {
+  std::vector<double> latencies = helper.getResults();
+  unsigned bufsInserted = 0;
+  for (const auto *buf : buffers) {
+    // lp_solve positions start with 1
+    double latency = latencies[buf->position - 1];
+    assert(latency >= 0);
+    if (latency != 0) {
+      model.insertDelay(*(buf->channel), (unsigned)latency);
+      bufsInserted++;
+    }
+  }
+  std::cout << "Total buffers inserted: " << bufsInserted << std::endl;
 }
 
 void LpSolver::balanceLatency(const Graph *graph) { 

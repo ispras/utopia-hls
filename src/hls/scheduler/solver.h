@@ -15,6 +15,15 @@ using namespace eda::hls::model;
 
 namespace eda::hls::scheduler {
 
+struct Buffer final {
+  Buffer(Chan *chan, unsigned latency, unsigned position) : channel(chan), 
+      latency(latency), position(position) {}
+
+  Chan *channel;
+  unsigned latency;
+  unsigned position;
+};
+
 class LpSolver final : public LatencyBalancer {
 
 public:
@@ -32,6 +41,7 @@ public:
   int getStatus() { return lastStatus; }
 
 private:
+  void insertBuffers(Model &model) override;
   void genLatencyConstraints(const std::string &nextName, 
       const std::string &prevName, unsigned latency);
   void genDeltaConstraints(const std::string &dstName, 
@@ -52,6 +62,7 @@ private:
   
   LpSolverHelper &helper;
   int lastStatus;
+  std::vector<Buffer*> buffers;
 };
 
 } // namespace eda::hls::scheduler
