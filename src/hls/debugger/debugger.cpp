@@ -83,19 +83,22 @@ namespace eda::hls::debugger {
       const Node *fOut = outPair.first;
       const Node *sOut = outPair.second;
 
-      const std::string fName = fOut->type.name;
-      const std::string sName = sOut->type.name;
+      // funciton names
+      const char *fName = fOut->type.name.c_str();
+      const char *sName = sOut->type.name.c_str();
 
+      // output sorts
       const z3::sort fOutSort = getSort(*fOut, ctx);
       const z3::sort sOutSort = getSort(*sOut, ctx);
 
+      // input sorts
       const z3::sort_vector fInSorts = getInSorts(*fOut, ctx);
       const z3::sort_vector sInSorts = getInSorts(*sOut, ctx);
 
-      const z3::func_decl fFunc = function(fName.c_str(), fInSorts, fOutSort);
+      const z3::func_decl fFunc = function(fName, fInSorts, fOutSort);
       const z3::expr_vector fArgs = getFuncArgs(*fOut, ctx);
 
-      const z3::func_decl sFunc = function(sName.c_str(), sInSorts, sOutSort);
+      const z3::func_decl sFunc = function(sName, sInSorts, sOutSort);
       const z3::expr_vector sArgs = getFuncArgs(*sOut, ctx);
 
       const z3::expr outExpr = fFunc(fArgs) != sFunc(sArgs);
@@ -224,10 +227,6 @@ namespace eda::hls::debugger {
         nodes.push_back(delayExpr);
 
       } else if (node->isKernel()) {
-
-        // prefix for kernel function name
-        const std::string modelName = getModelName(*node);
-        const std::string funcName = node->name;
 
         const std::vector<Chan*> nodeOuts = node->outputs;
 
