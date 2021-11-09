@@ -10,8 +10,10 @@
 
 #include "hls/scheduler/lp_helper.h"
 #include "hls/scheduler/scheduler.h"
+#include "util/singleton.h"
 
 using namespace eda::hls::model;
+using namespace eda::util;
 
 namespace eda::hls::scheduler {
 
@@ -24,13 +26,13 @@ struct Buffer final {
   unsigned position;
 };
 
-class LpSolver final : public LatencyBalancer {
+class LpSolver final : public LatencyBalancer, public Singleton<LpSolver> {
 
 public:
 
-  LpSolver() : helper(LpSolverHelper::get()), lastStatus(helper.getStatus()) {}
+  friend Singleton<LpSolver>;
 
-  ~LpSolver() { helper.reset(); }
+  ~LpSolver();
 
   void balance(Model &model, BalanceMode mode, Verbosity verbosity);
 
@@ -41,6 +43,10 @@ public:
   int getStatus() { return lastStatus; }
 
 private:
+  LpSolver() : helper(LpSolverHelper::get()), lastStatus(helper.getStatus()) {}
+  void deleteBuffers();
+  void reset();
+
   void insertBuffers(Model &model) override;
   void genLatencyConstraints(const std::string &nextName, 
       const std::string &prevName, unsigned latency);

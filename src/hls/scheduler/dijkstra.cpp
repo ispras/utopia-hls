@@ -15,6 +15,7 @@ namespace eda::hls::scheduler {
 
 void DijkstraBalancer::reset() {
    nodeMap = std::map<const Node*, unsigned>();
+   toVisit = std::deque<const Chan*>();
 }
 
 void DijkstraBalancer::init(const Graph* graph) {

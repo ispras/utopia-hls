@@ -9,6 +9,7 @@
 #pragma once
 
 #include "hls/scheduler/scheduler.h"
+#include "util/singleton.h"
 
 #include <deque>
 #include <map>
@@ -16,15 +17,18 @@
 #include <vector>
 
 using namespace eda::hls::model;
+using namespace eda::util;
 
 namespace eda::hls::scheduler {
 
-class DijkstraBalancer final : public LatencyBalancer {
+class DijkstraBalancer final : public LatencyBalancer, public Singleton<DijkstraBalancer> {
 public:
+  friend Singleton<DijkstraBalancer>;
   ~DijkstraBalancer() {}
   void balance(Model &model) override;
 
 private:
+  DijkstraBalancer() {}
   void reset();
   void deleteEntries();
   void init(const Graph *graph);

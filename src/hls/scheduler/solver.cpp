@@ -17,6 +17,22 @@ namespace eda::hls::scheduler {
 std::shared_ptr<double[]> makeCoeffs(const std::vector<std::string> &);
 float sumFlows(const std::vector<Port*> &);
 
+LpSolver::~LpSolver() { 
+  deleteBuffers();
+  helper.reset(); 
+}
+
+void LpSolver::deleteBuffers() {
+  for (const auto *buf : buffers) {
+    delete buf;
+  }
+}
+
+void LpSolver::reset() {
+  deleteBuffers();
+  buffers = std::vector<Buffer*>();
+}
+
 void LpSolver::balance(Model &model, BalanceMode mode, Verbosity verbosity) {
   for (auto* graph : model.graphs) {
     if (graph->isMain()) {
@@ -44,6 +60,7 @@ void LpSolver::balance(Model &model, BalanceMode mode, Verbosity verbosity) {
 
       // Reset solver for next problem
       helper.reset();
+      reset();
     }
   }
 }
