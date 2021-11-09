@@ -12,8 +12,5 @@
 #include "mlir/Pass/Pass.h"
 
 std::unique_ptr<mlir::Pass> createGraphRewritePass();
-namespace mlir {
-void registerTestPrintNestingPass();
-}
 
 #endif // HIL_HILCOMBINE_H
