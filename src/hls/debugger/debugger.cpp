@@ -83,10 +83,8 @@ namespace eda::hls::debugger {
       const Node *fOut = outPair.first;
       const Node *sOut = outPair.second;
 
-      const std::string fModelName = getModelName(*fOut);
-      const std::string sModelName = getModelName(*sOut);
-      const std::string fName = fModelName + "_" + fOut->name;
-      const std::string sName = sModelName + "_" + sOut->name;
+      const std::string fName = fOut->type.name;
+      const std::string sName = sOut->type.name;
 
       const z3::sort fOutSort = getSort(*fOut, ctx);
       const z3::sort sOutSort = getSort(*sOut, ctx);
@@ -230,7 +228,6 @@ namespace eda::hls::debugger {
         // prefix for kernel function name
         const std::string modelName = getModelName(*node);
         const std::string funcName = node->name;
-        const std::string modelFuncPrefix = modelName + "_" + funcName;
 
         const std::vector<Chan*> nodeOuts = node->outputs;
 
@@ -244,10 +241,10 @@ namespace eda::hls::debugger {
           const z3::sort fSort = getSort(*srcBnd.port, ctx);
 
           // kernel function name
-          const std::string kerName = modelFuncPrefix + "_" + nodeOut->name;
+          const char *kerName = node->type.name.c_str();
 
           // kernel function
-          const z3::func_decl kernel = function(kerName.c_str(), sorts, fSort);
+          const z3::func_decl kernel = function(kerName, sorts, fSort);
           const z3::expr_vector kernelArgs = getFuncArgs(*node, ctx);
 
           // create equation
@@ -346,8 +343,8 @@ namespace eda::hls::debugger {
     const z3::sort fInSort = getSort(*bnd.port, ctx);
     const std::string modelName = getModelName(*bnd.node);
     const std::string nodeName = bnd.node->name;
-    const std::string constName =
-        modelName + "_" + nodeName + "_" + bnd.port->name;
+    const std::string portName = bnd.port->name;
+    const std::string constName = modelName + "_" + nodeName + "_" + portName;
 
     return ctx.constant(constName.c_str(), fInSort);
   }
@@ -364,10 +361,9 @@ namespace eda::hls::debugger {
   z3::expr Verifier::toInFunc(const Node &node, const Chan &ch,
       z3::context &ctx) const {
 
-    const std::string outIdx = ch.name;
     const std::string modelName = getModelName(node);
     const std::string nodeName = node.name;
-    const std::string funcName = modelName + "_" + nodeName + "_" + outIdx;
+    const std::string funcName = modelName + "_" + nodeName + "_" + ch.name;
     const z3::sort fSort = getSort(*ch.source.port, ctx);
     z3::sort_vector sorts(ctx);
     const z3::func_decl func = function(funcName.c_str(), sorts, fSort);

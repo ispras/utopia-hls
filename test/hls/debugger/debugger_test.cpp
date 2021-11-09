@@ -25,8 +25,18 @@ bool eqCheckTest(const std::string &fileM, const std::string &fileM2) {
   return verifier.equivalent(*modelM.get(), *modelM2.get());
 }
 
-TEST(DebuggerTest, Solve) {
-  // TODO: wrong test, substitute 'true' by 'false'
-  EXPECT_EQ(eqCheckTest("test/data/hil/test.hil", "test/data/hil/test_clone.hil"), true);
+TEST(DebuggerTest, SolveKernel) {
+  EXPECT_EQ(
+      eqCheckTest(
+          "test/data/hil/one_kernel.hil",
+          "test/data/hil/one_kernel_clone.hil"),
+      false);
+}
+
+TEST(DebuggerTest, SolveTest) {
+  EXPECT_EQ(
+      eqCheckTest("test/data/hil/test.hil",
+          "test/data/hil/test_clone.hil"),
+      false);
 }
 
