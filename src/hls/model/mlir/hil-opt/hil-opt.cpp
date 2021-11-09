@@ -57,6 +57,7 @@ int loadMLIR(mlir::MLIRContext &context, mlir::OwningModuleRef &module) {
 int main(int argc, char **argv) {
     mlir::registerAsmPrinterCLOptions();
     mlir::registerMLIRContextCLOptions();
+    mlir::registerTestPrintNestingPass();
     mlir::registerPassManagerCLOptions();
     mlir::registerDefaultTimingManagerCLOptions();
     cl::ParseCommandLineOptions(argc, argv, "hil dialect");
@@ -82,6 +83,7 @@ int main(int argc, char **argv) {
         llvm::errs() << errorMessage << "\n";
         return 5;
     }
+
     module->print(output->os());
     return 0;
 }

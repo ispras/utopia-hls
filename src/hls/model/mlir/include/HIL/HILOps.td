@@ -11,29 +11,53 @@
 
 include "HILDialect.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
+include "mlir/IR/SymbolInterfaces.td"
 
-def HIL_Model : HIL_Op<"model", [NoTerminator]> {
+class HIL_Container<string mnemonic, list<OpTrait> traits = []> :
+  HIL_Op<mnemonic, !listconcat(traits, [
+    NoRegionArguments,
+    NoTerminator,
+    SingleBlock
+  ])> {
+  let assemblyFormat = "$body attr-dict";
+  let regions = (region SizedRegion<1>: $body);
+  let extraClassDeclaration = [{
+    Block *getBody() {
+      Region& region = getOperation()->getRegion(0);
+      assert(region.hasOneBlock() && "The body should have one block.");
+      return &region.front();
+    }
+  }];
+}
+
+def HIL_Model : HIL_Container<"model"> {
   let summary = "Model container.";
   let description = [{
     The `hil.model` operation
   }];
-
-  let regions = (region AnyRegion:$region);
-  let assemblyFormat = [{
-    $region attr-dict
-  }];
 }
 
-def HIL_Graph : HIL_Op<"graph", [NoTerminator]> {
+def HIL_Graph : HIL_Container<"graph"> {
   let summary = "Graph container.";
   let description = [{
     The `hil.graph` operation
   }];
 
-  let arguments = (ins StrAttr:$name);
-  let regions = (region AnyRegion:$region);
-  let assemblyFormat = [{
-    $name $region attr-dict
+  let arguments = (ins StrAttr:$graphName);
+  let assemblyFormat = "$graphName $body attr-dict";
+}
+
+def HIL_Chans : HIL_Container<"chans", [HasParent<"Graph">]> {
+  let summary = "Chans container.";
+  let description = [{
+    The `hil.chans` operation
+  }];
+}
+
+def HIL_Nodes : HIL_Container<"nodes", [HasParent<"Graph">]> {
+  let summary = "Nodes container.";
+  let description = [{
+    The `hil.nodes` operation
   }];
 }
 
@@ -129,7 +153,7 @@ def OutputArgType : HIL_Type<"HILOutputArg"> {
 def InputArgTypeAttr : TypeAttrBase<"HILInputArgType", "input arg attribute">;
 def OutputArgTypeAttr : TypeAttrBase<"HILOutputArgType", "output arg attribute">;
 
-def HIL_NodeType : HIL_Op<"nodetype", []> {
+def HIL_NodeType : HIL_Op<"nodetype", [HasParent<"Model">]> {
   let summary = "Node type.";
   let description = [{
     The `hil.nodetype` operation for defining types of nodes
@@ -144,7 +168,7 @@ def HIL_NodeType : HIL_Op<"nodetype", []> {
   }];
 }
 
-def HIL_Node : HIL_Op<"node", []> {
+def HIL_Node : HIL_Op<"node", [HasParent<"Nodes">]> {
   let summary = "Node.";
   let description = [{
     The `hil.nodetype` operation for defining types of nodes
@@ -160,7 +184,7 @@ def HIL_Node : HIL_Op<"node", []> {
   }];
 }
 
-def HIL_Chan : HIL_Op<"chan", []> {
+def HIL_Chan : HIL_Op<"chan", [HasParent<"Chans">]> {
   let summary = "Channel.";
   let description = [{
     The `hil.nodetype` operation for defining types of nodes
