@@ -41,9 +41,11 @@ public:
   }
 
   int getStatus() { return lastStatus; }
+  unsigned getGraphLatency() { return graphTime; }
 
 private:
-  LpSolver() : helper(LpSolverHelper::get()), lastStatus(helper.getStatus()) {}
+  LpSolver() : helper(LpSolverHelper::get()), lastStatus(helper.getStatus()),
+      graphTime(0) {}
   void deleteBuffers();
   void reset();
 
@@ -60,6 +62,7 @@ private:
   void balanceFlows(BalanceMode mode, const Graph *graph);
   void genNodeConstraints(const std::string &nodeName);
   void genFlowConstraints(const Graph *graph, OperationType type);
+  void collectGraphTime();
 
   const std::string TimePrefix = "t_";
   const std::string FlowPrefix = "f_";
@@ -69,6 +72,8 @@ private:
   LpSolverHelper &helper;
   int lastStatus;
   std::vector<Buffer*> buffers;
+  std::vector<std::string> sinks;
+  unsigned graphTime;
 };
 
 } // namespace eda::hls::scheduler

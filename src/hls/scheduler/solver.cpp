@@ -31,6 +31,7 @@ void LpSolver::deleteBuffers() {
 void LpSolver::reset() {
   deleteBuffers();
   buffers = std::vector<Buffer*>();
+  sinks = std::vector<std::string>();
 }
 
 void LpSolver::balance(Model &model, BalanceMode mode, Verbosity verbosity) {
@@ -55,6 +56,8 @@ void LpSolver::balance(Model &model, BalanceMode mode, Verbosity verbosity) {
 
       if (mode == LatencyLP) {
         insertBuffers(model);
+        collectGraphTime();
+        std::cout << "Max time: " << graphTime << std::endl;
       }
       lastStatus = helper.getStatus();
 
@@ -80,11 +83,27 @@ void LpSolver::insertBuffers(Model &model) {
   std::cout << "Total buffers inserted: " << bufsInserted << std::endl;
 }
 
+void LpSolver::collectGraphTime() {
+  std::vector<SolverVariable*> sinkVars = helper.getVariables(sinks);
+  std::vector<double> latencies = helper.getResults();
+  unsigned maxTime = 0;
+  for (const auto *sink : sinkVars) {
+    unsigned index = sink->column_number - 1;
+    if (latencies[index] > maxTime) {
+      maxTime = (unsigned)latencies[index];
+    }
+  }
+  graphTime = maxTime;
+}
+
 void LpSolver::balanceLatency(const Graph *graph) { 
 
   for (const Node *node : graph->nodes) {
     std::string nodeName = node->name;
     helper.addVariable(TimePrefix + nodeName, node);
+    if (node->isSink()) {
+      sinks.push_back(TimePrefix + node->name);
+    }
   }
 
   std::vector<std::string> deltas;
@@ -141,7 +160,7 @@ void LpSolver::genBufferConstraints(const std::string &dstName,
 }
 
 void LpSolver::balanceFlows(BalanceMode mode, const Graph *graph) {
-  std::vector<std::string> sinks;
+  
   for (const auto *node : graph->nodes) {
     checkFlows(node);
     std::string nodeName = node->name;
@@ -149,7 +168,7 @@ void LpSolver::balanceFlows(BalanceMode mode, const Graph *graph) {
     genNodeConstraints(nodeName);
     if (node->isSink()) {
       sinks.push_back(node->name);
-    }     
+    }   
   }
 
   // Add constraints for channels
