@@ -110,10 +110,11 @@ namespace eda::hls::debugger {
     solver.add(nodes);
 
     // TODO: debug print
-    std::cout << "SMT-LIBv2 formula:" << std::endl;
-    std::cout << solver.to_smt2() << std::endl;
+    //std::cout << "SMT-LIBv2 formula:" << std::endl;
+    //std::cout << solver.to_smt2() << std::endl;
 
-    switch (solver.check()) {
+    z3::check_result result = solver.check();
+    switch (result) {
       case z3::sat:
         std::cout << "Models are NOT equivalent" << std::endl;
         // TODO: debug print
@@ -128,7 +129,7 @@ namespace eda::hls::debugger {
         return false;
         break;
     }
-    std::cout << "Z3 solver returns unexpected result" << std::endl;
+    std::cout << "Z3 solver returns unexpected result: " << result << std::endl;
     return false;
   }
 
