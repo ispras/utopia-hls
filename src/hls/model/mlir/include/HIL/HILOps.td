@@ -79,13 +79,12 @@ def InputArgType : HIL_Type<"InputArg"> {
 
   let parameters = (ins
     "std::string":$typeName,
-    "int64_t":$flow,
+    "double*":$flow,
     "std::string":$name);
 
   let printer = [{
-    int64_t uncasted_flow = getImpl()->flow;
     $_printer << "input<\"" <<
-      getImpl()->typeName << "\"<" << *reinterpret_cast<double*>(&uncasted_flow) << ">" << " " << '"' << getImpl()->name << '"' << ">";
+      getImpl()->typeName << "\"<" << *getImpl()->flow << ">" << " " << '"' << getImpl()->name << '"' << ">";
   }];
 
   let parser = [{
@@ -96,10 +95,9 @@ def InputArgType : HIL_Type<"InputArg"> {
       return Type();
     if ($_parser.parseLess())
       return Type();
-    double inner_flow;
-    if ($_parser.parseFloat(inner_flow))
+    double *flow = new double{};
+    if ($_parser.parseFloat(*flow))
       return Type();
-    int64_t flow = *reinterpret_cast<int64_t*>(&inner_flow);
     if ($_parser.parseGreater())
       return Type();
     std::string name;
@@ -122,13 +120,13 @@ def OutputArgType : HIL_Type<"OutputArg"> {
 
   let parameters = (ins
     "std::string":$typeName,
-    "int64_t":$flow,
-    "int":$latency,
-    "std::string":$name);
+    "double*":$flow,
+    "unsigned":$latency,
+    "std::string":$name,
+    "std::string":$value);
 
   let printer = [{
-    int64_t uncasted_flow = getImpl()->flow;
-    $_printer << "output<\"" << getImpl()->typeName << "\"<" <<  *reinterpret_cast<double*>(&uncasted_flow) << ">" << " " << getImpl()->latency << " " << '"' << getImpl()->name << '"' << ">";
+    $_printer << "output<\"" << getImpl()->typeName << "\"<" << *getImpl()->flow << ">" << " " << getImpl()->latency << " " << '"' << getImpl()->name << '"' << (getImpl()->value.empty() ? "" : " = " + getImpl()->value) << ">";
   }];
 
   let parser = [{
@@ -139,21 +137,28 @@ def OutputArgType : HIL_Type<"OutputArg"> {
       return Type();
     if ($_parser.parseLess())
       return Type();
-    double inner_flow;
-    if ($_parser.parseFloat(inner_flow))
+    double *flow = new double{};
+    if ($_parser.parseFloat(*flow))
       return Type();
-    int64_t flow = *reinterpret_cast<int64_t*>(&inner_flow);
     if ($_parser.parseGreater())
       return Type();
-    int latency;
+    unsigned latency;
     if ($_parser.parseInteger(latency))
       return Type();
     std::string name;
     if ($_parser.parseString(&name))
       return Type();
+    if ($_parser.parseOptionalEqual()) {
+      if ($_parser.parseGreater())
+        return Type();
+      return get($_ctxt, typeName, flow, latency, name, "");
+    }
+    std::string value;
+    if ($_parser.parseString(&value))
+      return Type();
     if ($_parser.parseGreater())
       return Type();
-    return get($_ctxt, typeName, flow, latency, name);
+    return get($_ctxt, typeName, flow, latency, name, value);
   }];
 }
 

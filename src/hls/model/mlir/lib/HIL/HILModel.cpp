@@ -39,14 +39,12 @@ T find_only_elem_by_type(Iterator first, Iterator last) {
   return v[0];
 }
 
-template <typename T>
-class Traverser {
+template <typename T> class MLIRBuilder {
 public:
-  Traverser(T &node, Builder &builder) : node(node), builder(builder) {}
+  MLIRBuilder(T &node, Builder &builder) : node(node), builder(builder) {}
   void build();
-  template <typename U>
-  static Traverser<U> get(U &node, Builder &builder) {
-    return Traverser<U>(node, builder);
+  template <typename U> static MLIRBuilder<U> get(U &node, Builder &builder) {
+    return MLIRBuilder<U>(node, builder);
   }
 
 private:
@@ -54,64 +52,56 @@ private:
   Builder &builder;
 };
 
-template <>
-void Traverser<mlir::hil::InputArgType>::build() {
-  auto uncasted_flow = node.getFlow(); // FIXME
+template <> void MLIRBuilder<mlir::hil::InputArgType>::build() {
   builder.addPort(node.getName(), node.getTypeName(),
-                  std::to_string(*reinterpret_cast<double *>(&uncasted_flow)),
+                  std::to_string(*node.getFlow()),
                   "0");
 }
 
-template <>
-void Traverser<mlir::hil::OutputArgType>::build() {
-  auto uncasted_flow = node.getFlow(); // FIXME
+template <> void MLIRBuilder<mlir::hil::OutputArgType>::build() {
   builder.addPort(node.getName(), node.getTypeName(),
-                  std::to_string(*reinterpret_cast<double *>(&uncasted_flow)),
-                  std::to_string(node.getLatency()));
+                  std::to_string(*node.getFlow()),
+                  std::to_string(node.getLatency()),
+                  node.getValue());
 }
 
-template <>
-void Traverser<mlir::hil::NodeType>::build() {
+template <> void MLIRBuilder<mlir::hil::NodeType>::build() {
   builder.startNodetype(node.name().str());
   // Build inputs
   for (auto op : node.commandArguments()) {
     auto in_port_op =
         op.cast<mlir::TypeAttr>().getValue().cast<mlir::hil::InputArgType>();
-    Traverser::get(in_port_op, builder).build();
+    MLIRBuilder::get(in_port_op, builder).build();
   }
   // Build outputs
   builder.startOutputs();
   for (auto op : node.commandResults()) {
     auto out_port_op =
         op.cast<mlir::TypeAttr>().getValue().cast<mlir::hil::OutputArgType>();
-    Traverser::get(out_port_op, builder).build();
+    MLIRBuilder::get(out_port_op, builder).build();
   }
   builder.endNodetype();
 }
 
-template <>
-void Traverser<mlir::hil::NodeTypes>::build() {
+template <> void MLIRBuilder<mlir::hil::NodeTypes>::build() {
   for (auto &op : node.getBody()->getOperations()) {
     auto nodetype_op = mlir::cast<mlir::hil::NodeType>(op);
-    Traverser::get(nodetype_op, builder).build();
+    MLIRBuilder::get(nodetype_op, builder).build();
   }
 }
 
-template <>
-void Traverser<mlir::hil::Chan>::build() {
+template <> void MLIRBuilder<mlir::hil::Chan>::build() {
   builder.addChan(node.typeName().str(), node.varName().str());
 }
 
-template <>
-void Traverser<mlir::hil::Chans>::build() {
-  for (auto &op : node) {
+template <> void MLIRBuilder<mlir::hil::Chans>::build() {
+  for (auto &op : node.getBody()->getOperations()) {
     auto chan_op = mlir::cast<mlir::hil::Chan>(op);
-    Traverser::get(chan_op, builder).build();
+    MLIRBuilder::get(chan_op, builder).build();
   }
 }
 
-template <>
-void Traverser<mlir::hil::Node>::build() {
+template <> void MLIRBuilder<mlir::hil::Node>::build() {
   builder.startNode(node.nodeTypeName().str(), node.name().str());
   for (auto op : node.commandArguments()) {
     auto chan_name = op.cast<mlir::StringAttr>().getValue().str();
@@ -125,37 +115,34 @@ void Traverser<mlir::hil::Node>::build() {
   builder.endNode();
 }
 
-template <>
-void Traverser<mlir::hil::Nodes>::build() {
-  for (auto &op : node) {
+template <> void MLIRBuilder<mlir::hil::Nodes>::build() {
+  for (auto &op : node.getBody()->getOperations()) {
     auto node_op = mlir::cast<mlir::hil::Node>(op);
-    Traverser::get(node_op, builder).build();
+    MLIRBuilder::get(node_op, builder).build();
   }
 }
 
-template <>
-void Traverser<mlir::hil::Graph>::build() {
+template <> void MLIRBuilder<mlir::hil::Graph>::build() {
   builder.startGraph(node.name().str());
   auto &ops = node.getBody()->getOperations();
   auto chans_op =
       find_only_elem_by_type<mlir::hil::Chans>(ops.begin(), ops.end());
-  Traverser::get(chans_op, builder).build();
+  MLIRBuilder::get(chans_op, builder).build();
   auto nodes_op =
       find_only_elem_by_type<mlir::hil::Nodes>(ops.begin(), ops.end());
-  Traverser::get(nodes_op, builder).build();
+  MLIRBuilder::get(nodes_op, builder).build();
   builder.endGraph();
 }
 
-template <>
-void Traverser<mlir::hil::Model>::build() {
+template <> void MLIRBuilder<mlir::hil::Model>::build() {
   builder.startModel(node.name().str());
   auto &ops = node.getBody()->getOperations();
   auto nodetypes_op =
       find_only_elem_by_type<mlir::hil::NodeTypes>(ops.begin(), ops.end());
-  Traverser::get(nodetypes_op, builder).build();
+  MLIRBuilder::get(nodetypes_op, builder).build();
   for (auto graph_op :
        find_elems_by_type<mlir::hil::Graph>(ops.begin(), ops.end())) {
-    Traverser::get(graph_op, builder).build();
+    MLIRBuilder::get(graph_op, builder).build();
   }
   builder.endModel();
 }
@@ -172,7 +159,7 @@ public:
 
   void traverse_with_builder(Builder &builder) {
     auto op = mlir::cast<mlir::hil::Model>(*module->getOps().begin());
-    Traverser(op, builder).build();
+    MLIRBuilder(op, builder).build();
   }
 
   MLIRModelLayer(MLIRModelLayer &&oth)
