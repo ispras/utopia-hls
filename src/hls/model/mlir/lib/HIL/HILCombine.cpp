@@ -8,6 +8,8 @@
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "mlir/Transforms/Passes.h"
 
+#include <optional>
+
 using namespace mlir;
 using namespace mlir::hil;
 
@@ -17,7 +19,8 @@ public:
   ChansRewritePass(MLIRContext *context)
       : RewritePattern(MatchAnyOpTypeTag(), /*benefit=*/1, context) {}
 
-  LogicalResult matchAndRewrite(Operation *op, PatternRewriter &rewriter) const override {
+  LogicalResult matchAndRewrite(Operation *op,
+                                PatternRewriter &rewriter) const override {
     auto chans_op = dyn_cast<Chans>(*op);
     if (!chans_op) {
       return failure();
@@ -25,8 +28,8 @@ public:
     auto context = chans_op.getContext();
     auto outer_region_ops = chans_op->getParentRegion()->getOps();
     auto nodes_op_it =
-      std::find_if(outer_region_ops.begin(), outer_region_ops.end(),
-                   [](Operation &op) { return isa<Nodes>(op); });
+        std::find_if(outer_region_ops.begin(), outer_region_ops.end(),
+                     [](Operation &op) { return isa<Nodes>(op); });
     assert(nodes_op_it != outer_region_ops.end());
     auto nodes_op = cast<Nodes>(*nodes_op_it);
     std::map<std::string, std::string> chan_to_source;
@@ -51,27 +54,24 @@ public:
       auto &chans_block_op = chans_block_op_ref.get();
       auto chan_op = cast<Chan>(chans_block_op);
       auto chan_name = chan_op.varName().str();
-      std::string node_from = UNKNOWN_CHAN;
+      std::optional<std::string> node_from;
       auto node_from_it = chan_to_source.find(chan_name);
       if (node_from_it != chan_to_source.end()) {
         node_from = node_from_it->second;
       }
-      std::string node_to = UNKNOWN_CHAN;
+      std::optional<std::string> node_to;
       auto node_to_it = chan_to_target.find(chan_name);
       if (node_to_it != chan_to_target.end()) {
         node_to = node_to_it->second;
       }
       rewriter.setInsertionPoint(&chans_block_op);
-      rewriter.replaceOpWithNewOp<Chan>(&chans_block_op, chan_op.typeName(),
-                                        chan_op.varName(),
-                                        StringAttr().get(context, node_from),
-                                        StringAttr().get(context, node_to));
+      rewriter.replaceOpWithNewOp<Chan>(
+          &chans_block_op, chan_op.typeName(), chan_op.varName(),
+          StringAttr().get(context, node_from.value()),
+          StringAttr().get(context, node_to.value()));
     }
     return success();
   }
-
-private:
-  static constexpr auto UNKNOWN_CHAN = "<UNKNOWN_CHAN>";
 };
 } // namespace
 
