@@ -10,34 +10,65 @@
 #define HIL_OPS
 
 include "HILDialect.td"
-include "mlir/Interfaces/SideEffectInterfaces.td"
 
-def HIL_Model : HIL_Op<"model", [NoTerminator]> {
+class HIL_Container<string mnemonic, list<OpTrait> traits = []> :
+  HIL_Op<mnemonic, !listconcat(traits, [
+    NoRegionArguments,
+    NoTerminator,
+    SingleBlock
+  ])> {
+  let assemblyFormat = "$body attr-dict";
+  let regions = (region SizedRegion<1>: $body);
+  let extraClassDeclaration = [{
+    Block *getBody() {
+      Region& region = getOperation()->getRegion(0);
+      assert(region.hasOneBlock() && "The body should have one block.");
+      return &region.front();
+    }
+  }];
+}
+
+def HIL_Model : HIL_Container<"model"> {
   let summary = "Model container.";
   let description = [{
     The `hil.model` operation
   }];
-
-  let regions = (region AnyRegion:$region);
-  let assemblyFormat = [{
-    $region attr-dict
-  }];
+  let arguments = (ins StrAttr:$name);
+  let assemblyFormat = "$name $body attr-dict";
 }
 
-def HIL_Graph : HIL_Op<"graph", [NoTerminator]> {
+def HIL_Graph : HIL_Container<"graph", [HasParent<"Model">]> {
   let summary = "Graph container.";
   let description = [{
     The `hil.graph` operation
   }];
 
   let arguments = (ins StrAttr:$name);
-  let regions = (region AnyRegion:$region);
-  let assemblyFormat = [{
-    $name $region attr-dict
+  let assemblyFormat = "$name $body attr-dict";
+}
+
+def HIL_NodeTypes : HIL_Container<"nodetypes", [HasParent<"Model">]> {
+  let summary = "Nodetypes container.";
+  let description = [{
+    Container of `hil.nodetype`
   }];
 }
 
-def InputArgType : HIL_Type<"HILInputArg"> {
+def HIL_Chans : HIL_Container<"chans", [HasParent<"Graph">]> {
+  let summary = "Chans container.";
+  let description = [{
+    Container of `hil.chan`
+  }];
+}
+
+def HIL_Nodes : HIL_Container<"nodes", [HasParent<"Graph">]> {
+  let summary = "Nodes container.";
+  let description = [{
+    Container of `hil.node`
+  }];
+}
+
+def InputArgType : HIL_Type<"InputArg"> {
   let mnemonic = "input";
 
   let summary = "Input argument";
@@ -48,13 +79,12 @@ def InputArgType : HIL_Type<"HILInputArg"> {
 
   let parameters = (ins
     "std::string":$typeName,
-    "int64_t":$flow,
+    "double*":$flow,
     "std::string":$name);
 
   let printer = [{
-    int64_t uncasted_flow = getImpl()->flow;
     $_printer << "input<\"" <<
-      getImpl()->typeName << "\"<" << *reinterpret_cast<double*>(&uncasted_flow) << ">" << " " << '"' << getImpl()->name << '"' << ">";
+      getImpl()->typeName << "\"<" << *getImpl()->flow << ">" << " " << '"' << getImpl()->name << '"' << ">";
   }];
 
   let parser = [{
@@ -65,10 +95,9 @@ def InputArgType : HIL_Type<"HILInputArg"> {
       return Type();
     if ($_parser.parseLess())
       return Type();
-    double inner_flow;
-    if ($_parser.parseFloat(inner_flow))
+    double *flow = new double{};
+    if ($_parser.parseFloat(*flow))
       return Type();
-    int64_t flow = *reinterpret_cast<int64_t*>(&inner_flow);
     if ($_parser.parseGreater())
       return Type();
     std::string name;
@@ -80,7 +109,7 @@ def InputArgType : HIL_Type<"HILInputArg"> {
   }];
 }
 
-def OutputArgType : HIL_Type<"HILOutputArg"> {
+def OutputArgType : HIL_Type<"OutputArg"> {
   let mnemonic = "output";
 
   let summary = "Output argument";
@@ -91,13 +120,13 @@ def OutputArgType : HIL_Type<"HILOutputArg"> {
 
   let parameters = (ins
     "std::string":$typeName,
-    "int64_t":$flow,
-    "int":$bind,
-    "std::string":$name);
+    "double*":$flow,
+    "unsigned":$latency,
+    "std::string":$name,
+    "std::string":$value);
 
   let printer = [{
-    int64_t uncasted_flow = getImpl()->flow;
-    $_printer << "output<\"" << getImpl()->typeName << "\"<" <<  *reinterpret_cast<double*>(&uncasted_flow) << ">" << " " << getImpl()->bind << " " << '"' << getImpl()->name << '"' << ">";
+    $_printer << "output<\"" << getImpl()->typeName << "\"<" << *getImpl()->flow << ">" << " " << getImpl()->latency << " " << '"' << getImpl()->name << '"' << (getImpl()->value.empty() ? "" : " = " + getImpl()->value) << ">";
   }];
 
   let parser = [{
@@ -108,28 +137,35 @@ def OutputArgType : HIL_Type<"HILOutputArg"> {
       return Type();
     if ($_parser.parseLess())
       return Type();
-    double inner_flow;
-    if ($_parser.parseFloat(inner_flow))
+    double *flow = new double{};
+    if ($_parser.parseFloat(*flow))
       return Type();
-    int64_t flow = *reinterpret_cast<int64_t*>(&inner_flow);
     if ($_parser.parseGreater())
       return Type();
-    int bind;
-    if ($_parser.parseInteger(bind))
+    unsigned latency;
+    if ($_parser.parseInteger(latency))
       return Type();
     std::string name;
     if ($_parser.parseString(&name))
       return Type();
+    if ($_parser.parseOptionalEqual()) {
+      if ($_parser.parseGreater())
+        return Type();
+      return get($_ctxt, typeName, flow, latency, name, "");
+    }
+    std::string value;
+    if ($_parser.parseString(&value))
+      return Type();
     if ($_parser.parseGreater())
       return Type();
-    return get($_ctxt, typeName, flow, bind, name);
+    return get($_ctxt, typeName, flow, latency, name, value);
   }];
 }
 
-def InputArgTypeAttr : TypeAttrBase<"HILInputArgType", "input arg attribute">;
-def OutputArgTypeAttr : TypeAttrBase<"HILOutputArgType", "output arg attribute">;
+def InputArgTypeAttr : TypeAttrBase<"InputArgType", "input arg attribute">;
+def OutputArgTypeAttr : TypeAttrBase<"OutputArgType", "output arg attribute">;
 
-def HIL_NodeType : HIL_Op<"nodetype", []> {
+def HIL_NodeType : HIL_Op<"nodetype", [HasParent<"NodeTypes">]> {
   let summary = "Node type.";
   let description = [{
     The `hil.nodetype` operation for defining types of nodes
@@ -144,7 +180,7 @@ def HIL_NodeType : HIL_Op<"nodetype", []> {
   }];
 }
 
-def HIL_Node : HIL_Op<"node", []> {
+def HIL_Node : HIL_Op<"node", [HasParent<"Nodes">]> {
   let summary = "Node.";
   let description = [{
     The `hil.nodetype` operation for defining types of nodes
@@ -160,7 +196,7 @@ def HIL_Node : HIL_Op<"node", []> {
   }];
 }
 
-def HIL_Chan : HIL_Op<"chan", []> {
+def HIL_Chan : HIL_Op<"chan", [HasParent<"Chans">]> {
   let summary = "Channel.";
   let description = [{
     The `hil.nodetype` operation for defining types of nodes

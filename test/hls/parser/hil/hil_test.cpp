@@ -11,14 +11,10 @@
 
 #include "gtest/gtest.h"
 
-#include "hls/compiler/compiler.h"
-#include "hls/library/library.h"
 #include "hls/model/model.h"
 #include "hls/model/printer.h"
 #include "hls/parser/hil/parser.h"
 
-using namespace eda::hls::compiler;
-using namespace eda::hls::library;
 using namespace eda::hls::model;
 using namespace eda::hls::parser::hil;
 
@@ -42,30 +38,6 @@ int hilTestGraphs(const std::string &filename) {
   return (parse(filename))->graphs.size();
 }
 
-int hilTestVerilogNodeTypePrinter(const std::string &filename) {
-  auto nodetypes = parse(filename)->nodetypes;
-
-  std::cout << "------ Verilog RTL-model ------" << std::endl;
-  for (const auto *nodetype: nodetypes) {
-    auto printer = std::make_unique<VerilogNodeTypePrinter>(*nodetype);
-    printer->print(std::cout);
-  }
-
-  return 0;
-}
-
-int hilTestCompiler(const std::string &filename) {
-  auto compiler = std::make_unique<Compiler>(*parse(filename));
-  std::cout << *compiler;
-
-  Parameters params("add");
-  auto metaElement = Library::get().find(params.elementName);
-  auto element = metaElement->construct(params);
-  std::cout << element->ir << std::endl;
-
-  return 0;
-}
-
 TEST(HilTest, SimpleTest) {
   EXPECT_EQ(hilTest("test/data/hil/test.hil"), 0);
   EXPECT_EQ(hilTest("test/data/hil/idct.hil"), 0);
@@ -77,13 +49,5 @@ TEST(HilTest, NodeTypesTest) {
 
 TEST(HilTest, GraphsTest) {
   EXPECT_EQ(hilTestGraphs("test/data/hil/test.hil"), 1);
-}
-
-TEST(HilTest, VerilogNodeTypePrinterTest) {
-  EXPECT_EQ(hilTestVerilogNodeTypePrinter("test/data/hil/test.hil"), 0);
-}
-
-TEST(HilTest, CompilerTest) {
-  EXPECT_EQ(hilTestCompiler("test/data/hil/test.hil"), 0);
 }
 

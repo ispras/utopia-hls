@@ -8,30 +8,7 @@
 
 #include "hls/scheduler/scheduler.h"
 
-#include <cassert>
-#include <iostream>
-#include <memory>
-
 namespace eda::hls::scheduler {
-
-LatencyBalancer::~LatencyBalancer() {
-  for (auto *buf : buffers) {
-    delete buf;
-  }
-}
-
-void LatencyBalancer::insertBuffers(Model &model, 
-    const std::vector<double> &latencies) {
-  for (const auto *buf : buffers) {
-    // lp_solve positions start with 1
-    unsigned latency = latencies[buf->position - 1];
-    if (latency != 0) {
-      model.insertDelay(*(buf->channel), latency);
-      std::cout << "Inserted buffer: " << *(buf->channel)
-                << " with latency " << latency << std::endl;
-    }
-  }
-}
 
 }  // namespace eda::hls::scheduler
 

@@ -23,26 +23,27 @@ using namespace mlir::hil;
 // HIL dialect.
 //===----------------------------------------------------------------------===//
 void HILDialect::initialize() {
-    addOperations<
+  addOperations<
 #define GET_OP_LIST
 #include "HIL/HILOps.cpp.inc"
-        >();
-    addTypes<
+      >();
+  addTypes<
 #define GET_TYPEDEF_LIST
 #include "HIL/HILOpsTypes.cpp.inc"
 #undef GET_TYPEDEF_LIST
-        >();
+      >();
 }
 
 Type HILDialect::parseType(DialectAsmParser &parser) const {
-    StringRef data_type;
-    if (parser.parseKeyword(&data_type))
-        return Type();
-    mlir::Type value;
-    generatedTypeParser(parser, data_type, value);
-    return value;
+  StringRef data_type;
+  if (parser.parseKeyword(&data_type))
+    return Type();
+  mlir::Type value;
+  generatedTypeParser(parser, data_type, value);
+  return value;
 }
 
-void HILDialect::printType(mlir::Type type, mlir::DialectAsmPrinter &printer) const {
-    (void)generatedTypePrinter(type, printer);
+void HILDialect::printType(mlir::Type type,
+                           mlir::DialectAsmPrinter &printer) const {
+  (void)generatedTypePrinter(type, printer);
 }

@@ -83,21 +83,22 @@ namespace eda::hls::debugger {
       const Node *fOut = outPair.first;
       const Node *sOut = outPair.second;
 
-      const std::string fModelName = getModelName(*fOut);
-      const std::string sModelName = getModelName(*sOut);
-      const std::string fName = fModelName + "_" + fOut->name;
-      const std::string sName = sModelName + "_" + sOut->name;
+      // funciton names
+      const char *fName = fOut->type.name.c_str();
+      const char *sName = sOut->type.name.c_str();
 
+      // output sorts
       const z3::sort fOutSort = getSort(*fOut, ctx);
       const z3::sort sOutSort = getSort(*sOut, ctx);
 
+      // input sorts
       const z3::sort_vector fInSorts = getInSorts(*fOut, ctx);
       const z3::sort_vector sInSorts = getInSorts(*sOut, ctx);
 
-      const z3::func_decl fFunc = function(fName.c_str(), fInSorts, fOutSort);
+      const z3::func_decl fFunc = function(fName, fInSorts, fOutSort);
       const z3::expr_vector fArgs = getFuncArgs(*fOut, ctx);
 
-      const z3::func_decl sFunc = function(sName.c_str(), sInSorts, sOutSort);
+      const z3::func_decl sFunc = function(sName, sInSorts, sOutSort);
       const z3::expr_vector sArgs = getFuncArgs(*sOut, ctx);
 
       const z3::expr outExpr = fFunc(fArgs) != sFunc(sArgs);
@@ -109,10 +110,11 @@ namespace eda::hls::debugger {
     solver.add(nodes);
 
     // TODO: debug print
-    std::cout << "SMT-LIBv2 formula:" << std::endl;
-    std::cout << solver.to_smt2() << std::endl;
+    //std::cout << "SMT-LIBv2 formula:" << std::endl;
+    //std::cout << solver.to_smt2() << std::endl;
 
-    switch (solver.check()) {
+    z3::check_result result = solver.check();
+    switch (result) {
       case z3::sat:
         std::cout << "Models are NOT equivalent" << std::endl;
         // TODO: debug print
@@ -127,7 +129,7 @@ namespace eda::hls::debugger {
         return false;
         break;
     }
-    std::cout << "Z3 solver returns unexpected result" << std::endl;
+    std::cout << "Z3 solver returns unexpected result: " << result << std::endl;
     return false;
   }
 
@@ -227,11 +229,6 @@ namespace eda::hls::debugger {
 
       } else if (node->isKernel()) {
 
-        // prefix for kernel function name
-        const std::string modelName = getModelName(*node);
-        const std::string funcName = node->name;
-        const std::string modelFuncPrefix = modelName + "_" + funcName;
-
         const std::vector<Chan*> nodeOuts = node->outputs;
 
         // create equation for every output port of kernel node
@@ -241,14 +238,13 @@ namespace eda::hls::debugger {
 
           // input/output sorts for kernel function
           const z3::sort_vector sorts = getInSorts(*node, ctx);
-          const char *sortName = srcBnd.port->type.c_str();
-          const z3::sort fSort = ctx.uninterpreted_sort(sortName);
+          const z3::sort fSort = getSort(*srcBnd.port, ctx);
 
           // kernel function name
-          const std::string kerName = modelFuncPrefix + "_" + nodeOut->name;
+          const char *kerName = node->type.name.c_str();
 
           // kernel function
-          const z3::func_decl kernel = function(kerName.c_str(), sorts, fSort);
+          const z3::func_decl kernel = function(kerName, sorts, fSort);
           const z3::expr_vector kernelArgs = getFuncArgs(*node, ctx);
 
           // create equation
@@ -338,23 +334,24 @@ namespace eda::hls::debugger {
     return ctx.uninterpreted_sort(node.type.name.c_str());
   }
 
+  z3::sort Verifier::getSort(const Port &port, z3::context &ctx) const {
+    return ctx.uninterpreted_sort(port.type.c_str());
+  }
+
   z3::expr Verifier::toConst(const Binding &bnd, z3::context &ctx) const {
 
-    const char *typeName = bnd.port->type.c_str();
-    const z3::sort fInSort = ctx.uninterpreted_sort(typeName);
+    const z3::sort fInSort = getSort(*bnd.port, ctx);
     const std::string modelName = getModelName(*bnd.node);
     const std::string nodeName = bnd.node->name;
-    const std::string constName =
-        modelName + "_" + nodeName + "_" + bnd.port->name;
+    const std::string portName = bnd.port->name;
+    const std::string constName = modelName + "_" + nodeName + "_" + portName;
 
     return ctx.constant(constName.c_str(), fInSort);
   }
 
   z3::expr Verifier::toConst(const Node &node, z3::context &ctx) const {
 
-    const NodeType &fType = node.type;
-    const std::string typeName = fType.name;
-    const z3::sort fInSort = ctx.uninterpreted_sort(typeName.c_str());
+    const z3::sort fInSort = getSort(node, ctx);
     const std::string modelName = getModelName(node);
     const std::string constName = modelName + "_" + node.name;
 
@@ -364,14 +361,10 @@ namespace eda::hls::debugger {
   z3::expr Verifier::toInFunc(const Node &node, const Chan &ch,
       z3::context &ctx) const {
 
-    const Binding src = ch.source;
-    const Port *fPort = src.port;
-    const std::string outIdx = ch.name;
     const std::string modelName = getModelName(node);
     const std::string nodeName = node.name;
-    const std::string funcName = modelName + "_" + nodeName + "_" + outIdx;
-    const char *sortName = fPort->type.c_str();
-    const z3::sort fSort = ctx.uninterpreted_sort(sortName);
+    const std::string funcName = modelName + "_" + nodeName + "_" + ch.name;
+    const z3::sort fSort = getSort(*ch.source.port, ctx);
     z3::sort_vector sorts(ctx);
     const z3::func_decl func = function(funcName.c_str(), sorts, fSort);
     const z3::expr_vector fArgs = z3::expr_vector(ctx);
@@ -386,8 +379,7 @@ namespace eda::hls::debugger {
 
     for (size_t i = 0; i < arity; i++) {
 
-      const char *sortName = node.inputs[i]->target.port->type.c_str();
-      sorts.push_back(ctx.uninterpreted_sort(sortName));
+      sorts.push_back(getSort(*node.inputs[i]->target.port, ctx));
     }
     return sorts;
   }

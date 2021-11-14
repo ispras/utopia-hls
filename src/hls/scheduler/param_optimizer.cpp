@@ -59,9 +59,8 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     }
 
     // Balance flows and align times.
-    LpSolver solver;
-    solver.balance(model);
-
+    LpSolver::get().balance(model);
+    
     indicators.latency = 100; // FIXME
     indicators.frequency = cur_f; // FIXME
 

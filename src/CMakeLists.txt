@@ -5,23 +5,12 @@ cmake_minimum_required(VERSION 3.13)
 # The project name and version.
 project(Utopia VERSION 0.0)
 
-# The project library and executable.
-set(MAIN_LIBRARY ueda)
+# The project executable and dependencies.
 set(MAIN_TARGET umain)
 set(Z3_LIBRARY z3)
 set(LPSOLVE55_LIBRARY lpsolve55)
 set(DL_LIBRARY dl)
 set(COLAMD_LIBRARY colamd)
-
-# Use custom build of Z3 if Z3_DIR env var is specified
-if(DEFINED ENV{Z3_DIR})
-  message(STATUS "Z3_DIR env var is set.")
-  set(Z3_DIR $ENV{Z3_DIR})
-  link_directories(${Z3_DIR}/lib)
-  set(CMAKE_CXX_FLAGS "-I${Z3_DIR}/include")
-else()
-  message(STATUS "Z3_DIR env var is not set.")
-endif()
 
 # The project requires flex/bison.
 find_package(FLEX REQUIRED)
@@ -109,7 +98,13 @@ target_include_directories(${MAIN_LIBRARY} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(${MAIN_LIBRARY} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 # The libraries to link with.
-target_link_libraries(${MAIN_LIBRARY} ${LPSOLVE55_LIBRARY} ${DL_LIBRARY} ${COLAMD_LIBRARY} ${Z3_LIBRARY})
+target_link_libraries(${MAIN_LIBRARY}
+  ${ELPP_LIBRARY}
+  ${LPSOLVE55_LIBRARY}
+  ${DL_LIBRARY}
+  ${COLAMD_LIBRARY}
+  ${Z3_LIBRARY}
+)
 
 # The project executable.
 add_executable(${MAIN_TARGET} main.cpp)

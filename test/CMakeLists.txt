@@ -1,19 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.0)
+
 project(UtopiaTest VERSION 0.0)
 
 set(TEST_TARGET utest)
+
 set(CMAKE_CXX_STANDARD 17)
-
-# Use custom build of Z3 if Z3_DIR env var is specified
-if(DEFINED ENV{Z3_DIR})
-  set(Z3_DIR $ENV{Z3_DIR})
-  link_directories(${Z3_DIR}/lib)
-  set(CMAKE_CXX_FLAGS "-I${Z3_DIR}/include")
-endif()
-
-set(MAIN_LIBRARY ueda)
 
 # Check if the 'gtest' target has been already imported (e.g., by LLVM).
 if(NOT TARGET gtest)
@@ -31,7 +24,9 @@ endif()
 enable_testing()
 
 add_executable(${TEST_TARGET}
+  hls/compiler/compiler_test.cpp
   hls/debugger/debugger_test.cpp
+  hls/library/library_test.cpp
   hls/parser/hil/hil_test.cpp
   hls/scheduler/param_optimizer_test.cpp
   hls/scheduler/scheduler_test.cpp

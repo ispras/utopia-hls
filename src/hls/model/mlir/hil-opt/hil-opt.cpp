@@ -6,7 +6,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/IR/AsmState.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
@@ -16,7 +15,6 @@
 #include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Support/FileUtilities.h"
-#include "mlir/Support/MlirOptMain.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/InitLLVM.h"
 #include "llvm/Support/SourceMgr.h"
@@ -24,38 +22,46 @@
 
 #include "HIL/HILCombine.h"
 #include "HIL/HILDialect.h"
+#include "HIL/HILModel.h"
 
 namespace cl = llvm::cl;
 
 static cl::opt<std::string> inputFilename(cl::Positional,
-                                          cl::desc("<input toy file>"),
-                                          cl::init("-"), cl::value_desc("filename"));
+                                          cl::desc("<input mlir file>"),
+                                          cl::init("-"),
+                                          cl::value_desc("filename"));
 static cl::opt<std::string> outputFilename("o", cl::desc("Output filename"),
                                            cl::value_desc("filename"),
                                            cl::init("-"));
 
 int loadMLIR(mlir::MLIRContext &context, mlir::OwningModuleRef &module) {
-    // Otherwise, the input is '.mlir'.
-    llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> fileOrErr =
-        llvm::MemoryBuffer::getFileOrSTDIN(inputFilename);
-    if (std::error_code EC = fileOrErr.getError()) {
-        llvm::errs() << "Could not open input file: " << EC.message() << "\n";
-        return -1;
-    }
+  // Open file
+  llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> fileOrErr =
+      llvm::MemoryBuffer::getFileOrSTDIN(inputFilename);
+  if (std::error_code EC = fileOrErr.getError()) {
+    llvm::errs() << "Could not open input file: " << EC.message() << "\n";
+    return -1;
+  }
 
-    // Parse the input mlir.
-    llvm::SourceMgr sourceMgr;
-    sourceMgr.AddNewSourceBuffer(std::move(*fileOrErr), llvm::SMLoc());
-    module = mlir::parseSourceFile(sourceMgr, &context);
-    if (!module) {
-        llvm::errs() << "Error can't load file " << inputFilename << "\n";
-        return 3;
-    }
-    return 0;
+  // Parse the input mlir.
+  llvm::SourceMgr sourceMgr;
+  sourceMgr.AddNewSourceBuffer(std::move(*fileOrErr), llvm::SMLoc());
+  module = mlir::parseSourceFile(sourceMgr, &context);
+  if (!module) {
+    llvm::errs() << "Error can't load file " << inputFilename << "\n";
+    return 3;
+  }
+  return 0;
 }
 
 int main(int argc, char **argv) {
-    mlir::registerAsmPrinterCLOptions();
+  mlir::registerAsmPrinterCLOptions();
+  mlir::registerMLIRContextCLOptions();
+  mlir::registerPassManagerCLOptions();
+  mlir::registerDefaultTimingManagerCLOptions();
+  cl::ParseCommandLineOptions(argc, argv, "hil dialect");
+  eda::hls::model::parse_model_from_mlir_file(inputFilename);
+  /*  mlir::registerAsmPrinterCLOptions();
     mlir::registerMLIRContextCLOptions();
     mlir::registerPassManagerCLOptions();
     mlir::registerDefaultTimingManagerCLOptions();
@@ -82,6 +88,7 @@ int main(int argc, char **argv) {
         llvm::errs() << errorMessage << "\n";
         return 5;
     }
-    module->print(output->os());
-    return 0;
+
+    module->print(output->os());*/
+  return 0;
 }

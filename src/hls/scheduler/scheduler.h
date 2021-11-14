@@ -29,22 +29,13 @@ struct Buffer;
 class LatencyBalancer {
 public:
   LatencyBalancer() {}
-  virtual ~LatencyBalancer();
+  virtual ~LatencyBalancer() {}
   virtual void balance(Model &model) {}
 
 protected:
-  void insertBuffers(Model &model, const std::vector<double> &latencies);
-
-  std::vector<Buffer*> buffers;
+  virtual void insertBuffers(Model &model) {};
 };
 
-struct Buffer final {
-  Buffer(Chan *chan, unsigned latency, unsigned position) : channel(chan), 
-      latency(latency), position(position) {}
 
-  Chan *channel;
-  unsigned latency;
-  unsigned position;
-};
 
 } // namespace eda::hls::scheduler

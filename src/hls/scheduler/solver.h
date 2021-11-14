@@ -10,18 +10,29 @@
 
 #include "hls/scheduler/lp_helper.h"
 #include "hls/scheduler/scheduler.h"
+#include "util/singleton.h"
 
 using namespace eda::hls::model;
+using namespace eda::util;
 
 namespace eda::hls::scheduler {
 
-class LpSolver final : public LatencyBalancer {
+struct Buffer final {
+  Buffer(Chan *chan, unsigned latency, unsigned position) : channel(chan), 
+      latency(latency), position(position) {}
+
+  Chan *channel;
+  unsigned latency;
+  unsigned position;
+};
+
+class LpSolver final : public LatencyBalancer, public Singleton<LpSolver> {
 
 public:
 
-  LpSolver() : helper(LpSolverHelper::get()), lastStatus(helper.getStatus()) {}
+  friend Singleton<LpSolver>;
 
-  ~LpSolver() { helper.reset(); }
+  ~LpSolver();
 
   void balance(Model &model, BalanceMode mode, Verbosity verbosity);
 
@@ -30,8 +41,15 @@ public:
   }
 
   int getStatus() { return lastStatus; }
+  unsigned getGraphLatency() { return graphTime; }
 
 private:
+  LpSolver() : helper(LpSolverHelper::get()), lastStatus(helper.getStatus()),
+      graphTime(0) {}
+  void deleteBuffers();
+  void reset();
+
+  void insertBuffers(Model &model) override;
   void genLatencyConstraints(const std::string &nextName, 
       const std::string &prevName, unsigned latency);
   void genDeltaConstraints(const std::string &dstName, 
@@ -44,6 +62,7 @@ private:
   void balanceFlows(BalanceMode mode, const Graph *graph);
   void genNodeConstraints(const std::string &nodeName);
   void genFlowConstraints(const Graph *graph, OperationType type);
+  void collectGraphTime();
 
   const std::string TimePrefix = "t_";
   const std::string FlowPrefix = "f_";
@@ -52,6 +71,9 @@ private:
   
   LpSolverHelper &helper;
   int lastStatus;
+  std::vector<Buffer*> buffers;
+  std::vector<std::string> sinks;
+  unsigned graphTime;
 };
 
 } // namespace eda::hls::scheduler

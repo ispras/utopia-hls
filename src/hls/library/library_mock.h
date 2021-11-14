@@ -35,16 +35,27 @@ struct MetaElementMock final : public MetaElement {
 inline std::unique_ptr<Element> MetaElementMock::construct(
     const Parameters &params) const {
   std::unique_ptr<Element> element = std::make_unique<Element>(ports);
-  std::string inputs, outputs, iface_wires, regs, fsm, assigns;
-  unsigned int pos = 0, input_length = 0, output_length = 0;
+  std::string inputs, outputs, ifaceWires, regs, fsm, assigns;
+  unsigned pos = 0, inputLength = 0, outputLength = 0;
+  std::string outputType;
+  bool quickProcess = false;
 
-  for (auto port : ports) {
-    if (port.name != "clock" && port.name != "reset") {
-      if (port.direction == Port::IN || port.direction == Port::INOUT) {
-        input_length += port.width;
-      }
-      if (port.direction == Port::OUT || port.direction == Port::INOUT) {
-        output_length += port.width;
+  if (name == "merge" || name == "split" || name == "delay") {
+    outputType = std::string("reg ");
+    quickProcess = true;
+  } else {
+    outputType = std::string("wire ");
+  }
+
+  if (!quickProcess) {
+    for (auto port : ports) {
+      if (port.name != "clock" && port.name != "reset") {
+        if (port.direction == Port::IN || port.direction == Port::INOUT) {
+          inputLength += port.width;
+        }
+        if (port.direction == Port::OUT || port.direction == Port::INOUT) {
+          outputLength += port.width;
+        }
       }
     }
   }
@@ -54,7 +65,7 @@ inline std::unique_ptr<Element> MetaElementMock::construct(
 
   for (auto port : ports) {
     if (port.name == "clock" || port.name == "reset") {
-      iface_wires += std::string("input ") + port.name + ";\n";
+      ifaceWires += std::string("input ") + port.name + ";\n";
       continue;
     }
 
@@ -64,15 +75,18 @@ inline std::unique_ptr<Element> MetaElementMock::construct(
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
-        iface_wires += std::string("input ") + portDeclr;
+        ifaceWires += std::string("input ") + portDeclr;
       } else {
-        iface_wires += std::string("inout ") + portDeclr;
+        ifaceWires += std::string("inout ") + portDeclr;
       }
       inputs += std::string("wire ") + portDeclr;
+      if (quickProcess) {
+        continue;
+      }
 
       // Create the first stage of pipeline.
       if (fsmNotCreated) {
-        regs += std::string("reg [") + std::to_string(input_length - 1) + ":0] state_0;\n";
+        regs += std::string("reg [") + std::to_string(inputLength - 1) + ":0] state_0;\n";
         fsm += std::string("always @(posedge clock) begin\n");
         fsm += std::string("state_0 <= {");
         fsmNotCreated = false;
@@ -84,25 +98,103 @@ inline std::unique_ptr<Element> MetaElementMock::construct(
 
     if (port.direction == Port::OUT || port.direction == Port::INOUT) {
       if (port.direction == Port::OUT) {
-        iface_wires += std::string("output ") + portDeclr;
+        ifaceWires += std::string("output ") + portDeclr;
       }
-      outputs += std::string("wire ") + portDeclr;
-      if (input_length < output_length && pos != 0) {
+      outputs += outputType + portDeclr;
+      if (quickProcess) {
+        continue;
+      }
+
+      if (inputLength < outputLength && pos != 0) {
         pos -= port.width; // FIXME
       }
+      uassert(outputLength != 0, "All the outputs have zero width!");
       assigns += std::string("assign ") + port.name +
                  " = state_" +
                  (port.latency == 0 ? "0" : std::to_string(port.latency - 1)) +
-                 "[" + std::to_string((pos + port.width - 1) % output_length) +
-                 ":" + std::to_string(pos % output_length) + "];\n";
+                 "[" + std::to_string((pos + port.width - 1) % outputLength) +
+                 ":" + std::to_string(pos % outputLength) + "];\n";
       pos += port.width;
     }
   }
 
-  if (output_length == 0) {
-    element->ir = std::string("\n") + iface_wires + inputs;
+  if (!quickProcess && outputLength == 0) {
+    element->ir = std::string("\n") + ifaceWires + inputs;
     return element;
   }
+
+  std::string ir;
+  if (name == "merge" || name == "split") {
+    std::vector<std::string> portNames;
+    std::string portName;
+    ir += std::string("reg [31:0] state;\n");
+    ir += std::string("always @(posedge clock) begin\nif (!reset) begin\n  state <= 0; end\nelse");
+
+    for (auto port : ports) {
+      if (port.name == "clock" || port.name == "reset") {
+        continue;
+      }
+      if (port.direction == Port::IN || port.direction == Port::INOUT) {
+        if (name == "merge") {
+          portNames.push_back(port.name);
+        } else if (name == "split") {
+          portName = port.name;
+        }
+      }
+      if (port.direction == Port::OUT || port.direction == Port::INOUT) {
+        if (name == "merge") {
+          portName = port.name;
+        } else if (name == "split") {
+          portNames.push_back(port.name);
+        }
+      }
+    }
+    unsigned counter = 0;
+    for (auto currName : portNames) {
+      ir += std::string(" if (state == ") + std::to_string(counter) + ") begin\n";
+      ir += std::string("  state <= ") + std::to_string(++counter) + ";\n  ";
+      if (name == "merge") {
+        ir += portName + " <= " + currName + "; end\nelse ";
+      } else if (name == "split") {
+        ir += currName + " <= " + portName + "; end\nelse ";
+      }
+    }
+    ir += std::string("begin\n  state <= 0; end\nend\n");
+    element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
+    return element;
+  }
+  else if (name == "delay") {
+    std::string inPort, outPort;
+    unsigned d = 3; // FIXME
+    regs += std::string("reg [31:0] state;\n");
+
+    for (auto port : ports) {
+      if (port.name == "clock" || port.name == "reset") {
+        continue;
+      }
+      if (port.direction == Port::IN || port.direction == Port::INOUT) {
+        inPort = port.name;
+      }
+      if (port.direction == Port::OUT || port.direction == Port::INOUT) {
+        outPort = port.name;
+      }
+    }
+
+    ir += std::string(" if (state == 0) begin\n  state <= 1;\n  s0 <= ") + inPort + "; end\nelse";
+    regs += std::string("reg [31:0] s0;\n");
+    for (unsigned i = 1; i < d; i++) {
+      regs += std::string("reg [31:0] s") + std::to_string(i) + ";\n";
+      ir += std::string(" if (state == ") + std::to_string(i) + ") begin\n";
+      ir += std::string("  state <= ") + std::to_string(i + 1) + ";\n";
+      ir += std::string("  s") + std::to_string(i) + " <= s" + std::to_string(i - 1) + "; end\nelse";
+    }
+    ir += std::string(" begin\n  state <= 0;\n  ") + outPort + " <= s" +
+          std::to_string(d - 1) + "; end\nend\n";
+    regs += std::string("always @(posedge clock) begin\nif (!reset) begin\n  state <= 0; end\nelse");
+    element->ir = std::string("\n") + ifaceWires + inputs + outputs + regs + ir;
+    return element;
+  }
+
 
   // Finish creating the first stage of pipeline.
   if (!fsmNotCreated) {
@@ -116,12 +208,12 @@ inline std::unique_ptr<Element> MetaElementMock::construct(
   // unsigned f = params.value("f");
   unsigned f = 6;
   for (unsigned i = 1; (i < f) && !fsmNotCreated; i++) {
-    regs += std::string("reg [") + std::to_string(input_length - 1) + ":0] state_" + std::to_string(i) + ";\n";
-    if (input_length > 2) {
+    regs += std::string("reg [") + std::to_string(inputLength - 1) + ":0] state_" + std::to_string(i) + ";\n";
+    if (inputLength > 2) {
       fsm += std::string("state_") + std::to_string(i) +
-                          " = {state_" + std::to_string(i - 1) + "[" + std::to_string(input_length - 2) + ":0], " +
-                          "state_" + std::to_string(i - 1) + "[" + std::to_string(input_length - 1) + "]};\n";
-    } else if (input_length == 2) {
+                          " = {state_" + std::to_string(i - 1) + "[" + std::to_string(inputLength - 2) + ":0], " +
+                          "state_" + std::to_string(i - 1) + "[" + std::to_string(inputLength - 1) + "]};\n";
+    } else if (inputLength == 2) {
       fsm += std::string("state_") + std::to_string(i) + "[1:0] = {state_" + std::to_string(i - 1) +
                          "[0], state_" + std::to_string(i - 1) + "[1]};\n";
     }
@@ -133,7 +225,7 @@ inline std::unique_ptr<Element> MetaElementMock::construct(
     fsm += std::string("end\n");
   }
 
-  element->ir = std::string("\n") + iface_wires + inputs + outputs + regs + fsm + assigns;
+  element->ir = std::string("\n") + ifaceWires + inputs + outputs + regs + fsm + assigns;
   return element;
 }
 

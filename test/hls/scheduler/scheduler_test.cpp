@@ -23,17 +23,17 @@ using namespace eda::hls::scheduler;
 int lpsolveTest(const std::string &filename, BalanceMode mode) {
 
   std::unique_ptr<Model> model = parse(filename);
-  LpSolver *solver = new LpSolver();
+  LpSolver &solver = LpSolver::get();
 
-  solver->balance(*model, mode, Verbosity::Normal);
+  solver.balance(*model, mode, Verbosity::Full);
   //std::cout << *model;
-  return solver->getStatus();
+  return solver.getStatus();
 }
 
 int dijkstraTest(const std::string &filename) {
   std::unique_ptr<Model> model = parse(filename);
-  DijkstraBalancer *balancer = new DijkstraBalancer();
-  balancer->balance(*model);
+  DijkstraBalancer::get().balance(*model);
+  //std::cout << *model;
   return 0;
 }
 
@@ -55,4 +55,8 @@ TEST(SchedulerTest, DijkstraLatency) {
 
 TEST(SchedulerTest, IdctSolveLatency) {
   EXPECT_EQ(lpsolveTest("test/data/hil/idct.hil", BalanceMode::LatencyLP), OPTIMAL);
+}
+
+TEST(SchedulerTest, IdctDijkstraLatency) {
+  EXPECT_EQ(dijkstraTest("test/data/hil/idct.hil"), 0);
 }

@@ -55,6 +55,7 @@ private:
   z3::expr toConst(const Node &node, z3::context &ctx) const;
   z3::expr toInFunc(const Node &node, const Chan &ch, z3::context &ctx) const;
   z3::sort getSort(const Node &node, z3::context &ctx) const;
+  z3::sort getSort(const Port &port, z3::context &ctx) const;
   z3::sort_vector getInSorts(const Node &node, z3::context &ctx) const;
   z3::expr_vector getFuncArgs(const Node &node, z3::context &ctx) const;
 
