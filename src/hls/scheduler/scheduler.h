@@ -33,7 +33,7 @@ public:
   virtual void balance(Model &model) {}
 
 protected:
-  void insertBuffers(Graph &graph, const std::vector<double> &latencies);
+  void insertBuffers(Model &model, const std::vector<double> &latencies);
 
   std::vector<Buffer*> buffers;
 };

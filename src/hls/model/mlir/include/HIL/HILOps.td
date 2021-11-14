@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef STANDALONE_OPS
-#define STANDALONE_OPS
+#ifndef HIL_OPS
+#define HIL_OPS
 
 include "HILDialect.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
@@ -21,6 +21,19 @@ def HIL_Model : HIL_Op<"model", [NoTerminator]> {
   let regions = (region AnyRegion:$region);
   let assemblyFormat = [{
     $region attr-dict
+  }];
+}
+
+def HIL_Graph : HIL_Op<"graph", [NoTerminator]> {
+  let summary = "Graph container.";
+  let description = [{
+    The `hil.graph` operation
+  }];
+
+  let arguments = (ins StrAttr:$name);
+  let regions = (region AnyRegion:$region);
+  let assemblyFormat = [{
+    $name $region attr-dict
   }];
 }
 
@@ -116,7 +129,7 @@ def OutputArgType : HIL_Type<"HILOutputArg"> {
 def InputArgTypeAttr : TypeAttrBase<"HILInputArgType", "input arg attribute">;
 def OutputArgTypeAttr : TypeAttrBase<"HILOutputArgType", "output arg attribute">;
 
-def HIL_NodeType : HIL_Op<"nodetype", [NoSideEffect]> {
+def HIL_NodeType : HIL_Op<"nodetype", []> {
   let summary = "Node type.";
   let description = [{
     The `hil.nodetype` operation for defining types of nodes
@@ -131,7 +144,7 @@ def HIL_NodeType : HIL_Op<"nodetype", [NoSideEffect]> {
   }];
 }
 
-def HIL_Node : HIL_Op<"node", [NoSideEffect]> {
+def HIL_Node : HIL_Op<"node", []> {
   let summary = "Node.";
   let description = [{
     The `hil.nodetype` operation for defining types of nodes
@@ -147,7 +160,7 @@ def HIL_Node : HIL_Op<"node", [NoSideEffect]> {
   }];
 }
 
-def HIL_Chan : HIL_Op<"chan", [NoSideEffect]> {
+def HIL_Chan : HIL_Op<"chan", []> {
   let summary = "Channel.";
   let description = [{
     The `hil.nodetype` operation for defining types of nodes
@@ -155,10 +168,12 @@ def HIL_Chan : HIL_Op<"chan", [NoSideEffect]> {
 
   let arguments = (ins
     StrAttr:$typeName,
-    StrAttr:$varName);
+    StrAttr:$varName,
+    OptionalAttr<StrAttr>:$nodeFrom,
+    OptionalAttr<StrAttr>:$nodeTo);
   let assemblyFormat = [{
-    $typeName $varName attr-dict
+    $typeName $varName (`(` $nodeFrom^ `=``>` $nodeTo `)`)? attr-dict
   }];
 }
 
-#endif // STANDALONE_OPS
+#endif // HIL_OPS

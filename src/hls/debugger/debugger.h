@@ -53,13 +53,14 @@ private:
 
   z3::expr toConst(const Binding &bnd, z3::context &ctx) const;
   z3::expr toConst(const Node &node, z3::context &ctx) const;
-  z3::expr toFunc(const Node &node, const Chan &ch, z3::context &ctx) const;
+  z3::expr toInFunc(const Node &node, const Chan &ch, z3::context &ctx) const;
   z3::sort getSort(const Node &node, z3::context &ctx) const;
   z3::sort_vector getInSorts(const Node &node, z3::context &ctx) const;
   z3::expr_vector getFuncArgs(const Node &node, z3::context &ctx) const;
 
   /* Utility methods to operate with model. */
 
+  std::string getModelName(const Node &node) const;
   std::vector<Node*> getSources(const Graph &graph) const;
   std::vector<Node*> getSinks(const Graph &graph) const;
 };

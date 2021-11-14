@@ -14,8 +14,10 @@
 #include <cassert>
 #include <iostream>
 #include <map>
+#include <memory>
 
 using namespace eda::util;
+using namespace eda::hls::model;
 
 namespace eda::hls::library {
 
@@ -112,22 +114,9 @@ struct Port {
   const unsigned width;
 };
 
-typedef std::vector<Port> Ports;
+typedef std::vector<Port> Ports; // FIXME
 
-/// Description of a class of modules with the given names,
-///  parameter list, and allowed ranges of their values.
-struct MetaElement final {
-  MetaElement(const std::string &name, const Parameters &params,
-              const Ports &ports):
-    name(name), params(params), ports(ports) {}
-  MetaElement(const MetaElement &) = default;
-
-  const std::string name;
-  const Parameters params;
-  const Ports ports;
-};
-
-/// Description of a module with the given name and values of parameters.
+/// Description of a constructed element (module).
 struct Element final {
   explicit Element(const Ports &ports): ports(ports) {}
 
@@ -138,30 +127,39 @@ struct Element final {
   std::string ir;
 };
 
+/// Description of a parameterized constructor of elements.
+struct MetaElement {
+  MetaElement(const std::string &name,
+              const Parameters &params,
+              const Ports &ports):
+      name(name), params(params), ports(ports) {}
+
+  /// Constructs an element for the given set of parameters.
+  virtual std::unique_ptr<Element> construct(
+      const Parameters &params) const = 0;
+
+  /// Estimates the indicators the given set of parameters.
+  virtual void estimate(
+      const Parameters &params, Indicators &indicators) const = 0;
+
+  const std::string name;
+  const Parameters params;
+  const Ports ports;
+};
+
 class Library final : public Singleton<Library> {
 public:
-  Library();
+  Library() {}
 
-  /// Return a list of parameters for the module with the given name
-  /// (and correspodent functionality).
-  const MetaElement& find(const eda::hls::model::NodeType &type);
+  std::shared_ptr<MetaElement> find(const NodeType &nodetype);
+  std::shared_ptr<MetaElement> find(const std::string &name) const;
 
-  /// Return a list of parameters iff the element is in the library.
-  const MetaElement& find(const std::string &name) const;
-
-  /// Return a module with the selected set of parameters
-  /// (where f is an additional parameter).
-  std::unique_ptr<Element> construct(const MetaElement &meta) const;
-
-  /// Return characteristics for the selected set of parameters.
-  void estimate(const Parameters &params, Indicators &indicators) const;
+  void add(const std::shared_ptr<MetaElement> &metaElement) {
+    library.push_back(metaElement);
+  }
 
 private:
-  /// NodeType => MetaElement if the element is missing in the library.
-  MetaElement createMetaElement(const eda::hls::model::NodeType &type) const;
-  /// MetaElement to populate the library.
-  MetaElement createMetaElement(const std::string &name) const;
-  std::vector<MetaElement> library;
+  std::vector<std::shared_ptr<MetaElement>> library;
 };
 
 class VerilogNodeTypePrinter final {
@@ -182,11 +180,8 @@ public:
   void print(std::ostream &out) const;
 
 private:
-  void printChan(std::ostream &out, const eda::hls::model::Chan &chan) const;
+  const std::string chanSourceToString(const eda::hls::model::Chan &chan) const;
   const eda::hls::model::Graph &graph;
 };
-
-std::ostream& operator <<(std::ostream &out, const VerilogNodeTypePrinter &printer);
-std::ostream& operator <<(std::ostream &out, const VerilogGraphPrinter &printer);
 
 } // namespace eda::hls::library

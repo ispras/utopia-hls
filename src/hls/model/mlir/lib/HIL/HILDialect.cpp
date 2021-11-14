@@ -23,37 +23,26 @@ using namespace mlir::hil;
 // HIL dialect.
 //===----------------------------------------------------------------------===//
 void HILDialect::initialize() {
-  addOperations<
+    addOperations<
 #define GET_OP_LIST
 #include "HIL/HILOps.cpp.inc"
-      >();
-  addTypes<
+        >();
+    addTypes<
 #define GET_TYPEDEF_LIST
 #include "HIL/HILOpsTypes.cpp.inc"
 #undef GET_TYPEDEF_LIST
-    >();
+        >();
 }
 
 Type HILDialect::parseType(DialectAsmParser &parser) const {
-  StringRef data_type;
-  if (parser.parseKeyword(&data_type)) return Type();
-  mlir::Type value;
-  generatedTypeParser(parser, data_type, value);
-  return value;
+    StringRef data_type;
+    if (parser.parseKeyword(&data_type))
+        return Type();
+    mlir::Type value;
+    generatedTypeParser(parser, data_type, value);
+    return value;
 }
-  //return HILLolType::parse(parser);
-/*   // If this dialect allows unknown types, then represent this with OpaqueType. */
-/*   if (allowsUnknownTypes()) { */
-/*     Identifier ns = Identifier::get(getNamespace(), getContext()); */
-/*     return OpaqueType::get(ns, parser.getFullSymbolSpec()); */
-/*   } */
-/*  */
-/*   parser.emitError(parser.getNameLoc()) */
-/*       << "dialect '" << getNamespace() << "' provides no type parsing hook"; */
-/*   return Type(); */
-//}
 
-void HILDialect::printType(mlir::Type type,
-                           mlir::DialectAsmPrinter &printer) const {
-  (void)generatedTypePrinter(type, printer);
+void HILDialect::printType(mlir::Type type, mlir::DialectAsmPrinter &printer) const {
+    (void)generatedTypePrinter(type, printer);
 }

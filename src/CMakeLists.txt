@@ -75,6 +75,7 @@ add_library(${MAIN_LIBRARY}
   hls/library/library.cpp
   hls/compiler/compiler.cpp
   hls/model/model.cpp
+  hls/model/transform.cpp
   hls/model/printer.cpp
   hls/parser/hil/builder.cpp
   hls/parser/hil/parser.cpp

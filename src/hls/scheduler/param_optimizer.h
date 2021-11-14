@@ -57,8 +57,8 @@ class ParametersOptimizer final : public Singleton<ParametersOptimizer> {
 
 public:
   std::map<std::string, Parameters> optimize(
-      const Model &model,
       const Criteria &criteria,
+      Model &model,
       Indicators &indicators
   ) const;
 

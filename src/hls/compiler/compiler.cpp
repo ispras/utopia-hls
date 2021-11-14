@@ -19,13 +19,13 @@ void Compiler::print(std::ostream &out) const {
   // print model.nodetypes
   for (const auto *nodetype : model.nodetypes) {
     auto printer = std::make_unique<VerilogNodeTypePrinter>(*nodetype);
-    out << *printer;
+    printer->print(out);
   }
 
   // print model.graphs
   for (const auto *graph : model.graphs) {
     auto printer = std::make_unique<VerilogGraphPrinter>(*graph);
-    out << *printer;
+    printer->print(out);
   }
 }
 

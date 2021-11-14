@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef STANDALONE_DIALECT
-#define STANDALONE_DIALECT
+#ifndef HIL_DIALECT
+#define HIL_DIALECT
 
 include "mlir/IR/OpBase.td"
 
@@ -37,4 +37,4 @@ class HIL_Op<string mnemonic, list<OpTrait> traits = []> :
 /*         DialectType<HIL_Dialect, condition, descr>; */
 class HIL_Type<string name> : TypeDef<HIL_Dialect, name> { }
 
-#endif // STANDALONE_DIALECT
+#endif // HIL_DIALECT

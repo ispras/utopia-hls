@@ -48,7 +48,7 @@ int hilTestVerilogNodeTypePrinter(const std::string &filename) {
   std::cout << "------ Verilog RTL-model ------" << std::endl;
   for (const auto *nodetype: nodetypes) {
     auto printer = std::make_unique<VerilogNodeTypePrinter>(*nodetype);
-    std::cout << *printer;
+    printer->print(std::cout);
   }
 
   return 0;
@@ -59,8 +59,8 @@ int hilTestCompiler(const std::string &filename) {
   std::cout << *compiler;
 
   Parameters params("add");
-  MetaElement meta = Library::get().find(params.elementName);
-  auto element = Library::get().construct(meta);
+  auto metaElement = Library::get().find(params.elementName);
+  auto element = metaElement->construct(params);
   std::cout << element->ir << std::endl;
 
   return 0;

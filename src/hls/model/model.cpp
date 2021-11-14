@@ -11,6 +11,7 @@
 #include <unordered_map>
 
 #include "hls/model/model.h"
+#include "hls/model/transform.h"
 
 namespace eda::hls::model {
 
@@ -89,33 +90,25 @@ void Graph::instantiate(
   } // for nodes.
 }
 
-void Graph::insertDelay(Chan &chan, unsigned latency) {
-  std::string typeName = "delay_" + chan.type + "_" + std::to_string(latency);
-  NodeType *nodetype = model.findNodetype(typeName);
+void Model::save() {
+  for (auto *transform : transforms)
+    delete transform;
 
-  if (nodetype == nullptr) {
-    nodetype = new NodeType(typeName, model);
-    nodetype->addInput(new Port("in", chan.type, 1.0, 0, false, 0));
-    nodetype->addOutput(new Port("out", chan.type, 1.0, latency, false, 0));
-    model.addNodetype(nodetype);
-  }
+  transforms.clear();
+}
 
-  std::string nodeName = typeName + "_" + std::to_string(nodes.size());
-  Node *node = new Node(nodeName, *nodetype, *this);
+void Model::undo() {
+  for (auto *transform : transforms)
+    transform->undo();
 
-  Chan *from = new Chan(nodeName + "_out", chan.type, *this);
-  from->source = { node, nodetype->findOutput("out") };
-  from->target = chan.target;
-  chan.target = { node, nodetype->findInput("in") };
+  save();
+}
 
-  node->addInput(&chan);
-  node->addOutput(from);
+void Model::insertDelay(Chan &chan, unsigned latency) {
+  auto *transform = new InsertDelay(*this, chan, latency);
+  transforms.push_back(transform);
 
-  auto &inputs = const_cast<std::vector<Chan*>&>(from->target.node->inputs);
-  std::replace(inputs.begin(), inputs.end(), &chan, from);
-
-  addChan(from);
-  addNode(node);
+  transform->apply();
 }
 
 std::ostream& operator <<(std::ostream &out, const Port &port) {

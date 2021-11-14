@@ -9,6 +9,7 @@
 #include "hls/library/library.h"
 #include "hls/model/model.h"
 #include "hls/scheduler/param_optimizer.h"
+#include "hls/scheduler/solver.h"
 
 #include <cassert>
 #include <iostream>
@@ -18,8 +19,8 @@
 namespace eda::hls::scheduler {
 
 std::map<std::string, Parameters> ParametersOptimizer::optimize(
-    const Model &model,
     const Criteria &criteria,
+    Model &model,
     Indicators &indicators) const {
   std::map<std::string, Parameters> params;
 
@@ -28,30 +29,41 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   assert(graph != nullptr && "Main graph is not found");
 
   // Collect the parameters for all nodes.
+  Parameters defaultParams("<default>");
+  defaultParams.add(Parameter("f", criteria.frequency, criteria.frequency.max)); // FIXME
+
   for (const auto *node : graph->nodes) {
-    const MetaElement &metaElement = Library::get().find(node->type);
-    Parameters nodeParams(node->name, metaElement.params);
+    auto metaElement = Library::get().find(node->type);
+    Parameters nodeParams(node->name, metaElement->params);
+    //nodeParams.set("f", criteria.frequency.max);
     params.insert({ node->name, nodeParams });
   }
 
-  int iter_counter = 0;
   std::ofstream ostrm("debug_file.txt", std::ios::out);
   ostrm << "Running optimization loop" << std::endl;
+  unsigned cur_f = criteria.frequency.max;
   // Optimization loop.
-  while (true) {
-    iter_counter++;
+  const unsigned N = 3;
+  for (unsigned i = 0; i < N; i++) {
     // Update the values of the parameters.
     for (const auto *node : graph->nodes) {
-      auto i = params.find(node->name);
-      for (auto param : i->second.params) {
-        param.second.value += 100; // FIXME
-      }
+      auto nodeParams = params.find(node->name);
+      if (nodeParams == params.end())
+        continue;
+
+      /*for (auto param : nodeParams->second.params) {
+        ostrm << param.second.name << ": " << param.second.value << std::endl;
+        //param.set("f", param.second.value / 2);
+      }*/
+      nodeParams->second.set("f", cur_f);
     }
 
     // Balance flows and align times.
-    // TODO:
+    LpSolver solver;
+    solver.balance(model);
+
     indicators.latency = 100; // FIXME
-    indicators.frequency = 100000 * iter_counter; // FIXME
+    indicators.frequency = cur_f; // FIXME
 
     // Estimate the integral indicators.
     indicators.throughput = indicators.frequency;
@@ -59,16 +71,23 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     indicators.area = 0;
 
     for (const auto *node : graph->nodes) {
-      auto i = params.find(node->name);
-      Indicators nodeIndicators;
-      Library::get().estimate(i->second, nodeIndicators);
+      auto metaElement = Library::get().find(node->type);
+      assert(metaElement && "MetaElement is not found");
+      auto nodeParams = params.find(node->name);
 
-      //ostrm << i->second.value("f") << std::endl;
-      ostrm << nodeIndicators.frequency << std::endl;
+      Indicators nodeIndicators;
+
+      metaElement->estimate(
+        nodeParams == params.end()
+          ? defaultParams       // For inserted nodes 
+          : nodeParams->second, // For existing nodes
+        nodeIndicators);
 
       indicators.power += nodeIndicators.power;
       indicators.area += nodeIndicators.area;
+
     }
+    ostrm << "Iteration #" << i << std::endl;
     ostrm << std::endl << "Frequency: " << indicators.frequency << std::endl;
     ostrm << "Latency: " << indicators.latency << std::endl;
     ostrm << "Throughput: " << indicators.throughput << std::endl;
@@ -76,21 +95,16 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     ostrm << "Area: " << indicators.area << std::endl << std::endl;
     
     // Check the constraints.
-    if (criteria.check(indicators)) {
+    /*if (criteria.check(indicators)) {
       // Acceptable.
-      ostrm << "Solution found" << std::endl;
-      break;
-    } else {
-      // Unacceptable.
-      if(iter_counter > 10) {
-        ostrm << "Solution has not been found" << std::endl;
-        break;
-      }
-    }
-    //break;
+      break; // FIXME
+    }*/
+
+    cur_f = cur_f / 2;
+    // Reset to the initial model state.
+    model.undo();
   }
 
-  ostrm << "Number of iterations: " << iter_counter << std::endl;
   ostrm.close();
   return params;
 }
