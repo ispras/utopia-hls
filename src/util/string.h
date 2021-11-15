@@ -24,8 +24,8 @@ inline bool ends_with(const std::string &string, const std::string &suffix) {
       && string.compare(string.size() - suffix.size(), suffix.size(), suffix) == 0;
 }
 
-template<typename ... Args>
-std::string format(const std::string &format, Args ... args) {
+template<typename... Args>
+std::string format(const std::string &format, Args... args) {
   int length = snprintf(nullptr, 0, format.c_str(), args ...);
 
   if (length < 0) {
