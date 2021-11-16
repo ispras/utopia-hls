@@ -69,7 +69,7 @@ void DijkstraBalancer::insertBuffers(Model &model) {
       const Node *predNode = pred->source.node;
       int delta = curTime - (nodeMap[predNode] + pred->source.port->latency);
       assert(delta >= 0);
-      if (delta > 0) {
+      if (delta > 0 && !predNode->isConst()) {
         model.insertDelay(*pred, delta);
         bufsInserted++;
       }

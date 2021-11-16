@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/model/model.h"
+#include "hls/model/printer.h"
 #include "hls/parser/hil/parser.h"
 #include "hls/scheduler/dijkstra.h"
 #include "hls/scheduler/scheduler.h"
@@ -14,6 +15,7 @@
 
 #include "gtest/gtest.h"
 
+#include <fstream>
 #include <iostream>
 
 using namespace eda::hls::model;
@@ -27,6 +29,12 @@ int lpsolveTest(const std::string &filename, BalanceMode mode) {
 
   solver.balance(*model, mode, Verbosity::Full);
   //std::cout << *model;
+
+  std::ofstream output(filename + "_solve.dot");
+  eda::hls::model::printDot(output, *model);
+  output.close();
+
+
   return solver.getStatus();
 }
 
@@ -34,6 +42,11 @@ int dijkstraTest(const std::string &filename) {
   std::unique_ptr<Model> model = parse(filename);
   DijkstraBalancer::get().balance(*model);
   //std::cout << *model;
+
+  std::ofstream output(filename + "_dijkstra.dot");
+  eda::hls::model::printDot(output, *model);
+  output.close();
+
   return 0;
 }
 
@@ -57,6 +70,14 @@ TEST(SchedulerTest, IdctSolveLatency) {
   EXPECT_EQ(lpsolveTest("test/data/hil/idct.hil", BalanceMode::LatencyLP), OPTIMAL);
 }
 
+TEST(SchedulerTest, IdctRowSolveLatency) {
+  EXPECT_EQ(lpsolveTest("test/data/hil/idct_row.hil", BalanceMode::LatencyLP), OPTIMAL);
+}
+
 TEST(SchedulerTest, IdctDijkstraLatency) {
   EXPECT_EQ(dijkstraTest("test/data/hil/idct.hil"), 0);
+}
+
+TEST(SchedulerTest, IdctRowDijkstraLatency) {
+  EXPECT_EQ(dijkstraTest("test/data/hil/idct_row.hil"), 0);
 }

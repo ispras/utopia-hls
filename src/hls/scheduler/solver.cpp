@@ -99,10 +99,16 @@ void LpSolver::collectGraphTime() {
 void LpSolver::balanceLatency(const Graph *graph) { 
 
   for (const Node *node : graph->nodes) {
-    std::string nodeName = node->name;
-    helper.addVariable(TimePrefix + nodeName, node);
+    std::string varName = TimePrefix + node->name;
+    helper.addVariable(varName, node);
+    
     if (node->isSink()) {
-      sinks.push_back(TimePrefix + node->name);
+      sinks.push_back(varName);
+    }
+
+    /// Agreement: inputs have to be synchronized
+    if (node->isSource()) {
+      synchronizeInput(varName);
     }
   }
 
@@ -120,6 +126,14 @@ void LpSolver::balanceLatency(const Graph *graph) {
   // Minimize deltas
   helper.setObjective(deltas, makeCoeffs(deltas).get());
   helper.setMin();
+}
+
+void LpSolver::synchronizeInput(const std::string &varName) {
+  std::vector<std::string> name{varName};
+  std::vector<double> value{1.0};
+
+  // t_source = 0
+  helper.addConstraint(name, value, OperationType::Equal, 0);
 }
 
 void LpSolver::genLatencyConstraints(const std::string &dstName, 

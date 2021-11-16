@@ -57,6 +57,7 @@ private:
   void genBufferConstraints(const std::string &nextName, 
       const std::string &prevName, unsigned latency, Chan *channel);
   void balanceLatency(const Graph *graph);
+  void synchronizeInput(const std::string &varName);
 
   void checkFlows(const Node *node);
   void balanceFlows(BalanceMode mode, const Graph *graph);
