@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "util/singleton.h"
 #include "util/string.h"
 
 #include <cstddef>
@@ -22,23 +23,23 @@ public:
   virtual std::size_t size() const = 0;
 };
 
-class scalar: public type {};
+class basic: public type {};
 
-class untyped: public scalar {};
+class untyped: public basic {};
 
 template<std::size_t IntBits, std::size_t FracBits, bool IsSigned>
-class fix: public scalar {
+class fix: public basic {
 public:
   static constexpr std::size_t type_size = IntBits + FracBits;
 
-  static constexpr std::string type_name() {
+  static std::string type_name() {
     return "fix<" + std::to_string(IntBits)  + ","
                   + std::to_string(FracBits) + ","
                   + std::to_string(IsSigned) + ">";
   }
  
-  constexpr std::string name() const override { return type_name(); }
-  constexpr std::size_t size() const override { return type_size; }
+  std::string name() const override { return type_name(); }
+  std::size_t size() const override { return type_size; }
 };
 
 template<std::size_t IntBits, std::size_t FracBits>
@@ -65,17 +66,17 @@ using uint32 = uint<32>;
 using uint64 = uint<64>;
 
 template<std::size_t ExpBits, std::size_t Precision>
-class real: public scalar {
+class real: public basic {
 public:
   static constexpr std::size_t type_size = ExpBits + Precision;
 
-  static constexpr std::string type_name() {
+  static std::string type_name() {
     return "real<" + std::to_string(ExpBits) + ","
                    + std::to_string(Precision) + ">";
   }
 
-  constexpr std::string name() const override { return type_name(); }
-  constexpr std::size_t size() const override { return type_size; }
+  std::string name() const override { return type_name(); }
+  std::size_t size() const override { return type_size; }
 };
 
 using float16 = real<5, 11>;
@@ -83,14 +84,15 @@ using float32 = real<8, 24>;
 using float64 = real<11, 53>;
 
 template<std::size_t Bits>
-class bits: public scalar {
+class bits: public basic {
   static constexpr std::size_t type_size = Bits;
 
-  static constexpr std::string type_name() {
+  static std::string type_name() {
     return "bits<" + std::to_string(Bits) + ">";
   }
 
-  constexpr std::size_t size() const override { return type_size; }
+  std::string name() const override { return type_name(); }
+  std::size_t size() const override { return type_size; }
 };
 
 class composite: public type {};
@@ -100,7 +102,7 @@ class tuple: public composite {
 public:
   static constexpr std::size_t type_size = Head::type_size + (... + Tail::type_size);
 
-  static constexpr std::string type_name() {
+  static std::string type_name() {
     std::stringstream out;
     out << "tuple<" << Head::type_name();
     ((out << "," << Tail::type_name()), ...);
@@ -108,18 +110,18 @@ public:
     return out.str();
   }
 
-  constexpr std::string name() const override { return type_name(); }
-  constexpr std::size_t size() const override { return type_size; }
+  std::string name() const override { return type_name(); }
+  std::size_t size() const override { return type_size; }
 };
 
 template<typename Type>
 class complex: public tuple<Type, Type> {
 public:
-  static constexpr std::string type_name() {
+  static std::string type_name() {
     return "complex<" + Type::type_name() + ">";
   }
 
-  constexpr std::string name() const override { return type_name(); }
+  std::string name() const override { return type_name(); }
 };
 
 template<typename Type, std::size_t... Sizes>
@@ -127,7 +129,7 @@ class tensor: public composite {
 public:
   static constexpr std::size_t type_size = Type::type_size * (... * Sizes);
 
-  static constexpr std::string type_name() {
+  static std::string type_name() {
     std::stringstream out;
     out << "tensor<" << Type::type_name();
     ((out << "," << Sizes), ...);
@@ -135,8 +137,8 @@ public:
     return out.str();
   }
 
-  constexpr std::string name() const override { return type_name(); }
-  constexpr std::size_t size() const override { return type_size; }
+  std::string name() const override { return type_name(); }
+  std::size_t size() const override { return type_size; }
 };
 
 template<typename Type, std::size_t Size>

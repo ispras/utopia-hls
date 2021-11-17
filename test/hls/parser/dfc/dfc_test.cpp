@@ -12,16 +12,20 @@
 
 #include "hls/parser/dfc/dfc.h"
 
-int dfcTest() {
-  dfc::sint8 scalar;
-  dfc::vector<dfc::uint16, 128> vector;
-  dfc::tuple<dfc::uint16, dfc::complex<dfc::sint8>> tuple;
-  dfc::tensor<dfc::uint8, 2, 3> tensor;
+DFC_KERNEL(MyKernel) {
+  DFC_INPUT(x, dfc::uint32);
+  DFC_INPUT(y, dfc::uint32);
+  DFC_OUTPUT(z, dfc::uint32);
 
-  std::cout << scalar.name() << ": " << scalar.size() << std::endl;
-  std::cout << vector.name() << ": " << vector.size() << std::endl;
-  std::cout << tuple.name()  << ": " << tuple.size()  << std::endl;
-  std::cout << tensor.name() << ": " << tensor.size() << std::endl;
+  DFC_KERNEL_CTOR(MyKernel) {
+    dfc::var<dfc::uint32> tmp = x;
+    z = tmp + y;
+  }
+};
+
+void dfcTest() {
+  dfc::params args;
+  MyKernel kernel(args);
 }
 
 TEST(DfcTest, SimpleTest) {
