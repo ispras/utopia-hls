@@ -70,6 +70,9 @@ void DijkstraBalancer::addConnections(std::vector<Chan*> &connections,
   if (mode == BalanceMode::LatencyASAP) connections = next->outputs;
   if (mode == BalanceMode::LatencyALAP) connections = next->inputs;
   toVisit.insert(toVisit.end(), connections.begin(), connections.end());
+  if (connections.empty()) {
+    terminalNodes.push_back(next);
+  }
 }
 
 void DijkstraBalancer::balance(Model &model, BalanceMode balanceMode) {
@@ -102,6 +105,7 @@ void DijkstraBalancer::balance(Model &model, BalanceMode balanceMode) {
     std::cout << elem.second << std::endl;
   }*/
   insertBuffers(model);
+  collectGraphTime();
 }
 
 void DijkstraBalancer::insertBuffers(Model &model) {
@@ -125,6 +129,18 @@ void DijkstraBalancer::insertBuffers(Model &model) {
     }
   }
   std::cout << "Total buffers inserted: " << bufsInserted << std::endl;
+}
+
+void DijkstraBalancer::collectGraphTime() {
+  unsigned maxTime = 0;
+  for (const auto *node : terminalNodes) {
+    unsigned nodeTime = nodeMap[node];
+    if (nodeTime > maxTime) {
+      maxTime = nodeTime;
+    }
+  }
+  graphTime = maxTime;
+  std::cout << "Max time: " << graphTime << std::endl;
 }
 
 } // namespace eda::hls::scheduler

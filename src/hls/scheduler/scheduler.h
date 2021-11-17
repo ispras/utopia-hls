@@ -29,12 +29,15 @@ struct Buffer;
 
 class LatencyBalancer {
 public:
-  LatencyBalancer() {}
+  LatencyBalancer() : graphTime(0) {}
   virtual ~LatencyBalancer() {}
   virtual void balance(Model &model) {}
+  unsigned getGraphLatency() { return graphTime; }
 
 protected:
   virtual void insertBuffers(Model &model) {};
+  virtual void collectGraphTime() {};
+  unsigned graphTime;
 };
 
 

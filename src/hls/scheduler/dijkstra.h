@@ -44,10 +44,12 @@ private:
   void collectSources(const Graph *graph);
   void collectSinks(const Graph *graph);
   void insertBuffers(Model &model) override;
+  void collectGraphTime() override;
 
   std::deque<const Chan*> toVisit;
   std::map<const Node*, unsigned> nodeMap;
   BalanceMode mode;
+  std::vector<const Node*> terminalNodes;
 };
 
 } // namespace eda::hls::scheduler
