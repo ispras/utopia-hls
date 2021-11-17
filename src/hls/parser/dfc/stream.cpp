@@ -10,17 +10,17 @@
 
 namespace dfc {
 
-void stream::declare(const stream *var) {
+void wire::declare(const wire *var) {
   // TODO:
 }
 
-void stream::connect(const stream *in, const stream *out) {
+void wire::connect(const wire *in, const wire *out) {
   // TODO:
 }
 
-void stream::connect(const std::string &op,
-                     const std::vector<const stream*> &in,
-                     const std::vector<const stream*> &out) {
+void wire::connect(const std::string &op,
+                   const std::vector<const wire*> &in,
+                   const std::vector<const wire*> &out) {
   // TODO:
 }
 
