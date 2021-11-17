@@ -18,7 +18,7 @@ void DijkstraBalancer::reset() {
    toVisit = std::deque<const Chan*>();
 }
 
-void DijkstraBalancer::init(const Graph* graph) {
+void DijkstraBalancer::init(const Graph *graph) {
   reset();
   // Init the elements
   for (const auto *node : graph->nodes) {
@@ -26,38 +26,81 @@ void DijkstraBalancer::init(const Graph* graph) {
   }
 }
 
-void DijkstraBalancer::visit(const Node *node) {
+void DijkstraBalancer::visitChan(const Chan *chan, unsigned dstTime) {
+  const Node *dstNode = getNext(chan);
+  if (dstNode != nullptr && dstTime > nodeMap[dstNode]) {
+    nodeMap[dstNode] = dstTime;
+  }
+}
 
-  toVisit.insert(toVisit.end(), node->outputs.begin(), node->outputs.end());
+void DijkstraBalancer::visit(unsigned curTime, 
+    const std::vector<Chan*> &connections) {
+  for (const auto *next : connections) {
+    visitChan(next, curTime + next->source.port->latency);
+  }
+}
 
-  for (const auto &next : node->outputs) {
-    unsigned curTime = nodeMap[node];
-    const Node *dstNode = next->target.node;
-    unsigned dstTime = curTime + next->source.port->latency;
-    if (dstTime > nodeMap[dstNode]) {
-      nodeMap[dstNode] = dstTime;
+void DijkstraBalancer::collectSources(const Graph *graph) {
+  for (const auto *chan : graph->chans) {
+    const Node *src = chan->source.node;
+    if (src->isSource()) {
+      toVisit.push_back(chan);
+      visitChan(chan, nodeMap[src] + chan->source.port->latency);
     }
   }
 }
 
-void DijkstraBalancer::balance(Model &model) {
+void DijkstraBalancer::collectSinks(const Graph *graph) {
+  for (const auto *chan : graph->chans) {
+    const Node *targ = chan->target.node;
+    if (targ->isSink()) {
+      toVisit.push_back(chan);
+      visitChan(chan, nodeMap[targ] + chan->source.port->latency);
+    }
+  }
+}
+
+const Node* DijkstraBalancer::getNext(const Chan *chan) {
+  return mode == BalanceMode::LatencyASAP ? chan->target.node :
+    mode == BalanceMode::LatencyALAP ? chan->source.node : nullptr;
+}
+
+void DijkstraBalancer::addConnections(std::vector<Chan*> &connections, 
+    const Node *next) {
+  if (mode == BalanceMode::LatencyASAP) connections = next->outputs;
+  if (mode == BalanceMode::LatencyALAP) connections = next->inputs;
+  toVisit.insert(toVisit.end(), connections.begin(), connections.end());
+}
+
+void DijkstraBalancer::balance(Model &model, BalanceMode balanceMode) {
+  mode = balanceMode;
   for (const auto *graph : model.graphs) {
     if (graph->isMain()) {
       init(graph);
 
-      for (const auto *chan : graph->chans) {
-        const Node *src = chan->source.node;
-        if (src->isSource()) {
-          toVisit.push_back(chan);
-        }
+      if (mode == BalanceMode::LatencyASAP) {
+        collectSources(graph);
+      }
+
+      if (mode == BalanceMode::LatencyALAP) {
+        collectSinks(graph);
       }
 
       while (!toVisit.empty()) {
-        visit(toVisit.front()->target.node);
+        const Node *next = getNext(toVisit.front());
+        std::vector<Chan*> connections;
+        addConnections(connections, next);
+        if (next != nullptr) {
+          visit(nodeMap[next], connections);
+        }
         toVisit.pop_front();
       }
     }
   }
+  /*for (const auto &elem : nodeMap) {
+    std::cout << elem.first->name << " ";
+    std::cout << elem.second << std::endl;
+  }*/
   insertBuffers(model);
 }
 
@@ -67,7 +110,13 @@ void DijkstraBalancer::insertBuffers(Model &model) {
     const unsigned curTime = node.second;
     for (const auto &pred : node.first->inputs) {
       const Node *predNode = pred->source.node;
-      int delta = curTime - (nodeMap[predNode] + pred->source.port->latency);
+      int delta = 0;
+      if (mode == BalanceMode::LatencyASAP) {
+        delta = curTime - (nodeMap[predNode] + pred->source.port->latency);
+      }
+      if (mode == BalanceMode::LatencyALAP) {
+        delta = (nodeMap[predNode] - pred->source.port->latency) - curTime;
+      }
       assert(delta >= 0);
       if (delta > 0 && !predNode->isConst()) {
         model.insertDelay(*pred, delta);

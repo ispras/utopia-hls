@@ -186,12 +186,12 @@ void LpSolver::balanceFlows(BalanceMode mode, const Graph *graph) {
   }
 
   // Add constraints for channels
-  if (mode == Simple) {
+  if (mode == FlowSimple) {
     // flow_src*coeff_src == flow_dst*coeff_dst
     genFlowConstraints(graph, OperationType::Equal);
   }
 
-  if (mode == Blocking) {
+  if (mode == FlowBlocking) {
     // flow_src*coeff_src >= flow_dst*coeff_dst
     genFlowConstraints(graph, OperationType::GreaterOrEqual);
   }

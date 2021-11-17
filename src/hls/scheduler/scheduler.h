@@ -18,10 +18,11 @@ using namespace eda::hls::model;
 namespace eda::hls::scheduler {
 
 enum BalanceMode {
-  Simple,
-  Blocking,
+  FlowSimple,
+  FlowBlocking,
   LatencyLP,
-  LatencyDijkstra
+  LatencyASAP,
+  LatencyALAP
 };
 
 struct Buffer;

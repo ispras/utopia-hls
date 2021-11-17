@@ -21,22 +21,33 @@ using namespace eda::util;
 
 namespace eda::hls::scheduler {
 
-class DijkstraBalancer final : public LatencyBalancer, public Singleton<DijkstraBalancer> {
+class DijkstraBalancer final : public LatencyBalancer, 
+    public Singleton<DijkstraBalancer> {
 public:
   friend Singleton<DijkstraBalancer>;
   ~DijkstraBalancer() {}
-  void balance(Model &model) override;
+  void balance(Model &model) override {
+    balance(model, BalanceMode::LatencyASAP);
+  }
+  
+  void balance(Model &model, BalanceMode mode);
 
 private:
-  DijkstraBalancer() {}
+  DijkstraBalancer() : mode(BalanceMode::LatencyASAP) {}
   void reset();
   void deleteEntries();
   void init(const Graph *graph);
-  void visit(const Node *node);
+  void visit(unsigned curTime, const std::vector<Chan*> &connections);
+  void visitChan(const Chan *chan, unsigned dstTime);
+  const Node* getNext(const Chan *chan);
+  void addConnections(std::vector<Chan*> &connections, const Node *next);
+  void collectSources(const Graph *graph);
+  void collectSinks(const Graph *graph);
   void insertBuffers(Model &model) override;
 
   std::deque<const Chan*> toVisit;
-  std::map<const Node*, unsigned> nodeMap; 
+  std::map<const Node*, unsigned> nodeMap;
+  BalanceMode mode;
 };
 
 } // namespace eda::hls::scheduler

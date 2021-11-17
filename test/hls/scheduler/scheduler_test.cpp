@@ -38,9 +38,9 @@ int lpsolveTest(const std::string &filename, BalanceMode mode) {
   return solver.getStatus();
 }
 
-int dijkstraTest(const std::string &filename) {
+int dijkstraTest(const std::string &filename, BalanceMode mode) {
   std::unique_ptr<Model> model = parse(filename);
-  DijkstraBalancer::get().balance(*model);
+  DijkstraBalancer::get().balance(*model, mode);
   //std::cout << *model;
 
   std::ofstream output(filename + "_dijkstra.dot");
@@ -51,19 +51,23 @@ int dijkstraTest(const std::string &filename) {
 }
 
 TEST(SchedulerTest, SolveSimpleInfeasible) {
-  EXPECT_EQ(lpsolveTest("test/data/hil/test.hil", BalanceMode::Simple), INFEASIBLE);
+  EXPECT_EQ(lpsolveTest("test/data/hil/test.hil", BalanceMode::FlowSimple), INFEASIBLE);
 }
 
 TEST(SchedulerTest, SolveBlocking) {
-  EXPECT_EQ(lpsolveTest("test/data/hil/test.hil", BalanceMode::Blocking), OPTIMAL);
+  EXPECT_EQ(lpsolveTest("test/data/hil/test.hil", BalanceMode::FlowBlocking), OPTIMAL);
 }
 
 TEST(SchedulerTest, SolveLatency) {
   EXPECT_EQ(lpsolveTest("test/data/hil/test.hil", BalanceMode::LatencyLP), OPTIMAL);
 }
 
-TEST(SchedulerTest, DijkstraLatency) {
-  EXPECT_EQ(dijkstraTest("test/data/hil/test.hil"), 0);
+TEST(SchedulerTest, DijkstraLatencyASAP) {
+  EXPECT_EQ(dijkstraTest("test/data/hil/test.hil", BalanceMode::LatencyASAP), 0);
+}
+
+TEST(SchedulerTest, DijkstraLatencyALAP) {
+  EXPECT_EQ(dijkstraTest("test/data/hil/test.hil", BalanceMode::LatencyALAP), 0);
 }
 
 TEST(SchedulerTest, IdctSolveLatency) {
@@ -74,10 +78,19 @@ TEST(SchedulerTest, IdctRowSolveLatency) {
   EXPECT_EQ(lpsolveTest("test/data/hil/idct_row.hil", BalanceMode::LatencyLP), OPTIMAL);
 }
 
-TEST(SchedulerTest, IdctDijkstraLatency) {
-  EXPECT_EQ(dijkstraTest("test/data/hil/idct.hil"), 0);
+TEST(SchedulerTest, IdctASAP) {
+  EXPECT_EQ(dijkstraTest("test/data/hil/idct.hil", BalanceMode::LatencyASAP), 0);
 }
 
-TEST(SchedulerTest, IdctRowDijkstraLatency) {
-  EXPECT_EQ(dijkstraTest("test/data/hil/idct_row.hil"), 0);
+TEST(SchedulerTest, IdctRowASAP) {
+  EXPECT_EQ(dijkstraTest("test/data/hil/idct_row.hil", BalanceMode::LatencyASAP), 0);
 }
+
+TEST(SchedulerTest, IdctALAP) {
+  EXPECT_EQ(dijkstraTest("test/data/hil/idct.hil", BalanceMode::LatencyALAP), 0);
+}
+
+TEST(SchedulerTest, IdctRowALAP) {
+  EXPECT_EQ(dijkstraTest("test/data/hil/idct_row.hil", BalanceMode::LatencyALAP), 0);
+}
+
