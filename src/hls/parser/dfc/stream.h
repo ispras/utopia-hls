@@ -42,6 +42,18 @@ enum wire_kind { CONST, SCALAR, STREAM };
 
 enum wire_direct { INPUT, OUTPUT, INOUT };
 
+// TODO:
+struct wire_value {
+  wire_value() {}
+  wire_value(int rhs) {}
+
+  std::string to_string() const { return ""; }
+
+  const std::string type;
+  const std::size_t size = 0;
+  const std::vector<bool> value;
+};
+
 class wire {
 public:
   virtual std::string type() const = 0;
@@ -51,10 +63,23 @@ public:
   const std::string name;
   const wire_kind kind;
   const wire_direct direct;
+  const wire_value value;
 
 protected:
+  wire(const std::string &name,
+       wire_kind kind,
+       wire_direct direct,
+       wire_value value):
+       name(name), kind(kind), direct(direct), value(value) {
+    declare(this);
+  }
+
   wire(const std::string &name, wire_kind kind, wire_direct direct):
-    name(name), kind(kind), direct(direct) { declare(this); }
+      wire(name, kind, direct, 0) {}
+
+  wire(wire_value value):
+      wire(value.to_string(), CONST, INPUT, value) {}
+
   wire(wire_kind kind, wire_direct direct):
     wire(eda::utils::unique_name("wire"), kind, direct) {}
 
@@ -144,7 +169,7 @@ struct var: public typed<Type> {
   explicit var(const std::string &id): typed<Type>(id, Kind, Direct) {}
 };
 
-/// Input constraints.
+/// Input specialization.
 template<typename Type, wire_kind Kind>
 struct var<Type, Kind, INPUT>: public typed<Type> {
   var(): typed<Type>(Kind, INPUT) {}
@@ -155,7 +180,7 @@ struct var<Type, Kind, INPUT>: public typed<Type> {
   typed<Type>& operator=(const typed<Type> &rhs) = delete;
 };
 
-/// Output constraints.
+/// Output specialization.
 template<typename Type, wire_kind Kind>
 struct var<Type, Kind, OUTPUT>: public typed<Type> {
   var(): typed<Type>(Kind, OUTPUT) {}
@@ -167,6 +192,24 @@ struct var<Type, Kind, OUTPUT>: public typed<Type> {
   typed<Type>& operator-(const typed<Type> &rhs) = delete; 
   typed<Type>& operator*(const typed<Type> &rhs) = delete;
   typed<Type>& operator/(const typed<Type> &rhs) = delete;
+};
+
+/// Constant specialization.
+template<typename Type>
+struct var<Type, CONST, INPUT>: public typed<Type> {
+  var(): typed<Type>(CONST, INPUT) {}
+  explicit var(const std::string &id): typed<Type>(id, CONST, INPUT) {}
+
+  // Assignment to a constant is prohibited.
+  var(const typed<Type> &rhs) = delete;
+  typed<Type>& operator=(const typed<Type> &rhs) = delete;
+
+  // Initialization from a literal.
+  var(wire_value value):
+    typed<Type>(Type::type_name() + value.to_string(), CONST, INPUT) {}
+
+  template<typename LiteralType>
+  var(LiteralType value): var(wire_value(value)) {}
 };
 
 //===----------------------------------------------------------------------===//

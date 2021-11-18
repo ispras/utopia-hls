@@ -18,6 +18,8 @@ DFC_KERNEL(MyKernel) {
   DFC_OUTPUT(z, dfc::uint32);
 
   DFC_KERNEL_CTOR(MyKernel) {
+    dfc::value<dfc::uint32> value = 0;
+
     dfc::stream<dfc::uint32> tmp = x;
     z = tmp + y;
   }
