@@ -3,6 +3,7 @@ add_mlir_dialect_library(MLIRHIL
         HILOps.cpp
         HILCombine.cpp
         HILModel.cpp
+        HILDumper.cpp
         ${PROJECT_SOURCE_DIR}/../../parser/hil/builder.cpp
         ${PROJECT_SOURCE_DIR}/../model.cpp
 

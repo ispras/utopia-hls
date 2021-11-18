@@ -12,6 +12,7 @@
 
 #include "HIL/HILDialect.h"
 #include "HIL/HILModel.h"
+#include "HIL/HILDumper.h"
 #include "HIL/HILOps.h"
 #include "hls/model/model.h"
 #include "hls/parser/hil/builder.h"
@@ -184,7 +185,12 @@ std::unique_ptr<Model> parse_model_from_mlir(const std::string &s) {
   auto mlir_model_layer = detail::MLIRModelLayer::load_from_mlir(s);
   mlir_model_layer.traverse_with_builder(builder);
   auto m = builder.create();
+  std::cerr << "***********MODEL_BEGIN**********" << std::endl;
   std::cerr << *m << std::endl;
+  std::cerr << "************MODEL_END***********" << std::endl;
+  std::cerr << "***********MLIR_BEGIN***********" << std::endl;
+  dump_model_mlir(*m, std::cerr);
+  std::cerr << "************MLIR_END************" << std::endl;
   return std::unique_ptr<Model>(std::move(m));
 }
 
@@ -200,5 +206,4 @@ std::unique_ptr<Model> parse_model_from_mlir_file(const std::string &filename) {
   return parse_model_from_mlir(buf.str());
 }
 
-std::string dump_model_to_mlir(Model &m) { return ""; } // TODO
 } // namespace eda::hls::model

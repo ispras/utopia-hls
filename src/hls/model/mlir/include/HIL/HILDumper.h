@@ -8,18 +8,13 @@
 
 #pragma once
 
-#include "mlir/IR/MLIRContext.h"
-#include "mlir/Parser.h"
-#include "mlir/Pass/PassManager.h"
-#include "llvm/Support/SourceMgr.h"
-
 #include <string>
 
 #include "hls/model/model.h"
 
 namespace eda::hls::model {
-std::unique_ptr<eda::hls::model::Model>
-parse_model_from_mlir(const std::string &s);
-std::unique_ptr<eda::hls::model::Model>
-parse_model_from_mlir_file(const std::string &filename);
+std::ostream &dump_model_mlir(const eda::hls::model::Model &model,
+                              std::ostream &os);
+void dump_model_mlir_to_file(const eda::hls::model::Model &model,
+                             const std::string &filename);
 } // namespace eda::hls::model
