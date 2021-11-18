@@ -5,6 +5,13 @@
 // Copyright 2021 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+/// \file
+/// This file contains the declaration of the LpSolver class  and its
+/// supplement structures, that can schedule or balance the flows in the 
+/// dataflow graph using linear programming.
+///
+/// \author <a href="mailto:lebedev@ispras.ru">Mikhail Lebedev</a>
+//===----------------------------------------------------------------------===//
 
 #pragma once
 
@@ -48,21 +55,38 @@ private:
   void reset();
 
   void insertBuffers(Model &model) override;
-  void genLatencyConstraints(const std::string &nextName, 
-      const std::string &prevName, unsigned latency);
-  void genDeltaConstraints(const std::string &dstName, 
-      const std::string &srcName, std::vector<std::string> &deltas);
-  void genBufferConstraints(const std::string &nextName, 
-      const std::string &prevName, unsigned latency, Chan *channel);
-  void balanceLatency(const Graph *graph);
-  void synchronizeInput(const std::string &varName);
-
-  void checkFlows(const Node *node);
-  void balanceFlows(BalanceMode mode, const Graph *graph);
-  void genNodeConstraints(const std::string &nodeName);
-  void genFlowConstraints(const Graph *graph, OperationType type);
   void collectGraphTime() override;
 
+  /// Generates the constraint for next node timestep.
+  void genLatencyConstraint(const std::string &nextName, 
+      const std::string &prevName, unsigned latency);
+  
+  /// Generates the constraint for time delta between nodes.
+  void genDeltaConstraint(const std::string &dstName, 
+      const std::string &srcName, std::vector<std::string> &deltas);
+  
+  /// Generates the constraint for buffer latency.
+  void genBufferConstraint(const std::string &nextName, 
+      const std::string &prevName, unsigned latency, Chan *channel);
+
+  /// Schedules the graph.
+  void balanceLatency(const Graph *graph);
+
+  /// Generates the constraint for input.
+  void synchronizeInput(const std::string &varName);
+
+  /// Checks the sum input & output flows of a split/merge node to be equal.
+  void checkFlows(const Node *node);
+
+  /// Balances the flows of the graph.
+  void balanceFlows(BalanceMode mode, const Graph *graph);
+
+  /// Generates the constraints for node's flow.
+  void genNodeConstraints(const std::string &nodeName);
+
+  /// Generates the constraints for inter-node flows.
+  void genFlowConstraints(const Graph *graph, OperationType type);
+  
   const std::string TimePrefix = "t_";
   const std::string FlowPrefix = "f_";
   const std::string DeltaPrefix = "delta_";

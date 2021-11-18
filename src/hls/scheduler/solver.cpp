@@ -74,7 +74,8 @@ void LpSolver::insertBuffers(Model &model) {
   for (const auto *buf : buffers) {
     // lp_solve positions start with 1
     double latency = latencies[buf->position - 1];
-    assert(latency >= 0);
+    assert(latency >= 0 && ("Delta for channel " + buf->channel->name + " < 0")
+      .c_str());
     if (latency != 0) {
       model.insertDelay(*(buf->channel), (unsigned)latency);
       bufsInserted++;
@@ -118,9 +119,9 @@ void LpSolver::balanceLatency(const Graph *graph) {
     const std::string srcName = channel->source.node->name;
     unsigned srcLatency = channel->source.port->latency;
 
-    genLatencyConstraints(dstName, srcName, srcLatency);
-    genDeltaConstraints(dstName, srcName, deltas);
-    genBufferConstraints(dstName, srcName, srcLatency, channel);
+    genLatencyConstraint(dstName, srcName, srcLatency);
+    genDeltaConstraint(dstName, srcName, deltas);
+    genBufferConstraint(dstName, srcName, srcLatency, channel);
   }
 
   // Minimize deltas
@@ -136,7 +137,7 @@ void LpSolver::synchronizeInput(const std::string &varName) {
   helper.addConstraint(name, value, OperationType::Equal, 0);
 }
 
-void LpSolver::genLatencyConstraints(const std::string &dstName, 
+void LpSolver::genLatencyConstraint(const std::string &dstName, 
     const std::string &srcName, unsigned srcLatency) {
   std::vector<std::string> names{TimePrefix + dstName, TimePrefix + srcName};
   std::vector<double> values{1.0, -1.0};
@@ -146,7 +147,7 @@ void LpSolver::genLatencyConstraints(const std::string &dstName,
       srcLatency);
 }
 
-void LpSolver::genDeltaConstraints(const std::string &dstName, 
+void LpSolver::genDeltaConstraint(const std::string &dstName, 
     const std::string &srcName, std::vector<std::string> &deltas) {
   std::vector<double> values{1.0, -1.0, 1.0};
   const std::string deltaName = DeltaPrefix + dstName + "_" + srcName;
@@ -159,7 +160,7 @@ void LpSolver::genDeltaConstraints(const std::string &dstName,
   helper.addConstraint(constrNames, values, OperationType::Equal, 0);
 }
 
-void LpSolver::genBufferConstraints(const std::string &dstName, 
+void LpSolver::genBufferConstraint(const std::string &dstName, 
     const std::string &srcName, unsigned srcLatency, Chan *channel) {
   std::vector<double> values{1.0, -1.0, 1.0};
   const std::string bufName = BufferPrefix + dstName + "_" + srcName;
@@ -232,7 +233,8 @@ void LpSolver::genFlowConstraints(const Graph *graph, OperationType type) {
 
 void LpSolver::checkFlows(const Node *node) {
   if (node->isMerge() || node->isSplit()) {
-    assert(sumFlows(node->type.inputs) == sumFlows(node->type.outputs));
+    assert((sumFlows(node->type.inputs) == sumFlows(node->type.outputs))
+      && ("Input & output flows for " + node->name + " do not match!").c_str());
   }
 }
 
