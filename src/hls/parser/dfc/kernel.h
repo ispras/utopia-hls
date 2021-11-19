@@ -29,14 +29,12 @@ struct params final {
 
 class kernel {
 public:
-  std::string name() const { return id; }
+  const std::string name;
 
 protected:
-  kernel(const std::string &id, const params &args): id(id) {}
+  kernel(const std::string &name, const params &args): name(name) {}
   kernel(const params &args): kernel(eda::utils::unique_name("kernel"), args) {}
   virtual ~kernel() {}
-
-  const std::string id;
 };
 
 template<typename UserKernel>
@@ -45,6 +43,5 @@ protected:
   user_kernel(const std::string &id, const params &args): kernel(id, args) {}
   virtual ~user_kernel() {}
 };
-
 
 } // namespace dfc
