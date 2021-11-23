@@ -32,7 +32,7 @@ public:
   const std::string name;
 
 protected:
-  kernel(const std::string &name, const params &args): name(name) {}
+  kernel(const std::string &name, const params &args);
   kernel(const params &args): kernel(eda::utils::unique_name("kernel"), args) {}
   virtual ~kernel() {}
 };

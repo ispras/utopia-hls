@@ -66,7 +66,9 @@ add_library(${MAIN_LIBRARY}
   hls/model/model.cpp
   hls/model/transform.cpp
   hls/model/printer.cpp
+  hls/parser/dfc/kernel.cpp
   hls/parser/dfc/stream.cpp
+  hls/parser/dfc/internal/builder.cpp
   hls/parser/hil/builder.cpp
   hls/parser/hil/parser.cpp
   hls/scheduler/dijkstra.cpp

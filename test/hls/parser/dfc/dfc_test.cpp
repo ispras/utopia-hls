@@ -13,15 +13,40 @@
 #include "hls/parser/dfc/dfc.h"
 
 DFC_KERNEL(MyKernel) {
-  DFC_INPUT(x, dfc::uint32);
-  DFC_INPUT(y, dfc::uint32);
-  DFC_OUTPUT(z, dfc::uint32);
+  static constexpr std::size_t N = 10;
 
   DFC_KERNEL_CTOR(MyKernel) {
-    dfc::value<dfc::uint32> value = 0;
+    std::array<dfc::input<dfc::uint32>, N> x;
+    std::array<dfc::input<dfc::uint32>, N> y;
+    dfc::output<dfc::uint32> z;
+  
+    kernel(x, y, z);
+  }
 
-    dfc::stream<dfc::uint32> tmp = x;
-    z = tmp + y;
+  void add_kernel(dfc::input<dfc::uint32> x,
+                  dfc::input<dfc::uint32> y,
+                  dfc::output<dfc::uint32> z) {
+    z = x + y;
+  }
+
+  void mul_kernel(dfc::input<dfc::uint32> x,
+                  dfc::input<dfc::uint32> y,
+                  dfc::output<dfc::uint32> z) {
+    z = x * y;
+  }
+
+  void kernel(std::array<dfc::input<dfc::uint32>, N> x,
+              std::array<dfc::input<dfc::uint32>, N> y,
+              dfc::output<dfc::uint32> z) {
+    std::array<dfc::stream<dfc::uint32>, N> m;
+    for (std::size_t i = 0; i < N; i++) {
+      mul_kernel(x[i], y[i], m[i]);
+    }
+
+    dfc::stream<dfc::uint32> acc = m[0];
+    for (std::size_t i = 1; i < N; i++) {
+      add_kernel(m[i], acc, acc);
+    }
   }
 };
 

@@ -57,6 +57,7 @@ struct wire_value {
 class wire {
 public:
   virtual std::string type() const = 0;
+  virtual wire* new_wire() const = 0;
 
   virtual ~wire() {}
 
@@ -83,18 +84,18 @@ protected:
   wire(wire_kind kind, wire_direct direct):
     wire(eda::utils::unique_name("wire"), kind, direct) {}
 
-  void declare(const wire *var);
+  void declare(const wire *var) const;
 
-  void connect(const wire *in, const wire *out);
+  void connect(const wire *in, const wire *out) const;
 
-  void connect(const std::string &op,
+  void connect(const std::string &opcode,
                const std::vector<const wire*> &in,
-               const std::vector<const wire*> &out);
+               const std::vector<const wire*> &out) const;
 
   void connect(const std::string &op,
                const wire *lhs,
                const wire *rhs,
-               const wire *out) {
+               const wire *out) const {
     connect(op, { lhs, rhs }, { out });
   }
 };
@@ -110,6 +111,10 @@ struct typed: public wire {
     return Type::type_name();
   }
 
+  typed<Type>* new_wire() const override {
+    return new typed(kind, INOUT);
+  }
+
   typed(const typed<Type> &rhs): wire(rhs.name, rhs.kind, rhs.direct) {
     this->connect(&rhs, this);
   }
@@ -119,42 +124,36 @@ struct typed: public wire {
     return *this;
   }
  
-  typed<Type>& operator+(const typed<Type> &rhs) {
+  typed<Type>& operator+(const typed<Type> &rhs) const {
     auto &out = create();
     this->connect("ADD", this, &rhs, &out);
     return out;
   }
 
-  typed<Type>& operator-(const typed<Type> &rhs) {
+  typed<Type>& operator-(const typed<Type> &rhs) const {
     auto &out = create();
     this->connect("SUB", this, &rhs, &out);
     return out;
   }
 
-  typed<Type>& operator*(const typed<Type> &rhs) {
+  typed<Type>& operator*(const typed<Type> &rhs) const {
     auto &out = create();
     this->connect("MUL", this, &rhs, &out);
     return out;
   }
 
-  typed<Type>& operator/(const typed<Type> &rhs) {
+  typed<Type>& operator/(const typed<Type> &rhs) const {
     auto &out = create();
     this->connect("DIV", this, &rhs, &out);
     return out;
   }
 
 protected:
-  virtual typed<Type>* new_wire() const {
-    return new typed(kind, INOUT);
-  }
-
-  typed<Type>& create() {
-    static std::vector<std::shared_ptr<typed<Type>>> storage;
-
-    std::shared_ptr<typed<Type>> ptr(new_wire());
-    storage.push_back(ptr);
-
-    return *ptr;
+  typed<Type>& create() const {
+    static std::vector<std::unique_ptr<typed<Type>>> storage;
+    typed<Type>* wire = new_wire();
+    storage.push_back(std::move(std::unique_ptr<typed<Type>>(wire)));
+    return *wire;
   }
 };
 
@@ -173,10 +172,10 @@ struct var: public typed<Type> {
 template<typename Type, wire_kind Kind>
 struct var<Type, Kind, INPUT>: public typed<Type> {
   var(): typed<Type>(Kind, INPUT) {}
+  var(const typed<Type> &rhs): typed<Type>(rhs) {}
   explicit var(const std::string &id): typed<Type>(id, Kind, INPUT) {}
 
   // Assignment to an input is prohibited.
-  var(const typed<Type> &rhs) = delete;
   typed<Type>& operator=(const typed<Type> &rhs) = delete;
 };
 
