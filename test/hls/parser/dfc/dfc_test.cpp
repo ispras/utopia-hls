@@ -6,11 +6,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <iostream>
+#include "hls/parser/dfc/dfc.h"
+#include "hls/parser/dfc/internal/builder.h"
 
 #include "gtest/gtest.h"
 
-#include "hls/parser/dfc/dfc.h"
+#include <iostream>
 
 DFC_KERNEL(MyKernel) {
   static constexpr std::size_t N = 10;
@@ -53,6 +54,9 @@ DFC_KERNEL(MyKernel) {
 void dfcTest() {
   dfc::params args;
   MyKernel kernel(args);
+
+  std::shared_ptr<eda::hls::model::Model> model = eda::hls::parser::dfc::Builder::get().create("MyModel");
+  std::cout << model << std::endl;
 }
 
 TEST(DfcTest, SimpleTest) {
