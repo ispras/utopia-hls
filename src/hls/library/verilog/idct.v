@@ -1,89 +1,212 @@
 
-// Evaluations of rows
-module idctrow(input clock, input reset, input [5:0] start_index);
+`define ML 16
+`define W1 2841
+`define W2 2676
+`define W3 2408
+`define W5 1609
+`define W6 1108
+`define W7 565
 
-reg [15:0] x0;
+module idctrow(input [`ML-1:0] i0, input [`ML-1:0] i1, input [`ML-1:0] i2, input [`ML-1:0] i3,
+               input [`ML-1:0] i4, input [`ML-1:0] i5, input [`ML-1:0] i6, input [`ML-1:0] i7,
+               output [`ML-1:0] b0, output [`ML-1:0] b1, output [`ML-1:0] b2, output [`ML-1:0] b3,
+               output [`ML-1:0] b4, output [`ML-1:0] b5, output [`ML-1:0] b6, output [`ML-1:0] b7);
 
-always @(posedge clock) begin
-  if(!reset) begin
-    x0 <= 0;
-  end else begin
-    x0 <= start_index;
-  end
+wire [`ML-1:0] x [7:0][3:0];
+wire return_zero;
+
+wire [`ML-1:0] b0;
+wire [`ML-1:0] b1;
+wire [`ML-1:0] b2;
+wire [`ML-1:0] b3;
+wire [`ML-1:0] b4;
+wire [`ML-1:0] b5;
+wire [`ML-1:0] b6;
+wire [`ML-1:0] b7;
+
+// zeroth stage
+assign x[0][0] = (b0 << 11) + 128;
+assign x[1][0] = b4 << 11;
+assign x[2][0] = b6;
+assign x[3][0] = b2;
+assign x[4][0] = b1;
+assign x[5][0] = b7;
+assign x[6][0] = b5;
+assign x[7][0] = b3;
+
+assign br = !(x[1][0] | x[2][0] | x[3][0] | x[4][0] | x[5][0] | x[6][0] | x[7][0]);
+
+// first stage
+wire [`ML-1:0] tmp0;
+wire [`ML-1:0] tmp1;
+assign x[0][1] = x[0][0];
+assign x[1][1] = x[1][0];
+assign x[2][1] = x[2][0];
+assign x[3][1] = x[3][0];
+assign tmp0    = `W7 * (x[4][0] + x[5][0]);
+assign x[4][1] = tmp0 + (`W1 - `W7) * x[4][0];
+assign x[5][1] = tmp0 - (`W1 + `W7) * x[5][0];
+assign tmp1    = `W3 * (x[6][0] + x[7][0]);
+assign x[6][1] = tmp1 - (`W3 - `W5) * x[6][0];
+assign x[7][1] = tmp1 - (`W3 + `W5) * x[7][0];
+
+// second stage
+wire [`ML-1:0] tmp2;
+wire [`ML-1:0] tmp3;
+assign x[0][2] = x[0][1] - x[1][1];
+assign x[1][2] = x[4][1] + x[6][1];
+assign tmp2 = `W6 * (x[3][1] + x[2][1]);
+assign x[2][2] = tmp2 - (`W2 + `W6) * x[2][1];
+assign x[3][2] = tmp2 - (`W2 - `W6) * x[3][1];
+assign x[4][2] = x[4][1] - x[6][1];
+assign x[5][2] = x[5][1] - x[7][1];
+assign x[6][2] = x[5][1] + x[7][1];
+assign x[7][2] = x[7][1];
+assign tmp3 = x[0][1] + x[1][1];
+
+// third stage
+wire [`ML-1:0] tmp4;
+assign x[0][3] = x[0][2] - x[2][2];
+assign x[1][3] = x[1][2];
+assign x[2][3] = (181 * (x[4][2] + x[5][2]) + 128) >> 8;
+assign x[3][3] = x[0][2] + x[2][2];
+assign x[4][3] = (181 * (x[4][2] - x[5][2]) + 128) >> 8;
+assign x[5][3] = x[5][2];
+assign x[6][3] = x[6][2];
+assign x[7][3] = tmp3 +  x[3][2];
+assign tmp4    = tmp3 - x[3][2];
+
+// fourth stage
+wire [`ML-1:0] tmp5;
+assign tmp5 = b0 << 3;
+assign b0 = br ? tmp5 : (x[7][3] + x[1][3]) >> 8;
+assign b1 = br ? tmp5 : (x[3][3] + x[2][3]) >> 8;
+assign b2 = br ? tmp5 : (x[0][3] + x[4][3]) >> 8;
+assign b3 = br ? tmp5 : (   tmp4 + x[6][3]) >> 8;
+assign b4 = br ? tmp5 : (   tmp4 - x[6][3]) >> 8;
+assign b5 = br ? tmp5 : (x[0][3] - x[4][3]) >> 8;
+assign b6 = br ? tmp5 : (x[3][3] - x[2][3]) >> 8;
+assign b7 = br ? tmp5 : (x[7][3] - x[1][3]) >> 8;
+
+endmodule //idctrow
+
+`define ICLP(i) (i < -256 ? -256 : i > 255 ? 255 : i)
+
+module idctcol(input [`ML-1:0] i0, input [`ML-1:0] i1, input [`ML-1:0] i2, input [`ML-1:0] i3,
+               input [`ML-1:0] i4, input [`ML-1:0] i5, input [`ML-1:0] i6, input [`ML-1:0] i7,
+               output [`ML-1:0] b0, output [`ML-1:0] b1, output [`ML-1:0] b2, output [`ML-1:0] b3,
+               output [`ML-1:0] b4, output [`ML-1:0] b5, output [`ML-1:0] b6, output [`ML-1:0] b7);
+
+wire [`ML-1:0] x [7:0][3:0];
+wire return_zero;
+
+wire [`ML-1:0] b0;
+wire [`ML-1:0] b1;
+wire [`ML-1:0] b2;
+wire [`ML-1:0] b3;
+wire [`ML-1:0] b4;
+wire [`ML-1:0] b5;
+wire [`ML-1:0] b6;
+wire [`ML-1:0] b7;
+
+// zeroth stage
+assign x[0][0] = (b0 << 8) + 8192;
+assign x[1][0] = b4 << 8;
+assign x[2][0] = b6;
+assign x[3][0] = b2;
+assign x[4][0] = b1;
+assign x[5][0] = b7;
+assign x[6][0] = b5;
+assign x[7][0] = b3;
+
+assign br = !(x[1][0] | x[2][0] | x[3][0] | x[4][0] | x[5][0] | x[6][0] | x[7][0]);
+
+// first stage
+wire [`ML-1:0] tmp0;
+wire [`ML-1:0] tmp1;
+assign x[0][1] = x[0][0];
+assign x[1][1] = x[1][0];
+assign x[2][1] = x[2][0];
+assign x[3][1] = x[3][0];
+assign tmp0    = `W7 * (x[4][0] + x[5][0]) + 4;
+assign x[4][1] = (tmp0 + (`W1 - `W7) * x[4][0]) >> 3;
+assign x[5][1] = (tmp0 - (`W1 + `W7) * x[5][0]) >> 3;
+assign tmp1    = `W3 * (x[6][0] + x[7][0]) + 4;
+assign x[6][1] = (tmp1 - (`W3 - `W5) * x[6][0]) >> 3;
+assign x[7][1] = (tmp1 - (`W3 + `W5) * x[7][0]) >> 3;
+
+// second stage
+wire [`ML-1:0] tmp2;
+wire [`ML-1:0] tmp3;
+assign x[0][2] = x[0][1] - x[1][1];
+assign x[1][2] = x[4][1] + x[6][1];
+assign tmp2 = `W6 * (x[3][1] + x[2][1]) + 4;
+assign x[2][2] = (tmp2 - (`W2 + `W6) * x[2][1]) >> 3;
+assign x[3][2] = (tmp2 - (`W2 - `W6) * x[3][1]) >> 3;
+assign x[4][2] = x[4][1] - x[6][1];
+assign x[5][2] = x[5][1] - x[7][1];
+assign x[6][2] = x[5][1] + x[7][1];
+assign x[7][2] = x[7][1];
+assign tmp3 = x[0][1] + x[1][1];
+
+// third stage
+wire [`ML-1:0] tmp4;
+assign x[0][3] = x[0][2] - x[2][2];
+assign x[1][3] = x[1][2];
+assign x[2][3] = (181 * (x[4][2] + x[5][2]) + 128) >> 8;
+assign x[3][3] = x[0][2] + x[2][2];
+assign x[4][3] = (181 * (x[4][2] - x[5][2]) + 128) >> 8;
+assign x[5][3] = x[5][2];
+assign x[6][3] = x[6][2];
+assign x[7][3] = tmp3 + x[3][2];
+assign tmp4    = tmp3 - x[3][2];
+
+// fourth stage
+wire [`ML-1:0] tmp5 = `ICLP((b0 + 32) >> 6);
+assign b0 = br ? tmp5 : `ICLP((x[7][3] + x[1][3]) >> 14);
+assign b1 = br ? tmp5 : `ICLP((x[3][3] + x[2][3]) >> 14);
+assign b2 = br ? tmp5 : `ICLP((x[0][3] + x[4][3]) >> 14);
+assign b3 = br ? tmp5 : `ICLP((   tmp4 + x[6][3]) >> 14);
+assign b4 = br ? tmp5 : `ICLP((   tmp4 - x[6][3]) >> 14);
+assign b5 = br ? tmp5 : `ICLP((x[0][3] - x[4][3]) >> 14);
+assign b6 = br ? tmp5 : `ICLP((x[3][3] - x[2][3]) >> 14);
+assign b7 = br ? tmp5 : `ICLP((x[7][3] - x[1][3]) >> 14);
+
+endmodule //idctcol
+
+
+module Fast_IDCT(input [`ML*8*8-1:0] in, output [`ML*8*8-1:0] out);
+
+wire [`ML*8*8-1:0] ws;
+wire [`ML*8*8-1:0] out;
+
+genvar i;
+generate for (i = 1; i < 8; i = i + 1) begin
+    idctrow ir(in[i*`ML-1+0-:`ML], in[i*`ML-1+1-:`ML], in[i*`ML-1+2-:`ML], in[i*`ML+3-:`ML],
+               in[i*`ML-1+4-:`ML], in[i*`ML-1+5-:`ML], in[i*`ML-1+6-:`ML], in[i*`ML+7-:`ML],
+               ws[i*`ML-1+0-:`ML], ws[i*`ML-1+1-:`ML], ws[i*`ML-1+2-:`ML], ws[i*`ML+3-:`ML],
+               ws[i*`ML-1+4-:`ML], ws[i*`ML-1+5-:`ML], ws[i*`ML-1+6-:`ML], ws[i*`ML+7-:`ML]);
+    idctcol ic(ws[i+`ML*0-1-:`ML], ws[i+`ML*1-1-:`ML], ws[i+`ML*2-1-:`ML], ws[i+`ML*3-1-:`ML],
+               ws[i+`ML*4-1-:`ML], ws[i+`ML*5-1-:`ML], ws[i+`ML*6-1-:`ML], ws[i+`ML*7-1-:`ML],
+               out[i+`ML*0-1-:`ML], out[i+`ML*1-1-:`ML], out[i+`ML*2-1-:`ML], out[i+`ML*3-1-:`ML],
+               out[i+`ML*4-1-:`ML], out[i+`ML*5-1-:`ML], out[i+`ML*6-1-:`ML], out[i+`ML*7-1-:`ML]);
 end
-
-
-//  integer i;
-//  always @*
-//    for (i = 0; i < 64; i = i + 1)
-//      block_array[i] = block_flat[16 * i +: 16];
-
-endmodule // idctrow
-
-
-// Evaluations of columns
-module idctcol(input clock, input reset, input [5:0] start_index);
-
-reg [15:0] x0;
-reg [15:0] x1;
-reg [15:0] x2;
-reg [15:0] x3;
-reg [15:0] x4;
-reg [15:0] x5;
-reg [15:0] x6;
-reg [15:0] x7;
-reg [15:0] x8;
-
-always @(posedge clock) begin
-  if (!reset) begin
-    x0 <= 0;
-    x1 <= 0;
-    x2 <= 0;
-    x3 <= 0;
-    x4 <= 0;
-    x5 <= 0;
-    x6 <= 0;
-    x7 <= 0;
-    x8 <= 0;
-  end else begin
-    x1 <= start_index;
-  end
-end
-
-endmodule // idctcol
-
-
-module Fast_IDCT(input clock, input reset);
-  wire [5:0] start_index;
-  genvar i;
-
-  generate for (i = 0; i < 8; i = i + 1) begin
-    idctrow ir0 (clock, reset, i == 0 ? 6'd0 :
-                               i == 1 ? 6'd8 :
-                               i == 2 ? 6'd16 :
-                               i == 3 ? 6'd24 :
-                               i == 4 ? 6'd32 :
-                               i == 5 ? 6'd40 :
-                               i == 6 ? 6'd48 :
-                               i == 7 ? 6'd56 : 6'd0 /* start_index */);
-  end
-  endgenerate
-
-  generate for (i = 0; i < 8; i = i + 1) begin
-    idctcol ic0 (clock, reset, i == 0 ? 6'd0 :
-                               i == 1 ? 6'd1 :
-                               i == 2 ? 6'd2 :
-                               i == 3 ? 6'd3 :
-                               i == 4 ? 6'd4 :
-                               i == 5 ? 6'd5 :
-                               i == 6 ? 6'd6 :
-                               i == 7 ? 6'd7 : 6'd0 /* start_index */);
-  end
-  endgenerate
+endgenerate
 endmodule // Fast_IDCT
 
-module top (input clock, input reset);
-reg [15:0] block [63:0]; // TODO: how to pass that? by means of flattening?
-Fast_IDCT idct(clock, reset);
-
+module top ();
+reg [`ML-1:0] b [63:0];
+wire [`ML*8*8-1:0] out;
+Fast_IDCT idct({b[63], b[62], b[61], b[60], b[59], b[58], b[57], b[56],
+                b[55], b[54], b[53], b[52], b[51], b[50], b[49], b[48],
+                b[47], b[46], b[45], b[44], b[43], b[42], b[41], b[40],
+                b[39], b[38], b[37], b[36], b[35], b[34], b[33], b[32],
+                b[31], b[30], b[29], b[28], b[27], b[26], b[25], b[24],
+                b[23], b[22], b[21], b[20], b[19], b[18], b[17], b[16],
+                b[15], b[14], b[13], b[12], b[11], b[10], b[09], b[08],
+                b[07], b[06], b[05], b[04], b[03], b[02], b[01], b[00]}, out);
+initial begin
+//  b <= out;
+  #1;
+end
 endmodule // top
