@@ -6,24 +6,26 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "hls/model/model.h"
+#include "hls/model/printer.h"
 #include "hls/parser/dfc/dfc.h"
 #include "hls/parser/dfc/internal/builder.h"
 
 #include "gtest/gtest.h"
 
+#include <fstream>
 #include <iostream>
 
 DFC_KERNEL(MyKernel) {
-  static constexpr std::size_t N = 10;
+  static constexpr std::size_t N = 1;
 
   DFC_KERNEL_CTOR(MyKernel) {
     std::array<dfc::input<dfc::uint32>, N> x;
     std::array<dfc::input<dfc::uint32>, N> y;
     dfc::output<dfc::uint32> z;
-  
+
     kernel(x, y, z);
   }
-
   void add_kernel(dfc::input<dfc::uint32> x,
                   dfc::input<dfc::uint32> y,
                   dfc::output<dfc::uint32> z) {
@@ -56,7 +58,11 @@ void dfcTest() {
   MyKernel kernel(args);
 
   std::shared_ptr<eda::hls::model::Model> model = eda::hls::parser::dfc::Builder::get().create("MyModel");
-  std::cout << model << std::endl;
+  std::cout << *model << std::endl;
+
+  std::ofstream output("dfc_test.dot");
+  eda::hls::model::printDot(output, *model);
+  output.close();
 }
 
 TEST(DfcTest, SimpleTest) {

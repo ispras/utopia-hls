@@ -71,18 +71,10 @@ protected:
        wire_kind kind,
        wire_direct direct,
        wire_value value):
-       name(name), kind(kind), direct(direct), value(value) {
-    declare(this);
-  }
+       name(name), kind(kind), direct(direct), value(value) {}
 
   wire(const std::string &name, wire_kind kind, wire_direct direct):
       wire(name, kind, direct, 0) {}
-
-  wire(wire_value value):
-      wire(value.to_string(), CONST, INPUT, value) {}
-
-  wire(wire_kind kind, wire_direct direct):
-    wire(eda::utils::unique_name("wire"), kind, direct) {}
 
   void declare(const wire *var) const;
 
@@ -102,10 +94,11 @@ protected:
 
 template<typename Type>
 struct typed: public wire {
-  typed(wire_kind kind, wire_direct direct):
-    wire(kind, direct) {}
   typed(const std::string &name, wire_kind kind, wire_direct direct):
-    wire(name, kind, direct) {}
+    wire(name, kind, direct) { declare(this); }
+
+  typed(wire_kind kind, wire_direct direct):
+    typed(eda::utils::unique_name("wire"), kind, direct) {}
 
   std::string type() const override {
     return Type::type_name();

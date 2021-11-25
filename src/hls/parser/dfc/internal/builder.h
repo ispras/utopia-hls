@@ -47,10 +47,18 @@ public:
 private:
   Builder() {}
 
+  struct Wire final {
+    Wire(const std::string &name, const std::string &type):
+      name(name), type(type) {}
+
+    std::string name;
+    std::string type;
+  };
+
   struct Unit final {
     Unit(const std::string &opcode,
-         const std::vector<const ::dfc::wire*> &in,
-         const std::vector<const ::dfc::wire*> &out):
+         const std::vector<Wire*> &in,
+         const std::vector<Wire*> &out):
       opcode(opcode), in(in), out(out) {}
 
     std::string fullName() const;
@@ -58,31 +66,35 @@ private:
     /// Unit operation.
     std::string opcode;
     /// Unique inputs.
-    std::vector<const ::dfc::wire*> in;
+    std::vector<Wire*> in;
     /// Unique outputs.
-    std::vector<const ::dfc::wire*> out;
+    std::vector<Wire*> out;
   };
 
   struct Kernel final {
     Kernel(const std::string &name): name(name) {}
 
+    enum Mode { CREATE, ACCESS, CREATE_COPY, CREATE_IF_NOT_EXISTS };
+    Wire* getWire(const std::string &name) const;
+    Wire* getWire(const ::dfc::wire *wire, Mode mode);
+
     /// Kernel name.
     std::string name;
     /// Contains all units.
-    std::vector<Unit> units;
+    std::vector<Unit*> units;
     /// Contains all wires.
-    std::vector<const ::dfc::wire*> wires;
+    std::unordered_map<std::string, Wire*> wires;
     /// Contains the wires connected to the given point (another wire).
-    std::unordered_map<std::string, std::vector<const ::dfc::wire*>> fanout;
+    std::unordered_map<std::string, std::vector<Wire*>> fanout;
   };
 
-  Port* createPort(const ::dfc::wire *wire, unsigned latency);
-  NodeType* createNodetype(const Unit &unit, Model *model);
-  Chan* createChan(const ::dfc::wire *wire, Graph *graph);
-  Node* createNode(const Unit &unit, Graph *graph, Model *model);
-  Graph* createGraph(const Kernel &kernel, Model *model);
+  Port* createPort(const Wire *wire, unsigned latency);
+  NodeType* createNodetype(const Unit *unit, Model *model);
+  Chan* createChan(const Wire *wire, Graph *graph);
+  Node* createNode(const Unit *unit, Graph *graph, Model *model);
+  Graph* createGraph(const Kernel *kernel, Model *model);
 
-  std::vector<Kernel> kernels;
+  std::vector<Kernel*> kernels;
 };
 
 } // namespace eda::hls::parser::dfc

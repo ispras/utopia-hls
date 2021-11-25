@@ -11,32 +11,36 @@
 namespace eda::hls::model {
 
 static void printDot(std::ostream &out, const Node &node) {
-  out << "  " << node.name << " ["
-              << "label=" << node.type.name << ", "
-              << "color=" << (node.isDelay() ? "red" : "black")
-              << "];" << std::endl;
+  out << "    " << node.name << " ["
+                << "label=" << node.type.name << ", "
+                << "color=" << (node.isDelay() ? "red" : "black")
+                << "];" << std::endl;
 }
 
 static void printDot(std::ostream &out, const Chan &chan) {
-  out << "  " << chan.source.node->name << " -> "
-              << chan.target.node->name << ";" << std::endl;
+  out << "    " << chan.source.node->name << " -> "
+                << chan.target.node->name << ";" << std::endl;
 }
 
 static void printDot(std::ostream &out, const Graph &graph) {
-  for (const Node *node: graph.nodes)
+  out << "  subgraph " << graph.name << " {" << std::endl;
+
+  for (const auto *node : graph.nodes)
     printDot(out, *node);
 
   out << std::endl;
 
-  for (const Chan *chan: graph.chans)
+  for (const auto *chan : graph.chans)
     printDot(out, *chan);
+
+  out << "  }" << std::endl;
 }
 
 void printDot(std::ostream &out, const Model &model) {
   out << "digraph " << model.name << " {" << std::endl;
 
-  const Graph* graph = model.findGraph("main");
-  printDot(out, *graph);
+  for (const auto *graph : model.graphs)
+    printDot(out, *graph);
 
   out << "}" << std::endl;
 }
