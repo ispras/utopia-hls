@@ -181,22 +181,63 @@ wire [`ML*8*8-1:0] ws;
 wire [`ML*8*8-1:0] out;
 
 genvar i;
-generate for (i = 1; i < 8; i = i + 1) begin
-    idctrow ir(in[i*`ML-1+0-:`ML], in[i*`ML-1+1-:`ML], in[i*`ML-1+2-:`ML], in[i*`ML+3-:`ML],
-               in[i*`ML-1+4-:`ML], in[i*`ML-1+5-:`ML], in[i*`ML-1+6-:`ML], in[i*`ML+7-:`ML],
-               ws[i*`ML-1+0-:`ML], ws[i*`ML-1+1-:`ML], ws[i*`ML-1+2-:`ML], ws[i*`ML+3-:`ML],
-               ws[i*`ML-1+4-:`ML], ws[i*`ML-1+5-:`ML], ws[i*`ML-1+6-:`ML], ws[i*`ML+7-:`ML]);
-    idctcol ic(ws[i+`ML*0-1-:`ML], ws[i+`ML*1-1-:`ML], ws[i+`ML*2-1-:`ML], ws[i+`ML*3-1-:`ML],
-               ws[i+`ML*4-1-:`ML], ws[i+`ML*5-1-:`ML], ws[i+`ML*6-1-:`ML], ws[i+`ML*7-1-:`ML],
-               out[i+`ML*0-1-:`ML], out[i+`ML*1-1-:`ML], out[i+`ML*2-1-:`ML], out[i+`ML*3-1-:`ML],
-               out[i+`ML*4-1-:`ML], out[i+`ML*5-1-:`ML], out[i+`ML*6-1-:`ML], out[i+`ML*7-1-:`ML]);
+generate for (i=1; i<8*8; i=i+8) begin
+    //b[0]         b[1]         b[2]            b[3]            b[4]            b[5]            b[6]            b[7]
+    //b[8]
+    //                                                                                                          b[63]
+    //1*x-1:0*x	   2*x-1:1*x	3*x-1:2*x	4*x-1:3*x	5*x-1:4*x	6*x-1:5*x	7*x-1:6*x	8*x-1:7*x
+    //9*x-1:8*x
+    //                                                                                                         64*x-1:63*x
+    idctrow ir(in[(i+0)*`ML-1 : (i-1)*`ML],
+               in[(i+1)*`ML-1 : (i+0)*`ML],
+               in[(i+2)*`ML-1 : (i+1)*`ML],
+               in[(i+3)*`ML-1 : (i+2)*`ML],
+               in[(i+4)*`ML-1 : (i+3)*`ML],
+               in[(i+5)*`ML-1 : (i+4)*`ML],
+               in[(i+6)*`ML-1 : (i+5)*`ML],
+               in[(i+7)*`ML-1 : (i+6)*`ML],
+               ws[(i+0)*`ML-1 : (i-1)*`ML],
+               ws[(i+1)*`ML-1 : (i+0)*`ML],
+               ws[(i+2)*`ML-1 : (i+1)*`ML],
+               ws[(i+3)*`ML-1 : (i+2)*`ML],
+               ws[(i+4)*`ML-1 : (i+3)*`ML],
+               ws[(i+5)*`ML-1 : (i+4)*`ML],
+               ws[(i+6)*`ML-1 : (i+5)*`ML],
+               ws[(i+7)*`ML-1 : (i+6)*`ML]);
+    //b[0]	b[8]	b[16]					b[56]
+    //b[1]
+    //                                                          b[63]
+    //(1+8*0)*x-1:(0+8*0)*x (1+8*1)*x-1:(0+8*1)*x (1+8*2)*x-1:(0+8*2)*x     (1+8*7)*x-1:(0+8*7)*x
+    //(2+8*0)*x-1:(1+8*0)*x
+    //                                                                      (8+8*7)*x-1:(7+8*7)*x
+end
+endgenerate
+generate for (i=1; i<=8; i=i+1) begin
+    idctcol ic(ws[(i+8*0)*`ML-1 : (i-1+8*0)*`ML],
+               ws[(i+8*1)*`ML-1 : (i-1+8*1)*`ML],
+               ws[(i+8*2)*`ML-1 : (i-1+8*2)*`ML],
+               ws[(i+8*3)*`ML-1 : (i-1+8*3)*`ML],
+               ws[(i+8*4)*`ML-1 : (i-1+8*4)*`ML],
+               ws[(i+8*5)*`ML-1 : (i-1+8*5)*`ML],
+               ws[(i+8*6)*`ML-1 : (i-1+8*6)*`ML],
+               ws[(i+8*7)*`ML-1 : (i-1+8*7)*`ML],
+               out[(i+8*0)*`ML-1 : (i-1+8*0)*`ML],
+               out[(i+8*1)*`ML-1 : (i-1+8*1)*`ML],
+               out[(i+8*2)*`ML-1 : (i-1+8*2)*`ML],
+               out[(i+8*3)*`ML-1 : (i-1+8*3)*`ML],
+               out[(i+8*4)*`ML-1 : (i-1+8*4)*`ML],
+               out[(i+8*5)*`ML-1 : (i-1+8*5)*`ML],
+               out[(i+8*6)*`ML-1 : (i-1+8*6)*`ML],
+               out[(i+8*7)*`ML-1 : (i-1+8*7)*`ML]);
 end
 endgenerate
 endmodule // Fast_IDCT
 
 module top ();
+integer i;
 reg [`ML-1:0] b [63:0];
 wire [`ML*8*8-1:0] out;
+reg [`ML*8*8-1:0] out_reg;
 Fast_IDCT idct({b[63], b[62], b[61], b[60], b[59], b[58], b[57], b[56],
                 b[55], b[54], b[53], b[52], b[51], b[50], b[49], b[48],
                 b[47], b[46], b[45], b[44], b[43], b[42], b[41], b[40],
@@ -206,7 +247,14 @@ Fast_IDCT idct({b[63], b[62], b[61], b[60], b[59], b[58], b[57], b[56],
                 b[15], b[14], b[13], b[12], b[11], b[10], b[09], b[08],
                 b[07], b[06], b[05], b[04], b[03], b[02], b[01], b[00]}, out);
 initial begin
-//  b <= out;
-  #1;
+  $dumpfile("test.vcd");
+  $dumpvars(3, top);
+  out_reg <= 0;
+  for (i = 0; i < 64; i = i + 1) begin
+    b[i] <= i;
+  end
+  #10;
+  out_reg <= out;
+  #10;
 end
 endmodule // top
