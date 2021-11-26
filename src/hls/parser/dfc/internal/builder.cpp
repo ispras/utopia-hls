@@ -109,7 +109,10 @@ Builder::Wire* Builder::Kernel::getWire(const ::dfc::wire *wire, Mode mode) {
       ? eda::utils::unique_name(wire->name)
       : wire->name;
 
-  auto *result = new Wire(name, wire->type());
+  const bool input  = (wire->direct == ::dfc::INPUT);
+  const bool output = (wire->direct == ::dfc::OUTPUT);
+  auto *result = new Wire(name, wire->type(), input, output);
+                          
   wires.insert({ name, result });
 
   return result;
@@ -139,10 +142,17 @@ Chan* Builder::createChan(const Wire *wire, Graph *graph) {
 }
 
 Node* Builder::createNode(const Unit *unit, Graph *graph, Model *model) {
-  auto *nodetype = createNodetype(unit, model);
-  model->addNodetype(nodetype);
+  static unsigned id = 0;
 
-  auto *node = new Node(unit->opcode, *nodetype, *graph);
+  auto *nodetype = model->findNodetype(unit->fullName());
+
+  if (nodetype == nullptr) {
+    nodetype = createNodetype(unit, model);
+    model->addNodetype(nodetype);
+  }
+
+  const std::string name = unit->opcode + std::to_string(id++);
+  auto *node = new Node(name, *nodetype, *graph);
 
   for (auto *in : unit->in) {
     auto *input = graph->findChan(in->name);
@@ -162,9 +172,17 @@ Node* Builder::createNode(const Unit *unit, Graph *graph, Model *model) {
 Graph* Builder::createGraph(const Kernel *kernel, Model *model) {
   auto *graph = new Graph(kernel->name, *model);
 
-  // Create channels.
+  // Create channels, sources, and sinks.
   for (const auto &[_, wire] : kernel->wires) {
     graph->addChan(createChan(wire, graph));
+
+    if (wire->input) {
+      auto *source = new Unit("source", {}, { wire });
+      graph->addNode(createNode(source, graph, model));
+    } else if (wire->output) {
+      auto *sink = new Unit("sink", { wire }, {});
+      graph->addNode(createNode(sink, graph, model));
+    }
   }
 
   // Create functional nodes and corresponding node types.

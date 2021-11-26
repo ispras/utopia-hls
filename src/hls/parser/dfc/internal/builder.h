@@ -48,11 +48,13 @@ private:
   Builder() {}
 
   struct Wire final {
-    Wire(const std::string &name, const std::string &type):
-      name(name), type(type) {}
+    Wire(const std::string &name, const std::string &type, bool input, bool output):
+      name(name), type(type), input(input), output(output) {}
 
-    std::string name;
-    std::string type;
+    const std::string name;
+    const std::string type;
+    const bool input;
+    const bool output;
   };
 
   struct Unit final {
@@ -64,7 +66,7 @@ private:
     std::string fullName() const;
 
     /// Unit operation.
-    std::string opcode;
+    const std::string opcode;
     /// Unique inputs.
     std::vector<Wire*> in;
     /// Unique outputs.
@@ -79,7 +81,7 @@ private:
     Wire* getWire(const ::dfc::wire *wire, Mode mode);
 
     /// Kernel name.
-    std::string name;
+    const std::string name;
     /// Contains all units.
     std::vector<Unit*> units;
     /// Contains all wires.
