@@ -25,14 +25,14 @@ wire [`ML-1:0] b6;
 wire [`ML-1:0] b7;
 
 // zeroth stage
-assign x[0][0] = (b0 << 11) + 128;
-assign x[1][0] = b4 << 11;
-assign x[2][0] = b6;
-assign x[3][0] = b2;
-assign x[4][0] = b1;
-assign x[5][0] = b7;
-assign x[6][0] = b5;
-assign x[7][0] = b3;
+assign x[0][0] = (i0 << 11) + 128;
+assign x[1][0] = i4 << 11;
+assign x[2][0] = i6;
+assign x[3][0] = i2;
+assign x[4][0] = i1;
+assign x[5][0] = i7;
+assign x[6][0] = i5;
+assign x[7][0] = i3;
 
 assign br = !(x[1][0] | x[2][0] | x[3][0] | x[4][0] | x[5][0] | x[6][0] | x[7][0]);
 
@@ -110,14 +110,14 @@ wire [`ML-1:0] b6;
 wire [`ML-1:0] b7;
 
 // zeroth stage
-assign x[0][0] = (b0 << 8) + 8192;
-assign x[1][0] = b4 << 8;
-assign x[2][0] = b6;
-assign x[3][0] = b2;
-assign x[4][0] = b1;
-assign x[5][0] = b7;
-assign x[6][0] = b5;
-assign x[7][0] = b3;
+assign x[0][0] = (i0 << 8) + 8192;
+assign x[1][0] = i4 << 8;
+assign x[2][0] = i6;
+assign x[3][0] = i2;
+assign x[4][0] = i1;
+assign x[5][0] = i7;
+assign x[6][0] = i5;
+assign x[7][0] = i3;
 
 assign br = !(x[1][0] | x[2][0] | x[3][0] | x[4][0] | x[5][0] | x[6][0] | x[7][0]);
 
@@ -249,12 +249,20 @@ Fast_IDCT idct({b[63], b[62], b[61], b[60], b[59], b[58], b[57], b[56],
 initial begin
   $dumpfile("test.vcd");
   $dumpvars(3, top);
-  out_reg <= 0;
+
   for (i = 0; i < 64; i = i + 1) begin
     b[i] <= i;
   end
+
   #10;
+
+  for(i = 0; i < 64; i = i + 1)
+    $display("b[%d]=%d ", i, b[i]);
+
   out_reg <= out;
+
   #10;
+
+  $display("out_reg=%d\n", out_reg);
 end
 endmodule // top
