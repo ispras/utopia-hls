@@ -17,7 +17,7 @@
 #include <iostream>
 
 DFC_KERNEL(MyKernel) {
-  static constexpr std::size_t N = 2;
+  static constexpr std::size_t N = 4;
 
   DFC_KERNEL_CTOR(MyKernel) {
     std::array<dfc::input<dfc::uint32>, N> x;
@@ -43,14 +43,18 @@ DFC_KERNEL(MyKernel) {
               std::array<dfc::input<dfc::uint32>, N> y,
               dfc::output<dfc::uint32> z) {
     std::array<dfc::stream<dfc::uint32>, N> m;
+    std::array<dfc::stream<dfc::uint32>, N> a;
+
     for (std::size_t i = 0; i < N; i++) {
       mul_kernel(x[i], y[i], m[i]);
     }
 
-    dfc::stream<dfc::uint32> acc = m[0];
+    a[0] = m[0];
     for (std::size_t i = 1; i < N; i++) {
-      add_kernel(m[i], acc, acc);
+      a[i] = a[i-1] + m[i];
     }
+
+    z = a[N-1];
   }
 };
 

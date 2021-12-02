@@ -108,9 +108,15 @@ struct typed: public wire {
     return new typed(kind, INOUT);
   }
 
-  typed(const typed<Type> &rhs): wire(rhs.name, rhs.kind, rhs.direct) {
-    this->connect(&rhs, this);
+  typed(const typed<Type> &rhs, wire_direct direct):
+      wire(rhs.name, rhs.kind, INOUT) {
+    if (direct != OUTPUT)
+      connect(&rhs, this);
+    else
+      connect(this, &rhs);
   }
+
+  typed(const typed<Type> &rhs): typed(rhs, INOUT) {}
 
   typed<Type>& operator=(const typed<Type> &rhs) {
     this->connect(&rhs, this);
@@ -165,7 +171,7 @@ struct var: public typed<Type> {
 template<typename Type, wire_kind Kind>
 struct var<Type, Kind, INPUT>: public typed<Type> {
   var(): typed<Type>(Kind, INPUT) {}
-  var(const typed<Type> &rhs): typed<Type>(rhs) {}
+  var(const typed<Type> &rhs): typed<Type>(rhs, INPUT) {}
   explicit var(const std::string &id): typed<Type>(id, Kind, INPUT) {}
 
   // Assignment to an input is prohibited.
@@ -176,7 +182,7 @@ struct var<Type, Kind, INPUT>: public typed<Type> {
 template<typename Type, wire_kind Kind>
 struct var<Type, Kind, OUTPUT>: public typed<Type> {
   var(): typed<Type>(Kind, OUTPUT) {}
-  var(const typed<Type> &rhs): typed<Type>(rhs) {}
+  var(const typed<Type> &rhs): typed<Type>(rhs, OUTPUT) {}
   explicit var(const std::string &id): typed<Type>(id, Kind, OUTPUT) {}
 
   // Reading from an output is prohibited.

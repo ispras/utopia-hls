@@ -86,8 +86,10 @@ private:
     std::vector<Unit*> units;
     /// Contains all wires.
     std::unordered_map<std::string, Wire*> wires;
-    /// Contains the wires connected to the given point (another wire).
-    std::unordered_map<std::string, std::vector<Wire*>> fanout;
+    /// Maps a non-input wire to its source.
+    std::unordered_map<std::string, Wire*> in;
+    /// Maps a non-output wire to its targets.
+    std::unordered_map<std::string, std::vector<Wire*>> out;
   };
 
   Port* createPort(const Wire *wire, unsigned latency);

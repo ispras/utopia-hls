@@ -18,8 +18,10 @@ static void printDot(std::ostream &out, const Node &node) {
 }
 
 static void printDot(std::ostream &out, const Chan &chan) {
-  out << "    " << chan.source.node->name << " -> "
-                << chan.target.node->name << ";" << std::endl;
+  if (chan.source.node != nullptr && chan.target.node != nullptr) {
+    out << "    " << chan.source.node->name << " -> "
+                  << chan.target.node->name << ";" << std::endl;
+  }
 }
 
 static void printDot(std::ostream &out, const Graph &graph) {
