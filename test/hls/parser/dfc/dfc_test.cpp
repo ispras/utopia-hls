@@ -24,9 +24,11 @@ DFC_KERNEL(MyKernel) {
     std::array<dfc::input<dfc::uint32>, N> y;
     dfc::output<dfc::uint32> z;
 
-    kernel(x, y, z);
+    z = x[0] + y[0];
+//    kernel(x, y, z);
   }
 
+/*
   void add_kernel(dfc::input<dfc::uint32> x,
                   dfc::input<dfc::uint32> y,
                   dfc::output<dfc::uint32> z) {
@@ -56,6 +58,7 @@ DFC_KERNEL(MyKernel) {
 
     z = a[N-1];
   }
+*/
 };
 
 void dfcTest() {

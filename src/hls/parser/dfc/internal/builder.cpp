@@ -34,15 +34,15 @@ void Builder::declareWire(const ::dfc::wire *wire) {
   assert(!kernels.empty() && "Wire declaration outside a kernel");
   auto *kernel = kernels.back();
 
-  kernel->getWire(wire, Kernel::CREATE);
+  kernel->getWire(wire, Kernel::CREATE_ORIGINAL);
 }
 
 void Builder::connectWires(const ::dfc::wire *in, const ::dfc::wire *out) {
   assert(!kernels.empty() && "Wire connection outside a kernel");
   auto *kernel = kernels.back();
 
-  auto *source = kernel->getWire(in, Kernel::ACCESS);
-  auto *target = kernel->getWire(out, Kernel::CREATE_COPY);
+  auto *source = kernel->getWire(in,  Kernel::ACCESS_VERSION);
+  auto *target = kernel->getWire(out, Kernel::CREATE_VERSION);
 
   kernel->in[target->name] = source;
   kernel->out[source->name].push_back(target);
@@ -57,8 +57,8 @@ void Builder::connectWires(const std::string &opcode,
   // Create new inputs and connect them w/ the old ones.
   std::vector<Wire*> inputs;
   for (const auto *wire : in) {
-    auto *source = kernel->getWire(wire, Kernel::ACCESS);
-    auto *target = kernel->getWire(wire, Kernel::CREATE_COPY);
+    auto *source = kernel->getWire(wire, Kernel::ACCESS_VERSION);
+    auto *target = kernel->getWire(wire, Kernel::CREATE_VERSION);
 
     kernel->in[target->name] = source;
     kernel->out[source->name].push_back(target);
@@ -69,7 +69,7 @@ void Builder::connectWires(const std::string &opcode,
   // Compose outputs.
   std::vector<Wire*> outputs;
   for (const auto *wire : out) {
-    auto *output = kernel->getWire(wire, Kernel::ACCESS);
+    auto *output = kernel->getWire(wire, Kernel::ACCESS_ORIGINAL);
     outputs.push_back(output);
   }
 
@@ -102,20 +102,29 @@ Builder::Wire* Builder::Kernel::getWire(const std::string &name) const {
 Builder::Wire* Builder::Kernel::getWire(const ::dfc::wire *wire, Mode mode) {
   auto i = wires.find(wire->name);
 
-  assert((mode != Kernel::CREATE || i == wires.end()) && "Wire already exists");
-  assert((mode != Kernel::ACCESS || i != wires.end()) && "Wire does not exist");
+  const bool create = mode == Kernel::CREATE_ORIGINAL;
+  const bool access = mode == Kernel::ACCESS_ORIGINAL ||
+                      mode == Kernel::ACCESS_VERSION;
 
-  if (i != wires.end() && mode != Kernel::CREATE_COPY)
+  assert((!create || i == wires.end()) && "Wire already exists");
+  assert((!access || i != wires.end()) && "Wire does not exist");
+
+  if (mode == Kernel::ACCESS_ORIGINAL)
     return i->second;
 
-  const std::string name = (mode == Kernel::CREATE_COPY) ?
+  if (mode == Kernel::ACCESS_VERSION)
+    return latest.find(wire->name)->second;
+
+  const std::string name = (mode == Kernel::CREATE_VERSION) ?
         eda::utils::unique_name(wire->name) : wire->name;
 
-  const bool input = wire->direct == ::dfc::INPUT;
-  const bool output = wire->direct == ::dfc::OUTPUT;
+  auto *result = new Wire(name,
+                          wire->type(),
+                          wire->direct == ::dfc::INPUT,
+                          wire->direct == ::dfc::OUTPUT);
 
-  auto *result = new Wire(name, wire->type(), input, output);
   wires.insert({ name, result });
+  latest.insert({ wire->name, result });
 
   return result;
 }

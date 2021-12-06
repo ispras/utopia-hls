@@ -116,34 +116,34 @@ struct typed: public wire {
       connect(this, &rhs);
   }
 
-  typed(const typed<Type> &rhs): typed(rhs, INOUT) {}
+  explicit typed(const typed<Type> &rhs): typed(rhs, INOUT) {}
 
   typed<Type>& operator=(const typed<Type> &rhs) {
-    this->connect(&rhs, this);
+    connect(&rhs, this);
     return *this;
   }
  
   typed<Type>& operator+(const typed<Type> &rhs) const {
     auto &out = create();
-    this->connect("ADD", this, &rhs, &out);
+    connect("ADD", this, &rhs, &out);
     return out;
   }
 
   typed<Type>& operator-(const typed<Type> &rhs) const {
     auto &out = create();
-    this->connect("SUB", this, &rhs, &out);
+    connect("SUB", this, &rhs, &out);
     return out;
   }
 
   typed<Type>& operator*(const typed<Type> &rhs) const {
     auto &out = create();
-    this->connect("MUL", this, &rhs, &out);
+    connect("MUL", this, &rhs, &out);
     return out;
   }
 
   typed<Type>& operator/(const typed<Type> &rhs) const {
     auto &out = create();
-    this->connect("DIV", this, &rhs, &out);
+    connect("DIV", this, &rhs, &out);
     return out;
   }
 
@@ -163,15 +163,19 @@ protected:
 template<typename Type, wire_kind Kind, wire_direct Direct>
 struct var: public typed<Type> {
   var(): typed<Type>(Kind, Direct) {}
-  var(const typed<Type> &rhs): typed<Type>(rhs) {}
+  explicit var(const typed<Type> &rhs): typed<Type>(rhs) {}
   explicit var(const std::string &id): typed<Type>(id, Kind, Direct) {}
+
+  typed<Type>& operator=(const typed<Type> &rhs) {
+    return typed<Type>::operator=(rhs);
+  }
 };
 
 /// Input specialization.
 template<typename Type, wire_kind Kind>
 struct var<Type, Kind, INPUT>: public typed<Type> {
   var(): typed<Type>(Kind, INPUT) {}
-  var(const typed<Type> &rhs): typed<Type>(rhs, INPUT) {}
+  explicit var(const typed<Type> &rhs): typed<Type>(rhs, INPUT) {}
   explicit var(const std::string &id): typed<Type>(id, Kind, INPUT) {}
 
   // Assignment to an input is prohibited.
@@ -182,8 +186,12 @@ struct var<Type, Kind, INPUT>: public typed<Type> {
 template<typename Type, wire_kind Kind>
 struct var<Type, Kind, OUTPUT>: public typed<Type> {
   var(): typed<Type>(Kind, OUTPUT) {}
-  var(const typed<Type> &rhs): typed<Type>(rhs, OUTPUT) {}
+  explicit var(const typed<Type> &rhs): typed<Type>(rhs, OUTPUT) {}
   explicit var(const std::string &id): typed<Type>(id, Kind, OUTPUT) {}
+
+  typed<Type>& operator=(const typed<Type> &rhs) {
+    return typed<Type>::operator=(rhs);
+  }
 
   // Reading from an output is prohibited.
   typed<Type>& operator+(const typed<Type> &rhs) = delete;
