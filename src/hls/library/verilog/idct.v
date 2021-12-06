@@ -25,20 +25,20 @@ wire [`ML-1:0] b6;
 wire [`ML-1:0] b7;
 
 // zeroth stage
-assign x[0][0] = (i0 << 11) + 128;
-assign x[1][0] = i4 << 11;
-assign x[2][0] = i6;
-assign x[3][0] = i2;
-assign x[4][0] = i1;
-assign x[5][0] = i7;
-assign x[6][0] = i5;
-assign x[7][0] = i3;
+assign x[0][0] = ($signed(i0) << 11) + 128;
+assign x[1][0] = $signed(i4) << 11;
+assign x[2][0] = $signed(i6);
+assign x[3][0] = $signed(i2);
+assign x[4][0] = $signed(i1);
+assign x[5][0] = $signed(i7);
+assign x[6][0] = $signed(i5);
+assign x[7][0] = $signed(i3);
 
 assign br = !(x[1][0] | x[2][0] | x[3][0] | x[4][0] | x[5][0] | x[6][0] | x[7][0]);
 
 // first stage
-wire [`ML*2-1:0] tmp0;
-wire [`ML*2-1:0] tmp1;
+wire signed [`ML*2-1:0] tmp0;
+wire signed [`ML*2-1:0] tmp1;
 assign x[0][1] = x[0][0];
 assign x[1][1] = x[1][0];
 assign x[2][1] = x[2][0];
@@ -51,8 +51,8 @@ assign x[6][1] = tmp1 - (`W3 - `W5) * x[6][0];
 assign x[7][1] = tmp1 - (`W3 + `W5) * x[7][0];
 
 // second stage
-wire [`ML*2-1:0] tmp2;
-wire [`ML*2-1:0] tmp3;
+wire signed [`ML*2-1:0] tmp2;
+wire signed [`ML*2-1:0] tmp3;
 assign x[0][2] = x[0][1] - x[1][1];
 assign x[1][2] = x[4][1] + x[6][1];
 assign tmp2 = `W6 * (x[3][1] + x[2][1]);
@@ -65,7 +65,7 @@ assign x[7][2] = x[7][1];
 assign tmp3 = x[0][1] + x[1][1];
 
 // third stage
-wire [`ML*2-1:0] tmp4;
+wire signed [`ML*2-1:0] tmp4;
 assign x[0][3] = x[0][2] - x[2][2];
 assign x[1][3] = x[1][2];
 assign x[2][3] = (181 * (x[4][2] + x[5][2]) + 128) >>> 8;
@@ -77,7 +77,7 @@ assign x[7][3] = tmp3 +  x[3][2];
 assign tmp4    = tmp3 - x[3][2];
 
 // fourth stage
-wire [`ML*2-1:0] tmp5;
+wire signed [`ML*2-1:0] tmp5;
 assign tmp5 = b0 << 3;
 assign b0 = br ? tmp5[`ML-1:0] : (x[7][3] + x[1][3]) >>> 8;
 assign b1 = br ? tmp5[`ML-1:0] : (x[3][3] + x[2][3]) >>> 8;
@@ -245,7 +245,7 @@ endmodule // Fast_IDCT
 
 module top ();
 integer i;
-reg [`ML-1:0] b [63:0];
+reg signed [`ML-1:0] b [63:0];
 wire [`ML*8*8-1:0] out;
 reg [`ML*8*8-1:0] out_reg;
 Fast_IDCT idct({b[63], b[62], b[61], b[60], b[59], b[58], b[57], b[56],
@@ -261,18 +261,24 @@ initial begin
   $dumpvars(6, top);
 
   for (i = 0; i < 64; i = i + 1) begin
-    b[i] <= i;
+    b[i] <= -1*i;
   end
 
   #10;
-
-  for(i = 0; i < 64; i = i + 1)
-    $display("b[%d]=%d ", i, b[i]);
-
   out_reg <= out;
 
   #10;
-
   $display("out_reg (hex) = %x", out_reg);
+
+  for (i = 0; i < 64; i = i + 1) begin
+    b[i] <= 1*i;
+  end
+
+  #10;
+  out_reg <= out;
+
+  #10;
+  $display("out_reg (hex) = %x", out_reg);
+
 end
 endmodule // top
