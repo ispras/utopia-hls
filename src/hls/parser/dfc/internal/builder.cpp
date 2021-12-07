@@ -10,6 +10,7 @@
 #include "hls/parser/dfc/internal/builder.h"
 
 #include <cassert>
+#include <iostream>
 #include <sstream>
 
 using namespace eda::hls::model;
@@ -102,14 +103,13 @@ Builder::Wire* Builder::Kernel::getWire(const std::string &name) const {
 Builder::Wire* Builder::Kernel::getWire(const ::dfc::wire *wire, Mode mode) {
   auto i = wires.find(wire->name);
 
-  const bool create = mode == Kernel::CREATE_ORIGINAL;
   const bool access = mode == Kernel::ACCESS_ORIGINAL ||
                       mode == Kernel::ACCESS_VERSION;
 
-  assert((!create || i == wires.end()) && "Wire already exists");
   assert((!access || i != wires.end()) && "Wire does not exist");
 
-  if (mode == Kernel::ACCESS_ORIGINAL)
+  if ((mode == Kernel::ACCESS_ORIGINAL) ||
+      (mode == Kernel::CREATE_ORIGINAL && i != wires.end()))
     return i->second;
 
   if (mode == Kernel::ACCESS_VERSION)
@@ -123,9 +123,7 @@ Builder::Wire* Builder::Kernel::getWire(const ::dfc::wire *wire, Mode mode) {
                           wire->direct == ::dfc::INPUT,
                           wire->direct == ::dfc::OUTPUT);
 
-  wires.insert({ name, result });
-  latest.insert({ wire->name, result });
-
+  latest[wire->name] = wires[name] = result;
   return result;
 }
 
