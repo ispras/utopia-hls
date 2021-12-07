@@ -60,9 +60,9 @@ struct Instance final {
             outputs(),
             bindings() {}
 
-  void addInput(Port &inputPort);
-  void addOutput(Port &outputPort);
-  void addBinding(Port &connectsFrom, Port &connectTo);
+  void addInput(const Port &inputPort);
+  void addOutput(const Port &outputPort);
+  void addBinding(const Port &connectsFrom, const Port &connectTo);
 };
 
 
@@ -129,10 +129,10 @@ struct Circuit final {
 };
 
 struct Compiler final {
-  static constexpr char* indent = "    ";
-  static constexpr char* opPrefix = "firrtl.";
-  static constexpr char* typePrefix = "!firrtl.";
-  static constexpr char* varPrefix = "%";
+  static constexpr const char* indent = "    ";
+  static constexpr const char* opPrefix = "firrtl.";
+  static constexpr const char* typePrefix = "!firrtl.";
+  static constexpr const char* varPrefix = "%";
 
   const eda::hls::model::Model model;
 

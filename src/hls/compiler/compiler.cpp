@@ -6,10 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <memory>
-
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <memory>
 
 #include "hls/compiler/compiler.h"
 #include "hls/library/library.h"
@@ -23,15 +22,15 @@ const std::string chanSourceToString(const eda::hls::model::Chan &chan) {
   return chan.source.node->name + "_" + chan.source.port->name;
 }
 
-  void Instance::addInput(Port &inputPort) {
+  void Instance::addInput(const Port &inputPort) {
     inputs.push_back(inputPort);
   }
 
-  void Instance::addOutput(Port &outputPort) {
+  void Instance::addOutput(const Port &outputPort) {
     inputs.push_back(outputPort);
   }
 
-  void Instance::addBinding(Port &connectsFrom, Port &connectTo) {
+  void Instance::addBinding(const Port &connectsFrom, const Port &connectTo) {
     bindings.push_back({connectsFrom, connectTo});
   }
 
