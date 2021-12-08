@@ -57,8 +57,6 @@ struct wire_value {
 class wire {
 public:
   virtual std::string type() const = 0;
-  virtual wire* new_wire(wire_direct direct) const = 0;
-
   virtual ~wire() {}
 
   const std::string name;
@@ -85,10 +83,25 @@ protected:
                const std::vector<const wire*> &out) const;
 
   void connect(const std::string &op,
+               const wire *in,
+               const wire *out) const {
+    std::vector source = { in };
+    std::vector target = { out };
+    connect(op, source, target);
+  }
+
+  void connect(const std::string &op,
                const wire *lhs,
                const wire *rhs,
                const wire *out) const {
-    connect(op, { lhs, rhs }, { out });
+    std::vector source = { lhs, rhs };
+    std::vector target = { out };
+    connect(op, source, target);
+  }
+
+  void store(wire *var) const {
+    static std::vector<std::unique_ptr<wire>> storage;
+    storage.push_back(std::unique_ptr<wire>(var));
   }
 };
 
@@ -102,10 +115,6 @@ struct typed: public wire {
 
   std::string type() const override {
     return Type::type_name();
-  }
-
-  typed<Type>* new_wire(wire_direct direct) const override {
-    return new typed(kind, direct);
   }
 
   typed(const typed<Type> &rhs, wire_direct direct):
@@ -153,17 +162,27 @@ struct typed: public wire {
   typed<Type>& operator<<(std::size_t rhs) const {
     auto &out = create();
     connect("SHL", this, /* FIXME: const(rhs) */ this, &out);
+    return out;
+  }
+
+  typed<Type>& operator+=(const typed<Type> &rhs) { return *this = *this + rhs; }
+  typed<Type>& operator-=(const typed<Type> &rhs) { return *this = *this - rhs; }
+  typed<Type>& operator*=(const typed<Type> &rhs) { return *this = *this * rhs; }
+  typed<Type>& operator/=(const typed<Type> &rhs) { return *this = *this / rhs; }
+
+  template<typename NewType>
+  typed<NewType>& cast() const {
+    auto &out = create<NewType>();
+    connect("CAST", this, &out);
+    return out;
   }
 
 protected:
-  typed<Type>& store(typed<Type> *wire) const {
-    static std::vector<std::unique_ptr<typed<Type>>> storage;
-    storage.push_back(std::move(std::unique_ptr<typed<Type>>(wire)));
+  template<typename NewType = Type>
+  typed<NewType>& create(wire_direct direct = INOUT) const {
+    auto *wire = new typed<NewType>(kind, direct);
+    store(wire);
     return *wire;
-  }
-
-  typed<Type>& create(wire_direct direct = INOUT) const {
-    return store(new_wire(direct));
   }
 };
 
