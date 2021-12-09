@@ -35,37 +35,34 @@ void LpSolver::reset() {
 }
 
 void LpSolver::balance(Model &model, BalanceMode mode, Verbosity verbosity) {
-  for (auto* graph : model.graphs) {
-    if (graph->isMain()) {
-      helper.setVerbosity(verbosity);
+  const Graph *graph = model.main();
+  helper.setVerbosity(verbosity);
 
-      // Generate a problem to solve
-      switch (mode) {
-      case LatencyLP:
-        balanceLatency(graph);
-        break;
-      default:
-        balanceFlows(mode, graph);
-      }
-
-      // Solve
-      helper.printProblem();
-      helper.solve();
-      helper.printStatus();
-      //helper.printResults();
-
-      if (mode == LatencyLP) {
-        insertBuffers(model);
-        collectGraphTime();
-        std::cout << "Max time: " << graphTime << std::endl;
-      }
-      lastStatus = helper.getStatus();
-
-      // Reset solver for next problem
-      helper.reset();
-      reset();
-    }
+  // Generate a problem to solve
+  switch (mode) {
+  case LatencyLP:
+    balanceLatency(graph);
+    break;
+  default:
+    balanceFlows(mode, graph);
   }
+
+  // Solve
+  helper.printProblem();
+  helper.solve();
+  helper.printStatus();
+  //helper.printResults();
+
+  if (mode == LatencyLP) {
+    insertBuffers(model);
+    collectGraphTime();
+    std::cout << "Max time: " << graphTime << std::endl;
+  }
+  lastStatus = helper.getStatus();
+
+  // Reset solver for next problem
+  helper.reset();
+  reset();
 }
 
 void LpSolver::insertBuffers(Model &model) {

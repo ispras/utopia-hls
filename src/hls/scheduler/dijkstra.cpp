@@ -82,28 +82,25 @@ void DijkstraBalancer::addConnections(std::vector<Chan*> &connections,
 
 void DijkstraBalancer::balance(Model &model, BalanceMode balanceMode) {
   mode = balanceMode;
-  for (const auto *graph : model.graphs) {
-    if (graph->isMain()) {
-      init(graph);
+  const Graph *graph = model.main();
+  init(graph);
 
-      if (mode == BalanceMode::LatencyASAP) {
-        visitSources(graph);
-      }
+  if (mode == BalanceMode::LatencyASAP) {
+    visitSources(graph);
+  }
 
-      if (mode == BalanceMode::LatencyALAP) {
-        visitSinks(graph);
-      }
+  if (mode == BalanceMode::LatencyALAP) {
+    visitSinks(graph);
+  }
 
-      while (!toVisit.empty()) {
-        const Node *next = getNext(toVisit.front());
-        std::vector<Chan*> connections;
-        addConnections(connections, next);
-        if (next != nullptr) {
-          visit(nodeMap[next], connections);
-        }
-        toVisit.pop_front();
-      }
+  while (!toVisit.empty()) {
+    const Node *next = getNext(toVisit.front());
+    std::vector<Chan*> connections;
+    addConnections(connections, next);
+    if (next != nullptr) {
+      visit(nodeMap[next], connections);
     }
+    toVisit.pop_front();
   }
   /*for (const auto &elem : nodeMap) {
     std::cout << elem.first->name << " ";
