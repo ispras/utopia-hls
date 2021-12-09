@@ -10,6 +10,7 @@
 /// supplement structures, that should be used for lp_solver problem building 
 /// and invocation.
 ///
+/// \author <a href="mailto:lebedev@ispras.ru">Mikhail Lebedev</a>
 //===----------------------------------------------------------------------===//
 
 #pragma once
@@ -86,6 +87,7 @@ public:
   /// Prints the last solution status.
   void printStatus();
 
+  /// Prints the solution results.
   void printResults();
 
   /// Returns the solution status.
@@ -113,6 +115,7 @@ public:
   /// Get the existing constraints.
   std::vector<SolverConstraint*> getConstraints() { return constraints; }
 
+  /// Resets the problem.
   void reset();
 
 private:
@@ -153,7 +156,8 @@ struct SolverConstraint final {
       const std::vector<double> &values, OperationType operation, double rhs) : 
       variables(variables), values(values), operation(operation), rhs(rhs) {
     
-    assert(variables.size() == values.size());
+    assert(variables.size() == values.size() 
+      && "Variables & values sizes do not match!");
   }
 
   std::vector<SolverVariable*> variables;

@@ -16,31 +16,22 @@ namespace eda::hls::debugger {
 
   bool Verifier::equivalent(const Model &left, const Model &right) const {
 
-    std::cout << "Graph matching.." << std::endl;
-
-    // 'main' graphs pair
-    std::pair<Graph*, Graph*> mainPair;
-
-    if (!match(left.graphs, right.graphs, mainPair)) {
-      std::cout << "Can't match graphs!" << std::endl;
-      return false;
-    }
-
     z3::context ctx;
     z3::expr_vector nodes(ctx);
 
-    const Graph *fGraph = mainPair.first;
-    const Graph *sGraph = mainPair.second;
+    const Graph *lGraph = left.main();
+    const Graph *rGraph = right.main();
 
-    createExprs(*fGraph, ctx, nodes);
-    createExprs(*sGraph, ctx, nodes);
+    createExprs(*lGraph, ctx, nodes);
+    createExprs(*rGraph, ctx, nodes);
 
     // create equations for graph inputs
-    const std::vector<Node*> fInputs = getSources(*fGraph);
-    const std::vector<Node*> sInputs = getSources(*sGraph);
+    const std::vector<Node*> lInputs = getSources(*lGraph);
+    const std::vector<Node*> rInputs = getSources(*rGraph);
     std::list<std::pair<Node*, Node*>> sources;
 
-    if (!match(fInputs, sInputs, sources)) {
+    if (!match(lInputs, rInputs, sources)) {
+
       std::cout << "Cannot match graphs inputs!" << std::endl;
       return false;
     }
@@ -69,11 +60,12 @@ namespace eda::hls::debugger {
     }
 
     // create inequations for outputs
-    const std::vector<Node*> fOutputs = getSinks(*fGraph);
-    const std::vector<Node*> sOutputs = getSinks(*sGraph);
+    const std::vector<Node*> lOuts = getSinks(*lGraph);
+    const std::vector<Node*> rOuts = getSinks(*rGraph);
     std::list<std::pair<Node*, Node*>> outMatch;
 
-    if (!match(fOutputs, sOutputs, outMatch)) {
+    if (!match(lOuts, rOuts, outMatch)) {
+
       std::cout << "Cannot match graphs outputs" << std::endl;
       return false;
     }
@@ -174,6 +166,7 @@ namespace eda::hls::debugger {
       return false;
 
     for (size_t i = 0; i < lSize; i++) {
+
       Node *lNode = left[i];
       bool hasMatch = false;
 
@@ -181,11 +174,13 @@ namespace eda::hls::debugger {
         Node *rNode = right[j];
 
         if (lNode->name == rNode->name) {
+
           matched.push_back(std::make_pair(lNode, rNode));
           hasMatch = true;
         }
       }
       if (!hasMatch) {
+
         std::cout << "No match for graphs " + lNode->name << std::endl;
         return false;
       }
@@ -378,7 +373,6 @@ namespace eda::hls::debugger {
     z3::sort_vector sorts(ctx);
 
     for (size_t i = 0; i < arity; i++) {
-
       sorts.push_back(getSort(*node.inputs[i]->target.port, ctx));
     }
     return sorts;

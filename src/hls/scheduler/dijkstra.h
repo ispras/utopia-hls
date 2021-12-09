@@ -5,6 +5,12 @@
 // Copyright 2021 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+/// \file
+/// This file contains the declaration of the DijkstraBalancer class, that 
+/// can schedule the dataflow graph using ASAP or ALAP techniques.
+///
+/// \author <a href="mailto:lebedev@ispras.ru">Mikhail Lebedev</a>
+//===----------------------------------------------------------------------===//
 
 #pragma once
 
@@ -35,14 +41,31 @@ public:
 private:
   DijkstraBalancer() : mode(BalanceMode::LatencyASAP) {}
   void reset();
-  void deleteEntries();
   void init(const Graph *graph);
+
+  /// Visits the specified channels.
   void visit(unsigned curTime, const std::vector<Chan*> &connections);
+  
+  /// Visits the specified channel and updates the destination's time.
   void visitChan(const Chan *chan, unsigned dstTime);
+  
+  /// Returns the next node depending on the exploration direction: 
+  /// ASAP - top->down
+  /// ALAP - down->top
   const Node* getNext(const Chan *chan);
+
+  /// Adds the connections of the node to the specified vector depending on 
+  /// the exploration direction:
+  /// ASAP - outputs
+  /// ALAP - inputs
   void addConnections(std::vector<Chan*> &connections, const Node *next);
-  void collectSources(const Graph *graph);
-  void collectSinks(const Graph *graph);
+
+  /// Visits the sources of the specified graph.
+  void visitSources(const Graph *graph);
+
+  /// Visits the sinks of the specified graph.
+  void visitSinks(const Graph *graph);
+  
   void insertBuffers(Model &model) override;
   void collectGraphTime() override;
 

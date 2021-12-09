@@ -41,7 +41,7 @@ void LpSolverHelper::deleteFields() {
 
 void LpSolverHelper::initFields() {
   lp = ::make_lp(0, 0);
-  assert(lp != nullptr);
+  assert(lp != nullptr && "LP problem creation error!");
   variables = std::map<std::string, SolverVariable*>();
   constraints = std::vector<SolverConstraint*>();
   currentColumn = 0;
@@ -104,7 +104,7 @@ void LpSolverHelper::addAllConstraints() {
     std::vector<double> values = constraint->values;
     assert(::add_constraintex(lp, constraint->variables.size(), &values[0], 
         getColumnNumbers(constraint->variables).get(), constraint->operation, 
-        constraint->rhs));
+        constraint->rhs) && "Constraint creation error!");
   }
   ::set_add_rowmode(lp, FALSE);
 }
@@ -121,7 +121,7 @@ std::vector<SolverVariable*> LpSolverHelper::getVariables(
   std::vector<SolverVariable*> vars;
   for (const std::string &name : names) {
     auto it = variables.find(name);
-    assert(it != variables.end());
+    assert(it != variables.end() && ("Variable " + name + " not found!").c_str());
     vars.push_back(it->second);
   }
   return vars;
