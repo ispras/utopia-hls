@@ -37,8 +37,32 @@ namespace eda::hls::compiler {
     bindings.push_back({connectsFrom, connectTo});
   }
 
-  ExternalModule::ExternalModule(const model::NodeType* nodetype) {
-    externalModuleName = nodetype->name;
+  void Module::addInput(const Port &inputPort) {
+    inputs.push_back(inputPort);
+  }
+
+  void Module::addOutput(const Port &outputPort) {
+    outputs.push_back(outputPort);
+  }
+
+  void Module::printBody(std::ostream &out) const {
+    out << body;
+  }
+
+  void Module::printEmptyLine(std::ostream &out) const {
+    out << "\n";
+  }
+
+  /*void Module::addWire(const Wire &inputWire) {
+    wires.push_back(inputWire);
+  }*/
+
+  void Module::addBody(const std::string &body) {
+    this->body = body;
+  }
+
+  ExternalModule::ExternalModule(const model::NodeType* nodetype) : Module() {
+    moduleName = nodetype->name;
     addInput(Port("clock", true, 1, "clock"));
     addInput(Port("reset", true, 1, "reset"));
     for (const auto *input : nodetype->inputs) {
@@ -49,23 +73,13 @@ namespace eda::hls::compiler {
     }
     auto meta = Library::get().find(*nodetype);
     auto element = meta->construct(meta->params);
-    addBody(element->ir);
-  }
-
-  void ExternalModule::addBody(const std::string &body) {
-    this->body = body;
-  }
-
-  void ExternalModule::addInput(const Port &inputPort) {
-    inputs.push_back(inputPort);
-  }
-
-  void ExternalModule::addOutput(const Port &outputPort) {
-    outputs.push_back(outputPort);
+    addBody(element->ir)  /*void Module::addWire(const Wire &inputWire) {
+    wires.push_back(inputWire);
+  }*/;
   }
 
   void ExternalModule::printDeclaration(std::ostream &out) const {
-    out << "module " << externalModuleName << "(\n";
+    out << "module " << moduleName << "(\n";
     for (const auto &input : inputs) {
       out << Compiler::indent << input.name;
       if (input.width != 1) {
@@ -86,17 +100,9 @@ namespace eda::hls::compiler {
     out << ");\n";
   }
 
-  void ExternalModule::printBody(std::ostream &out) const {
-    out << body;
-  }
-
   void ExternalModule::printEpilogue(std::ostream &out) const {
-    out << "endmodule " << "//" << externalModuleName;
+    out << "endmodule " << "//" << moduleName;
     printEmptyLine(out);
-  }
-
-  void ExternalModule::printEmptyLine(std::ostream &out) const {
-    out << "\n";
   }
 
   void ExternalModule::printVerilog(std::ostream &out) const {
@@ -108,7 +114,7 @@ namespace eda::hls::compiler {
 
   void ExternalModule::printFirrtlDeclaration(std::ostream &out) const {
     out << Compiler::indent << Compiler::opPrefix << "extmodule @" <<
-    externalModuleName << "(";
+    moduleName << "(";
     bool hasComma = false;
     for (const auto &input : inputs) {
       out << (hasComma ? ",\n" : "\n");
@@ -129,7 +135,7 @@ namespace eda::hls::compiler {
     out << ")\n";
   }
 
-  Module::Module(const eda::hls::model::Model &model) {
+  FirrtlModule::FirrtlModule(const eda::hls::model::Model &model) : Module() {
     const auto* graph = model.main();
     moduleName = graph->name;
     //Inputs & Outputs
@@ -153,7 +159,9 @@ namespace eda::hls::compiler {
                            node->type.name));
       for (const auto *input : node->inputs) {
         Port inputPort(node->name + "_" + input->target.port->name, true);
-        instances.back().addInput(inputPort);
+        instances.back().addInput(inputPort);  /*void Module::addWire(const Wire &inputWire) {
+    wires.push_back(inputWire);
+  }*/
       }
 
       for (const auto *output : node->outputs) {
@@ -169,27 +177,11 @@ namespace eda::hls::compiler {
     }
   }
 
-  void Module::addBody(const std::string &body) {
-    this->body = body;
-  }
-
-  void Module::addWire(const Wire &inputWire) {
-    wires.push_back(inputWire);
-  }
-
-  void Module::addInstance(const Instance &inputInstance) {
+  void FirrtlModule::addInstance(const Instance &inputInstance) {
     instances.push_back(inputInstance);
   }
 
-  void Module::addInput(const Port &inputPort) {
-    inputs.push_back(inputPort);
-  }
-
-  void Module::addOutput(const Port &outputPort) {
-    outputs.push_back(outputPort);
-  }
-
-  void Module::printWires(std::ostream &out) const {
+  /*void Module::printWires(std::ostream &out) const {
     for (const auto &wire : wires) {
       out << Compiler::indent << Compiler::indent << Compiler::varPrefix <<
           wire.name << " = " << Compiler::opPrefix << "wire :" <<
@@ -199,9 +191,9 @@ namespace eda::hls::compiler {
       }
       out << "\n";
     }
-  }
+  }*/
 
-  void Module::printInstances(std::ostream &out) const {
+  void FirrtlModule::printInstances(std::ostream &out) const {
     for (const auto &instance : instances) {
       out << Compiler::indent << Compiler::indent;
       out << Compiler::varPrefix << instance.instanceName << "_" << "clock" <<
@@ -245,7 +237,7 @@ namespace eda::hls::compiler {
     }
   }
 
-  void Module::printConnections(std::ostream &out) const {
+  void FirrtlModule::printConnections(std::ostream &out) const {
     for (const auto &instance : instances) {
       out << Compiler::indent << Compiler::indent << Compiler::opPrefix <<
           "connect " << Compiler::varPrefix << instance.instanceName + "_" +
@@ -271,7 +263,7 @@ namespace eda::hls::compiler {
     }
   }
 
-  void Module::printDeclaration(std::ostream &out) const {
+  void FirrtlModule::printDeclaration(std::ostream &out) const {
     out << Compiler::indent << Compiler::opPrefix << "module @" << moduleName <<
         " (\n";
     for (const auto &input : inputs) {
@@ -296,23 +288,15 @@ namespace eda::hls::compiler {
     out << Compiler::indent << Compiler::indent << "{\n";
   }
 
-  void Module::printBody(std::ostream &out) const {
-    out << body;
-  }
-
-  void Module::printEpilogue(std::ostream &out) const {
+  void FirrtlModule::printEpilogue(std::ostream &out) const {
     out << Compiler::indent << Compiler::indent << "} ";
     printEmptyLine(out);
   }
 
-  void Module::printEmptyLine(std::ostream &out) const {
-    out << "\n";
-  }
-
-  void Module::printFirrtl(std::ostream &out) const {
+  void FirrtlModule::printFirrtl(std::ostream &out) const {
     printDeclaration(out);
     printEmptyLine(out);
-    printWires(out);
+    //printWires(out);
     printEmptyLine(out);
     printInstances(out);
     printConnections(out);
@@ -323,18 +307,18 @@ namespace eda::hls::compiler {
 
   Circuit::Circuit(std::string moduleName) : name(moduleName) {}
 
-  void Circuit::addModule(const Module &module) {
-    modules.insert({module.moduleName, module});
+  void Circuit::addFirModule(const FirrtlModule &firModule) {
+    firModules.insert({firModule.moduleName, firModule});
   }
 
   void Circuit::addExternalModule(const ExternalModule &externalModule) {
-    externalModules.insert({externalModule.externalModuleName, externalModule});
+    externalModules.insert({externalModule.moduleName, externalModule});
   }
 
   void Circuit::printFirrtl(std::ostream &out) const {
     out << Compiler::opPrefix << "circuit " << "\"" << name <<
         "\" " << "{\n";
-    for (const auto &pair : modules) {
+    for (const auto &pair : firModules) {
       pair.second.printFirrtl(out);
     }
     for (const auto &pair : externalModules) {
@@ -384,7 +368,7 @@ std::shared_ptr<Circuit> Compiler::constructCircuit() {
   for (const auto *nodetype : model.nodetypes) {
     circuit->addExternalModule(nodetype);
   }
-  circuit->addModule(model);
+  circuit->addFirModule(model);
   return circuit;
 }
 

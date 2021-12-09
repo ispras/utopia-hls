@@ -66,7 +66,8 @@ struct Instance final {
 };
 
 
-struct Module final {
+struct Module {
+
   std::string moduleName;
   std::vector<Wire> wires;
   std::vector<Instance> instances;
@@ -74,54 +75,53 @@ struct Module final {
   std::vector<Port> outputs;
   std::string body;
 
-  Module(const eda::hls::model::Model &model);
+  Module() = default;
 
   void addBody(const std::string &body);
-  void addWire(const Wire &inputWire);
-  void addInstance(const Instance &inputInstance);
   void addInput(const Port &inputPort);
   void addOutput(const Port &outputPort);
-  void printWires(std::ostream &out) const;
-  void printInstances(std::ostream &out) const;
-  void printConnections(std::ostream &out) const;
-  void printDeclaration(std::ostream &out) const;
   void printBody(std::ostream &out) const;
-  void printEpilogue(std::ostream &out) const;
   void printEmptyLine(std::ostream &out) const;
-  void printFirrtl(std::ostream &out) const;
+
 };
 
 
-struct ExternalModule final {
-  std::string externalModuleName;
-  std::vector<Wire> wires;
-  std::vector<Instance> instances;
-  std::vector<Port> inputs;
-  std::vector<Port> outputs;
-  std::string body;
+struct FirrtlModule final : Module {
+
+  FirrtlModule(const eda::hls::model::Model &model);
+
+  //void addWire(const Wire &inputWire);
+  void addInstance(const Instance &inputInstance);
+  //void printWires(std::ostream &out) const;
+  void printInstances(std::ostream &out) const;
+  void printConnections(std::ostream &out) const;
+  void printDeclaration(std::ostream &out) const;
+  void printEpilogue(std::ostream &out) const;;
+  void printFirrtl(std::ostream &out) const;
+
+};
+
+
+struct ExternalModule final : Module {
 
   ExternalModule(const model::NodeType *nodetype);
 
-  void addBody(const std::string &body);
-  void addInput(const Port &inputPort);
-  void addOutput(const Port &outputPort);
   void printDeclaration(std::ostream &out) const;
   void printFirrtlDeclaration(std::ostream &out) const;
-  void printBody(std::ostream &out) const;
   void printEpilogue(std::ostream &out) const;
-  void printEmptyLine(std::ostream &out) const;
   void printVerilog(std::ostream &out) const;
+
 };
 
 
 struct Circuit final {
   std::string name;
-  std::map<std::string, Module> modules;
+  std::map<std::string, FirrtlModule> firModules;
   std::map<std::string, ExternalModule> externalModules;
 
   Circuit(std::string moduleName);
 
-  void addModule(const Module &module);
+  void addFirModule(const FirrtlModule &firModule);
   void addExternalModule(const ExternalModule &externalModule);
   void convertToSV(const std::string& inputFirrtlName) const;
   void print(std::ostream &out) const;
