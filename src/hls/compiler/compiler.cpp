@@ -73,22 +73,20 @@ namespace eda::hls::compiler {
     }
     auto meta = Library::get().find(*nodetype);
     auto element = meta->construct(meta->params);
-    addBody(element->ir)  /*void Module::addWire(const Wire &inputWire) {
-    wires.push_back(inputWire);
-  }*/;
+    addBody(element->ir);
   }
 
   void ExternalModule::printDeclaration(std::ostream &out) const {
     out << "module " << moduleName << "(\n";
+    bool hasComma = false;
     for (const auto &input : inputs) {
+      out << (hasComma ? ",\n" : "\n");
       out << Compiler::indent << input.name;
       if (input.width != 1) {
         out << "[" << input.width << ":" << 0 << "],\n";
-      } else {
-        out << ",\n";
       }
+      hasComma = true;
     }
-    bool hasComma = false;
     for (const auto &output : outputs) {
       out << (hasComma ? ",\n" : "\n");
       out << Compiler::indent << output.name;
@@ -159,9 +157,7 @@ namespace eda::hls::compiler {
                            node->type.name));
       for (const auto *input : node->inputs) {
         Port inputPort(node->name + "_" + input->target.port->name, true);
-        instances.back().addInput(inputPort);  /*void Module::addWire(const Wire &inputWire) {
-    wires.push_back(inputWire);
-  }*/
+        instances.back().addInput(inputPort);
       }
 
       for (const auto *output : node->outputs) {
@@ -352,9 +348,15 @@ namespace eda::hls::compiler {
                                         testName +
                                         "/" +
                                         std::string("main.sv")).c_str());
+    std::filesystem::rename(Compiler::relativePath + outputFirrtlName,
+                            Compiler::relativePath + testName + "/" +
+                            outputFirrtlName);
     outputFile.open(Compiler::relativePath + outputVerilogName);
     printVerilog(outputFile);
     outputFile.close();
+    std::filesystem::rename(Compiler::relativePath + outputVerilogName,
+                            Compiler::relativePath + testName + "/" +
+                            outputVerilogName);
   }
 
   std::ostream& operator <<(std::ostream &out, const Circuit &circuit) {
