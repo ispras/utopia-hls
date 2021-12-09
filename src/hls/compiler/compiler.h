@@ -15,33 +15,33 @@
 namespace eda::hls::compiler {
 
 struct Wire final {
-  std::string wireName;
-  size_t wireWidth;
-  std::string wireType;
+  std::string name;
+  size_t width;
+  std::string type;
 
-  Wire(const std::string &wireName,
-       const size_t wireWidth = 1,
-       const std::string &wireType = "uint") :
-   wireName(wireName),
-   wireWidth(wireWidth),
-   wireType(wireType) {}
+  Wire(const std::string &name,
+       const size_t width = 1,
+       const std::string &type = "uint") :
+    name(name),
+    width(width),
+    type(type) {}
 };
 
 
 struct Port final {
-  std::string portName;
-  bool inputPort;
-  size_t portWidth;
-  std::string portType;
+  std::string name;
+  bool isInput;
+  size_t width;
+  std::string type;
 
-  Port(const std::string &portName,
-       const bool inputPort,
-       const size_t portWidth = 1,
-       const std::string &portType = "uint") :
-    portName(portName),
-    inputPort(inputPort),
-    portWidth(portWidth),
-    portType(portType) {}
+  Port(const std::string &name,
+       const bool isInput,
+       const size_t width = 1,
+       const std::string &type = "uint") :
+    name(name),
+    isInput(isInput),
+    width(width),
+    type(type) {}
 };
 
 
@@ -54,11 +54,11 @@ struct Instance final {
 
   Instance(const std::string &instanceName,
            const std::string &moduleName) :
-            instanceName(instanceName),
-            moduleName(moduleName),
-            inputs(),
-            outputs(),
-            bindings() {}
+    instanceName(instanceName),
+    moduleName(moduleName),
+    inputs(),
+    outputs(),
+    bindings() {}
 
   void addInput(const Port &inputPort);
   void addOutput(const Port &outputPort);
@@ -79,7 +79,8 @@ struct Module final {
   void addBody(const std::string &body);
   void addWire(const Wire &inputWire);
   void addInstance(const Instance &inputInstance);
-  void addPort(const Port &port, const bool isInput);
+  void addInput(const Port &inputPort);
+  void addOutput(const Port &outputPort);
   void printWires(std::ostream &out) const;
   void printInstances(std::ostream &out) const;
   void printConnections(std::ostream &out) const;
@@ -102,18 +103,19 @@ struct ExternalModule final {
   ExternalModule(const model::NodeType *nodetype);
 
   void addBody(const std::string &body);
-  void addPort(const Port &port, const bool isInput);
+  void addInput(const Port &inputPort);
+  void addOutput(const Port &outputPort);
   void printDeclaration(std::ostream &out) const;
   void printFirrtlDeclaration(std::ostream &out) const;
   void printBody(std::ostream &out) const;
-  void printEpilogue(std::ostream &out) const;;
+  void printEpilogue(std::ostream &out) const;
   void printEmptyLine(std::ostream &out) const;
   void printVerilog(std::ostream &out) const;
 };
 
 
 struct Circuit final {
-  std::string circuitName;
+  std::string name;
   std::map<std::string, Module> modules;
   std::map<std::string, ExternalModule> externalModules;
 
@@ -121,11 +123,13 @@ struct Circuit final {
 
   void addModule(const Module &module);
   void addExternalModule(const ExternalModule &externalModule);
+  void convertToSV(const std::string& inputFirrtlName) const;
   void print(std::ostream &out) const;
   void printFirrtl(std::ostream &out) const;
   void printVerilog(std::ostream &out) const;
   void printFiles(const std::string& outputFirrtlName,
-                  const std::string& outputVerilogName) const;
+                  const std::string& outputVerilogName,
+                  const std::string& testName) const;
 };
 
 struct Compiler final {
@@ -133,6 +137,10 @@ struct Compiler final {
   static constexpr const char* opPrefix = "firrtl.";
   static constexpr const char* typePrefix = "!firrtl.";
   static constexpr const char* varPrefix = "%";
+  static constexpr const char* relativePath = "./test/data/hil/";
+  static constexpr const char* circt = "circt-opt ";
+  static constexpr const char* circt_options = " --lower-firrtl-to-hw \
+                                                 --export-split-verilog ";
 
   const eda::hls::model::Model model;
 

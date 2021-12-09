@@ -6,9 +6,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <stdlib.h>
+#include <string.h>
 
 #include "hls/compiler/compiler.h"
 #include "hls/library/library.h"
@@ -18,9 +21,9 @@ using namespace eda::hls::library;
 
 namespace eda::hls::compiler {
 
-const std::string chanSourceToString(const eda::hls::model::Chan &chan) {
-  return chan.source.node->name + "_" + chan.source.port->name;
-}
+  const std::string chanSourceToString(const eda::hls::model::Chan &chan) {
+    return chan.source.node->name + "_" + chan.source.port->name;
+  }
 
   void Instance::addInput(const Port &inputPort) {
     inputs.push_back(inputPort);
@@ -36,13 +39,13 @@ const std::string chanSourceToString(const eda::hls::model::Chan &chan) {
 
   ExternalModule::ExternalModule(const model::NodeType* nodetype) {
     externalModuleName = nodetype->name;
-    addPort(Port("clock", true, 1, "clock"), true);
-    addPort(Port("reset", true, 1, "reset"), true);
+    addInput(Port("clock", true, 1, "clock"));
+    addInput(Port("reset", true, 1, "reset"));
     for (const auto *input : nodetype->inputs) {
-      addPort(Port(input->name, true), true);
+      addInput(Port(input->name, true));
     }
     for (const auto *output : nodetype->outputs) {
-      addPort(Port(output->name, false), false);
+      addOutput(Port(output->name, false));
     }
     auto meta = Library::get().find(*nodetype);
     auto element = meta->construct(meta->params);
@@ -53,26 +56,30 @@ const std::string chanSourceToString(const eda::hls::model::Chan &chan) {
     this->body = body;
   }
 
-  void ExternalModule::addPort(const Port &Port, const bool isInput) {
-    isInput ? inputs.push_back(Port) : outputs.push_back(Port);
+  void ExternalModule::addInput(const Port &inputPort) {
+    inputs.push_back(inputPort);
+  }
+
+  void ExternalModule::addOutput(const Port &outputPort) {
+    outputs.push_back(outputPort);
   }
 
   void ExternalModule::printDeclaration(std::ostream &out) const {
     out << "module " << externalModuleName << "(\n";
     for (const auto &input : inputs) {
-      out << Compiler::indent << input.portName;
-       if (input.portWidth != 1) {
-         out << "[" << input.portWidth << ":" << 0 << "],\n";
-       } else {
-         out << ",\n";
-       }
+      out << Compiler::indent << input.name;
+      if (input.width != 1) {
+        out << "[" << input.width << ":" << 0 << "],\n";
+      } else {
+        out << ",\n";
+      }
     }
     bool hasComma = false;
     for (const auto &output : outputs) {
       out << (hasComma ? ",\n" : "\n");
-      out << Compiler::indent << output.portName;
-      if (output.portWidth != 1) {
-       out << "[" << output.portWidth << ":" << 0 << "],\n";
+      out << Compiler::indent << output.name;
+      if (output.width != 1) {
+        out << "[" << output.width << ":" << 0 << "],\n";
       }
       hasComma = true;
     }
@@ -101,42 +108,42 @@ const std::string chanSourceToString(const eda::hls::model::Chan &chan) {
 
   void ExternalModule::printFirrtlDeclaration(std::ostream &out) const {
     out << Compiler::indent << Compiler::opPrefix << "extmodule @" <<
-     externalModuleName << "(";
-     bool hasComma = false;
-     for (const auto &input : inputs) {
-       out << (hasComma ? ",\n" : "\n");
-       out << Compiler::indent << Compiler::indent <<  "in " <<
-        Compiler::varPrefix << input.portName << " : " << Compiler::typePrefix
-        << input.portType;
-        if (input.portType != "reset" && input.portType != "clock") {
-          out << "<" << input.portWidth << ">";
-        }
-        hasComma = true;
-     }
-     for (const auto &output : outputs) {
-       out << (hasComma ? ",\n" : "\n");
-       out << Compiler::indent << Compiler::indent <<  "out " <<
-       Compiler::varPrefix << output.portName << ": " << Compiler::typePrefix <<
-        output.portType << "<" << output.portWidth << ">";
-     }
-     out << ")\n";
+    externalModuleName << "(";
+    bool hasComma = false;
+    for (const auto &input : inputs) {
+      out << (hasComma ? ",\n" : "\n");
+      out << Compiler::indent << Compiler::indent <<  "in " <<
+          Compiler::varPrefix << input.name << " : " << Compiler::typePrefix
+          << input.type;
+      if (input.type != "reset" && input.type != "clock") {
+        out << "<" << input.width << ">";
+      }
+      hasComma = true;
+    }
+    for (const auto &output : outputs) {
+      out << (hasComma ? ",\n" : "\n");
+      out << Compiler::indent << Compiler::indent <<  "out " <<
+          Compiler::varPrefix << output.name << ": " << Compiler::typePrefix <<
+          output.type << "<" << output.width << ">";
+    }
+    out << ")\n";
   }
 
   Module::Module(const eda::hls::model::Model &model) {
     const auto* graph = model.main();
     moduleName = graph->name;
     //Inputs & Outputs
-    addPort(Port("clock", true, 1, "clock"), true);
-    addPort(Port("reset", true, 1, "reset"), true);
+    addInput(Port("clock", true, 1, "clock"));
+    addInput(Port("reset", true, 1, "reset"));
     for (const auto *node : graph->nodes) {
       if (node->isSource()) {
         for (const auto *output : node->outputs) {
-          addPort(Port(output->name, true), true);
+          addInput(Port(output->name, true));
         }
       }
       if (node->isSink()) {
         for (const auto *input : node->inputs) {
-          addPort(Port(input->name, false), false);
+          addOutput(Port(input->name, false));
         }
       }
     }
@@ -146,16 +153,16 @@ const std::string chanSourceToString(const eda::hls::model::Chan &chan) {
                            node->type.name));
       for (const auto *input : node->inputs) {
         Port inputPort(node->name + "_" + input->target.port->name, true);
-        instances[instances.size() - 1].addInput(inputPort);
+        instances.back().addInput(inputPort);
       }
 
       for (const auto *output : node->outputs) {
         Port outputPort(node->name + "_" + output->source.port->name, false);
-        instances[instances.size() - 1].addOutput(outputPort);
+        instances.back().addOutput(outputPort);
         if (node->type.name != "sink") {
           Port connectsTo(output->target.node->name + "_" +
-           output->target.port->name, true);
-          instances[instances.size() - 1].addBinding(outputPort, connectsTo);
+              output->target.port->name, true);
+          instances.back().addBinding(outputPort, connectsTo);
         }
       }
       addBody("");
@@ -174,19 +181,23 @@ const std::string chanSourceToString(const eda::hls::model::Chan &chan) {
     instances.push_back(inputInstance);
   }
 
-  void Module::addPort(const Port &Port, const bool isInput) {
-    isInput ? inputs.push_back(Port) : outputs.push_back(Port);
+  void Module::addInput(const Port &inputPort) {
+    inputs.push_back(inputPort);
+  }
+
+  void Module::addOutput(const Port &outputPort) {
+    outputs.push_back(outputPort);
   }
 
   void Module::printWires(std::ostream &out) const {
     for (const auto &wire : wires) {
       out << Compiler::indent << Compiler::indent << Compiler::varPrefix <<
-      wire.wireName << " = " << Compiler::opPrefix << "wire :" <<
-       Compiler::typePrefix << wire.wireType;
-       if (wire.wireType != "clock" && wire.wireType != "reset") {
-         out << "<" << wire.wireWidth << ">";
-       }
-       out << "\n";
+          wire.name << " = " << Compiler::opPrefix << "wire :" <<
+          Compiler::typePrefix << wire.type;
+      if (wire.type != "clock" && wire.type != "reset") {
+        out << "<" << wire.width << ">";
+      }
+      out << "\n";
     }
   }
 
@@ -194,38 +205,39 @@ const std::string chanSourceToString(const eda::hls::model::Chan &chan) {
     for (const auto &instance : instances) {
       out << Compiler::indent << Compiler::indent;
       out << Compiler::varPrefix << instance.instanceName << "_" << "clock" <<
-       "," << " ";
+          "," << " ";
       out << Compiler::varPrefix << instance.instanceName << "_" << "reset" <<
-       "," << " ";
+          "," << " ";
       bool hasComma = false;
       for (const auto &input : instance.inputs) {
         out << (hasComma ? ", " : "");
-        out << Compiler::varPrefix << input.portName;
+        out << Compiler::varPrefix << input.name;
         hasComma = true;
       }
 
       for (const auto &output : instance.outputs) {
         out << (hasComma ? ", " : "");
-        out << Compiler::varPrefix << output.portName;
+        out << Compiler::varPrefix << output.name;
         hasComma = true;
       }
 
       out << " = " << Compiler::opPrefix << "instance @" << instance.moduleName
-       << " {" << "name = " <<  "\"" << instance.instanceName << "\"}" << " : ";
+          << " {" << "name = " <<  "\"" << instance.instanceName << "\"}" <<
+          " : ";
       hasComma = false;
       out << Compiler::typePrefix << "clock, ";
       out << Compiler::typePrefix << "reset,";
       for (const auto &input : instance.inputs) {
         out << (hasComma ? ", " : " ");
-        out << Compiler::typePrefix << input.portType;
-        out << "<" << input.portWidth << ">";
+        out << Compiler::typePrefix << input.type;
+        out << "<" << input.width << ">";
         hasComma = true;
       }
 
       for (const auto &output : instance.outputs) {
         out << (hasComma ? ", " : " ");
-        out << Compiler::typePrefix << output.portType;
-        out << "<" << output.portWidth << ">";
+        out << Compiler::typePrefix << output.type;
+        out << "<" << output.width << ">";
         hasComma = true;
       }
 
@@ -236,48 +248,48 @@ const std::string chanSourceToString(const eda::hls::model::Chan &chan) {
   void Module::printConnections(std::ostream &out) const {
     for (const auto &instance : instances) {
       out << Compiler::indent << Compiler::indent << Compiler::opPrefix <<
-      "connect " << Compiler::varPrefix << instance.instanceName + "_" +
-      "clock, " << Compiler::varPrefix << "clock" << " : " <<
-       Compiler::typePrefix << "clock" << ", " << Compiler::typePrefix <<
-        "clock\n";
+          "connect " << Compiler::varPrefix << instance.instanceName + "_" +
+          "clock, " << Compiler::varPrefix << "clock" << " : " <<
+          Compiler::typePrefix << "clock" << ", " << Compiler::typePrefix <<
+          "clock\n";
       out << Compiler::indent << Compiler::indent << Compiler::opPrefix <<
-      "connect " << Compiler::varPrefix << instance.instanceName + "_" +
-       "reset, " << Compiler::varPrefix << "reset" << " : " <<
-       Compiler::typePrefix << "reset" << ", " << Compiler::typePrefix <<
-       "reset\n";
+          "connect " << Compiler::varPrefix << instance.instanceName + "_" +
+          "reset, " << Compiler::varPrefix << "reset" << " : " <<
+          Compiler::typePrefix << "reset" << ", " << Compiler::typePrefix <<
+          "reset\n";
       for (const auto &pair : instance.bindings) {
         out << Compiler::indent << Compiler::indent << Compiler::opPrefix <<
-        "connect " << Compiler::varPrefix << pair.second.portName << ", "
-         << Compiler::varPrefix << pair.first.portName;
-         out <<  " : " << Compiler::typePrefix << pair.second.portType;
-         out << "<" << pair.second.portWidth << ">";
-         out << ", ";
-         out << Compiler::typePrefix << pair.second.portType;
-         out << "<" << pair.second.portWidth << ">";
-         out << "\n";
+            "connect " << Compiler::varPrefix << pair.second.name << ", "
+            << Compiler::varPrefix << pair.first.name;
+        out <<  " : " << Compiler::typePrefix << pair.second.type;
+        out << "<" << pair.second.width << ">";
+        out << ", ";
+        out << Compiler::typePrefix << pair.second.type;
+        out << "<" << pair.second.width << ">";
+        out << "\n";
       }
     }
   }
 
   void Module::printDeclaration(std::ostream &out) const {
     out << Compiler::indent << Compiler::opPrefix << "module @" << moduleName <<
-     " (\n";
+        " (\n";
     for (const auto &input : inputs) {
       out << Compiler::indent << Compiler::indent <<  "in " <<
-      Compiler::varPrefix << input.portName << " : " << Compiler::typePrefix <<
-       input.portType;
-       if (input.portName != "clock" && input.portName != "reset") {
-         out << "<" << input.portWidth << ">,\n";
-       } else {
-         out << ",\n";
-       }
+          Compiler::varPrefix << input.name << " : " << Compiler::typePrefix <<
+          input.type;
+      if (input.name != "clock" && input.name != "reset") {
+        out << "<" << input.width << ">,\n";
+      } else {
+        out << ",\n";
+      }
     }
     bool hasComma = false;
     for (const auto &output : outputs) {
       out << (hasComma ? ",\n" : "\n");
       out << Compiler::indent << Compiler::indent <<  "out " <<
-       Compiler::varPrefix << output.portName << ": " << Compiler::typePrefix <<
-       output.portType << "<" << output.portWidth << ">";
+          Compiler::varPrefix << output.name << ": " << Compiler::typePrefix <<
+          output.type << "<" << output.width << ">";
       hasComma = true;
     }
     out << ")\n";
@@ -309,7 +321,7 @@ const std::string chanSourceToString(const eda::hls::model::Chan &chan) {
     printEmptyLine(out);
   }
 
-  Circuit::Circuit(std::string moduleName) : circuitName(moduleName) {}
+  Circuit::Circuit(std::string moduleName) : name(moduleName) {}
 
   void Circuit::addModule(const Module &module) {
     modules.insert({module.moduleName, module});
@@ -320,8 +332,8 @@ const std::string chanSourceToString(const eda::hls::model::Chan &chan) {
   }
 
   void Circuit::printFirrtl(std::ostream &out) const {
-    out << Compiler::opPrefix << "circuit " << "\"" << circuitName <<
-     "\" " << "{\n";
+    out << Compiler::opPrefix << "circuit " << "\"" << name <<
+        "\" " << "{\n";
     for (const auto &pair : modules) {
       pair.second.printFirrtl(out);
     }
@@ -337,13 +349,26 @@ const std::string chanSourceToString(const eda::hls::model::Chan &chan) {
     }
   }
 
+  void Circuit::convertToSV(const std::string& inputFirrtlName) const {
+    system((std::string(Compiler::circt) +
+            inputFirrtlName +
+            std::string(Compiler::circt_options)).c_str());
+  }
+
   void Circuit::printFiles(const std::string& outputFirrtlName,
-                           const std::string& outputVerilogName) const {
+                           const std::string& outputVerilogName,
+                           const std::string& testName) const {
     std::ofstream outputFile;
-    outputFile.open(outputFirrtlName);
+    outputFile.open(Compiler::relativePath + outputFirrtlName);
     printFirrtl(outputFile);
     outputFile.close();
-    outputFile.open(outputVerilogName);
+    convertToSV(Compiler::relativePath + outputFirrtlName);
+    std::filesystem::create_directory(Compiler::relativePath + testName);
+    std::filesystem::rename("main.sv", (Compiler::relativePath +
+                                        testName +
+                                        "/" +
+                                        std::string("main.sv")).c_str());
+    outputFile.open(Compiler::relativePath + outputVerilogName);
     printVerilog(outputFile);
     outputFile.close();
   }
