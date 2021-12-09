@@ -31,6 +31,7 @@ namespace eda::hls::debugger {
     std::list<std::pair<Node*, Node*>> sources;
 
     if (!match(lInputs, rInputs, sources)) {
+
       std::cout << "Cannot match graphs inputs!" << std::endl;
       return false;
     }
@@ -64,6 +65,7 @@ namespace eda::hls::debugger {
     std::list<std::pair<Node*, Node*>> outMatch;
 
     if (!match(lOuts, rOuts, outMatch)) {
+
       std::cout << "Cannot match graphs outputs" << std::endl;
       return false;
     }
@@ -164,6 +166,7 @@ namespace eda::hls::debugger {
       return false;
 
     for (size_t i = 0; i < lSize; i++) {
+
       Node *lNode = left[i];
       bool hasMatch = false;
 
@@ -171,11 +174,13 @@ namespace eda::hls::debugger {
         Node *rNode = right[j];
 
         if (lNode->name == rNode->name) {
+
           matched.push_back(std::make_pair(lNode, rNode));
           hasMatch = true;
         }
       }
       if (!hasMatch) {
+
         std::cout << "No match for graphs " + lNode->name << std::endl;
         return false;
       }
@@ -368,7 +373,6 @@ namespace eda::hls::debugger {
     z3::sort_vector sorts(ctx);
 
     for (size_t i = 0; i < arity; i++) {
-
       sorts.push_back(getSort(*node.inputs[i]->target.port, ctx));
     }
     return sorts;
