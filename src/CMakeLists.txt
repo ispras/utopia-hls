@@ -11,6 +11,7 @@ set(Z3_LIBRARY z3)
 set(LPSOLVE55_LIBRARY lpsolve55)
 set(DL_LIBRARY dl)
 set(COLAMD_LIBRARY colamd)
+set(CTEMPLATE_LIBRARY ctemplate_nothreads)
 
 # The project requires flex/bison.
 find_package(FLEX REQUIRED)
@@ -60,9 +61,9 @@ add_library(${MAIN_LIBRARY}
   gate/model/gsymbol.cpp
   gate/model/netlist.cpp
   gate/model/signal.cpp
+  hls/compiler/compiler.cpp
   hls/debugger/debugger.cpp
   hls/library/library.cpp
-  hls/compiler/compiler.cpp
   hls/model/model.cpp
   hls/model/transform.cpp
   hls/model/printer.cpp
@@ -81,8 +82,8 @@ add_library(${MAIN_LIBRARY}
   rtl/model/event.cpp
   rtl/model/fsymbol.cpp
   rtl/model/net.cpp
-  rtl/model/vnode.cpp
   rtl/model/pnode.cpp
+  rtl/model/vnode.cpp
   rtl/parser/ril/builder.cpp
   rtl/parser/ril/parser.cpp
   util/string.cpp
@@ -107,6 +108,7 @@ target_link_libraries(${MAIN_LIBRARY}
   ${DL_LIBRARY}
   ${COLAMD_LIBRARY}
   ${Z3_LIBRARY}
+  ${CTEMPLATE_LIBRARY}
 )
 
 # The project executable.
