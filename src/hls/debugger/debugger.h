@@ -36,7 +36,7 @@ private:
 
   static std::unique_ptr<Verifier> instance;
 
-  /* Methods taht implement equivalence checking steps. */
+  /* Methods that implement equivalence checking steps. */
 
   bool match(const std::vector<Graph*> &left,
       const std::vector<Graph*> &right,
@@ -46,7 +46,7 @@ private:
       const std::vector<Node*> &right,
       std::list<std::pair<Node*, Node*>> &matched) const;
 
-  /* Methods for model-to-solver-format translation. */
+  /* Methods for model-to-solver interaction. */
 
   void createExprs(const Graph &graph, z3::context &ctx,
       z3::expr_vector &nodes) const;
