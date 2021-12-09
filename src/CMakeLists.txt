@@ -11,7 +11,6 @@ set(Z3_LIBRARY z3)
 set(LPSOLVE55_LIBRARY lpsolve55)
 set(DL_LIBRARY dl)
 set(COLAMD_LIBRARY colamd)
-set(CTEMPLATE_LIBRARY ctemplate_nothreads)
 
 # The project requires flex/bison.
 find_package(FLEX REQUIRED)
@@ -108,7 +107,6 @@ target_link_libraries(${MAIN_LIBRARY}
   ${DL_LIBRARY}
   ${COLAMD_LIBRARY}
   ${Z3_LIBRARY}
-  ${CTEMPLATE_LIBRARY}
 )
 
 # The project executable.
