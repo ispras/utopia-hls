@@ -59,8 +59,8 @@ private:
 
   struct Unit final {
     Unit(const std::string &opcode,
-         const std::vector<Wire*> &in,
-         const std::vector<Wire*> &out):
+         const std::vector<std::string> &in,
+         const std::vector<std::string> &out):
       opcode(opcode), in(in), out(out) {}
 
     std::string fullName() const;
@@ -68,9 +68,9 @@ private:
     /// Unit operation.
     const std::string opcode;
     /// Unique inputs.
-    std::vector<Wire*> in;
+    std::vector<std::string> in;
     /// Unique outputs.
-    std::vector<Wire*> out;
+    std::vector<std::string> out;
   };
 
   struct Kernel final {
@@ -86,25 +86,45 @@ private:
     Wire* getWire(const std::string &name) const;
     Wire* getWire(const ::dfc::wire *wire, Mode mode);
 
+    void reduce();
+
     /// Kernel name.
     const std::string name;
+
     /// Contains all units.
     std::vector<Unit*> units;
     /// Contains all wires.
-    std::unordered_map<std::string, Wire*> wires;
-    /// Contains latest versions.
-    std::unordered_map<std::string, Wire*> latest;
-    /// Maps a non-input wire to its source.
-    std::unordered_map<std::string, Wire*> in;
-    /// Maps a non-output wire to its targets.
-    std::unordered_map<std::string, std::vector<Wire*>> out;
+    std::vector<Wire*> wires;
+
+    /// Maps name to the related wire.
+    std::unordered_map<std::string, Wire*> originals;
+    /// Maps name to the latest version of the wire.
+    std::unordered_map<std::string, Wire*> versions;
+
+    /// Maps wire to the one it is replaced with.
+    std::unordered_map<std::string, Wire*> replaced;
+
+    /// Maps non-input wire to its source.
+    std::unordered_map<std::string, std::string> in;
+    /// Maps non-output wire to its targets.
+    std::unordered_map<std::string, std::vector<std::string>> out;
   };
 
-  Port* createPort(const Wire *wire, unsigned latency);
-  NodeType* createNodetype(const Unit *unit, Model *model);
-  Chan* createChan(const Wire *wire, Graph *graph);
-  Node* createNode(const Unit *unit, Graph *graph, Model *model);
-  Graph* createGraph(const Kernel *kernel, Model *model);
+  static Port* getPort(const Wire *wire, unsigned latency);
+
+  static Chan* getChan(const Wire *wire, Graph *graph);
+
+  static NodeType* getNodetype(const Kernel *kernel,
+                               const Unit *unit,
+                               Model *model);
+
+  static Node* getNode(const Kernel *kernel,
+                       const Unit *unit,
+                       Graph *graph,
+                       Model *model);
+
+  static Graph* getGraph(const Kernel *kernel,
+                         Model *model);
 
   std::vector<Kernel*> kernels;
 };
