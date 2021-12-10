@@ -1,11 +1,26 @@
 %{
 #include <stdio.h>
-
+#include "structs.hpp"
+#include <iostream>
 extern int yylineno;
 extern char* yytext;
 extern int yylex();
 void yyerror(const char *s);
+AST* head = new AST;
+Context* context = new Context;
 %}
+
+%locations
+
+%union
+{
+    int intValue;
+    float floatValue;
+    char * stringValue;
+}
+
+%token <stringValue> Identifiers
+%token <intValue> Numeric_literals
 
 %token Key_at Key_at2 Key_else Key_end Key_if Key_while Key_foreach
 %token Key_actor Key_endactor Key_endif Key_action Key_call
@@ -16,7 +31,7 @@ void yyerror(const char *s);
 %token Key_in Key_endwhile Key_endforeach Key_choose Key_endchoose
 %token Key_endaction Key_guard Key_delay Key_any Key_repeat 
 %token Key_initialize Key_endinitialize Key_schedule Key_endschedule
-%token Key_fsm Key_regexp Key_priority Identifiers Numeric_literals
+%token Key_fsm Key_regexp Key_priority
 %token Oper_eqarrow Oper_doublearrow Oper_assignment
 %token Oper_vert Oper_arrow 
 %token Delimiters_point Delimiters_comma Delimiters_cir_op 
@@ -83,6 +98,20 @@ OptTimeClause Delimiters_colon OptActionActor Key_schedule ActionSchedule OptAct
 | OptImports Key_actor Identifiers OptTypePars
 Delimiters_cir_op ActorPars Delimiters_cir_cl IOSig
 OptTimeClause Delimiters_colon OptActionActor ActorEnd
+{
+    context->actor = new Actor;
+    ID* name = new ID;
+    name->id = $3;
+    context->actor->id = name;
+    for(int i = 0; i < context->actorPars.size(); ++i)
+        context->actor->addActorPar(context->actorPars[i]);
+
+    for(int i = 0; i < context->typePars.size(); ++i)
+        context->actor->addTypePar(context->typePars[i]);
+
+    head->actor = context->actor;
+}
+;
 
 OptImports:
 | Imports
@@ -102,6 +131,9 @@ ActorEnd: Key_end
 
 OptActionActor:
 | Key_mutable VarDecltmp Delimiters_semicolon OptActionActor
+{
+
+}
 | FunDecl OptActionActor
 | ProcDecl OptActionActor
 | WrapActionInit OptActionActor
@@ -126,52 +158,205 @@ OptActionTag: Identifiers Delimiters_colon
 | Identifiers Delimiters_point OptActionTag
 ;
 
-TypePar: Identifiers 
+TypePar: Identifiers
+{
+    TypePar * tmp = new TypePar;
+    ID* name = new ID;
+    name->id = $1;
+    tmp->id = name;
+    context->typePars.push_back(tmp);
+}
 | Identifiers Oper_less Type
+{
+    TypePar * tmp = new TypePar;
+    tmp->type = context->type;
+    ID* name = new ID;
+    name->id = $1;
+    tmp->id = name;
+    context->typePars.push_back(tmp);
+}
 ;
 
-ActorPar: Type Identifiers Oper_equal Expression 
-| Identifiers Oper_equal Expression 
-| Type Identifiers 
-| Identifiers 
+ActorPar: Type Identifiers Oper_equal Expression
+{
+    ActorPar* tmp = new ActorPar;
+    tmp->type = context->type;
+    tmp->exp = context->exp;
+    ID* name = new ID;
+    name->id = $2;
+    tmp->id = name;
+    context->actorPars.push_back(tmp);
+}
+| Identifiers Oper_equal Expression
+{
+    ActorPar* tmp = new ActorPar;
+    tmp->exp = context->exp;
+    ID* name = new ID;
+    name->id = $1;
+    tmp->id = name;
+    context->actorPars.push_back(tmp);
+}
+| Type Identifiers
+{
+    ActorPar* tmp = new ActorPar;
+    tmp->type = context->type;
+    ID* name = new ID;
+    name->id = $2;
+    tmp->id = name;
+    context->actorPars.push_back(tmp);
+}
+| Identifiers
+{
+    ActorPar* tmp = new ActorPar;
+    ID* name = new ID;
+    name->id = $1;
+    tmp->id = name;
+    context->actorPars.push_back(tmp);
+}
 ;
 
-IOSig: PortDecls Oper_eqarrow PortDecls
+IOSig: PortDecls Oper_eqarrow {context->portType = 1;} PortDecls
 | PortDecls Oper_eqarrow
-| Oper_eqarrow PortDecls
+| Oper_eqarrow {context->portType = 1;} PortDecls
 | Oper_eqarrow
 ;
 
 PortDecl: Key_multi Type Identifiers
+{
+    PortDecl* tmp = new PortDecl;
+    tmp->type = context->type;
+    ID* name = new ID;
+    name->id = $3;
+    tmp->id = name;
+    tmp->multi = true;
+    if(context->portType == 0)
+        context->actor->addInPort(tmp);
+    else
+        context->actor->addOutPort(tmp);
+}
 | Type Identifiers
+{
+    PortDecl* tmp = new PortDecl;
+    tmp->type = context->type;
+    ID* name = new ID;
+    name->id = $2;
+    tmp->id = name;
+    tmp->multi = false;
+    if(context->portType == 0)
+        context->actor->addInPort(tmp);
+    else
+        context->actor->addOutPort(tmp);
+}
 | Key_multi Identifiers
+{
+    PortDecl* tmp = new PortDecl;
+    ID* name = new ID;
+    name->id = $2;
+    tmp->id = name;
+    tmp->multi = true;
+    if(context->portType == 0)
+        context->actor->addInPort(tmp);
+    else
+        context->actor->addOutPort(tmp);
+}
 | Identifiers
+{
+    PortDecl* tmp = new PortDecl;
+    ID* name = new ID;
+    name->id = $1;
+    tmp->id = name;
+    tmp->multi = false;
+    if(context->portType == 0)
+        context->actor->addInPort(tmp);
+    else
+        context->actor->addOutPort(tmp);
+}
 ;
 
 TimeClause: Key_time Type
+{
+    context->actor->timeClause = context->type;
+}
 ;
 
 Import: SingleImport Delimiters_semicolon
+{
+    head->addsImport(context->sImport);
+}
 | GroupImport Delimiters_semicolon
+{
+    head->addgImport(context->gImport);
+}
 ;
 
 SingleImport: Key_import QualID Oper_equal Identifiers
+{
+    context->sImport = new SingleImport;
+    context->sImport->qualID = context->qualID;
+    ID * name = new ID;
+    name->id = $4;
+    context->sImport->alias = name;
+}
 | Key_import QualID
 ;
 
 GroupImport: Key_import Key_all QualID
+{
+    context->gImport = new GroupImport;
+    context->gImport->qualID = context->qualID;
+}
 ;
 
 QualID: Identifiers
+{
+    context->qualID = new QualID;
+    ID * name = new ID;
+    name->id = $1;
+    context->qualID->addID(name);
+}
 | Identifiers Delimiters_point Identifiers OptPointID
+{
+    context->qualID = new QualID;
+    ID * name1 = new ID;
+    name1->id = $1;
+    context->qualID->addID(name1);
+    ID * name2 = new ID;
+    name2->id = $3;
+    context->qualID->addID(name2);
+}
 | Identifiers Delimiters_point Identifiers
+{
+    context->qualID = new QualID;
+    ID * name1 = new ID;
+    name1->id = $1;
+    context->qualID->addID(name1);
+    ID * name2 = new ID;
+    name2->id = $3;
+    context->qualID->addID(name2);
+}
 ;
 
 OptPointID: Delimiters_point Identifiers
+{
+    ID * name = new ID;
+    name->id = $2;
+    context->qualID->addID(name);
+}
 | Delimiters_point Identifiers OptPointID
+{
+    ID * name = new ID;
+    name->id = $2;
+    context->qualID->addID(name);
+}
 ;
 
 Type: Identifiers
+{
+    context->type = new Type;
+    ID* name = new ID;
+    name->id = $1;
+    context->type->id = name;
+}
 | Identifiers Delimiters_sq_op TypePars Delimiters_sq_cl
 | Identifiers Delimiters_cir_op OptTypeAttrs Delimiters_cir_cl
 | Delimiters_sq_op OptTypes Oper_doublearrow TypeTail
@@ -206,10 +391,27 @@ Operator: Oper_star
 ;
 
 Expression: PrimaryExpression
-| PrimaryExpression Operator Expression
+{
+    context->exp = new Exp;
+    for(int i = 0; i < context->expContent.size(); ++i)
+        context->exp->addToExp(context->expContent[i]);
+    context->expContent.clear();
+}
+| PrimaryExpression Operator
+{
+    context->expContent.push_back(context->oper);
+}
+Expression
 ;
 
 PrimaryExpression: Operator SingleExpression ExpCycleOfIndexFieldFunc
+{
+    PrimaryExp* tmp = new PrimaryExp;
+    tmp->singleExp = context->singleExp;
+    tmp->oper = context->oper;
+    context->expContent.push_back(tmp);
+    //todo: ExpCycleOfIndexFieldFunc
+}
 | SingleExpression ExpCycleOfIndexFieldFunc
 ;
 
@@ -224,27 +426,87 @@ OptionalExp: Delimiters_cir_cl
 ;
 
 SingleExpression: Key_old Identifiers
+{
+    IDExp* tmp = new IDExp;
+    tmp->old = true;
+    ID* name = new ID;
+    name->id = $2;
+    tmp->id = name;
+}
 | Identifiers
+{
+    IDExp* tmp = new IDExp;
+    tmp->old = false;
+    ID* name = new ID;
+    name->id = $1;
+    tmp->id = name;
+}
 | ExpressionLiteral
 | Delimiters_cir_op Expression Delimiters_cir_cl
+{
+    BracketsExp * tmp = new BracketsExp;
+    tmp->exp = context->exp;
+    context->singleExp = tmp;
+}
 | Key_if IfExpression
+{
+    context->singleExp = context->ifExp;
+}
 | Key_const Key_lambda LambdaExpression
 | Key_lambda LambdaExpression
 | Key_proc ProcExpression
 | Key_let LetExpression
+{
+    context->singleExp = context->letExp;
+}
 | Delimiters_sq_op ListComprehension
 | Delimiters_fig_op SetComprehension
 | Key_map MapComprehension
 ;
 
 ExpressionLiteral: Numeric_literals
+{
+    ExpLiteral* tmp = new ExpLiteral;
+    ID* lit = new ID;
+    lit->id = std::to_string($1);
+    tmp->expLiteral = lit;
+}
 | Key_true
+{
+    ExpLiteral* tmp = new ExpLiteral;
+    ID* lit = new ID;
+    lit->id = "true";
+    tmp->expLiteral = lit;
+}
 | Key_false
+{
+    ExpLiteral* tmp = new ExpLiteral;
+    ID* lit = new ID;
+    lit->id = "false";
+    tmp->expLiteral = lit;
+}
 | Key_null
+{
+    ExpLiteral* tmp = new ExpLiteral;
+    ID* lit = new ID;
+    lit->id = "null";
+    tmp->expLiteral = lit;
+}
 ;
 
-IfExpression: Expression Key_then Expression 
+IfExpression: Expression
+{
+    context->ifExp = new IfExp;
+    context->ifExp->ifExp = context->exp;
+}
+Key_then Expression
+{
+    context->ifExp->thenExp = context->exp;
+}
 Key_else Expression IfExpressionEnd
+{
+    context->ifExp->elseExp = context->exp;
+}
 ;
 
 IfExpressionEnd: Key_end
@@ -279,8 +541,21 @@ LambdaExpressionEnd: Key_end
 | Key_endlambda
 ;
 
-FormalPar: Type Identifiers 
+FormalPar: Type Identifiers
+{
+    context->formalPar = new FormalPar;
+    context->formalPar->type = context->type;
+    ID* name = new ID;
+    name->id = $2;
+    context->formalPar->id = name;
+}
 | Identifiers
+{
+    context->formalPar = new FormalPar;
+    ID* name = new ID;
+    name->id = $1;
+    context->formalPar->id = name;
+}
 ;
 
 ProcExpression:  Delimiters_cir_op OptFormalPars
@@ -520,7 +795,25 @@ ActionEnd: Key_end
 ;
 
 ActionTag: Identifiers
-| Identifiers OptPointID
+{
+    context->actionTag = new ActionTag;
+    ID* name = new ID;
+    name->id = $1;
+    context->actionTag->qualID = new QualID;
+    context->actionTag->qualID->addID(name);
+}
+| Identifiers
+{
+    context->qualID = new QualID;
+    ID* name = new ID;
+    name->id = $1;
+    context->qualID->addID(name);
+}
+OptPointID
+{
+    context->actionTag = new ActionTag;
+    context->actionTag->qualID = context->qualID;
+}
 ;
 
 ActionHead: InputPatterns Oper_eqarrow OutputExpressions
@@ -632,9 +925,11 @@ RegExp2:
 
 Stars:
 | Oper_star Stars
+;
 
 ActionTagTale:
 | Delimiters_point Identifiers ActionTagTale
+;
 
 PriorityOrder: CyclePriorInequal Key_end
 ;
@@ -654,6 +949,7 @@ CycleMoreActionTag:
 
 int main()
 {
+    AST* head;
     yyparse();
 
     return 0;

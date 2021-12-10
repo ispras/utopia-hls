@@ -4,10 +4,12 @@
 #include <string>
 
 struct Position;
+struct ExpContent;
+struct Operator;
 struct Statement;
 struct Type;
 struct PortDecl;
-struct IOSig;
+struct PortDecls;
 struct TypePar;
 struct SingleImport;
 struct GroupImport;
@@ -17,6 +19,7 @@ struct PrimaryExp;
 struct Exp;
 struct IfExp;
 struct LetExp;
+struct BracketsExp;
 struct FormalPar;
 struct ProcExp;
 struct ActorPar;
@@ -57,27 +60,36 @@ struct ExpLiteral;
 struct Position
 {
     int line;
-    int linePos;
+    int col;
+};
+
+struct ID
+{
+    std::string id;
+    Position pos;
 };
 
 struct Actor
 {
-    Position pos;
-    std::vector<Import*> imports;
-    std::string ID;
+    ID* id;
     std::vector <TypePar*> typePars;
     std::vector <ActorPar*> actorPars;
-    IOSig* IO;
+    std::vector<PortDecl*> inPorts;
+    std::vector<PortDecl*> outPorts;
     Type* timeClause;
     ActionSched* actionSched;
     std::vector <VarDecl*> vars;
     std::vector <Action*> actions;
     std::vector <InitAction*> initActions;
     std::vector <PriorityOrder*> priorOrders;
-    
-    void addImport(Import * x)
+     
+    void addOutPort(PortDecl * x)
     {
-        imports.push_back(x);
+        outPorts.push_back(x);
+    }
+    void addInPort(PortDecl * x)
+    {
+        inPorts.push_back(x);
     }
     void addTypePar(TypePar * x)
     {
@@ -106,129 +118,125 @@ struct Actor
 
 struct ActorPar
 {
-    Position pos;
+    
     Type* type;
-    std::string ID;
+    ID* id;
     Exp* exp;
 };
 
 struct TypePar
 {
-    Position pos;
-    std::string ID;
+    
+    ID* id;
     Type* type;
-};
-
-
-struct IOSig
-{
-    Position pos;
-    std::vector <PortDecl*> inPorts;
-    std::vector <PortDecl*> outPorts;
-
-    void addInPorts(PortDecl * x){
-        inPorts.push_back(x);
-    }
-    void addOutPorts(PortDecl * x){
-        outPorts.push_back(x);
-    }
 };
 
 struct PortDecl
 {
-    Position pos;
+    
     bool multi;
     Type* type;
-    std::string ID;
+    ID* id;
 };
 
 struct Import
 {
-    Position pos;
+
 };
 
 struct SingleImport : public Import
 {
-    std::vector <std::pair <QualID*, std::string>> IDs;
-
-    void addIDs(QualID * x, std::string y = 0)
-    {
-        IDs.push_back(std::make_pair(x, y));
-    }
+    QualID* qualID;
+    ID* alias;
 };
 
 struct GroupImport : public Import
 {
-    std::vector <QualID*> IDs;
-
-    void addIDs(QualID * x)
-    {
-        IDs.push_back(x);
-    }
+    QualID* qualID;
 };
 
 struct QualID
 {
-    Position pos;
-    std::vector<std::string> IDs;
+    
+    std::vector<ID*> ids;
 
-    void addIDs(std::string x)
+    void addID(ID* x)
     {
-        IDs.push_back(x);
+        ids.push_back(x);
     }
 };
 
-struct Type//todo
+struct Type//todo - fixed
 {
-    
+    std::vector<TypeAttr*> attrs;
+
+    void addTypeAttr(TypeAttr * x)
+    {
+        attrs.push_back(x);
+    }
+    ID* id; 
 };
 
-struct TypeAttr//todo
+struct TypeAttr//todo - fixed
 {
-    std::string ID;
+    ID* id;
     Type* type;
     Exp* exp;
 };
 
 struct VarDecl
 {
-    Position pos;
+    
+   ID* id;
 };
 
 struct VarType : public VarDecl
 {
     bool _mutable;
     Type* type;
-    std::string ID;
-    Exp* value;
+    Exp* exp;
+
+    void setExp(Exp * x)
+    {
+        exp = x;
+    }
 };
 
 struct Exp
 {
     Position pos;
-    std::vector<PrimaryExp*> primaryExps;
-    std::vector<std::string> operators;
+    std::vector<ExpContent*> exp;
 
-    void addPrimaryExp(PrimaryExp * x)
+    void addToExp(ExpContent * x)
     {
-        primaryExps.push_back(x);
-    }
-    void addOperator(std::string x)
-    {
-        operators.push_back(x);
+        exp.push_back(x);
     }
 };
 
-struct PrimaryExp//todo
+struct ExpContent
 {
-    Position pos;
-    std::string oper;
+    
+};
+
+struct Operator : public ExpContent
+{
+    ID* oper;
+};
+
+struct PrimaryExp : public ExpContent
+{
+    Operator* oper;
     SingleExp* singleExp;
 };
 
 struct SingleExp
 {
-    Position pos;
+    
+};
+
+struct BracketsExp : public SingleExp
+{
+    Exp* exp;
 };
 
 struct FuncExps : public SingleExp
@@ -244,17 +252,16 @@ struct FuncExps : public SingleExp
 struct IDExp : public SingleExp
 {
     bool old;
-    std::string ID;
+    ID* id;
 };
 
-struct ExpLiteral
+struct ExpLiteral : public SingleExp
 {
-    std::string expLiteral;
+    ID* expLiteral;
 };
 
 struct IfExp : public SingleExp
 {
-    Position pos;
     Exp* ifExp;
     Exp* thenExp;
     Exp* elseExp;
@@ -262,7 +269,7 @@ struct IfExp : public SingleExp
 
 struct LetExp : public SingleExp
 {
-    Position pos;
+    
     std::vector<VarDecl*> varDecls;
     Exp* exp;
 
@@ -274,14 +281,14 @@ struct LetExp : public SingleExp
 
 struct FormalPar
 {
-    Position pos;
+    
     Type* type;
-    std::string ID;
+    ID* id;
 };
 
 struct ProcExp : public SingleExp
 {
-    Position pos;
+    
     std::vector<FormalPar*> formalPars;
     std::vector<VarDecl*> varDecls;
     Statement* statement;
@@ -298,7 +305,6 @@ struct ProcExp : public SingleExp
 
 struct ProcDecl : public VarDecl
 {
-    std::string ID;
     std::vector<FormalPar*> formalPars;
     std::vector<VarDecl*> varDecls;
     Statement* statement;
@@ -307,11 +313,14 @@ struct ProcDecl : public VarDecl
     {
         formalPars.push_back(x);
     }
+    void addVarDecl(VarDecl * x)
+    {
+        varDecls.push_back(x);
+    }
 };
 
 struct FuncDecl : public VarDecl
 {   
-    std::string ID;
     std::vector<FormalPar*> formalPars;
     std::vector<VarDecl*> varDecls;
     Exp* exp;
@@ -328,19 +337,19 @@ struct FuncDecl : public VarDecl
 
 struct Statement
 {
-    Position pos;
+    
 };
 
 struct AssignmentStmt : public Statement
 {
-    std::string ID;
+    ID* id;
     Index* index;
     std::string fieldRef;
 };
 
 struct Index
 {
-    Position pos;
+    
     std::vector <Exp*> exps;
 
     void addExp(Exp * x)
@@ -351,7 +360,7 @@ struct Index
 
 struct CallStmt : public Statement
 {
-    Position pos;
+    
     Exp* exp;
     std::vector<Exp*> args;
 
@@ -363,7 +372,7 @@ struct CallStmt : public Statement
 
 struct BlockStmt : public Statement
 {
-    Position pos;
+    
     std::vector<VarDecl*> varDecls;
     Statement* statement;
 
@@ -375,7 +384,7 @@ struct BlockStmt : public Statement
 
 struct IfStmt : public Statement
 {
-    Position pos;
+    
     Exp* ifExp;
     Statement* thenStmt;
     Statement* elseStmt;
@@ -383,7 +392,7 @@ struct IfStmt : public Statement
 
 struct WhileStmt : public Statement
 {
-    Position pos;
+    
     Exp* whileExp;
     std::vector<VarDecl*> vars;
     std::vector<Statement*> doStmts;
@@ -400,7 +409,7 @@ struct WhileStmt : public Statement
 
 struct Action
 {
-    Position pos;
+    
     ActionTag* actionTag;
     ActionHead* actionHead;
     std::vector<Statement*> doStmts;
@@ -413,18 +422,13 @@ struct Action
 
 struct ActionTag
 {
-    Position pos;
-    std::vector<std::string> IDs;
-
-    void addID(std::string x)
-    {
-        IDs.push_back(x);
-    }
+    
+    QualID* qualID;
 };
 
 struct ActionHead
 {
-    Position pos;
+    
     std::vector<InputPattern*> inputPatterns;
     std::vector<OutputExp*> outputExps;
     std::vector<Exp*> guardExps;
@@ -451,8 +455,8 @@ struct ActionHead
 
 struct InputPattern
 {
-    Position pos;
-    std::string ID;
+    
+    ID* id;
     std::vector<std::string> IDs;
     RepeatClause* repeatClause;
     ChannelSelector* channelSelector;
@@ -465,19 +469,19 @@ struct InputPattern
 
 struct ChannelSelector//?
 {
-    Position pos;
+    
 };
 
 struct RepeatClause
 {
-    Position pos;
+    
     Exp* exp;
 };
 
 struct OutputExp
 {
-    Position pos;
-    std::string ID;
+    
+    ID* id;
     std::vector<Exp*> exps;
     RepeatClause* repeatClause;
     ChannelSelector* channelSelector;
@@ -490,7 +494,7 @@ struct OutputExp
 
 struct InitAction
 {
-    Position pos;
+    
     ActionTag* actionTag;
     InitHead* initHead;
     std::vector<Statement*> stmts;
@@ -503,7 +507,7 @@ struct InitAction
 
 struct InitHead
 {
-    Position pos;
+    
     std::vector<OutputExp*> outputExps;
     std::vector<Exp*> guardExps;
     std::vector<VarDecl*> varDecls;
@@ -525,16 +529,16 @@ struct InitHead
 
 struct ActionSched//todo
 {
-    Position pos;
+    
     SchedFSM* schedFSM;
     SchedRegExp* schedRegExp;
 };
 
 struct SchedFSM
 {
-    Position pos;
+    
     bool fsm;
-    std::string ID;
+    ID* id;
     std::vector<StateTransition*> stateTransitions;
 
     void addStateTransition(StateTransition * x)
@@ -545,23 +549,23 @@ struct SchedFSM
 
 struct StateTransition
 {
-    Position pos;
+    
 };
 
 struct SchedRegExp
 {
-    Position pos;
+    
     RegExp* regExp;
 };
 
 struct RegExp//?
 {
-    Position pos;
+    
 };
 
 struct PriorityOrder
 {
-    Position pos;
+    
     std::vector<PriorityIneq*> priorityIneqs;
 
     void addPriorityIneq(PriorityIneq * x)
@@ -572,7 +576,7 @@ struct PriorityOrder
 
 struct PriorityIneq
 {
-    Position pos;
+    
     ActionTag* firstTag;
     ActionTag* secondTag;
     std::vector<ActionTag*> extraTags;
@@ -583,4 +587,59 @@ struct PriorityIneq
     }
 };
 
+struct AST
+{
+    Actor* actor;
+    std::vector<GroupImport*> gImports;
+    std::vector<SingleImport*> sImports;
+    
+    void addsImport(SingleImport * x)
+    {
+        sImports.push_back(x);
+    }
+    void addgImport(GroupImport * x)
+    {
+        gImports.push_back(x);
+    }
+};
+
+struct Context
+{
+    int portType;
+    Actor* actor;
+    std::vector<ActorPar*> actorPars;
+    std::vector<TypePar*> typePars;
+    PortDecl* portDecl;
+    GroupImport* gImport;
+    SingleImport* sImport;
+    QualID* qualID;
+    Type* type;
+    TypeAttr* typeAttr;
+    VarDecl* varDecl;
+    Exp* exp;
+    Operator* oper;
+    std::vector<ExpContent*> expContent;
+    SingleExp* singleExp;
+    IfExp* ifExp;
+    LetExp* letExp;
+    /*otherExps?*/
+    FormalPar* formalPar;
+    Statement* statement;
+    Index* index;
+    Action* action;
+    ActionTag* actionTag;
+    ActionHead* actionHead;
+    InputPattern* inputPattern;
+    OutputExp* outputExp;
+    InitAction* initAction;
+    InitHead* initHead;
+    ActionSched* actionSched;
+    PriorityIneq* priorityIneq;
+    PriorityOrder* priorityOrder;
+
+    Context()
+    {
+        portType = 0;
+    }
+};
 #endif

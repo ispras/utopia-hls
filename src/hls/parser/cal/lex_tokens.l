@@ -1,6 +1,10 @@
 %{
 #include "parser_cal.tab.h"
+#define YY_USER_ACTION yylloc.first_line = yylloc.last_line = yylineno;
+#include <cstring>
 %}
+
+%option yylineno
 
 %%
 "call"      { return Key_call; }
@@ -56,7 +60,7 @@
 "fsm"       { return Key_fsm; }
 "regexp"    { return Key_regexp; }
 "priority"  { return Key_priority; }
-[a-zA-Z_$][a-zA-Z0-9_]*  { return Identifiers; }
+[a-zA-Z_$][a-zA-Z0-9_]*  { yylval.stringValue = strdup(yytext); return Identifiers; }
 "<"     { return Oper_less; }
 "="     { return Oper_equal; }
 "==>"   { return Oper_eqarrow; }
@@ -79,7 +83,7 @@
 "}"     { return Delimiters_fig_cl; }
 ":"     { return Delimiters_colon; }
 ";"     { return Delimiters_semicolon; }
-[0-9]+  {yylval = atoi(yytext); return Numeric_literals; }
+[0-9]+  {yylval.intValue = atoi(yytext); return Numeric_literals; }
 [ \t]*  {}
 "//".*\n   {}
 "/*".*"*/"   {}
