@@ -203,22 +203,23 @@ inline std::unique_ptr<Element> MetaElementMock::construct(
     regs += std::string("reg [") + std::to_string(pos - 1) + ":0] state_0;\n";
   }
 
-  // Extract frequency.
-  // FIXME
-  // unsigned f = params.value("f");
-  unsigned f = 6;
-  for (unsigned i = 1; (i < f) && !fsmNotCreated; i++) {
+  // Extract latency and construct a cascade of assignments.
+  // Indicators indicators;
+  // estimate(params, indicators);
+  unsigned latency = 3; // indicators.latency; FIXME
+
+  for (unsigned i = 1; (i < latency) && !fsmNotCreated; i++) {
     regs += std::string("reg [") + std::to_string(inputLength - 1) + ":0] state_" + std::to_string(i) + ";\n";
     if (inputLength > 2) {
       fsm += std::string("state_") + std::to_string(i) +
-                          " = {state_" + std::to_string(i - 1) + "[" + std::to_string(inputLength - 2) + ":0], " +
+                          " <= {state_" + std::to_string(i - 1) + "[" + std::to_string(inputLength - 2) + ":0], " +
                           "state_" + std::to_string(i - 1) + "[" + std::to_string(inputLength - 1) + "]};\n";
     } else if (inputLength == 2) {
-      fsm += std::string("state_") + std::to_string(i) + "[1:0] = {state_" + std::to_string(i - 1) +
+      fsm += std::string("state_") + std::to_string(i) + "[1:0] <= {state_" + std::to_string(i - 1) +
                          "[0], state_" + std::to_string(i - 1) + "[1]};\n";
     }
     else {
-      fsm += std::string("state_") + std::to_string(i) + "[0] = state_" + std::to_string(i - 1) + "[0];\n";
+      fsm += std::string("state_") + std::to_string(i) + "[0] <= state_" + std::to_string(i - 1) + "[0];\n";
     }
   }
   if (!fsmNotCreated) {
@@ -308,6 +309,58 @@ inline std::shared_ptr<MetaElement> MetaElementMock::create(
 
   return std::shared_ptr<MetaElement>(new MetaElementMock(nodetype.name, params, ports));
 }
+
+// MetaElement:
+//   Name of the element
+//   List of its Parameter(s)
+//   Indicators
+//   Generation facilities: function, correspondent file
+//   (List of) File(s)
+//   (Module in FIRRTL)
+struct PreLibraryElement {
+  std::string name;
+  Parameters parameters;
+  Indicators indicators;
+  std::string generator;
+  std::string fileName;
+  PreLibraryElement() : parameters("") {};
+};
+
+static struct PreLibraryElements {
+  static PreLibraryElement getAdd() {
+    PreLibraryElement element;
+    element.name = "add";
+    element.parameters.add(Parameter("f", Constraint(1, 1000), 100));
+    element.indicators.frequency  = 0;
+    element.indicators.throughput = 0;
+    element.indicators.latency    = 0;
+    element.indicators.power      = 0;
+    element.indicators.area       = 0;
+    element.generator = std::string("example: flopoco -opt $P1 $OUT");
+    element.fileName  = std::string("verilog/add.v");
+    return element;
+  }
+  static PreLibraryElement getSub() {
+    PreLibraryElement element;
+    element.name = "sub";
+    element.parameters.add(Parameter("f", Constraint(1, 1000), 100));
+    element.indicators.frequency  = 0;
+    element.indicators.throughput = 0;
+    element.indicators.latency    = 0;
+    element.indicators.power      = 0;
+    element.indicators.area       = 0;
+    element.generator = std::string("example: flopoco -opt $P1 $OUT");
+    element.fileName  = std::string("verilog/sub.v");
+    return element;
+  }
+
+  PreLibraryElements() {
+    preLibraryElements.push_back(getAdd());
+    preLibraryElements.push_back(getSub());
+  }
+
+  std::vector<PreLibraryElement> preLibraryElements;
+} preLibraryElements;
 
 static struct LibraryInitializer {
   LibraryInitializer() {

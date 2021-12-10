@@ -60,9 +60,9 @@ add_library(${MAIN_LIBRARY}
   gate/model/gsymbol.cpp
   gate/model/netlist.cpp
   gate/model/signal.cpp
+  hls/compiler/compiler.cpp
   hls/debugger/debugger.cpp
   hls/library/library.cpp
-  hls/compiler/compiler.cpp
   hls/model/model.cpp
   hls/model/transform.cpp
   hls/model/printer.cpp
@@ -81,8 +81,8 @@ add_library(${MAIN_LIBRARY}
   rtl/model/event.cpp
   rtl/model/fsymbol.cpp
   rtl/model/net.cpp
-  rtl/model/vnode.cpp
   rtl/model/pnode.cpp
+  rtl/model/vnode.cpp
   rtl/parser/ril/builder.cpp
   rtl/parser/ril/parser.cpp
   util/string.cpp

@@ -10,6 +10,7 @@
 #include "hls/parser/dfc/internal/builder.h"
 
 #include <cassert>
+#include <iostream>
 #include <sstream>
 
 using namespace eda::hls::model;
@@ -34,17 +35,18 @@ void Builder::declareWire(const ::dfc::wire *wire) {
   assert(!kernels.empty() && "Wire declaration outside a kernel");
   auto *kernel = kernels.back();
 
-  kernel->getWire(wire, Kernel::CREATE);
+  kernel->getWire(wire, Kernel::CREATE_ORIGINAL);
 }
 
 void Builder::connectWires(const ::dfc::wire *in, const ::dfc::wire *out) {
   assert(!kernels.empty() && "Wire connection outside a kernel");
   auto *kernel = kernels.back();
 
-  auto *source = kernel->getWire(in, Kernel::ACCESS);
-  auto *target = kernel->getWire(out, Kernel::CREATE_IF_NOT_EXISTS);
+  auto *source = kernel->getWire(in,  Kernel::ACCESS_VERSION);
+  auto *target = kernel->getWire(out, Kernel::CREATE_VERSION);
 
-  kernel->fanout[source->name].push_back(target);
+  kernel->in[target->name] = source;
+  kernel->out[source->name].push_back(target);
 }
 
 void Builder::connectWires(const std::string &opcode,
@@ -56,17 +58,19 @@ void Builder::connectWires(const std::string &opcode,
   // Create new inputs and connect them w/ the old ones.
   std::vector<Wire*> inputs;
   for (const auto *wire : in) {
-    auto *source = kernel->getWire(wire, Kernel::ACCESS);
-    auto *target = kernel->getWire(wire, Kernel::CREATE_COPY);
+    auto *source = kernel->getWire(wire, Kernel::ACCESS_VERSION);
+    auto *target = kernel->getWire(wire, Kernel::CREATE_VERSION);
 
-    kernel->fanout[source->name].push_back(target);
+    kernel->in[target->name] = source;
+    kernel->out[source->name].push_back(target);
+
     inputs.push_back(target);
   }
 
   // Compose outputs.
   std::vector<Wire*> outputs;
   for (const auto *wire : out) {
-    auto *output = kernel->getWire(wire, Kernel::ACCESS);
+    auto *output = kernel->getWire(wire, Kernel::ACCESS_ORIGINAL);
     outputs.push_back(output);
   }
 
@@ -99,22 +103,27 @@ Builder::Wire* Builder::Kernel::getWire(const std::string &name) const {
 Builder::Wire* Builder::Kernel::getWire(const ::dfc::wire *wire, Mode mode) {
   auto i = wires.find(wire->name);
 
-  assert((mode != Kernel::CREATE || i == wires.end()) && "Wire already exists");
-  assert((mode != Kernel::ACCESS || i != wires.end()) && "Wire does not exist");
+  const bool access = mode == Kernel::ACCESS_ORIGINAL ||
+                      mode == Kernel::ACCESS_VERSION;
 
-  if (i != wires.end() && mode != Kernel::CREATE_COPY)
+  assert((!access || i != wires.end()) && "Wire does not exist");
+
+  if ((mode == Kernel::ACCESS_ORIGINAL) ||
+      (mode == Kernel::CREATE_ORIGINAL && i != wires.end()))
     return i->second;
 
-  const std::string name = (mode == Kernel::CREATE_COPY)
-      ? eda::utils::unique_name(wire->name)
-      : wire->name;
+  if (mode == Kernel::ACCESS_VERSION)
+    return latest.find(wire->name)->second;
 
-  const bool input  = (wire->direct == ::dfc::INPUT);
-  const bool output = (wire->direct == ::dfc::OUTPUT);
-  auto *result = new Wire(name, wire->type(), input, output);
-                          
-  wires.insert({ name, result });
+  const std::string name = (mode == Kernel::CREATE_VERSION) ?
+        eda::utils::unique_name(wire->name) : wire->name;
 
+  auto *result = new Wire(name,
+                          wire->type(),
+                          wire->direct == ::dfc::INPUT,
+                          wire->direct == ::dfc::OUTPUT);
+
+  latest[wire->name] = wires[name] = result;
   return result;
 }
 
@@ -156,12 +165,16 @@ Node* Builder::createNode(const Unit *unit, Graph *graph, Model *model) {
 
   for (auto *in : unit->in) {
     auto *input = graph->findChan(in->name);
+    assert(input && "Input not found");
+
     input->target = { node, node->type.inputs[node->inputs.size()]};
     node->addInput(input);
   }
 
   for (auto *out: unit->out) {
     auto *output = graph->findChan(out->name);
+    assert(output && "Output not found");
+
     output->source = { node, node->type.outputs[node->outputs.size()]};
     node->addOutput(output);
   }
@@ -176,10 +189,13 @@ Graph* Builder::createGraph(const Kernel *kernel, Model *model) {
   for (const auto &[_, wire] : kernel->wires) {
     graph->addChan(createChan(wire, graph));
 
-    if (wire->input) {
+    const bool noInputs = kernel->in.find(wire->name) == kernel->in.end();
+    const bool noOutputs = kernel->out.find(wire->name) == kernel->out.end();
+
+    if (wire->input && noInputs && !noOutputs) {
       auto *source = new Unit("source", {}, { wire });
       graph->addNode(createNode(source, graph, model));
-    } else if (wire->output) {
+    } else if (wire->output && !noInputs && noOutputs) {
       auto *sink = new Unit("sink", { wire }, {});
       graph->addNode(createNode(sink, graph, model));
     }
@@ -191,7 +207,7 @@ Graph* Builder::createGraph(const Kernel *kernel, Model *model) {
   }
 
   // Create duplication nodes and corresponding node types.
-  for (const auto &[name, outputs] : kernel->fanout) {
+  for (const auto &[name, outputs] : kernel->out) {
     auto *input = kernel->getWire(name);
     auto *unit = new Unit("dup", { input }, outputs);
     graph->addNode(createNode(unit, graph, model));

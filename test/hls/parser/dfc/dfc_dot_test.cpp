@@ -16,10 +16,10 @@
 #include <fstream>
 #include <iostream>
 
-DFC_KERNEL(MyKernel) {
-  static constexpr std::size_t N = 2;
+DFC_KERNEL(DotProduct) {
+  static constexpr std::size_t N = 4;
 
-  DFC_KERNEL_CTOR(MyKernel) {
+  DFC_KERNEL_CTOR(DotProduct) {
     std::array<dfc::input<dfc::uint32>, N> x;
     std::array<dfc::input<dfc::uint32>, N> y;
     dfc::output<dfc::uint32> z;
@@ -43,29 +43,34 @@ DFC_KERNEL(MyKernel) {
               std::array<dfc::input<dfc::uint32>, N> y,
               dfc::output<dfc::uint32> z) {
     std::array<dfc::stream<dfc::uint32>, N> m;
+    std::array<dfc::stream<dfc::uint32>, N> a;
+
     for (std::size_t i = 0; i < N; i++) {
-      mul_kernel(x[i], y[i], m[i]);
+      mul_kernel(x[i], y[i], m[i].to_output());
     }
 
-    dfc::stream<dfc::uint32> acc = m[0];
+    a[0] = m[0];
     for (std::size_t i = 1; i < N; i++) {
-      add_kernel(m[i], acc, acc);
+      add_kernel(a[i-1].to_input(), m[i].to_input(), a[i].to_output());
     }
+
+    z = a[N-1];
   }
 };
 
-void dfcTest() {
+void dfcDotTest() {
   dfc::params args;
-  MyKernel kernel(args);
+  DotProduct kernel(args);
 
-  std::shared_ptr<eda::hls::model::Model> model = eda::hls::parser::dfc::Builder::get().create("MyModel");
+  std::shared_ptr<eda::hls::model::Model> model =
+    eda::hls::parser::dfc::Builder::get().create("DotModel");
   std::cout << *model << std::endl;
 
-  std::ofstream output("dfc_test.dot");
+  std::ofstream output("dfc_dot_test.dot");
   eda::hls::model::printDot(output, *model);
   output.close();
 }
 
-TEST(DfcTest, SimpleTest) {
-  dfcTest();
+TEST(DfcTest, DfcDotTest) {
+  dfcDotTest();
 }

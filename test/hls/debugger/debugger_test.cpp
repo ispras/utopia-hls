@@ -6,11 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gtest/gtest.h"
-
 #include "hls/model/model.h"
 #include "hls/parser/hil/parser.h"
 #include "hls/debugger/debugger.h"
+
+#include "gtest/gtest.h"
 
 using namespace eda::hls::model;
 using namespace eda::hls::parser::hil;

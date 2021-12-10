@@ -6,26 +6,40 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <iostream>
-#include <memory>
-
 #include "gtest/gtest.h"
 
 #include "hls/compiler/compiler.h"
 #include "hls/model/printer.h"
 #include "hls/parser/hil/parser.h"
 
+#include <iostream>
+#include <fstream>
+#include <memory>
+
 using namespace eda::hls::compiler;
 using namespace eda::hls::parser::hil;
 
-int compileSimpleHilTest(const std::string &filename) {
-  auto compiler = std::make_unique<Compiler>(*parse(filename));
-  std::cout << *compiler;
+int compileSimpleHilTest(const std::string &inputFileName,
+                         const std::string &outputFirrtlName,
+                         const std::string &outputVerilogName,
+                         const std::string &testName) {
+  auto compiler = std::make_unique<Compiler>(*parse(Compiler::relativePath + inputFileName));
+  auto circuit = compiler->constructCircuit();
+  circuit->printFiles(outputFirrtlName, outputVerilogName, testName);
 
   return 0;
 }
 
-TEST(CompilerTest, CompileTestHilTest) {
-  EXPECT_EQ(compileSimpleHilTest("test/data/hil/test.hil"), 0);
+TEST(CompilerTest, CompileTestIdctTest) {
+  EXPECT_EQ(compileSimpleHilTest("idct.hil",
+                                 "outputFirrtlIdct.mlir",
+                                 "outputVerilogIdct.v",
+                                 "idct"), 0);
 }
 
+TEST(CompilerTest, CompileTestHilTest) {
+  EXPECT_EQ(compileSimpleHilTest("test.hil",
+                                 "outputFirrtlTest.mlir",
+                                 "outputVerilogTest.v",
+                                 "test"), 0);
+}

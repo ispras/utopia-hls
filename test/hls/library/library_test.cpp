@@ -32,7 +32,7 @@ int printVerilogTest(const std::string &filename) {
 
 int callLibraryElementTest(const std::string &name) {
   Parameters params(name);
-  auto metaElement = Library::get().find(params.elementName);
+  auto metaElement = Library::get().find(name);
   auto element = metaElement->construct(params);
   std::cout << element->ir << std::endl;
 

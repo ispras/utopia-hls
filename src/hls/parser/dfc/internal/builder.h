@@ -76,7 +76,13 @@ private:
   struct Kernel final {
     Kernel(const std::string &name): name(name) {}
 
-    enum Mode { CREATE, ACCESS, CREATE_COPY, CREATE_IF_NOT_EXISTS };
+    enum Mode {
+      CREATE_ORIGINAL,
+      CREATE_VERSION,
+      ACCESS_ORIGINAL,
+      ACCESS_VERSION
+    };
+
     Wire* getWire(const std::string &name) const;
     Wire* getWire(const ::dfc::wire *wire, Mode mode);
 
@@ -86,8 +92,12 @@ private:
     std::vector<Unit*> units;
     /// Contains all wires.
     std::unordered_map<std::string, Wire*> wires;
-    /// Contains the wires connected to the given point (another wire).
-    std::unordered_map<std::string, std::vector<Wire*>> fanout;
+    /// Contains latest versions.
+    std::unordered_map<std::string, Wire*> latest;
+    /// Maps a non-input wire to its source.
+    std::unordered_map<std::string, Wire*> in;
+    /// Maps a non-output wire to its targets.
+    std::unordered_map<std::string, std::vector<Wire*>> out;
   };
 
   Port* createPort(const Wire *wire, unsigned latency);
