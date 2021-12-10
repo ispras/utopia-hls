@@ -313,50 +313,78 @@ inline std::shared_ptr<MetaElement> MetaElementMock::create(
 // MetaElement:
 //   Name of the element
 //   List of its Parameter(s)
-//   Indicators
+//   getIndicators function
 //   Generation facilities: function, correspondent file
 //   (List of) File(s)
 //   (Module in FIRRTL)
 struct PreLibraryElement {
-  std::string name;
-  Parameters parameters;
+  const std::string name;
+  const Parameters parameters;
+  const Ports ports;
   Indicators indicators;
+  void (*getIndicators)(const Parameters&, const Ports&, Indicators&);
   std::string generator;
   std::string fileName;
-  PreLibraryElement() : parameters("") {};
+
+  PreLibraryElement(const std::string &name, const Parameters &parameters,
+    const Ports &ports, void (*getIndicators)(const Parameters&, const Ports&, Indicators&)) :
+    name(name), parameters(parameters), ports(ports), getIndicators(getIndicators) {
+    getIndicators(parameters, ports, indicators);
+  };
+
+  static void indicatorsTest(const Parameters &params, const Ports& ports, Indicators &indicators) {
+    unsigned inputCount = 0;
+    unsigned latencySum = 0;
+
+    for (const auto &port : ports) {
+      if (port.direction == Port::IN)
+        inputCount++;
+      else
+        latencySum += port.latency;
+    }
+
+    double F = params.value("f");
+    double Fmax = 1000000.0;
+    double C = inputCount * latencySum;
+    double N = (C == 0 ? 0 : C * std::log((Fmax / (Fmax - F)) * ((C - 1) / C)));
+    double A = C * std::sqrt(N);
+    double P = A;
+
+    indicators.frequency  = static_cast<unsigned>(F);
+    indicators.throughput = static_cast<unsigned>(F);
+    indicators.latency    = static_cast<unsigned>(N);
+    indicators.power      = static_cast<unsigned>(P);
+    indicators.area       = static_cast<unsigned>(A);
+  };
 };
 
 static struct PreLibraryElements {
-  static PreLibraryElement getAdd() {
-    PreLibraryElement element;
-    element.name = "add";
-    element.parameters.add(Parameter("f", Constraint(1, 1000), 100));
-    element.indicators.frequency  = 0;
-    element.indicators.throughput = 0;
-    element.indicators.latency    = 0;
-    element.indicators.power      = 0;
-    element.indicators.area       = 0;
+  static PreLibraryElement getAdd(Parameters &params, Ports &ports) {
+    PreLibraryElement element("add", params, ports, PreLibraryElement::indicatorsTest);
     element.generator = std::string("example: flopoco -opt $P1 $OUT");
     element.fileName  = std::string("verilog/add.v");
     return element;
   }
-  static PreLibraryElement getSub() {
-    PreLibraryElement element;
-    element.name = "sub";
-    element.parameters.add(Parameter("f", Constraint(1, 1000), 100));
-    element.indicators.frequency  = 0;
-    element.indicators.throughput = 0;
-    element.indicators.latency    = 0;
-    element.indicators.power      = 0;
-    element.indicators.area       = 0;
+  static PreLibraryElement getSub(Parameters &params, Ports &ports) {
+    PreLibraryElement element("sub", params, ports, PreLibraryElement::indicatorsTest);
     element.generator = std::string("example: flopoco -opt $P1 $OUT");
     element.fileName  = std::string("verilog/sub.v");
     return element;
   }
 
   PreLibraryElements() {
-    preLibraryElements.push_back(getAdd());
-    preLibraryElements.push_back(getSub());
+    Parameters parameters("");
+    parameters.add(Parameter("f", Constraint(1, 1000), 100));
+
+    Port porta("a", Port::IN, 0, 4), portb("b", Port::IN, 0, 4);
+    Port portc("c", Port::OUT, 1, 4);
+    Ports ports;
+    ports.push_back(porta);
+    ports.push_back(portb);
+    ports.push_back(portc);
+
+    preLibraryElements.push_back(getAdd(parameters, ports));
+    preLibraryElements.push_back(getSub(parameters, ports));
   }
 
   std::vector<PreLibraryElement> preLibraryElements;
