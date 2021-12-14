@@ -9,9 +9,11 @@
 #include "hls/model/model.h"
 #include "hls/parser/dfc/internal/builder.h"
 
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 #include <sstream>
+#include <unordered_set>
 
 using namespace eda::hls::model;
 
@@ -21,7 +23,7 @@ std::shared_ptr<Model> Builder::create(const std::string &name) {
   auto *model = new Model(name);
 
   for (auto *kernel : kernels) {
-    kernel->reduce();
+    kernel->transform();
     model->addGraph(getGraph(kernel, model));
   }
 
@@ -46,8 +48,7 @@ void Builder::connectWires(const ::dfc::wire *in, const ::dfc::wire *out) {
   auto *source = kernel->getWire(in,  Kernel::ACCESS_VERSION);
   auto *target = kernel->getWire(out, Kernel::CREATE_VERSION);
 
-  kernel->in[target->name] = source->name;
-  kernel->out[source->name].push_back(target->name);
+  kernel->connect(source, target);
 }
 
 void Builder::connectWires(const std::string &opcode,
@@ -57,26 +58,24 @@ void Builder::connectWires(const std::string &opcode,
   auto *kernel = kernels.back();
 
   // Create new inputs and connect them w/ the old ones.
-  std::vector<std::string> inputs;
+  std::vector<Wire*> inputs;
   for (const auto *wire : in) {
     auto *source = kernel->getWire(wire, Kernel::ACCESS_VERSION);
     auto *target = kernel->getWire(wire, Kernel::CREATE_VERSION);
 
-    kernel->in[target->name] = source->name;
-    kernel->out[source->name].push_back(target->name);
-
-    inputs.push_back(target->name);
+    kernel->connect(source, target);
+    inputs.push_back(target);
   }
 
   // Compose outputs.
-  std::vector<std::string> outputs;
+  std::vector<Wire*> outputs;
   for (const auto *wire : out) {
     auto *output = kernel->getWire(wire, Kernel::ACCESS_ORIGINAL);
-    outputs.push_back(output->name);
+    outputs.push_back(output);
   }
 
   // Create a unit w/ the newly created inputs.
-  kernel->units.push_back(new Unit(opcode, inputs, outputs));
+  kernel->getUnit(opcode, inputs, outputs);
 }
 
 std::string Builder::Unit::fullName() const {
@@ -94,15 +93,6 @@ std::string Builder::Unit::fullName() const {
     [](char c) { return c == '<' || c == '>' || c == ','; }, '_');
 
   return result;
-}
-
-Builder::Wire* Builder::Kernel::getWire(const std::string &name) const {
-  auto i = originals.find(name);
-
-  if (i == originals.end())
-    i = replaced.find(name);
-
-  return i->second;
 }
 
 Builder::Wire* Builder::Kernel::getWire(const ::dfc::wire *wire, Mode mode) {
@@ -134,32 +124,55 @@ Builder::Wire* Builder::Kernel::getWire(const ::dfc::wire *wire, Mode mode) {
   return result;
 }
 
-void Builder::Kernel::reduce() {
-  for (auto *wire : wires) {
-    const auto input = wire->name;
-    const auto i = out.find(input);
+Builder::Unit* Builder::Kernel::getUnit(const std::string &opcode,
+                                        const std::vector<Wire*> &in,
+                                        const std::vector<Wire*> &out) {
+  auto *unit = new Unit(opcode, in, out);
+  units.push_back(unit);
+  return unit;
+}
 
-    if (i == out.end() || i->second.size() != 1)
+void Builder::Kernel::connect(Wire *source, Wire *target) {
+  if (!source->consumedBy)
+    getUnit("dup", { source }, { target });
+  else
+    source->consumedBy->addOutput(target);
+}
+
+void Builder::Kernel::transform() {
+  // Remove redundant units.
+  std::unordered_set<Unit*> removing;
+
+  for (auto *unit : units) {
+    if (unit->opcode != "dup" || unit->in.size() != 1 || unit->out.size() != 1)
       continue;
 
-    const auto output = i->second.front();
-    const auto j = out.find(output);
+    auto *input = unit->in.front();
+    auto *output = unit->out.front();
 
-    if (j == out.end())
-      out.erase(input);
-    else {
-      out[input] = j->second;
-      for (const auto &next : j->second)
-        in[next] = input;
+    auto *next = output->consumedBy;
+    input->consumedBy = next;
+
+    if (next)
+      std::replace(next->in.begin(), next->in.end(), output, input);
+
+    originals.erase(output->name);
+    versions.erase(output->name);
+
+    removing.insert(unit);
+    delete unit;
+  }
+
+  auto predicate = [&removing](Unit *unit) { return removing.count(unit) > 0; };
+  units.erase(std::remove_if(units.begin(), units.end(), predicate), units.end());
+
+  // Create units for the sources and sinks.
+  for (const auto &[_, wire] : originals) {
+    if (wire->input && !wire->producedBy && wire->consumedBy) {
+      getUnit("source", {}, { wire });
+    } else if (wire->output && wire->producedBy && !wire->consumedBy) {
+      getUnit("sink", { wire }, {});
     }
-
-    in.erase(output);
-    out.erase(output);
-
-    originals.erase(output);
-    versions.erase(output);
-
-    replaced[output] = wire;
   }
 }
 
@@ -188,15 +201,10 @@ NodeType* Builder::getNodetype(const Kernel *kernel,
                                Model *model) {
   auto *nodetype = new NodeType(unit->fullName(), *model);
 
-  for (const auto &name : unit->in) {
-    auto *wire = kernel->getWire(name);
+  for (auto *wire : unit->in)
     nodetype->addInput(getPort(wire, 0));
-  }
-
-  for (const auto &name : unit->out) {
-    auto *wire = kernel->getWire(name);
+  for (auto *wire : unit->out)
     nodetype->addOutput(getPort(wire, 1));
-  }
 
   return nodetype;
 }
@@ -216,8 +224,7 @@ Node* Builder::getNode(const Kernel *kernel,
   const std::string nodeName = unit->opcode + std::to_string(id++);
   auto *node = new Node(nodeName, *nodetype, *graph);
 
-  for (const auto &name : unit->in) {
-    auto *wire = kernel->getWire(name);
+  for (auto *wire : unit->in) {
     auto *input = getChan(wire, graph);
     assert(input && "Input not found");
 
@@ -225,8 +232,7 @@ Node* Builder::getNode(const Kernel *kernel,
     node->addInput(input);
   }
 
-  for (const auto &name : unit->out) {
-    auto *wire = kernel->getWire(name);
+  for (auto *wire : unit->out) {
     auto *output = getChan(wire, graph);
     assert(output && "Output not found");
 
@@ -240,31 +246,8 @@ Node* Builder::getNode(const Kernel *kernel,
 Graph* Builder::getGraph(const Kernel *kernel, Model *model) {
   auto *graph = new Graph(kernel->name, *model);
 
-  // Create sources, and sinks.
-  for (const auto &[_, wire] : kernel->originals) {
-
-    const bool noInputs = kernel->in.find(wire->name) == kernel->in.end();
-    const bool noOutputs = kernel->out.find(wire->name) == kernel->out.end();
-
-    if (wire->input && noInputs && !noOutputs) {
-      auto *source = new Unit("source", {}, { wire->name });
-      graph->addNode(getNode(kernel, source, graph, model));
-    } else if (wire->output && !noInputs && noOutputs) {
-      auto *sink = new Unit("sink", { wire->name }, {});
-      graph->addNode(getNode(kernel, sink, graph, model));
-    }
-  }
-
-  // Create functional nodes and corresponding node types.
-  for (auto *unit : kernel->units) {
+  for (auto *unit : kernel->units)
     graph->addNode(getNode(kernel, unit, graph, model));
-  }
-
-  // Create duplication nodes and corresponding node types.
-  for (const auto &[input, outputs] : kernel->out) {
-    auto *unit = new Unit("dup", { input }, outputs);
-    graph->addNode(getNode(kernel, unit, graph, model));
-  }
 
   return graph;
 }

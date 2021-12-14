@@ -47,6 +47,8 @@ public:
 private:
   Builder() {}
 
+  struct Unit;
+
   struct Wire final {
     Wire(const std::string &name, const std::string &type, bool input, bool output):
       name(name), type(type), input(input), output(output) {}
@@ -55,22 +57,37 @@ private:
     const std::string type;
     const bool input;
     const bool output;
+
+    Unit *producedBy = nullptr;
+    Unit *consumedBy = nullptr;
   };
 
   struct Unit final {
     Unit(const std::string &opcode,
-         const std::vector<std::string> &in,
-         const std::vector<std::string> &out):
-      opcode(opcode), in(in), out(out) {}
+         const std::vector<Wire*> &in,
+         const std::vector<Wire*> &out):
+        opcode(opcode), in(in), out(out) {
+      for (auto *wire : in)
+        wire->consumedBy = this;
+      for (auto *wire : out)
+        wire->producedBy = this;
+    }
 
     std::string fullName() const;
 
-    /// Unit operation.
+    void addInput(Wire *wire) {
+      in.push_back(wire);
+      wire->consumedBy = this;
+    }
+
+    void addOutput(Wire *wire) {
+      out.push_back(wire);
+      wire->producedBy = this;
+    }
+
     const std::string opcode;
-    /// Unique inputs.
-    std::vector<std::string> in;
-    /// Unique outputs.
-    std::vector<std::string> out;
+    std::vector<Wire*> in;
+    std::vector<Wire*> out;
   };
 
   struct Kernel final {
@@ -83,31 +100,25 @@ private:
       ACCESS_VERSION
     };
 
-    Wire* getWire(const std::string &name) const;
     Wire* getWire(const ::dfc::wire *wire, Mode mode);
 
-    void reduce();
+    Unit* getUnit(const std::string &opcode,
+                  const std::vector<Wire*> &in,
+                  const std::vector<Wire*> &out);
 
-    /// Kernel name.
+    void connect(Wire *source, Wire *target);
+
+    void transform();
+
     const std::string name;
 
-    /// Contains all units.
-    std::vector<Unit*> units;
-    /// Contains all wires.
     std::vector<Wire*> wires;
+    std::vector<Unit*> units;
 
     /// Maps name to the related wire.
     std::unordered_map<std::string, Wire*> originals;
     /// Maps name to the latest version of the wire.
     std::unordered_map<std::string, Wire*> versions;
-
-    /// Maps wire to the one it is replaced with.
-    std::unordered_map<std::string, Wire*> replaced;
-
-    /// Maps non-input wire to its source.
-    std::unordered_map<std::string, std::string> in;
-    /// Maps non-output wire to its targets.
-    std::unordered_map<std::string, std::vector<std::string>> out;
   };
 
   static Port* getPort(const Wire *wire, unsigned latency);
@@ -123,8 +134,7 @@ private:
                        Graph *graph,
                        Model *model);
 
-  static Graph* getGraph(const Kernel *kernel,
-                         Model *model);
+  static Graph* getGraph(const Kernel *kernel, Model *model);
 
   std::vector<Kernel*> kernels;
 };
