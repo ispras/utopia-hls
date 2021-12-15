@@ -73,7 +73,22 @@ Expressions: Expression
 ;
 
 IDs: Identifiers
-| Identifiers Delimiters_comma IDs
+{
+    context->qualID = new QualID;
+    ID* tmp = new ID;
+    tmp->id = $1;
+    tmp->pos.line = @1.first_line;
+    tmp->pos.col = @1.first_column;
+    context->qualID->addID(tmp);
+}
+| IDs Delimiters_comma Identifiers
+{
+    ID* tmp = new ID;
+    tmp->id = $3;
+    tmp->pos.line = @3.first_line;
+    tmp->pos.col = @3.first_column;
+    context->qualID->addID(tmp);
+}
 ;
 
 Statements: Statement
@@ -99,16 +114,16 @@ OptTimeClause Delimiters_colon OptActionActor Key_schedule ActionSchedule OptAct
 Delimiters_cir_op ActorPars Delimiters_cir_cl IOSig
 OptTimeClause Delimiters_colon OptActionActor ActorEnd
 {
-    context->actor = new Actor;
+    context->actor->timeClause = NULL;
     ID* name = new ID;
     name->id = $3;
+    name->pos.line = @3.first_line;
+    name->pos.col = @3.first_column;
     context->actor->id = name;
     for(int i = 0; i < context->actorPars.size(); ++i)
         context->actor->addActorPar(context->actorPars[i]);
-
     for(int i = 0; i < context->typePars.size(); ++i)
         context->actor->addTypePar(context->typePars[i]);
-
     head->actor = context->actor;
 }
 ;
@@ -130,10 +145,13 @@ ActorEnd: Key_end
 ;
 
 OptActionActor:
-| Key_mutable VarDecltmp Delimiters_semicolon OptActionActor
+| Key_mutable VarDecltmp Delimiters_semicolon 
 {
-
+    VarType* tmp = dynamic_cast<VarType*>(context->varDecls[0]);
+    tmp->_mutable = true;
+    context->actor->addVarType(tmp);
 }
+OptActionActor
 | FunDecl OptActionActor
 | ProcDecl OptActionActor
 | WrapActionInit OptActionActor
@@ -161,8 +179,11 @@ OptActionTag: Identifiers Delimiters_colon
 TypePar: Identifiers
 {
     TypePar * tmp = new TypePar;
+    tmp->type = NULL;
     ID* name = new ID;
     name->id = $1;
+    name->pos.line = @1.first_line;
+    name->pos.col = @1.first_column;
     tmp->id = name;
     context->typePars.push_back(tmp);
 }
@@ -172,6 +193,8 @@ TypePar: Identifiers
     tmp->type = context->type;
     ID* name = new ID;
     name->id = $1;
+    name->pos.line = @1.first_line;
+    name->pos.col = @1.first_column;
     tmp->id = name;
     context->typePars.push_back(tmp);
 }
@@ -184,15 +207,20 @@ ActorPar: Type Identifiers Oper_equal Expression
     tmp->exp = context->exp;
     ID* name = new ID;
     name->id = $2;
+    name->pos.line = @2.first_line;
+    name->pos.col = @2.first_column;
     tmp->id = name;
     context->actorPars.push_back(tmp);
 }
 | Identifiers Oper_equal Expression
 {
     ActorPar* tmp = new ActorPar;
+    tmp->type = NULL;
     tmp->exp = context->exp;
     ID* name = new ID;
     name->id = $1;
+    name->pos.line = @1.first_line;
+    name->pos.col = @1.first_column;
     tmp->id = name;
     context->actorPars.push_back(tmp);
 }
@@ -200,16 +228,23 @@ ActorPar: Type Identifiers Oper_equal Expression
 {
     ActorPar* tmp = new ActorPar;
     tmp->type = context->type;
+    tmp->exp = NULL;
     ID* name = new ID;
     name->id = $2;
+    name->pos.line = @2.first_line;
+    name->pos.col = @2.first_column;
     tmp->id = name;
     context->actorPars.push_back(tmp);
 }
 | Identifiers
 {
     ActorPar* tmp = new ActorPar;
+    tmp->type = NULL;
+    tmp->exp = NULL;
     ID* name = new ID;
     name->id = $1;
+    name->pos.line = @1.first_line;
+    name->pos.col = @1.first_column;
     tmp->id = name;
     context->actorPars.push_back(tmp);
 }
@@ -227,6 +262,8 @@ PortDecl: Key_multi Type Identifiers
     tmp->type = context->type;
     ID* name = new ID;
     name->id = $3;
+    name->pos.line = @3.first_line;
+    name->pos.col = @3.first_column;
     tmp->id = name;
     tmp->multi = true;
     if(context->portType == 0)
@@ -240,6 +277,8 @@ PortDecl: Key_multi Type Identifiers
     tmp->type = context->type;
     ID* name = new ID;
     name->id = $2;
+    name->pos.line = @2.first_line;
+    name->pos.col = @2.first_column;
     tmp->id = name;
     tmp->multi = false;
     if(context->portType == 0)
@@ -252,6 +291,8 @@ PortDecl: Key_multi Type Identifiers
     PortDecl* tmp = new PortDecl;
     ID* name = new ID;
     name->id = $2;
+    name->pos.line = @2.first_line;
+    name->pos.col = @2.first_column;
     tmp->id = name;
     tmp->multi = true;
     if(context->portType == 0)
@@ -264,6 +305,8 @@ PortDecl: Key_multi Type Identifiers
     PortDecl* tmp = new PortDecl;
     ID* name = new ID;
     name->id = $1;
+    name->pos.line = @1.first_line;
+    name->pos.col = @1.first_column;
     tmp->id = name;
     tmp->multi = false;
     if(context->portType == 0)
@@ -295,9 +338,16 @@ SingleImport: Key_import QualID Oper_equal Identifiers
     context->sImport->qualID = context->qualID;
     ID * name = new ID;
     name->id = $4;
+    name->pos.line = @4.first_line;
+    name->pos.col = @4.first_column;
     context->sImport->alias = name;
 }
 | Key_import QualID
+{
+    context->sImport = new SingleImport;
+    context->sImport->qualID = context->qualID;
+    context->sImport->alias = NULL;
+}
 ;
 
 GroupImport: Key_import Key_all QualID
@@ -307,45 +357,42 @@ GroupImport: Key_import Key_all QualID
 }
 ;
 
-QualID: Identifiers
+QualID: Identifiers 
 {
-    context->qualID = new QualID;
+    QualID * tmp = new QualID;
     ID * name = new ID;
     name->id = $1;
+    name->pos.line = @1.first_line;
+    name->pos.col = @1.first_column;
+    tmp->addID(name);
+    context->qualID = tmp;
+}
+| QualID Delimiters_point Identifiers
+{
+    ID * name = new ID;
+    name->id = $3;
+    name->pos.line = @3.first_line;
+    name->pos.col = @3.first_column;
     context->qualID->addID(name);
-}
-| Identifiers Delimiters_point Identifiers OptPointID
-{
-    context->qualID = new QualID;
-    ID * name1 = new ID;
-    name1->id = $1;
-    context->qualID->addID(name1);
-    ID * name2 = new ID;
-    name2->id = $3;
-    context->qualID->addID(name2);
-}
-| Identifiers Delimiters_point Identifiers
-{
-    context->qualID = new QualID;
-    ID * name1 = new ID;
-    name1->id = $1;
-    context->qualID->addID(name1);
-    ID * name2 = new ID;
-    name2->id = $3;
-    context->qualID->addID(name2);
 }
 ;
 
 OptPointID: Delimiters_point Identifiers
 {
+    context->qualID = new QualID;
     ID * name = new ID;
     name->id = $2;
+    name->pos.line = @2.first_line;
+    name->pos.col = @2.first_column;
     context->qualID->addID(name);
 }
 | Delimiters_point Identifiers OptPointID
 {
+    
     ID * name = new ID;
     name->id = $2;
+    name->pos.line = @2.first_line;
+    name->pos.col = @2.first_column;
     context->qualID->addID(name);
 }
 ;
@@ -355,6 +402,8 @@ Type: Identifiers
     context->type = new Type;
     ID* name = new ID;
     name->id = $1;
+    name->pos.line = @1.first_line;
+    name->pos.col = @1.first_column;
     context->type->id = name;
 }
 | Identifiers Delimiters_sq_op TypePars Delimiters_sq_cl
@@ -431,7 +480,10 @@ SingleExpression: Key_old Identifiers
     tmp->old = true;
     ID* name = new ID;
     name->id = $2;
+    name->pos.line = @2.first_line;
+    name->pos.col = @2.first_column;
     tmp->id = name;
+    context->singleExp = tmp;
 }
 | Identifiers
 {
@@ -439,7 +491,10 @@ SingleExpression: Key_old Identifiers
     tmp->old = false;
     ID* name = new ID;
     name->id = $1;
+    name->pos.line = @1.first_line;
+    name->pos.col = @1.first_column;
     tmp->id = name;
+    context->singleExp = tmp;
 }
 | ExpressionLiteral
 | Delimiters_cir_op Expression Delimiters_cir_cl
@@ -547,6 +602,8 @@ FormalPar: Type Identifiers
     context->formalPar->type = context->type;
     ID* name = new ID;
     name->id = $2;
+    name->pos.line = @2.first_line;
+    name->pos.col = @2.first_column;
     context->formalPar->id = name;
 }
 | Identifiers
@@ -554,6 +611,8 @@ FormalPar: Type Identifiers
     context->formalPar = new FormalPar;
     ID* name = new ID;
     name->id = $1;
+    name->pos.line = @1.first_line;
+    name->pos.col = @1.first_column;
     context->formalPar->id = name;
 }
 ;
@@ -576,7 +635,10 @@ ProcExpressionEnd: Key_end
 ;
 
 FunDecl: Key_function Identifiers Delimiters_cir_op
-OptFormalPars Delimiters_cir_cl OptVarDeclsColon OptionalStmt Key_end
+OptFormalPars Delimiters_cir_cl OptVarDeclsColon Expression Key_end
+{
+
+}
 ;
 
 OptVarDeclsColon:
@@ -635,7 +697,19 @@ Expression CycleGenExpression
 ;
 
 OptType: Identifiers
+{
+    context->id = new ID;
+    context->id->id = $1;
+    context->id->pos.line = @1.first_line;
+    context->id->pos.col = @1.first_column;
+}
 | Type Identifiers
+{
+    context->id = new ID;
+    context->id->id = $2;
+    context->id->pos.line = @2.first_line;
+    context->id->pos.col = @2.first_column;
+}
 ;
 
 OptCommaIDs:
@@ -768,7 +842,14 @@ CycleChooseGenExpression:
 | Delimiters_comma Key_choose ChooseGenerator
 ;
 
-VarDecltmp: OptionalType OptionalEqExpression
+VarDecltmp: OptType OptionalEqExpression
+{
+    VarType* var = new VarType;
+    var->type = context->type;
+    var->exp = context->exp;
+    var->id = context->id;
+    context->varDecls.push_back(var);
+}
 ;
 
 OptionalMutable:
@@ -776,6 +857,9 @@ OptionalMutable:
 ;
 
 OptionalEqExpression:
+{
+    context->exp = NULL;
+}
 | Equal Expression
 ;
 
@@ -784,6 +868,9 @@ Equal: Oper_equal
 ;
 
 ActionTail: ActionHead ActionDoStmts ActionEnd
+{
+    context->action->actionHead = context->actionHead;
+}
 ; 
 
 ActionDoStmts:
@@ -799,6 +886,8 @@ ActionTag: Identifiers
     context->actionTag = new ActionTag;
     ID* name = new ID;
     name->id = $1;
+    name->pos.line = @1.first_line;
+    name->pos.col = @1.first_column;
     context->actionTag->qualID = new QualID;
     context->actionTag->qualID->addID(name);
 }
@@ -807,6 +896,8 @@ ActionTag: Identifiers
     context->qualID = new QualID;
     ID* name = new ID;
     name->id = $1;
+    name->pos.line = @1.first_line;
+    name->pos.col = @1.first_column;
     context->qualID->addID(name);
 }
 OptPointID
@@ -818,6 +909,13 @@ OptPointID
 
 ActionHead: InputPatterns Oper_eqarrow OutputExpressions
 ActionHeadGuardExp OptVarVarDecls ActionHeadDelayExp
+{
+    context->actionHead = new ActionHead;
+    for(int i = 0; i < context->inputPattern.size(); i++)
+        context->actionHead->inputPatterns.push_back(context->inputPattern[i]);
+    for(int i = 0; i < context->outputExp.size(); i++)
+        context->actionHead->outputExps.push_back(context->outputExp[i]);
+}
 ;
 
 ActionHeadGuardExp:
@@ -830,13 +928,29 @@ ActionHeadDelayExp:
 
 InputPattern: OptIDcolon Delimiters_sq_op IDs
 Delimiters_sq_cl OptRepeatClause OptChannelSelector
+{
+    InputPattern * tmp = new InputPattern;
+    tmp->id = context->id;
+    tmp->IDs = context->qualID;
+    tmp->repeatClause = context->repeatClause;
+    context->inputPattern.push_back(tmp);
+}
 ;
 
-OptIDcolon:
+OptIDcolon: {context->id = NULL;}
 | Identifiers Delimiters_colon
+{
+    context->id = new ID;
+    context->id->id = $1;
+    context->id->pos.line = @1.first_line;
+    context->id->pos.col = @1.first_column;
+}
 ;
 
 OptRepeatClause:
+{
+    context->repeatClause = NULL;
+}
 | RepeatClause
 ;
 
@@ -855,11 +969,23 @@ OptionalAT2:
 ;
 
 RepeatClause: Key_repeat Expression
+{
+    context->repeatClause = new RepeatClause;
+    context->repeatClause->exp = context->exp;
+}
 ;
 
 OutputExpression: OptIDcolon Delimiters_sq_op
 Expressions Delimiters_sq_cl OptRepeatClause
 OptChannelSelector
+{
+    OutputExp* tmp = new OutputExp;
+    tmp->id = context->id;
+    //should be exps
+    tmp->repeatClause = context->repeatClause;
+    //should be selector
+    context->outputExp.push_back(tmp); 
+}
 ;
 
 InitializationActionTail: 
@@ -949,9 +1075,9 @@ CycleMoreActionTag:
 
 int main()
 {
-    AST* head;
+    context->actor = new Actor;
     yyparse();
-
+    head->print();
     return 0;
 }
 

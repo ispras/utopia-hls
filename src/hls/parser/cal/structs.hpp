@@ -2,32 +2,21 @@
 #define STRUCTS_HPP
 #include <vector>
 #include <string>
+#include <iostream>
 
-struct Position;
+using namespace std;
+
+
 struct ExpContent;
 struct Operator;
 struct Statement;
-struct Type;
-struct PortDecl;
-struct PortDecls;
-struct TypePar;
-struct SingleImport;
-struct GroupImport;
-struct Import;
-struct SingleExp;
-struct PrimaryExp;
 struct Exp;
-struct IfExp;
-struct LetExp;
 struct BracketsExp;
 struct FormalPar;
-struct ProcExp;
-struct ActorPar;
 struct VarDecl;
 struct ProcDecl;
 struct FuncDecl;
 struct VarType;
-struct Actor;
 struct Statement;
 struct AssignmentStmt;
 struct Index;
@@ -51,154 +40,61 @@ struct SchedRegExp;
 struct RegExp;
 struct PriorityOrder;
 struct PriorityIneq;
-struct QualID;
-struct TypeAttr;
 struct FuncExps;
-struct IDExp;
-struct ExpLiteral;
+struct TypeAttr;
 
 struct Position
 {
     int line;
     int col;
+    void print()
+    {
+        cout <<"pos("<< line <<','<< col << ") ";
+    }
 };
 
 struct ID
 {
     std::string id;
     Position pos;
-};
-
-struct Actor
-{
-    ID* id;
-    std::vector <TypePar*> typePars;
-    std::vector <ActorPar*> actorPars;
-    std::vector<PortDecl*> inPorts;
-    std::vector<PortDecl*> outPorts;
-    Type* timeClause;
-    ActionSched* actionSched;
-    std::vector <VarDecl*> vars;
-    std::vector <Action*> actions;
-    std::vector <InitAction*> initActions;
-    std::vector <PriorityOrder*> priorOrders;
-     
-    void addOutPort(PortDecl * x)
+    void print()
     {
-        outPorts.push_back(x);
+        pos.print();
+        cout << id << ' ';
     }
-    void addInPort(PortDecl * x)
-    {
-        inPorts.push_back(x);
-    }
-    void addTypePar(TypePar * x)
-    {
-        typePars.push_back(x);
-    }
-    void addActorPar(ActorPar * x)
-    {
-        actorPars.push_back(x);
-    }
-    void addVarType(VarDecl * x)
-    {
-        vars.push_back(x);
-    }
-    void addAction(Action * x){
-        actions.push_back(x);
-    }
-    void addInitAction(InitAction * x)
-    {
-        initActions.push_back(x);
-    }
-    void addPriorityOrder(PriorityOrder * x)
-    {
-        priorOrders.push_back(x);
-    }
-};
-
-struct ActorPar
-{
-    
-    Type* type;
-    ID* id;
-    Exp* exp;
-};
-
-struct TypePar
-{
-    
-    ID* id;
-    Type* type;
-};
-
-struct PortDecl
-{
-    
-    bool multi;
-    Type* type;
-    ID* id;
-};
-
-struct Import
-{
-
-};
-
-struct SingleImport : public Import
-{
-    QualID* qualID;
-    ID* alias;
-};
-
-struct GroupImport : public Import
-{
-    QualID* qualID;
 };
 
 struct QualID
 {
-    
     std::vector<ID*> ids;
-
     void addID(ID* x)
     {
         ids.push_back(x);
     }
+    void print()
+    {
+        cout << endl << "QualID: ";
+        for (int i = 0; i < ids.size(); i++)
+            ids[i]->print();
+    }
 };
 
-struct Type//todo - fixed
+struct Type
 {
     std::vector<TypeAttr*> attrs;
-
     void addTypeAttr(TypeAttr * x)
     {
         attrs.push_back(x);
     }
-    ID* id; 
-};
-
-struct TypeAttr//todo - fixed
-{
     ID* id;
-    Type* type;
-    Exp* exp;
+    void print();
 };
 
-struct VarDecl
+struct ExpContent
 {
-    
-   ID* id;
-};
-
-struct VarType : public VarDecl
-{
-    bool _mutable;
-    Type* type;
-    Exp* exp;
-
-    void setExp(Exp * x)
+    void print()
     {
-        exp = x;
+        
     }
 };
 
@@ -206,93 +102,110 @@ struct Exp
 {
     Position pos;
     std::vector<ExpContent*> exp;
-
     void addToExp(ExpContent * x)
     {
         exp.push_back(x);
     }
-};
-
-struct ExpContent
-{
-    
-};
-
-struct Operator : public ExpContent
-{
-    ID* oper;
-};
-
-struct PrimaryExp : public ExpContent
-{
-    Operator* oper;
-    SingleExp* singleExp;
-};
-
-struct SingleExp
-{
-    
-};
-
-struct BracketsExp : public SingleExp
-{
-    Exp* exp;
-};
-
-struct FuncExps : public SingleExp
-{
-    std::vector<Exp*> exps;
-
-    void addExp(Exp * x)
+    void print()
     {
-        exps.push_back(x);
+        cout << endl << "Exp: ";
+        for (int i = 0; i < exp.size(); i++)
+            exp[i]->print();
     }
 };
 
-struct IDExp : public SingleExp
+struct TypeAttr
 {
-    bool old;
     ID* id;
-};
-
-struct ExpLiteral : public SingleExp
-{
-    ID* expLiteral;
-};
-
-struct IfExp : public SingleExp
-{
-    Exp* ifExp;
-    Exp* thenExp;
-    Exp* elseExp;
-};
-
-struct LetExp : public SingleExp
-{
-    
-    std::vector<VarDecl*> varDecls;
+    Type* type;
     Exp* exp;
+    void print();
+};
 
-    void addVarDecl(VarDecl * x)
+void TypeAttr::print()
+{
+    cout << endl << "TypeAttr: ";
+    id->print();
+    if(type)
+        type->print();
+    if(exp)
+        exp->print();
+};
+
+void Type::print()
+{
+    cout << endl << "Type: ";
+    id->print();
+    for (int i = 0; i < attrs.size(); i++)
+        attrs[i]->print();
+};
+
+struct TypePar
+{
+    ID* id;
+    Type* type;
+    void print()
     {
-        varDecls.push_back(x);
+        if(type)
+            type->print();
+        id->print();
     }
+};
+
+struct VarDecl
+{
+    ID* id;
+    virtual ~VarDecl(){};
+};
+
+struct VarType : public VarDecl
+{
+    bool _mutable;
+    Type* type;
+    Exp* exp;
+    void setExp(Exp * x)
+    {
+        exp = x;
+    }
+    void print()
+    {
+        cout << endl << "VarDecl: ";
+        cout << "mutable:" << _mutable << " ";
+        id->print();
+        if(type)
+            type->print();
+        if(exp)
+            exp->print();
+    }
+    virtual ~VarType(){}
 };
 
 struct FormalPar
 {
-    
     Type* type;
     ID* id;
+    void print()
+    {
+        cout << endl << "Formal Par: "; 
+        if(type)
+            type->print();
+        id->print();
+    }
+};
+
+struct SingleExp
+{
+    void print()
+    {
+        
+    }
 };
 
 struct ProcExp : public SingleExp
 {
-    
     std::vector<FormalPar*> formalPars;
     std::vector<VarDecl*> varDecls;
     Statement* statement;
-
     void addFormalPar(FormalPar * x)
     {
         formalPars.push_back(x);
@@ -321,6 +234,7 @@ struct ProcDecl : public VarDecl
 
 struct FuncDecl : public VarDecl
 {   
+    ID* id;
     std::vector<FormalPar*> formalPars;
     std::vector<VarDecl*> varDecls;
     Exp* exp;
@@ -332,6 +246,183 @@ struct FuncDecl : public VarDecl
     void addVarDecl(VarDecl * x)
     {
         varDecls.push_back(x);
+    }
+    void print()
+    {
+        cout << endl << "FuncDecl: ";
+        for (int i = 0; i < formalPars.size(); i++)
+            formalPars[i]->print();
+        for (int i = 0; i < varDecls.size(); i++)
+            ;//varDecls[i]->print();
+        if(exp)
+            exp->print();
+    }
+};
+
+struct Operator : public ExpContent
+{
+    ID* oper;
+    void print()
+    {
+        oper->print();
+    }
+};
+
+struct BracketsExp : public SingleExp
+{
+    Exp* exp;
+    void print()
+    {
+        exp->print();
+    }
+};
+
+struct FuncExps : public SingleExp
+{
+    std::vector<Exp*> exps;
+    void addExp(Exp * x)
+    {
+        exps.push_back(x);
+    }
+    void print()
+    {
+        cout << endl << "FucExp: ";
+        for (int i = 0; i < exps.size(); i++)
+            exps[i]->print();
+    }
+};
+
+struct IDExp : public SingleExp
+{
+    bool old;
+    ID* id;
+    void print()
+    {
+        cout << endl << "IDExp: ";
+        cout << "old=" << old << " ";
+        id->print();
+    }
+};
+
+struct ExpLiteral : public SingleExp
+{
+    ID* expLiteral;
+    void print()
+    {
+        cout << endl<< "Literal: ";
+        expLiteral->print();
+    }
+};
+
+struct IfExp : public SingleExp
+{
+    Exp* ifExp;
+    Exp* thenExp;
+    Exp* elseExp;
+    void print()
+    {
+        cout << endl << "ifExp: ";
+        ifExp->print();
+        thenExp->print();
+        elseExp->print();
+    }
+};
+
+struct LetExp : public SingleExp
+{
+    std::vector<VarDecl*> varDecls;
+    Exp* exp;
+    void addVarDecl(VarDecl * x)
+    {
+        varDecls.push_back(x);
+    }
+    void print()
+    {
+        cout << endl << "LetExp: ";
+        for (int i = 0; i < varDecls.size(); i++)
+            ;//varDecls[i]->print();
+        if(exp)
+            exp->print();
+    }
+};
+
+
+struct PrimaryExp : public ExpContent
+{
+    Operator* oper;
+    SingleExp* singleExp;
+    void print()
+    {
+        cout << endl << "PrimExp: ";
+        if(oper)
+            oper->print();
+        singleExp->print();
+    }
+};
+
+struct ActorPar
+{
+    Type* type;
+    ID* id;
+    Exp* exp;
+    void print()
+    {
+        cout << endl << "ActorPar: ";
+        if(type != NULL)
+            type->print();
+        if(id)
+            id->print();
+        if(exp)
+            exp->print();
+    }
+};
+
+struct PortDecl
+{
+    bool multi;
+    Type* type;
+    ID* id;
+    PortDecl()
+    {
+        type = NULL;
+    }
+    void print()
+    {
+        cout << endl << "PortDecl: ";
+        cout << "multi:" << multi << ' ';
+        if(type)
+            type->print();
+        id->print();
+    }
+};
+
+struct Import
+{
+    void print()
+    {
+        
+    }
+};
+
+struct SingleImport : public Import
+{
+    QualID* qualID;
+    ID* alias;
+    void print()
+    {
+        cout << endl << "SingleImport: ";
+        qualID->print();
+        alias->print();
+    }
+};
+
+struct GroupImport : public Import
+{
+    QualID* qualID;
+    void print()
+    {
+        cout << endl << "GroupImport: ";
+        qualID->print();
     }
 };
 
@@ -349,7 +440,6 @@ struct AssignmentStmt : public Statement
 
 struct Index
 {
-    
     std::vector <Exp*> exps;
 
     void addExp(Exp * x)
@@ -407,34 +497,129 @@ struct WhileStmt : public Statement
     }
 };
 
-struct Action
+struct ActionTag
 {
-    
-    ActionTag* actionTag;
-    ActionHead* actionHead;
-    std::vector<Statement*> doStmts;
-
-    void addDoStmt(Statement * x)
+    QualID* qualID;
+    void print()
     {
-        doStmts.push_back(x);
+        cout << endl << "ActionTag: ";
+        qualID->print();
     }
 };
 
-struct ActionTag
+
+
+struct RepeatClause
+{
+    Exp* exp;
+    void print()
+    {
+        cout << endl << "Exp: ";
+        exp->print();
+    }
+};
+
+struct ChannelSelector//?
 {
     
-    QualID* qualID;
+};
+
+struct OutputExp
+{
+    ID* id;
+    std::vector<Exp*> exps;
+    RepeatClause* repeatClause;
+    ChannelSelector* channelSelector;
+    void addExp(Exp * x)
+    {
+        exps.push_back(x);
+    }
+    void print()
+    {
+        cout << endl << "OutputExp: ";
+        id->print();
+        for (int i = 0; i < exps.size(); i++)
+            exps[i]->print();
+        if(repeatClause)
+            repeatClause->print();
+
+    }
+};
+
+struct InitHead
+{
+    std::vector<OutputExp*> outputExps;
+    std::vector<Exp*> guardExps;
+    std::vector<VarDecl*> varDecls;
+    Exp* delayExp;
+    void addOutputExp(OutputExp * x)
+    {
+        outputExps.push_back(x);
+    }
+    void addGuardExp(Exp * x)
+    {
+        guardExps.push_back(x);
+    }
+    void addVarDecl(VarDecl * x)
+    {
+        varDecls.push_back(x);
+    }
+    void print()
+    {
+        cout << endl << "InitHead ";
+        for (int i = 0; i < outputExps.size(); i++)
+            outputExps[i]->print();
+        for (int i = 0; i < varDecls.size(); i++)
+            ;//varDecls[i]->print();
+        if(delayExp)
+            delayExp->print();
+    }
+};
+
+struct InputPattern
+{
+    ID* id;
+    QualID * IDs;
+    RepeatClause* repeatClause;
+    ChannelSelector* channelSelector;
+    void print()
+    {
+        cout << endl << "InpuPattern: ";
+        id->print();
+        if(IDs)
+            IDs->print();
+        if(repeatClause)
+            repeatClause->print();
+
+    }
+};
+
+struct InitAction
+{
+    ActionTag* actionTag;
+    InitHead* initHead;
+    std::vector<Statement*> stmts;
+    void addStmt(Statement * x)
+    {
+        stmts.push_back(x);
+    }
+    void print()
+    {
+        cout << endl << "InitAction: ";
+        if(actionTag)
+            actionTag->print();
+        if(initHead)
+            initHead->print();
+    }
 };
 
 struct ActionHead
 {
-    
     std::vector<InputPattern*> inputPatterns;
     std::vector<OutputExp*> outputExps;
     std::vector<Exp*> guardExps;
     std::vector<VarDecl*> varDecls;
     Exp* delayExp;
-
     void addInputPattern(InputPattern * x)
     {
         inputPatterns.push_back(x);
@@ -451,100 +636,31 @@ struct ActionHead
     {
         varDecls.push_back(x);
     }
+    void print()
+    {
+        cout << endl << "ActionHead";
+        for (int i = 0; i < inputPatterns.size(); i++)
+            inputPatterns[i]->print();
+        for (int i = 0; i < outputExps.size(); i++)
+            outputExps[i]->print();
+    }
 };
 
-struct InputPattern
+struct SchedFSM
 {
-    
+    bool fsm;
     ID* id;
-    std::vector<std::string> IDs;
-    RepeatClause* repeatClause;
-    ChannelSelector* channelSelector;
-
-    void addID(std::string x)
+    std::vector<StateTransition*> stateTransitions;
+    void addStateTransition(StateTransition * x)
     {
-        IDs.push_back(x);
-    }
-};
-
-struct ChannelSelector//?
-{
-    
-};
-
-struct RepeatClause
-{
-    
-    Exp* exp;
-};
-
-struct OutputExp
-{
-    
-    ID* id;
-    std::vector<Exp*> exps;
-    RepeatClause* repeatClause;
-    ChannelSelector* channelSelector;
-
-    void addExp(Exp * x)
-    {
-        exps.push_back(x);
-    }
-};
-
-struct InitAction
-{
-    
-    ActionTag* actionTag;
-    InitHead* initHead;
-    std::vector<Statement*> stmts;
-
-    void addStmt(Statement * x)
-    {
-        stmts.push_back(x);
-    }
-};
-
-struct InitHead
-{
-    
-    std::vector<OutputExp*> outputExps;
-    std::vector<Exp*> guardExps;
-    std::vector<VarDecl*> varDecls;
-    Exp* delayExp;
-
-    void addOutputExp(OutputExp * x)
-    {
-        outputExps.push_back(x);
-    }
-    void addGuardExp(Exp * x)
-    {
-        guardExps.push_back(x);
-    }
-    void addVarDecl(VarDecl * x)
-    {
-        varDecls.push_back(x);
+        stateTransitions.push_back(x);
     }
 };
 
 struct ActionSched//todo
 {
-    
     SchedFSM* schedFSM;
     SchedRegExp* schedRegExp;
-};
-
-struct SchedFSM
-{
-    
-    bool fsm;
-    ID* id;
-    std::vector<StateTransition*> stateTransitions;
-
-    void addStateTransition(StateTransition * x)
-    {
-        stateTransitions.push_back(x);
-    }
 };
 
 struct StateTransition
@@ -554,7 +670,6 @@ struct StateTransition
 
 struct SchedRegExp
 {
-    
     RegExp* regExp;
 };
 
@@ -563,9 +678,40 @@ struct RegExp//?
     
 };
 
+struct Action
+{
+    ActionTag* actionTag;
+    ActionHead* actionHead;
+    std::vector<Statement*> doStmts;
+
+    void addDoStmt(Statement * x)
+    {
+        doStmts.push_back(x);
+    }
+    void print()
+    {
+        cout << endl << "Action: ";
+        if(actionTag)
+            actionTag->print();
+        if(actionHead)
+            actionHead->print();
+
+    }
+};
+
+struct PriorityIneq
+{
+    ActionTag* firstTag;
+    ActionTag* secondTag;
+    std::vector<ActionTag*> extraTags;
+    void addExtraTag(ActionTag * x)
+    {
+        extraTags.push_back(x);
+    }
+};
+
 struct PriorityOrder
 {
-    
     std::vector<PriorityIneq*> priorityIneqs;
 
     void addPriorityIneq(PriorityIneq * x)
@@ -574,16 +720,76 @@ struct PriorityOrder
     }
 };
 
-struct PriorityIneq
+struct Actor
 {
-    
-    ActionTag* firstTag;
-    ActionTag* secondTag;
-    std::vector<ActionTag*> extraTags;
-
-    void addExtraTag(ActionTag * x)
+    ID* id;
+    std::vector <TypePar*> typePars;
+    std::vector <ActorPar*> actorPars;
+    std::vector<PortDecl*> inPorts;
+    std::vector<PortDecl*> outPorts;
+    Type* timeClause;
+    ActionSched* actionSched;
+    std::vector <VarDecl*> vars;
+    std::vector <Action*> actions;
+    std::vector <InitAction*> initActions;
+    std::vector <PriorityOrder*> priorOrders;
+    void addOutPort(PortDecl * x)
     {
-        extraTags.push_back(x);
+        outPorts.push_back(x);
+    }
+    void addInPort(PortDecl * x)
+    {
+        inPorts.push_back(x);
+    }
+    void addTypePar(TypePar * x)
+    {
+        typePars.push_back(x);
+    }
+    void addActorPar(ActorPar * x)
+    {
+        actorPars.push_back(x);
+    }
+    void addVarType(VarDecl * x)
+    {
+        vars.push_back(x);
+    }
+    void addAction(Action * x){
+        actions.push_back(x);
+    }
+    void addInitAction(InitAction * x)
+    {
+        initActions.push_back(x);
+    }
+    void addPriorityOrder(PriorityOrder * x)
+    {
+        priorOrders.push_back(x);
+    }
+    void print()
+    {
+        cout << endl << "Actor: ";
+        id->print();
+        cout << endl << "TypePars: ";
+        for (int i = 0; i < typePars.size(); i++)
+            typePars[i]->print();
+        cout << endl << "Actor Pars: ";
+        for (int i = 0; i < actorPars.size(); i++)
+            actorPars[i]->print();
+        cout << endl << "inPorts: "; 
+        for (int i = 0; i < inPorts.size(); i++)
+            inPorts[i]->print();
+        cout << endl << "outPorts: ";
+        for (int i = 0; i < outPorts.size(); i++)
+            outPorts[i]->print();
+        cout << endl << "vars: ";
+        for(int i = 0; i < vars.size(); i++){
+            VarType* tmp = dynamic_cast<VarType*>(vars[i]);
+            if(tmp != NULL)
+                tmp->print();
+        }
+        if(timeClause){
+            cout << endl << "timeClause: ";
+            timeClause->print();
+        }
     }
 };
 
@@ -592,7 +798,6 @@ struct AST
     Actor* actor;
     std::vector<GroupImport*> gImports;
     std::vector<SingleImport*> sImports;
-    
     void addsImport(SingleImport * x)
     {
         sImports.push_back(x);
@@ -601,11 +806,21 @@ struct AST
     {
         gImports.push_back(x);
     }
+    void print()
+    {
+        cout << endl << "AST: ";
+        for (int i = 0; i < gImports.size(); i++)
+            gImports[i]->print();
+        for (int i = 0; i < sImports.size(); i++)
+            sImports[i]->print();
+        actor->print();
+    }
 };
 
 struct Context
 {
     int portType;
+    ID* id;
     Actor* actor;
     std::vector<ActorPar*> actorPars;
     std::vector<TypePar*> typePars;
@@ -615,7 +830,7 @@ struct Context
     QualID* qualID;
     Type* type;
     TypeAttr* typeAttr;
-    VarDecl* varDecl;
+    std::vector<VarDecl*> varDecls;
     Exp* exp;
     Operator* oper;
     std::vector<ExpContent*> expContent;
@@ -629,8 +844,9 @@ struct Context
     Action* action;
     ActionTag* actionTag;
     ActionHead* actionHead;
-    InputPattern* inputPattern;
-    OutputExp* outputExp;
+    RepeatClause* repeatClause;
+    std::vector<InputPattern*> inputPattern;
+    std::vector<OutputExp*> outputExp;
     InitAction* initAction;
     InitHead* initHead;
     ActionSched* actionSched;
