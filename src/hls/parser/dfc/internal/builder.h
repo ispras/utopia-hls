@@ -11,6 +11,7 @@
 #include "hls/parser/dfc/stream.h"
 #include "util/singleton.h"
 
+#include <cassert>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -45,18 +46,36 @@ public:
                     const std::vector<const ::dfc::wire*> &out);
 
 private:
-  Builder() {}
+  Builder(): common("<common>") {}
 
   struct Unit;
-
   struct Wire final {
-    Wire(const std::string &name, const std::string &type, bool input, bool output):
-      name(name), type(type), input(input), output(output) {}
+    Wire(const std::string &name,
+         const std::string &type,
+         bool isInput,
+         bool isOutput,
+         bool isConst):
+      name(name),
+      type(type),
+      isInput(isInput),
+      isOutput(isOutput),
+      isConst(isConst) {}
+
+    void setConsumer(Unit *unit) {
+      assert(!consumedBy && "Multiple reads");
+      consumedBy = unit;
+    }
+
+    void setProducer(Unit *unit) {
+      assert(!producedBy && "Multiple writes");
+      producedBy = unit;
+    }
 
     const std::string name;
     const std::string type;
-    const bool input;
-    const bool output;
+    const bool isInput;
+    const bool isOutput;
+    const bool isConst;
 
     Unit *producedBy = nullptr;
     Unit *consumedBy = nullptr;
@@ -67,22 +86,24 @@ private:
          const std::vector<Wire*> &in,
          const std::vector<Wire*> &out):
         opcode(opcode), in(in), out(out) {
-      for (auto *wire : in)
-        wire->consumedBy = this;
-      for (auto *wire : out)
-        wire->producedBy = this;
+      for (auto *wire : in) {
+        wire->setConsumer(this);
+      }
+      for (auto *wire : out) {
+        wire->setProducer(this);
+      }
     }
 
     std::string fullName() const;
 
     void addInput(Wire *wire) {
       in.push_back(wire);
-      wire->consumedBy = this;
+      wire->setConsumer(this);
     }
 
     void addOutput(Wire *wire) {
       out.push_back(wire);
-      wire->producedBy = this;
+      wire->setProducer(this);
     }
 
     const std::string opcode;
@@ -136,7 +157,10 @@ private:
 
   static Graph* getGraph(const Kernel *kernel, Model *model);
 
+  Kernel* getKernel() { return kernels.empty() ? &common : kernels.back(); }
+
   std::vector<Kernel*> kernels;
+  Kernel common;
 };
 
 } // namespace eda::hls::parser::dfc

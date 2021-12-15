@@ -18,23 +18,26 @@
 #include <iostream>
 
 DFC_KERNEL(IDCT) {
-  static const int w1 = 2841; // 2048*sqrt(2)*cos(1*pi/16)
-  static const int w2 = 2676; // 2048*sqrt(2)*cos(2*pi/16)
-  static const int w3 = 2408; // 2048*sqrt(2)*cos(3*pi/16)
-  static const int w5 = 1609; // 2048*sqrt(2)*cos(5*pi/16)
-  static const int w6 = 1108; // 2048*sqrt(2)*cos(6*pi/16)
-  static const int w7 = 565;  // 2048*sqrt(2)*cos(7*pi/16)
+  static dfc::value<dfc::sint32> c4;
+  static dfc::value<dfc::sint32> c128;
+  static dfc::value<dfc::sint32> c181;
+  static dfc::value<dfc::sint32> c8192;
+
+  static dfc::value<dfc::sint32> W1; // 2048*sqrt(2)*cos(1*pi/16)
+  static dfc::value<dfc::sint32> W2; // 2048*sqrt(2)*cos(2*pi/16)
+  static dfc::value<dfc::sint32> W3; // 2048*sqrt(2)*cos(3*pi/16)
+  static dfc::value<dfc::sint32> W5; // 2048*sqrt(2)*cos(5*pi/16)
+  static dfc::value<dfc::sint32> W6; // 2048*sqrt(2)*cos(6*pi/16)
+  static dfc::value<dfc::sint32> W7; // 2048*sqrt(2)*cos(7*pi/16)
 
   DFC_KERNEL_CTOR(IDCT) {
     std::array<dfc::stream<dfc::sint16>, 64> blk;
-    blk[0] = blk[1] + blk[2];
-/*
+
     for (std::size_t i = 0; i < 8; i++)
       idctrow(blk, i);
 
     for (std::size_t i = 0; i < 8; i++)
       idctcol(blk, i);
-*/
   }
 
   /* row (horizontal) IDCT
@@ -47,8 +50,6 @@ DFC_KERNEL(IDCT) {
    *        c[1..7] = 128*sqrt(2)
    */
   void idctrow(std::array<dfc::stream<dfc::sint16>, 64> &blk, std::size_t i) {
-    dfc::value<dfc::sint32> c128(128), c181(181);
-    dfc::value<dfc::sint32> W1(w1), W2(w2), W3(w3), W5(w5), W6(w6), W7(w7);
     dfc::stream<dfc::sint32> x0, x1, x2, x3, x4, x5, x6, x7, x8;
 
     /* TODO: shortcut */
@@ -110,8 +111,6 @@ DFC_KERNEL(IDCT) {
    *        c[1..7] = (1/1024)*sqrt(2)
    */
   void idctcol(std::array<dfc::stream<dfc::sint16>, 64> blk, std::size_t i) {
-    dfc::value<dfc::sint32> c4(4), c128(128), c181(181), c8192(8192);
-    dfc::value<dfc::sint32> W1(w1), W2(w2), W3(w3), W5(w5), W6(w6), W7(w7);
     dfc::stream<dfc::sint32> x0, x1, x2, x3, x4, x5, x6, x7, x8;
 
     /* TODO: shortcut */
@@ -168,6 +167,17 @@ DFC_KERNEL(IDCT) {
     return in.cast<dfc::sint16>();
   }
 };
+
+dfc::value<dfc::sint32> IDCT::c4(4);
+dfc::value<dfc::sint32> IDCT::c128(128);
+dfc::value<dfc::sint32> IDCT::c181(181);
+dfc::value<dfc::sint32> IDCT::c8192(8192);
+dfc::value<dfc::sint32> IDCT::W1(2841);
+dfc::value<dfc::sint32> IDCT::W2(2676);
+dfc::value<dfc::sint32> IDCT::W3(2408);
+dfc::value<dfc::sint32> IDCT::W5(1609);
+dfc::value<dfc::sint32> IDCT::W6(1108);
+dfc::value<dfc::sint32> IDCT::W7(565);
 
 void dfcIdctTest() {
   dfc::params args;

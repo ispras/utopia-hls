@@ -19,64 +19,9 @@ using namespace eda::hls::model;
 
 namespace eda::hls::parser::dfc {
 
-std::shared_ptr<Model> Builder::create(const std::string &name) {
-  auto *model = new Model(name);
-
-  for (auto *kernel : kernels) {
-    kernel->transform();
-    model->addGraph(getGraph(kernel, model));
-  }
-
-  return std::shared_ptr<Model>(model);
-}
-
-void Builder::startKernel(const std::string &name) {
-  kernels.push_back(new Kernel(name));
-}
-
-void Builder::declareWire(const ::dfc::wire *wire) {
-  assert(!kernels.empty() && "Wire declaration outside a kernel");
-  auto *kernel = kernels.back();
-
-  kernel->getWire(wire, Kernel::CREATE_ORIGINAL);
-}
-
-void Builder::connectWires(const ::dfc::wire *in, const ::dfc::wire *out) {
-  assert(!kernels.empty() && "Wire connection outside a kernel");
-  auto *kernel = kernels.back();
-
-  auto *source = kernel->getWire(in,  Kernel::ACCESS_VERSION);
-  auto *target = kernel->getWire(out, Kernel::CREATE_VERSION);
-
-  kernel->connect(source, target);
-}
-
-void Builder::connectWires(const std::string &opcode,
-                           const std::vector<const ::dfc::wire*> &in,
-                           const std::vector<const ::dfc::wire*> &out) {
-  assert(!kernels.empty() && "Wire connection outside a kernel");
-  auto *kernel = kernels.back();
-
-  // Create new inputs and connect them w/ the old ones.
-  std::vector<Wire*> inputs;
-  for (const auto *wire : in) {
-    auto *source = kernel->getWire(wire, Kernel::ACCESS_VERSION);
-    auto *target = kernel->getWire(wire, Kernel::CREATE_VERSION);
-
-    kernel->connect(source, target);
-    inputs.push_back(target);
-  }
-
-  // Compose outputs.
-  std::vector<Wire*> outputs;
-  for (const auto *wire : out) {
-    auto *output = kernel->getWire(wire, Kernel::ACCESS_ORIGINAL);
-    outputs.push_back(output);
-  }
-
-  // Create a unit w/ the newly created inputs.
-  kernel->getUnit(opcode, inputs, outputs);
-}
+//===----------------------------------------------------------------------===//
+// Unit
+//===----------------------------------------------------------------------===//
 
 std::string Builder::Unit::fullName() const {
   std::stringstream fullname;
@@ -94,6 +39,10 @@ std::string Builder::Unit::fullName() const {
 
   return result;
 }
+
+//===----------------------------------------------------------------------===//
+// Kernel
+//===----------------------------------------------------------------------===//
 
 Builder::Wire* Builder::Kernel::getWire(const ::dfc::wire *wire, Mode mode) {
   auto i = originals.find(wire->name);
@@ -113,10 +62,11 @@ Builder::Wire* Builder::Kernel::getWire(const ::dfc::wire *wire, Mode mode) {
   const std::string name = (mode == Kernel::CREATE_VERSION) ?
         eda::utils::unique_name(wire->name) : wire->name;
 
-  auto *result = new Wire(name,
-                          wire->type(),
-                          wire->direct != ::dfc::OUTPUT,
-                          wire->direct != ::dfc::INPUT);
+  const bool isInput  = wire->direct != ::dfc::OUTPUT; 
+  const bool isOutput = wire->direct != ::dfc::INPUT;
+  const bool isConst  = wire->kind == ::dfc::CONST;
+
+  auto *result = new Wire(name, wire->type(), isInput, isOutput, isConst);
 
   wires.push_back(result);
   versions[wire->name] = originals[name] = result;
@@ -133,10 +83,18 @@ Builder::Unit* Builder::Kernel::getUnit(const std::string &opcode,
 }
 
 void Builder::Kernel::connect(Wire *source, Wire *target) {
-  if (!source->consumedBy)
+  auto *consumer = source->consumedBy;
+  auto *producer = source->producedBy;
+
+  if (!consumer) {
     getUnit("dup", { source }, { target });
-  else
-    source->consumedBy->addOutput(target);
+  } else if (consumer->opcode == "dup") {
+    consumer->addOutput(target);
+  } else if (producer && producer->opcode == "dup") {
+    producer->addOutput(target);
+  } else {
+    assert(false && "Duplication unit expected");
+  }
 }
 
 void Builder::Kernel::transform() {
@@ -166,23 +124,97 @@ void Builder::Kernel::transform() {
   auto predicate = [&removing](Unit *unit) { return removing.count(unit) > 0; };
   units.erase(std::remove_if(units.begin(), units.end(), predicate), units.end());
 
-  // Create units for the sources and sinks.
+  // Create units for the constants, sources and sinks.
   for (const auto &[_, wire] : originals) {
-    if (wire->input && !wire->producedBy && wire->consumedBy) {
+    if (wire->isConst && !wire->producedBy && wire->consumedBy) {
+      getUnit("const", {}, { wire });
+    } else if (wire->isInput && !wire->producedBy && wire->consumedBy) {
       getUnit("source", {}, { wire });
-    } else if (wire->output && wire->producedBy && !wire->consumedBy) {
+    } else if (wire->isOutput && wire->producedBy && !wire->consumedBy) {
       getUnit("sink", { wire }, {});
     }
   }
 }
 
+//===----------------------------------------------------------------------===//
+// Builder
+//===----------------------------------------------------------------------===//
+
+std::shared_ptr<Model> Builder::create(const std::string &name) {
+  auto *model = new Model(name);
+
+  for (auto *kernel : kernels) {
+    kernel->transform();
+    model->addGraph(getGraph(kernel, model));
+  }
+
+  return std::shared_ptr<Model>(model);
+}
+
+void Builder::startKernel(const std::string &name) {
+  auto *kernel = new Kernel(name);
+
+  kernel->originals.insert(common.originals.begin(), common.originals.end());
+  kernel->versions.insert(common.versions.begin(), common.versions.end());
+
+  kernels.push_back(kernel);
+}
+
+void Builder::declareWire(const ::dfc::wire *wire) {
+  auto *kernel = getKernel();
+  kernel->getWire(wire, Kernel::CREATE_ORIGINAL);
+}
+
+void Builder::connectWires(const ::dfc::wire *in, const ::dfc::wire *out) {
+  auto *kernel = getKernel();
+
+  auto *source = kernel->getWire(in,  Kernel::ACCESS_VERSION);
+  auto *target = kernel->getWire(out, Kernel::CREATE_VERSION);
+
+  kernel->connect(source, target);
+}
+
+void Builder::connectWires(const std::string &opcode,
+                           const std::vector<const ::dfc::wire*> &in,
+                           const std::vector<const ::dfc::wire*> &out) {
+  auto *kernel = getKernel();
+
+  // Create new inputs and connect them w/ the old ones.
+  std::vector<Wire*> sources;
+  std::vector<Wire*> targets;
+
+  for (const auto *wire : in) {
+    auto *source = kernel->getWire(wire, Kernel::ACCESS_VERSION);
+    sources.push_back(source);
+  }
+
+  for (const auto *wire : in) {
+    auto *target = kernel->getWire(wire, Kernel::CREATE_VERSION);
+    targets.push_back(target);
+  }
+
+  for (std::size_t i = 0; i < in.size(); i++) {
+    kernel->connect(sources[i], targets[i]);
+  }
+
+  // Compose outputs.
+  std::vector<Wire*> outputs;
+  for (const auto *wire : out) {
+    auto *output = kernel->getWire(wire, Kernel::ACCESS_ORIGINAL);
+    outputs.push_back(output);
+  }
+
+  // Create a unit w/ the newly created inputs.
+  kernel->getUnit(opcode, targets, outputs);
+}
+
 Port* Builder::getPort(const Wire *wire, unsigned latency) {
-  return new Port(wire->name, // Name
-                  wire->type, // Type
-                  1.0,        // Flow
-                  latency,    // Latency
-                  false,      // Constant
-                  0);         // Value 
+  return new Port(wire->name,    // Name
+                  wire->type,    // Type
+                  1.0,           // Flow
+                  latency,       // Latency
+                  wire->isConst, // Constant
+                  0);            // Value 
 }
 
 Chan* Builder::getChan(const Wire *wire, Graph *graph) {
@@ -201,10 +233,12 @@ NodeType* Builder::getNodetype(const Kernel *kernel,
                                Model *model) {
   auto *nodetype = new NodeType(unit->fullName(), *model);
 
-  for (auto *wire : unit->in)
+  for (auto *wire : unit->in) {
     nodetype->addInput(getPort(wire, 0));
-  for (auto *wire : unit->out)
+  }
+  for (auto *wire : unit->out) {
     nodetype->addOutput(getPort(wire, 1));
+  }
 
   return nodetype;
 }
@@ -216,6 +250,7 @@ Node* Builder::getNode(const Kernel *kernel,
   static unsigned id = 0;
 
   auto *nodetype = model->findNodetype(unit->fullName());
+
   if (!nodetype) {
     nodetype = getNodetype(kernel, unit, model);
     model->addNodetype(nodetype);
@@ -226,16 +261,12 @@ Node* Builder::getNode(const Kernel *kernel,
 
   for (auto *wire : unit->in) {
     auto *input = getChan(wire, graph);
-    assert(input && "Input not found");
-
     input->target = { node, node->type.inputs[node->inputs.size()] };
     node->addInput(input);
   }
 
   for (auto *wire : unit->out) {
     auto *output = getChan(wire, graph);
-    assert(output && "Output not found");
-
     output->source = { node, node->type.outputs[node->outputs.size()] };
     node->addOutput(output);
   }

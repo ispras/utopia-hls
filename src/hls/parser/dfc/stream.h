@@ -155,13 +155,13 @@ struct typed: public wire {
 
   typed<Type>& operator>>(std::size_t rhs) const {
     auto &out = create();
-    connect("SHR", this, /* FIXME: const(rhs) */ this, &out);
+    connect("SHR", this, /* FIXME: const(rhs) */ &out);
     return out;
   }
 
   typed<Type>& operator<<(std::size_t rhs) const {
     auto &out = create();
-    connect("SHL", this, /* FIXME: const(rhs) */ this, &out);
+    connect("SHL", this, /* FIXME: const(rhs) */ &out);
     return out;
   }
 
