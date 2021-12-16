@@ -137,7 +137,7 @@ struct Circuit final {
   void printVerilog(std::ostream &out) const;
   void printFiles(const std::string &outputFirrtlName,
                   const std::string &outputVerilogName,
-                  const std::string &testName) const;
+                  const std::string &outputDirectoryName) const;
 };
 
 struct Compiler final {
@@ -145,10 +145,9 @@ struct Compiler final {
   static constexpr const char* opPrefix = "firrtl.";
   static constexpr const char* typePrefix = "!firrtl.";
   static constexpr const char* varPrefix = "%";
-  static constexpr const char* relativePath = "./test/data/hil/";
   static constexpr const char* circt = "circt-opt ";
   static constexpr const char* circt_options = " --lower-firrtl-to-hw \
-                                                 --export-split-verilog ";
+                                                 --export-split-verilog";
 
   const std::shared_ptr<Model> model;
 

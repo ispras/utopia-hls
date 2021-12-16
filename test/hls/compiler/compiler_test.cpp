@@ -22,25 +22,24 @@ using namespace eda::hls::parser::hil;
 int compileSimpleHilTest(const std::string &inputFileName,
                          const std::string &outputFirrtlName,
                          const std::string &outputVerilogName,
-                         const std::string &testName) {
-  auto compiler = std::make_unique<Compiler>(*parse(Compiler::relativePath +
-                                                    inputFileName));
+                         const std::string &outputDirectoryName) {
+  auto compiler = std::make_unique<Compiler>(*parse(inputFileName));
   auto circuit = compiler->constructCircuit();
-  circuit->printFiles(outputFirrtlName, outputVerilogName, testName);
+  circuit->printFiles(outputFirrtlName, outputVerilogName, outputDirectoryName);
 
   return 0;
 }
 
 TEST(CompilerTest, CompileTestIdctTest) {
-  EXPECT_EQ(compileSimpleHilTest("idct.hil",
+  EXPECT_EQ(compileSimpleHilTest("./test/data/hil/idct.hil",
                                  "outputFirrtlIdct.mlir",
                                  "outputVerilogIdct.v",
-                                 "idct"), 0);
+                                 "./test/data/hil/idct/"), 0);
 }
 
 TEST(CompilerTest, CompileTestHilTest) {
-  EXPECT_EQ(compileSimpleHilTest("test.hil",
+  EXPECT_EQ(compileSimpleHilTest("./test/data/hil/test.hil",
                                  "outputFirrtlTest.mlir",
                                  "outputVerilogTest.v",
-                                 "test"), 0);
+                                 "./test/data/hil/test/"), 0);
 }
