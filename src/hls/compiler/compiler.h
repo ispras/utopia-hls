@@ -50,6 +50,8 @@ struct Instance final {
   std::string moduleName;
   std::vector<Port> inputs;
   std::vector<Port> outputs;
+  std::vector<Port> moduleInputs;
+  std::vector<Port> moduleOutputs;
   std::vector<std::pair<Port, Port>> bindings;
 
   Instance(const std::string &instanceName,
@@ -58,10 +60,14 @@ struct Instance final {
     moduleName(moduleName),
     inputs(),
     outputs(),
+    moduleInputs(),
+    moduleOutputs(),
     bindings() {}
 
   void addInput(const Port &inputPort);
   void addOutput(const Port &outputPort);
+  void addModuleInput(const Port &moduleInputPort);
+  void addModuleOutput(const Port &moduleOutputPort);
   void addBinding(const Port &connectsFrom, const Port &connectTo);
 };
 

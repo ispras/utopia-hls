@@ -29,6 +29,14 @@ namespace eda::hls::compiler {
     inputs.push_back(inputPort);
   }
 
+  void Instance::addModuleInput(const Port &moduleInputPort) {
+    moduleInputs.push_back(moduleInputPort);
+  }
+
+  void Instance::addModuleOutput(const Port &moduleOutputPort) {
+    moduleOutputs.push_back(moduleOutputPort);
+  }
+
   void Instance::addOutput(const Port &outputPort) {
     inputs.push_back(outputPort);
   }
@@ -117,8 +125,7 @@ namespace eda::hls::compiler {
     for (const auto &input : inputs) {
       out << (hasComma ? ",\n" : "\n");
       out << Compiler::indent << Compiler::indent <<  "in " <<
-          Compiler::varPrefix << input.name << " : " << Compiler::typePrefix
-          << input.type;
+          input.name << " : " << Compiler::typePrefix << input.type;
       if (input.type != "reset" && input.type != "clock") {
         out << "<" << input.width << ">";
       }
@@ -126,9 +133,9 @@ namespace eda::hls::compiler {
     }
     for (const auto &output : outputs) {
       out << (hasComma ? ",\n" : "\n");
-      out << Compiler::indent << Compiler::indent <<  "out " <<
-          Compiler::varPrefix << output.name << ": " << Compiler::typePrefix <<
-          output.type << "<" << output.width << ">";
+      out << Compiler::indent << Compiler::indent <<  "out " <<  output.name <<
+          ": " << Compiler::typePrefix << output.type << "<" << output.width <<
+          ">";
     }
     out << ")\n";
   }
@@ -159,6 +166,10 @@ namespace eda::hls::compiler {
         Port inputPort(node->name + "_" + input->target.port->name, true);
         instances.back().addInput(inputPort);
       }
+      for (const auto *moduleInput : node->type.inputs) {
+        Port inputPort(moduleInput->name, true);
+        instances.back().addModuleInput(inputPort);
+      }
 
       for (const auto *output : node->outputs) {
         Port outputPort(node->name + "_" + output->source.port->name, false);
@@ -168,6 +179,10 @@ namespace eda::hls::compiler {
               output->target.port->name, true);
           instances.back().addBinding(outputPort, connectsTo);
         }
+      }
+      for (const auto *moduleOutput : node->type.outputs) {
+        Port outputPort(moduleOutput->name, false);
+        instances.back().addModuleOutput(outputPort);
       }
       addBody("");
     }
@@ -209,27 +224,28 @@ namespace eda::hls::compiler {
         hasComma = true;
       }
 
-      out << " = " << Compiler::opPrefix << "instance @" << instance.moduleName
-          << " {" << "name = " <<  "\"" << instance.instanceName << "\"}" <<
-          " : ";
+      out << " = " << Compiler::opPrefix << "instance " << instance.instanceName
+          << " @" << instance.moduleName << "(";
       hasComma = false;
-      out << Compiler::typePrefix << "clock, ";
-      out << Compiler::typePrefix << "reset,";
-      for (const auto &input : instance.inputs) {
+      out << "in " << "clock " << ": " << Compiler::typePrefix << "clock, ";
+      out << "in " << "reset " << ": " << Compiler::typePrefix << "reset,";
+      for (const auto &input : instance.moduleInputs) {
         out << (hasComma ? ", " : " ");
+        out << "in " << input.name << ": ";
         out << Compiler::typePrefix << input.type;
         out << "<" << input.width << ">";
         hasComma = true;
       }
 
-      for (const auto &output : instance.outputs) {
+      for (const auto &output : instance.moduleOutputs) {
         out << (hasComma ? ", " : " ");
+        out << "out " << output.name << ": ";
         out << Compiler::typePrefix << output.type;
         out << "<" << output.width << ">";
         hasComma = true;
       }
 
-      out << "\n";
+      out << ")\n";
     }
   }
 

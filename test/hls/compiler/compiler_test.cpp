@@ -23,7 +23,8 @@ int compileSimpleHilTest(const std::string &inputFileName,
                          const std::string &outputFirrtlName,
                          const std::string &outputVerilogName,
                          const std::string &testName) {
-  auto compiler = std::make_unique<Compiler>(*parse(Compiler::relativePath + inputFileName));
+  auto compiler = std::make_unique<Compiler>(*parse(Compiler::relativePath +
+                                                    inputFileName));
   auto circuit = compiler->constructCircuit();
   circuit->printFiles(outputFirrtlName, outputVerilogName, testName);
 
