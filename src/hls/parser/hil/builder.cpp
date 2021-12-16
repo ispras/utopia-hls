@@ -14,7 +14,7 @@ using namespace eda::hls;
 
 namespace eda::hls::parser::hil {
 
-std::unique_ptr<Model> Builder::create() {
+std::shared_ptr<Model> Builder::create() {
   assert(currentModel != nullptr && "No model found");
 
   for (const NodeType *nodetype: currentModel->nodetypes) {

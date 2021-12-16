@@ -8,9 +8,11 @@
 
 #pragma once
 
+#include "hls/model/model.h"
+
 #include <iostream>
 
-#include "hls/model/model.h"
+using namespace eda::hls::model;
 
 namespace eda::hls::compiler {
 
@@ -94,7 +96,7 @@ struct Module {
 
 struct FirrtlModule final : Module {
 
-  FirrtlModule(const eda::hls::model::Model &model);
+  FirrtlModule(const Model &model);
 
   //void addWire(const Wire &inputWire);
   void addInstance(const Instance &inputInstance);
@@ -133,9 +135,9 @@ struct Circuit final {
   void print(std::ostream &out) const;
   void printFirrtl(std::ostream &out) const;
   void printVerilog(std::ostream &out) const;
-  void printFiles(const std::string& outputFirrtlName,
-                  const std::string& outputVerilogName,
-                  const std::string& testName) const;
+  void printFiles(const std::string &outputFirrtlName,
+                  const std::string &outputVerilogName,
+                  const std::string &testName) const;
 };
 
 struct Compiler final {
@@ -148,9 +150,9 @@ struct Compiler final {
   static constexpr const char* circt_options = " --lower-firrtl-to-hw \
                                                  --export-split-verilog ";
 
-  const eda::hls::model::Model model;
+  const std::shared_ptr<Model> model;
 
-  Compiler(const eda::hls::model::Model &model);
+  Compiler(const Model &model);
 
   void print(std::ostream &out) const;
 

@@ -19,7 +19,7 @@ using namespace eda::hls::model;
 using namespace eda::hls::parser::hil;
 
 int hilTest(const std::string &filename) {
-  std::unique_ptr<Model> model = parse(filename);
+  std::shared_ptr<Model> model = parse(filename);
 
   if (!model)
     return -1;

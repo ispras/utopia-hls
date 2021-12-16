@@ -180,7 +180,7 @@ private:
 
 namespace eda::hls::model {
 
-std::unique_ptr<Model> parse_model_from_mlir(const std::string &s) {
+std::shared_ptr<Model> parse_model_from_mlir(const std::string &s) {
   auto &builder = Builder::get();
   auto mlir_model_layer = detail::MLIRModelLayer::load_from_mlir(s);
   mlir_model_layer.traverse_with_builder(builder);
@@ -191,10 +191,10 @@ std::unique_ptr<Model> parse_model_from_mlir(const std::string &s) {
   std::cerr << "***********MLIR_BEGIN***********" << std::endl;
   dump_model_mlir(*m, std::cerr);
   std::cerr << "************MLIR_END************" << std::endl;
-  return std::unique_ptr<Model>(std::move(m));
+  return std::shared_ptr<Model>(std::move(m));
 }
 
-std::unique_ptr<Model> parse_model_from_mlir_file(const std::string &filename) {
+std::shared_ptr<Model> parse_model_from_mlir_file(const std::string &filename) {
   std::ifstream file{filename};
   std::stringstream buf;
   if (file) {

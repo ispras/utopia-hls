@@ -28,7 +28,7 @@ void paramOptimizerTest(const std::string &filename) {
     Constraint(1,    150000));                              // Area (number of LUTs)
 
   // Model whose parameters need to be optimized.
-  std::unique_ptr<Model> model = parse(filename);
+  std::shared_ptr<Model> model = parse(filename);
 
   // Integral indicators of the optimized model (output).
   Indicators indicators;

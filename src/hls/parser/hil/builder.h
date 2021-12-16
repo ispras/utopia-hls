@@ -32,7 +32,7 @@ class Builder final : public Singleton<Builder> {
   friend class Singleton<Builder>;
 
 public:
-  std::unique_ptr<Model> create();
+  std::shared_ptr<Model> create();
 
   void startModel(const std::string &name) {
     assert(currentModel == nullptr && "Model is inside another model");
@@ -57,7 +57,7 @@ public:
     assert(currentNodetype != nullptr && "Nodetype has not been started");
 
     currentModel->addNodetype(currentNodetype);
-    currentNodetype = nullptr; 
+    currentNodetype = nullptr;
   }
 
   void startOutputs() {
@@ -116,7 +116,7 @@ public:
 
     auto i = nodetypes.find(type);
     uassert(i != nodetypes.end(), "Nodetype is not found: " << type);
- 
+
     currentNode = new Node(name, *(i->second), *currentGraph);
     outputsStarted = false;
   }

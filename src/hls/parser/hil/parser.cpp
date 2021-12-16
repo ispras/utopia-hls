@@ -18,7 +18,7 @@ extern int hhparse(void);
 
 namespace eda::hls::parser::hil {
 
-std::unique_ptr<eda::hls::model::Model> parse(const std::string &filename) {
+std::shared_ptr<eda::hls::model::Model> parse(const std::string &filename) {
   FILE *file = fopen(filename.c_str(), "r");
   if (file == nullptr) {
     return nullptr;

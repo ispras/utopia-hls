@@ -6,6 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "hls/compiler/compiler.h"
+#include "hls/library/library.h"
+#include "hls/library/library_mock.h"
+
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -13,11 +17,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "hls/compiler/compiler.h"
-#include "hls/library/library.h"
-#include "hls/library/library_mock.h"
-
 using namespace eda::hls::library;
+using namespace eda::hls::model;
 
 namespace eda::hls::compiler {
 
@@ -382,14 +383,15 @@ namespace eda::hls::compiler {
   }
 
 std::shared_ptr<Circuit> Compiler::constructCircuit() {
-  auto circuit = std::make_shared<Circuit>(std::string(model.main()->name));
-  for (const auto *nodetype : model.nodetypes) {
+  auto circuit = std::make_shared<Circuit>(std::string(model->main()->name));
+  for (const auto *nodetype : model->nodetypes) {
     circuit->addExternalModule(nodetype);
   }
-  circuit->addFirModule(model);
+  circuit->addFirModule(*model);
   return circuit;
 }
 
-Compiler::Compiler(const eda::hls::model::Model &model) : model(model) {}
+Compiler::Compiler(const Model &model) :
+    model(std::make_shared<Model>(model)) {}
 
 } // namespace eda::hls::compiler

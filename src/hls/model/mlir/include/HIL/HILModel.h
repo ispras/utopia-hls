@@ -18,8 +18,8 @@
 #include "hls/model/model.h"
 
 namespace eda::hls::model {
-std::unique_ptr<eda::hls::model::Model>
+std::shared_ptr<eda::hls::model::Model>
 parse_model_from_mlir(const std::string &s);
-std::unique_ptr<eda::hls::model::Model>
+std::shared_ptr<eda::hls::model::Model>
 parse_model_from_mlir_file(const std::string &filename);
 } // namespace eda::hls::model

@@ -17,6 +17,6 @@ namespace eda::hls::model {
 
 namespace eda::hls::parser::hil {
 
-std::unique_ptr<eda::hls::model::Model> parse(const std::string &filename);
+std::shared_ptr<eda::hls::model::Model> parse(const std::string &filename);
 
 } // namespace eda::hls::parser::hil
