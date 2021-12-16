@@ -13,17 +13,17 @@ using namespace eda::hls::parser::dfc;
 
 namespace dfc {
 
-void wire::declare(const wire *var) const {
+void declare(const wire *var) {
   Builder::get().declareWire(var);
 }
 
-void wire::connect(const wire *in, const wire *out) const {
+void connect(const wire *in, const wire *out) {
   Builder::get().connectWires(in, out);
 }
 
-void wire::connect(const std::string &opcode,
-                   const std::vector<const wire*> &in,
-                   const std::vector<const wire*> &out) const {
+void connect(const std::string &opcode,
+             const std::vector<const wire*> &in,
+             const std::vector<const wire*> &out) {
   Builder::get().connectWires(opcode, in, out);
 }
 

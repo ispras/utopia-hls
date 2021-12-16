@@ -54,8 +54,11 @@ struct wire_value {
   const std::vector<bool> value;
 };
 
-class wire {
-public:
+//===----------------------------------------------------------------------===//
+// Untyped Wire
+//===----------------------------------------------------------------------===//
+
+struct wire {
   virtual std::string type() const = 0;
   virtual ~wire() {}
 
@@ -73,37 +76,37 @@ protected:
 
   wire(const std::string &name, wire_kind kind, wire_direct direct):
       wire(name, kind, direct, 0) {}
-
-  void declare(const wire *var) const;
-
-  void connect(const wire *in, const wire *out) const;
-
-  void connect(const std::string &opcode,
-               const std::vector<const wire*> &in,
-               const std::vector<const wire*> &out) const;
-
-  void connect(const std::string &op,
-               const wire *in,
-               const wire *out) const {
-    std::vector source = { in };
-    std::vector target = { out };
-    connect(op, source, target);
-  }
-
-  void connect(const std::string &op,
-               const wire *lhs,
-               const wire *rhs,
-               const wire *out) const {
-    std::vector source = { lhs, rhs };
-    std::vector target = { out };
-    connect(op, source, target);
-  }
-
-  void store(wire *var) const {
-    static std::vector<std::unique_ptr<wire>> storage;
-    storage.push_back(std::unique_ptr<wire>(var));
-  }
 };
+
+//===----------------------------------------------------------------------===//
+// Utilities
+//===----------------------------------------------------------------------===//
+
+void declare(const wire *var);
+
+void connect(const wire *in, const wire *out);
+
+void connect(const std::string &opcode,
+             const std::vector<const wire*> &in,
+             const std::vector<const wire*> &out);
+
+inline void store(wire *var) {
+  static std::vector<std::unique_ptr<wire>> storage;
+  storage.push_back(std::unique_ptr<wire>(var));
+}
+
+template <typename Type> struct typed;
+
+template<typename Type>
+typed<Type>& create(wire_kind kind, wire_direct direct = INOUT) {
+  auto *wire = new typed<Type>(kind, direct);
+  store(wire);
+  return *wire;
+}
+
+//===----------------------------------------------------------------------===//
+// Typed Wire
+//===----------------------------------------------------------------------===//
 
 template<typename Type>
 struct typed: public wire {
@@ -130,38 +133,74 @@ struct typed: public wire {
   }
  
   typed<Type>& operator+(const typed<Type> &rhs) const {
-    auto &out = create();
-    connect("ADD", this, &rhs, &out);
+    auto &out = create<Type>(kind);
+    connect("ADD", { this, &rhs }, { &out });
     return out;
   }
 
   typed<Type>& operator-(const typed<Type> &rhs) const {
-    auto &out = create();
-    connect("SUB", this, &rhs, &out);
+    auto &out = create<Type>(kind);
+    connect("SUB", { this, &rhs }, { &out });
     return out;
   }
 
   typed<Type>& operator*(const typed<Type> &rhs) const {
-    auto &out = create();
-    connect("MUL", this, &rhs, &out);
+    auto &out = create<Type>(kind);
+    connect("MUL", { this, &rhs }, { &out });
     return out;
   }
 
   typed<Type>& operator/(const typed<Type> &rhs) const {
-    auto &out = create();
-    connect("DIV", this, &rhs, &out);
+    auto &out = create<Type>(kind);
+    connect("DIV", { this, &rhs }, { &out });
     return out;
   }
 
   typed<Type>& operator>>(std::size_t rhs) const {
-    auto &out = create();
-    connect("SHR", this, /* FIXME: const(rhs) */ &out);
+    auto &out = create<Type>(kind);
+    connect("SHR" + std::to_string(rhs), { this }, { &out });
     return out;
   }
 
   typed<Type>& operator<<(std::size_t rhs) const {
-    auto &out = create();
-    connect("SHL", this, /* FIXME: const(rhs) */ &out);
+    auto &out = create<Type>(kind);
+    connect("SHL" + std::to_string(rhs), { this }, { &out });
+    return out;
+  }
+
+  typed<bit>& operator==(const typed<Type> &rhs) const {
+    auto &out = create<bit>(kind);
+    connect("EQ", { this, &rhs }, { &out });
+    return out;
+  }
+
+  typed<bit>& operator!=(const typed<Type> &rhs) const {
+    auto &out = create<bit>(kind);
+    connect("NE", { this, &rhs }, { &out });
+    return out;
+  }
+
+  typed<bit>& operator>(const typed<Type> &rhs) const {
+    auto &out = create<bit>(kind);
+    connect("GT", { this, &rhs }, { &out });
+    return out;
+  }
+
+  typed<bit>& operator>=(const typed<Type> &rhs) const {
+    auto &out = create<bit>(kind);
+    connect("GE", { this, &rhs }, { &out });
+    return out;
+  }
+
+  typed<bit>& operator<(const typed<Type> &rhs) const {
+    auto &out = create<bit>(kind);
+    connect("LT", { this, &rhs }, { &out });
+    return out;
+  }
+
+  typed<bit>& operator<=(const typed<Type> &rhs) const {
+    auto &out = create<bit>(kind);
+    connect("LE", { this, &rhs }, { &out });
     return out;
   }
 
@@ -172,22 +211,23 @@ struct typed: public wire {
 
   template<typename NewType>
   typed<NewType>& cast() const {
-    auto &out = create<NewType>();
-    connect("CAST", this, &out);
+    auto &out = create<NewType>(kind);
+    connect("CAST", { this }, { &out });
     return out;
-  }
-
-protected:
-  template<typename NewType = Type>
-  typed<NewType>& create(wire_direct direct = INOUT) const {
-    auto *wire = new typed<NewType>(kind, direct);
-    store(wire);
-    return *wire;
   }
 };
 
+template<typename Type>
+typed<Type>& mux(const typed<bit>  &sel,
+                 const typed<Type> &lhs,
+                 const typed<Type> &rhs) {
+  auto &out = create<Type>(lhs.kind);
+  connect("MUX", { &sel, &lhs, &rhs }, { &out });
+  return out;
+}
+
 //===----------------------------------------------------------------------===//
-// DFC variables
+// Variables
 //===----------------------------------------------------------------------===//
 
 template<typename Type, wire_kind Kind, wire_direct Direct>
@@ -199,14 +239,14 @@ struct var: public typed<Type> {
   var<Type, Kind, INPUT>& to_input() const {
     // Using the same name makes this input identical to the original wire.
     auto *in = new var<Type, Kind, INPUT>(wire::name);
-    typed<Type>::store(in);
+    store(in);
     return *in;
   }
 
   var<Type, Kind, OUTPUT>& to_output() const {
     // Using the same name makes this output identical to the original wire.
     auto *out = new var<Type, Kind, OUTPUT>(wire::name);
-    typed<Type>::store(out);
+    store(out);
     return *out;
   }
 
@@ -263,7 +303,7 @@ struct var<Type, CONST, INPUT>: public typed<Type> {
 };
 
 //===----------------------------------------------------------------------===//
-// DFC streams
+// Streams
 //===----------------------------------------------------------------------===//
 
 template<typename Type> using stream_inout  = var<Type, STREAM, INOUT>;
@@ -271,7 +311,7 @@ template<typename Type> using stream_input  = var<Type, STREAM, INPUT>;
 template<typename Type> using stream_output = var<Type, STREAM, OUTPUT>;
 
 //===----------------------------------------------------------------------===//
-// DFC scalars
+// Scalars
 //===----------------------------------------------------------------------===//
 
 template<typename Type> using scalar_inout  = var<Type, SCALAR, INOUT>;
@@ -279,13 +319,13 @@ template<typename Type> using scalar_input  = var<Type, SCALAR, INPUT>;
 template<typename Type> using scalar_output = var<Type, SCALAR, OUTPUT>;
 
 //===----------------------------------------------------------------------===//
-// DFC constants
+// Constants
 //===----------------------------------------------------------------------===//
 
 template<typename Type> using value = var<Type, CONST, INPUT>;
 
 //===----------------------------------------------------------------------===//
-// DFC shortcuts
+// Shortcuts
 //===----------------------------------------------------------------------===//
 
 template<typename Type> using stream = stream_inout<Type>;

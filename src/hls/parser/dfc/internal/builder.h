@@ -62,23 +62,24 @@ private:
       isConst(isConst) {}
 
     void setConsumer(Unit *unit) {
-      assert(!consumedBy && "Multiple reads");
-      consumedBy = unit;
+      assert(!consumer && "Multiple reads");
+      consumer = unit;
     }
 
     void setProducer(Unit *unit) {
-      assert(!producedBy && "Multiple writes");
-      producedBy = unit;
+      assert(!producer && "Multiple writes");
+      producer = unit;
     }
 
     const std::string name;
     const std::string type;
+
     const bool isInput;
     const bool isOutput;
     const bool isConst;
 
-    Unit *producedBy = nullptr;
-    Unit *consumedBy = nullptr;
+    Unit *producer = nullptr;
+    Unit *consumer = nullptr;
   };
 
   struct Unit final {
@@ -157,10 +158,14 @@ private:
 
   static Graph* getGraph(const Kernel *kernel, Model *model);
 
-  Kernel* getKernel() { return kernels.empty() ? &common : kernels.back(); }
+  Kernel* getKernel() {
+    return kernels.empty() ? &common : kernels.back();
+  }
 
-  std::vector<Kernel*> kernels;
+  /// Common part of all kernels (usually, wires and constants).
   Kernel common;
+  /// Kernels.
+  std::vector<Kernel*> kernels;
 };
 
 } // namespace eda::hls::parser::dfc

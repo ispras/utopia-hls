@@ -83,8 +83,8 @@ Builder::Unit* Builder::Kernel::getUnit(const std::string &opcode,
 }
 
 void Builder::Kernel::connect(Wire *source, Wire *target) {
-  auto *consumer = source->consumedBy;
-  auto *producer = source->producedBy;
+  auto *consumer = source->consumer;
+  auto *producer = source->producer;
 
   if (!consumer) {
     getUnit("dup", { source }, { target });
@@ -102,17 +102,19 @@ void Builder::Kernel::transform() {
   std::unordered_set<Unit*> removing;
 
   for (auto *unit : units) {
-    if (unit->opcode != "dup" || unit->in.size() != 1 || unit->out.size() != 1)
+    if (unit->opcode != "dup" || unit->in.size() != 1 || unit->out.size() != 1) {
       continue;
+    }
 
     auto *input = unit->in.front();
     auto *output = unit->out.front();
 
-    auto *next = output->consumedBy;
-    input->consumedBy = next;
+    auto *next = output->consumer;
+    input->consumer = next;
 
-    if (next)
+    if (next) {
       std::replace(next->in.begin(), next->in.end(), output, input);
+    }
 
     originals.erase(output->name);
     versions.erase(output->name);
@@ -126,11 +128,11 @@ void Builder::Kernel::transform() {
 
   // Create units for the constants, sources and sinks.
   for (const auto &[_, wire] : originals) {
-    if (wire->isConst && !wire->producedBy && wire->consumedBy) {
+    if (wire->isConst && !wire->producer && wire->consumer) {
       getUnit("const", {}, { wire });
-    } else if (wire->isInput && !wire->producedBy && wire->consumedBy) {
+    } else if (wire->isInput && !wire->producer && wire->consumer) {
       getUnit("source", {}, { wire });
-    } else if (wire->isOutput && wire->producedBy && !wire->consumedBy) {
+    } else if (wire->isOutput && wire->producer && !wire->consumer) {
       getUnit("sink", { wire }, {});
     }
   }
@@ -277,8 +279,9 @@ Node* Builder::getNode(const Kernel *kernel,
 Graph* Builder::getGraph(const Kernel *kernel, Model *model) {
   auto *graph = new Graph(kernel->name, *model);
 
-  for (auto *unit : kernel->units)
+  for (auto *unit : kernel->units) {
     graph->addNode(getNode(kernel, unit, graph, model));
+  }
 
   return graph;
 }

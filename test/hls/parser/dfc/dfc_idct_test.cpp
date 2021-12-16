@@ -23,6 +23,9 @@ DFC_KERNEL(IDCT) {
   static dfc::value<dfc::sint32> c181;
   static dfc::value<dfc::sint32> c8192;
 
+  static dfc::value<dfc::sint32> m256;
+  static dfc::value<dfc::sint32> p255;
+
   static dfc::value<dfc::sint32> W1; // 2048*sqrt(2)*cos(1*pi/16)
   static dfc::value<dfc::sint32> W2; // 2048*sqrt(2)*cos(2*pi/16)
   static dfc::value<dfc::sint32> W3; // 2048*sqrt(2)*cos(3*pi/16)
@@ -162,9 +165,9 @@ DFC_KERNEL(IDCT) {
     blk[8*7+i] = iclp((x7-x1)>>14);
   }
 
-  dfc::typed<dfc::sint16>& iclp(dfc::typed<dfc::sint32> &in) {
-    // FIXME:
-    return in.cast<dfc::sint16>();
+  // (i<-256) ? -256 : ((i>255) ? 255 : i)
+  dfc::typed<dfc::sint16>& iclp(dfc::typed<dfc::sint32> &i) {
+    dfc::mux(i < m256, m256, mux(i > p255, p255, i)).cast<dfc::sint16>();
   }
 };
 
@@ -172,6 +175,8 @@ dfc::value<dfc::sint32> IDCT::c4(4);
 dfc::value<dfc::sint32> IDCT::c128(128);
 dfc::value<dfc::sint32> IDCT::c181(181);
 dfc::value<dfc::sint32> IDCT::c8192(8192);
+dfc::value<dfc::sint32> IDCT::m256(-256);
+dfc::value<dfc::sint32> IDCT::p255(255);
 dfc::value<dfc::sint32> IDCT::W1(2841);
 dfc::value<dfc::sint32> IDCT::W2(2676);
 dfc::value<dfc::sint32> IDCT::W3(2408);
