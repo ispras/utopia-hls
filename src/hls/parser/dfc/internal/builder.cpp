@@ -45,6 +45,7 @@ std::string Builder::Unit::fullName() const {
 //===----------------------------------------------------------------------===//
 
 Builder::Wire* Builder::Kernel::getWire(const ::dfc::wire *wire, Mode mode) {
+  std::cout << "GET_WIRE: " << wire->name << std::endl;
   auto i = originals.find(wire->name);
 
   const bool access = mode == Kernel::ACCESS_ORIGINAL ||

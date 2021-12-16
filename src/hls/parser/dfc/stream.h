@@ -11,7 +11,9 @@
 #include "hls/parser/dfc/types.h"
 #include "util/string.h"
 
+#include <iomanip>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -42,16 +44,22 @@ enum wire_kind { CONST, SCALAR, STREAM };
 
 enum wire_direct { INPUT, OUTPUT, INOUT };
 
-// TODO:
 struct wire_value {
-  wire_value() {}
-  wire_value(int rhs) {}
+  wire_value(long long value): value(value), text(to_string(value)) {}
+  
+  std::string to_string() const { return text; }
 
-  std::string to_string() const { return ""; }
+  const long long value;
+  const std::string text;
 
-  const std::string type;
-  const std::size_t size = 0;
-  const std::vector<bool> value;
+private:
+  static std::string to_string(int value) {
+    std::stringstream out;
+    out << std::setfill('0')
+        << std::setw(sizeof(value)*2) 
+        << std::hex << value;
+    return out.str(); 
+  }
 };
 
 //===----------------------------------------------------------------------===//
@@ -78,14 +86,8 @@ protected:
       wire(name, kind, direct, 0) {}
 };
 
-//===----------------------------------------------------------------------===//
-// Utilities
-//===----------------------------------------------------------------------===//
-
 void declare(const wire *var);
-
 void connect(const wire *in, const wire *out);
-
 void connect(const std::string &opcode,
              const std::vector<const wire*> &in,
              const std::vector<const wire*> &out);
@@ -93,15 +95,6 @@ void connect(const std::string &opcode,
 inline void store(wire *var) {
   static std::vector<std::unique_ptr<wire>> storage;
   storage.push_back(std::unique_ptr<wire>(var));
-}
-
-template <typename Type> struct typed;
-
-template<typename Type>
-typed<Type>& create(wire_kind kind, wire_direct direct = INOUT) {
-  auto *wire = new typed<Type>(kind, direct);
-  store(wire);
-  return *wire;
 }
 
 //===----------------------------------------------------------------------===//
@@ -132,103 +125,30 @@ struct typed: public wire {
     return *this;
   }
  
-  typed<Type>& operator+(const typed<Type> &rhs) const {
-    auto &out = create<Type>(kind);
-    connect("ADD", { this, &rhs }, { &out });
-    return out;
-  }
-
-  typed<Type>& operator-(const typed<Type> &rhs) const {
-    auto &out = create<Type>(kind);
-    connect("SUB", { this, &rhs }, { &out });
-    return out;
-  }
-
-  typed<Type>& operator*(const typed<Type> &rhs) const {
-    auto &out = create<Type>(kind);
-    connect("MUL", { this, &rhs }, { &out });
-    return out;
-  }
-
-  typed<Type>& operator/(const typed<Type> &rhs) const {
-    auto &out = create<Type>(kind);
-    connect("DIV", { this, &rhs }, { &out });
-    return out;
-  }
-
-  typed<Type>& operator>>(std::size_t rhs) const {
-    auto &out = create<Type>(kind);
-    connect("SHR" + std::to_string(rhs), { this }, { &out });
-    return out;
-  }
-
-  typed<Type>& operator<<(std::size_t rhs) const {
-    auto &out = create<Type>(kind);
-    connect("SHL" + std::to_string(rhs), { this }, { &out });
-    return out;
-  }
-
-  typed<bit>& operator==(const typed<Type> &rhs) const {
-    auto &out = create<bit>(kind);
-    connect("EQ", { this, &rhs }, { &out });
-    return out;
-  }
-
-  typed<bit>& operator!=(const typed<Type> &rhs) const {
-    auto &out = create<bit>(kind);
-    connect("NE", { this, &rhs }, { &out });
-    return out;
-  }
-
-  typed<bit>& operator>(const typed<Type> &rhs) const {
-    auto &out = create<bit>(kind);
-    connect("GT", { this, &rhs }, { &out });
-    return out;
-  }
-
-  typed<bit>& operator>=(const typed<Type> &rhs) const {
-    auto &out = create<bit>(kind);
-    connect("GE", { this, &rhs }, { &out });
-    return out;
-  }
-
-  typed<bit>& operator<(const typed<Type> &rhs) const {
-    auto &out = create<bit>(kind);
-    connect("LT", { this, &rhs }, { &out });
-    return out;
-  }
-
-  typed<bit>& operator<=(const typed<Type> &rhs) const {
-    auto &out = create<bit>(kind);
-    connect("LE", { this, &rhs }, { &out });
-    return out;
-  }
-
   typed<Type>& operator+=(const typed<Type> &rhs) { return *this = *this + rhs; }
   typed<Type>& operator-=(const typed<Type> &rhs) { return *this = *this - rhs; }
   typed<Type>& operator*=(const typed<Type> &rhs) { return *this = *this * rhs; }
   typed<Type>& operator/=(const typed<Type> &rhs) { return *this = *this / rhs; }
 
-  template<typename NewType>
-  typed<NewType>& cast() const {
-    auto &out = create<NewType>(kind);
-    connect("CAST", { this }, { &out });
-    return out;
-  }
+  typed<Type>& operator>>=(std::size_t rhs) { return *this = *this >> rhs; }
+  typed<Type>& operator<<=(std::size_t rhs) { return *this = *this << rhs; }
 };
 
 template<typename Type>
-typed<Type>& mux(const typed<bit>  &sel,
-                 const typed<Type> &lhs,
-                 const typed<Type> &rhs) {
-  auto &out = create<Type>(lhs.kind);
-  connect("MUX", { &sel, &lhs, &rhs }, { &out });
-  return out;
+typed<Type>& create(wire_kind kind, wire_direct direct = INOUT) {
+  auto *wire = new typed<Type>(kind, direct);
+  store(wire);
+  return *wire;
 }
 
 //===----------------------------------------------------------------------===//
 // Variables
 //===----------------------------------------------------------------------===//
+
+template<typename Type, wire_kind Kind, wire_direct Direct> struct var;
+
+template<typename Type, wire_kind Kind, wire_direct Direct>
+var<Type, Kind, Direct>& create(const std::string &name);
 
 template<typename Type, wire_kind Kind, wire_direct Direct>
 struct var: public typed<Type> {
@@ -238,22 +158,27 @@ struct var: public typed<Type> {
 
   var<Type, Kind, INPUT>& to_input() const {
     // Using the same name makes this input identical to the original wire.
-    auto *in = new var<Type, Kind, INPUT>(wire::name);
-    store(in);
-    return *in;
+    return create<Type, Kind, INPUT>(wire::name);
   }
 
   var<Type, Kind, OUTPUT>& to_output() const {
     // Using the same name makes this output identical to the original wire.
-    auto *out = new var<Type, Kind, OUTPUT>(wire::name);
-    store(out);
-    return *out;
+    return create<Type, Kind, OUTPUT>(wire::name);
   }
 
   typed<Type>& operator=(const typed<Type> &rhs) {
     return typed<Type>::operator=(rhs);
   }
 };
+
+template<typename Type, wire_kind Kind, wire_direct Direct>
+var<Type, Kind, Direct>& create(const std::string &name) {
+  auto *wire = new var<Type, Kind, Direct>(name);
+  store(wire);
+  return *wire;
+}
+
+//===----------------------------------------------------------------------===//
 
 /// Input specialization.
 template<typename Type, wire_kind Kind>
@@ -265,6 +190,8 @@ struct var<Type, Kind, INPUT>: public typed<Type> {
   // Assignment to an input is prohibited.
   typed<Type>& operator=(const typed<Type> &rhs) = delete;
 };
+
+//===----------------------------------------------------------------------===//
 
 /// Output specialization.
 template<typename Type, wire_kind Kind>
@@ -284,6 +211,8 @@ struct var<Type, Kind, OUTPUT>: public typed<Type> {
   typed<Type>& operator/(const typed<Type> &rhs) = delete;
 };
 
+//===----------------------------------------------------------------------===//
+
 /// Constant specialization.
 template<typename Type>
 struct var<Type, CONST, INPUT>: public typed<Type> {
@@ -296,10 +225,16 @@ struct var<Type, CONST, INPUT>: public typed<Type> {
 
   // Initialization from a literal.
   var(wire_value value):
-    typed<Type>(Type::type_name() + value.to_string(), CONST, INPUT) {}
+    typed<Type>(wire_name(Type::type_name(), value), CONST, INPUT) {}
 
   template<typename LiteralType>
   var(LiteralType value): var(wire_value(value)) {}
+
+private:
+  static std::string wire_name(const std::string &type,
+                               const wire_value &value) {
+    return "const_" + type + "_" + value.to_string();
+  }
 };
 
 //===----------------------------------------------------------------------===//
@@ -333,5 +268,242 @@ template<typename Type> using scalar = scalar_inout<Type>;
 
 template<typename Type> using input  = stream_input<Type>;
 template<typename Type> using output = stream_output<Type>;
+
+//===----------------------------------------------------------------------===//
+// Operators
+//===----------------------------------------------------------------------===//
+
+template<typename Type, typename T>
+using compatible = typename std::enable_if<std::is_arithmetic_v<T>, T>::type;
+
+//===----------------------------------------------------------------------===//
+
+template<typename Type>
+typed<Type>& operator+(const typed<Type> &lhs, const typed<Type> &rhs) {
+  auto &out = create<Type>(lhs.kind);
+  connect("ADD", { &lhs, &rhs }, { &out });
+  return out;
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<Type>& operator+(const typed<Type> &lhs, T rhs) {
+  return lhs + value<Type>(rhs);
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<Type>& operator+(T lhs, const typed<Type> &rhs) {
+  return value<Type>(lhs) + rhs;
+}
+
+//===----------------------------------------------------------------------===//
+
+template<typename Type>
+typed<Type>& operator-(const typed<Type> &lhs, const typed<Type> &rhs) {
+  auto &out = create<Type>(lhs.kind);
+  connect("SUB", { &lhs, &rhs }, { &out });
+  return out;
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<Type>& operator-(const typed<Type> &lhs, T rhs) {
+  return lhs - value<Type>(rhs);
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<Type>& operator-(T lhs, const typed<Type> &rhs) {
+  return value<Type>(lhs) - rhs;
+}
+
+//===----------------------------------------------------------------------===//
+
+template<typename Type>
+typed<Type>& operator*(const typed<Type> &lhs, const typed<Type> &rhs) {
+  auto &out = create<Type>(lhs.kind);
+  connect("MUL", { &lhs, &rhs }, { &out });
+  return out;
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<Type>& operator*(const typed<Type> &lhs, T rhs) {
+  return lhs * value<Type>(rhs);
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<Type>& operator*(T lhs, const typed<Type> &rhs) {
+  return value<Type>(lhs) * rhs;
+}
+
+//===----------------------------------------------------------------------===//
+
+template<typename Type>
+typed<Type>& operator/(const typed<Type> &lhs, const typed<Type> &rhs) {
+  auto &out = create<Type>(lhs.kind);
+  connect("DIV", { &lhs, &rhs }, { &out });
+  return out;
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<Type>& operator/(const typed<Type> &lhs, T rhs) {
+  return lhs / value<Type>(rhs);
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<Type>& operator/(T lhs, const typed<Type> &rhs) {
+  return value<Type>(lhs) / rhs;
+}
+
+//===----------------------------------------------------------------------===//
+
+template<typename Type>
+typed<Type>& operator>>(const typed<Type> &lhs, std::size_t rhs) {
+  auto &out = create<Type>(lhs.kind);
+  connect("SHR" + std::to_string(rhs), { &lhs }, { &out });
+  return out;
+}
+
+//===----------------------------------------------------------------------===//
+
+template<typename Type>
+typed<Type>& operator<<(const typed<Type> &lhs, std::size_t rhs) {
+  auto &out = create<Type>(lhs.kind);
+  connect("SHL" + std::to_string(rhs), { &lhs }, { &out });
+  return out;
+}
+
+//===----------------------------------------------------------------------===//
+
+template<typename Type>
+typed<bit>& operator==(const typed<Type> &lhs, const typed<Type> &rhs) {
+  auto &out = create<bit>(lhs.kind);
+  connect("EQ", { &lhs, &rhs }, { &out });
+  return out;
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<bit>& operator==(const typed<Type> &lhs, T rhs) {
+  return lhs == value<Type>(rhs);
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<bit>& operator==(T lhs, const typed<Type> &rhs) {
+  return value<Type>(lhs) == rhs;
+}
+
+//===----------------------------------------------------------------------===//
+
+template<typename Type>
+typed<bit>& operator!=(const typed<Type> &lhs, const typed<Type> &rhs) {
+  auto &out = create<bit>(lhs.kind);
+  connect("NE", { &lhs, &rhs }, { &out });
+  return out;
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<bit>& operator!=(const typed<Type> &lhs, T rhs) {
+  return lhs != value<Type>(rhs);
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<bit>& operator!=(T lhs, const typed<Type> &rhs) {
+  return value<Type>(lhs) != rhs;
+}
+
+//===----------------------------------------------------------------------===//
+
+template<typename Type>
+typed<bit>& operator>(const typed<Type> &lhs, const typed<Type> &rhs) {
+  auto &out = create<bit>(lhs.kind);
+  connect("GT", { &lhs, &rhs }, { &out });
+  return out;
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<bit>& operator>(const typed<Type> &lhs, T rhs) {
+  return lhs > value<Type>(rhs);
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<bit>& operator>(T lhs, const typed<Type> &rhs) {
+  return value<Type>(lhs) > rhs;
+}
+
+//===----------------------------------------------------------------------===//
+
+template<typename Type>
+typed<bit>& operator>=(const typed<Type> &lhs, const typed<Type> &rhs) {
+  auto &out = create<bit>(lhs.kind);
+  connect("GE", { &lhs, &rhs }, { &out });
+  return out;
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<bit>& operator>=(const typed<Type> &lhs, T rhs) {
+  return lhs >= value<Type>(rhs);
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<bit>& operator>=(T lhs, const typed<Type> &rhs) {
+  return value<Type>(lhs) >= rhs;
+}
+
+//===----------------------------------------------------------------------===//
+
+template<typename Type>
+typed<bit>& operator<(const typed<Type> &lhs, const typed<Type> &rhs) {
+  auto &out = create<bit>(lhs.kind);
+  connect("LT", { &lhs, &rhs }, { &out });
+  return out;
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<bit>& operator<(const typed<Type> &lhs, T rhs) {
+  return lhs < value<Type>(rhs);
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<bit>& operator<(T lhs, const typed<Type> &rhs) {
+  return value<Type>(lhs) < rhs;
+}
+
+//===----------------------------------------------------------------------===//
+
+template<typename Type>
+typed<bit>& operator<=(const typed<Type> &lhs, const typed<Type> &rhs) {
+  auto &out = create<bit>(lhs.kind);
+  connect("LE", { &lhs, &rhs }, { &out });
+  return out;
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<bit>& operator<=(const typed<Type> &lhs, T rhs) {
+  return lhs <= value<Type>(rhs);
+}
+
+template<typename Type, typename T, typename = compatible<Type, T>>
+typed<bit>& operator<=(T lhs, const typed<Type> &rhs) {
+  return value<Type>(lhs) <= rhs;
+}
+
+//===----------------------------------------------------------------------===//
+
+template<typename Type>
+typed<Type>& mux(const typed<bit>  &sel,
+                 const typed<Type> &lhs,
+                 const typed<Type> &rhs) {
+  auto &out = create<Type>(lhs.kind);
+  connect("MUX", { &sel, &lhs, &rhs }, { &out });
+  return out;
+}
+
+//===----------------------------------------------------------------------===//
+
+template<typename NewType>
+typed<NewType>& cast(const wire &var) {
+  auto &out = create<NewType>(var.kind);
+  connect("CAST", { &var }, { &out });
+  return out;
+}
+
+//===----------------------------------------------------------------------===//
 
 } // namespace dfc

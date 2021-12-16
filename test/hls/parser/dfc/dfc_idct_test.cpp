@@ -18,20 +18,12 @@
 #include <iostream>
 
 DFC_KERNEL(IDCT) {
-  static dfc::value<dfc::sint32> c4;
-  static dfc::value<dfc::sint32> c128;
-  static dfc::value<dfc::sint32> c181;
-  static dfc::value<dfc::sint32> c8192;
-
-  static dfc::value<dfc::sint32> m256;
-  static dfc::value<dfc::sint32> p255;
-
-  static dfc::value<dfc::sint32> W1; // 2048*sqrt(2)*cos(1*pi/16)
-  static dfc::value<dfc::sint32> W2; // 2048*sqrt(2)*cos(2*pi/16)
-  static dfc::value<dfc::sint32> W3; // 2048*sqrt(2)*cos(3*pi/16)
-  static dfc::value<dfc::sint32> W5; // 2048*sqrt(2)*cos(5*pi/16)
-  static dfc::value<dfc::sint32> W6; // 2048*sqrt(2)*cos(6*pi/16)
-  static dfc::value<dfc::sint32> W7; // 2048*sqrt(2)*cos(7*pi/16)
+  static const int W1 = 2841; // 2048*sqrt(2)*cos(1*pi/16)
+  static const int W2 = 2676; // 2048*sqrt(2)*cos(2*pi/16)
+  static const int W3 = 2408; // 2048*sqrt(2)*cos(3*pi/16)
+  static const int W5 = 1609; // 2048*sqrt(2)*cos(5*pi/16)
+  static const int W6 = 1108; // 2048*sqrt(2)*cos(6*pi/16)
+  static const int W7 = 565;  // 2048*sqrt(2)*cos(7*pi/16)
 
   DFC_KERNEL_CTOR(IDCT) {
     std::array<dfc::stream<dfc::sint16>, 64> blk;
@@ -56,15 +48,15 @@ DFC_KERNEL(IDCT) {
     dfc::stream<dfc::sint32> x0, x1, x2, x3, x4, x5, x6, x7, x8;
 
     /* TODO: shortcut */
-    x1 = blk[8*i+4].cast<dfc::sint32>()<<11;
-    x2 = blk[8*i+6].cast<dfc::sint32>();
-    x3 = blk[8*i+2].cast<dfc::sint32>();
-    x4 = blk[8*i+1].cast<dfc::sint32>();
-    x5 = blk[8*i+7].cast<dfc::sint32>();
-    x6 = blk[8*i+5].cast<dfc::sint32>();
-    x7 = blk[8*i+3].cast<dfc::sint32>();
+    x1 = dfc::cast<dfc::sint32>(blk[8*i+4])<<11;
+    x2 = dfc::cast<dfc::sint32>(blk[8*i+6]);
+    x3 = dfc::cast<dfc::sint32>(blk[8*i+2]);
+    x4 = dfc::cast<dfc::sint32>(blk[8*i+1]);
+    x5 = dfc::cast<dfc::sint32>(blk[8*i+7]);
+    x6 = dfc::cast<dfc::sint32>(blk[8*i+5]);
+    x7 = dfc::cast<dfc::sint32>(blk[8*i+3]);
 
-    x0 = (blk[0].cast<dfc::sint32>()<<11) + c128; /* for proper rounding in the fourth stage */
+    x0 = (dfc::cast<dfc::sint32>(blk[0])<<11) + 128; /* for proper rounding in the fourth stage */
 
     /* first stage */
     x8 = W7*(x4+x5);
@@ -90,18 +82,18 @@ DFC_KERNEL(IDCT) {
     x8 -= x3;
     x3 = x0 + x2;
     x0 -= x2;
-    x2 = (c181*(x4+x5)+c128)>>8;
-    x4 = (c181*(x4-x5)+c128)>>8;
+    x2 = (181*(x4+x5)+128)>>8;
+    x4 = (181*(x4-x5)+128)>>8;
 
     /* fourth stage */
-    blk[0] = ((x7+x1)>>8).cast<dfc::sint16>();
-    blk[1] = ((x3+x2)>>8).cast<dfc::sint16>();
-    blk[2] = ((x0+x4)>>8).cast<dfc::sint16>();
-    blk[3] = ((x8+x6)>>8).cast<dfc::sint16>();
-    blk[4] = ((x8-x6)>>8).cast<dfc::sint16>();
-    blk[5] = ((x0-x4)>>8).cast<dfc::sint16>();
-    blk[6] = ((x3-x2)>>8).cast<dfc::sint16>();
-    blk[7] = ((x7-x1)>>8).cast<dfc::sint16>();
+    blk[0] = dfc::cast<dfc::sint16>((x7+x1)>>8);
+    blk[1] = dfc::cast<dfc::sint16>((x3+x2)>>8);
+    blk[2] = dfc::cast<dfc::sint16>((x0+x4)>>8);
+    blk[3] = dfc::cast<dfc::sint16>((x8+x6)>>8);
+    blk[4] = dfc::cast<dfc::sint16>((x8-x6)>>8);
+    blk[5] = dfc::cast<dfc::sint16>((x0-x4)>>8);
+    blk[6] = dfc::cast<dfc::sint16>((x3-x2)>>8);
+    blk[7] = dfc::cast<dfc::sint16>((x7-x1)>>8);
   }
 
   /* column (vertical) IDCT
@@ -117,28 +109,28 @@ DFC_KERNEL(IDCT) {
     dfc::stream<dfc::sint32> x0, x1, x2, x3, x4, x5, x6, x7, x8;
 
     /* TODO: shortcut */
-    x1 = blk[8*4+i].cast<dfc::sint32>()<<8;
-    x2 = blk[8*6+i].cast<dfc::sint32>();
-    x3 = blk[8*2+i].cast<dfc::sint32>();
-    x4 = blk[8*1+i].cast<dfc::sint32>();
-    x5 = blk[8*7+i].cast<dfc::sint32>();
-    x6 = blk[8*5+i].cast<dfc::sint32>();
-    x7 = blk[8*3+i].cast<dfc::sint32>();
+    x1 = dfc::cast<dfc::sint32>(blk[8*4+i])<<8;
+    x2 = dfc::cast<dfc::sint32>(blk[8*6+i]);
+    x3 = dfc::cast<dfc::sint32>(blk[8*2+i]);
+    x4 = dfc::cast<dfc::sint32>(blk[8*1+i]);
+    x5 = dfc::cast<dfc::sint32>(blk[8*7+i]);
+    x6 = dfc::cast<dfc::sint32>(blk[8*5+i]);
+    x7 = dfc::cast<dfc::sint32>(blk[8*3+i]);
 
-    x0 = (blk[8*0+i].cast<dfc::sint32>()<<8) + c8192;
+    x0 = (dfc::cast<dfc::sint32>(blk[8*0+i])<<8) + 8192;
 
     /* first stage */
-    x8 = W7*(x4+x5) + c4;
+    x8 = W7*(x4+x5) + 4;
     x4 = (x8+(W1-W7)*x4)>>3;
     x5 = (x8-(W1+W7)*x5)>>3;
-    x8 = W3*(x6+x7) + c4;
+    x8 = W3*(x6+x7) + 4;
     x6 = (x8-(W3-W5)*x6)>>3;
     x7 = (x8-(W3+W5)*x7)>>3;
     
     /* second stage */
     x8 = x0 + x1;
     x0 -= x1;
-    x1 = W6*(x3+x2) + c4;
+    x1 = W6*(x3+x2) + 4;
     x2 = (x1-(W2+W6)*x2)>>3;
     x3 = (x1+(W2-W6)*x3)>>3;
     x1 = x4 + x6;
@@ -151,8 +143,8 @@ DFC_KERNEL(IDCT) {
     x8 -= x3;
     x3 = x0 + x2;
     x0 -= x2;
-    x2 = (c181*(x4+x5)+c128)>>8;
-    x4 = (c181*(x4-x5)+c128)>>8;
+    x2 = (181*(x4+x5)+128)>>8;
+    x4 = (181*(x4-x5)+128)>>8;
     
     /* fourth stage */
     blk[8*0+i] = iclp((x7+x1)>>14);
@@ -167,22 +159,12 @@ DFC_KERNEL(IDCT) {
 
   // (i<-256) ? -256 : ((i>255) ? 255 : i)
   dfc::typed<dfc::sint16>& iclp(dfc::typed<dfc::sint32> &i) {
-    dfc::mux(i < m256, m256, mux(i > p255, p255, i)).cast<dfc::sint16>();
+    dfc::value<dfc::sint32> Cm256(-256);
+    dfc::value<dfc::sint32> Cp255(+255);
+
+    return dfc::cast<dfc::sint16>(dfc::mux(i < Cm256, Cm256, mux(i > Cp255, Cp255, i)));
   }
 };
-
-dfc::value<dfc::sint32> IDCT::c4(4);
-dfc::value<dfc::sint32> IDCT::c128(128);
-dfc::value<dfc::sint32> IDCT::c181(181);
-dfc::value<dfc::sint32> IDCT::c8192(8192);
-dfc::value<dfc::sint32> IDCT::m256(-256);
-dfc::value<dfc::sint32> IDCT::p255(255);
-dfc::value<dfc::sint32> IDCT::W1(2841);
-dfc::value<dfc::sint32> IDCT::W2(2676);
-dfc::value<dfc::sint32> IDCT::W3(2408);
-dfc::value<dfc::sint32> IDCT::W5(1609);
-dfc::value<dfc::sint32> IDCT::W6(1108);
-dfc::value<dfc::sint32> IDCT::W7(565);
 
 void dfcIdctTest() {
   dfc::params args;

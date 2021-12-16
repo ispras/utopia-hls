@@ -17,19 +17,17 @@
 
 namespace dfc {
 
-class type {
-public:
+struct type {
   virtual std::string name() const = 0;
   virtual std::size_t size() const = 0;
 };
 
-class basic: public type {};
+struct basic: public type {};
 
-class untyped: public basic {};
+struct untyped: public basic {};
 
 template<std::size_t IntBits, std::size_t FracBits, bool IsSigned>
-class fix: public basic {
-public:
+struct fix: public basic {
   static constexpr std::size_t type_size = IntBits + FracBits;
 
   static std::string type_name() {
@@ -43,10 +41,10 @@ public:
 };
 
 template<std::size_t IntBits, std::size_t FracBits>
-class sfix: public fix<IntBits, FracBits, true> {};
+struct sfix: public fix<IntBits, FracBits, true> {};
 
 template<std::size_t Bits>
-class sint: public sfix<Bits, 0> {};
+struct sint: public sfix<Bits, 0> {};
 
 using sint8  = sint<8>;
 using sint16 = sint<16>;
@@ -54,10 +52,10 @@ using sint32 = sint<32>;
 using sint64 = sint<64>;
 
 template<std::size_t IntBits, std::size_t FracBits>
-class ufix: public fix<IntBits, FracBits, false> {};
+struct ufix: public fix<IntBits, FracBits, false> {};
 
 template<std::size_t Bits>
-class uint: public ufix<Bits, 0> {};
+struct uint: public ufix<Bits, 0> {};
 
 using bit    = uint<1>;
 using uint8  = uint<8>;
@@ -66,8 +64,7 @@ using uint32 = uint<32>;
 using uint64 = uint<64>;
 
 template<std::size_t ExpBits, std::size_t Precision>
-class real: public basic {
-public:
+struct real: public basic {
   static constexpr std::size_t type_size = ExpBits + Precision;
 
   static std::string type_name() {
@@ -84,7 +81,7 @@ using float32 = real<8, 24>;
 using float64 = real<11, 53>;
 
 template<std::size_t Bits>
-class bits: public basic {
+struct bits: public basic {
   static constexpr std::size_t type_size = Bits;
 
   static std::string type_name() {
@@ -98,8 +95,7 @@ class bits: public basic {
 class composite: public type {};
 
 template<typename Head, typename... Tail>
-class tuple: public composite {
-public:
+struct tuple: public composite {
   static constexpr std::size_t type_size = Head::type_size + (... + Tail::type_size);
 
   static std::string type_name() {
@@ -115,8 +111,7 @@ public:
 };
 
 template<typename Type>
-class complex: public tuple<Type, Type> {
-public:
+struct complex: public tuple<Type, Type> {
   static std::string type_name() {
     return "complex<" + Type::type_name() + ">";
   }
@@ -125,8 +120,7 @@ public:
 };
 
 template<typename Type, std::size_t... Sizes>
-class tensor: public composite {
-public:
+struct tensor: public composite {
   static constexpr std::size_t type_size = Type::type_size * (... * Sizes);
 
   static std::string type_name() {
@@ -142,10 +136,10 @@ public:
 };
 
 template<typename Type, std::size_t Size>
-class vector: public tensor<Type, Size> {};
+struct vector: public tensor<Type, Size> {};
 
 template<typename Type, std::size_t Rows, std::size_t Cols>
-class matrix: public tensor<Type, Rows, Cols> {};
+struct matrix: public tensor<Type, Rows, Cols> {};
 
 } // namespace dfc
 
