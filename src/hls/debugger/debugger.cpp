@@ -330,7 +330,7 @@ z3::sort Verifier::getSort(const Node &node, z3::context &ctx) const {
 }
 
 z3::sort Verifier::getSort(const Port &port, z3::context &ctx) const {
-  return ctx.uninterpreted_sort(port.type.c_str());
+  return ctx.uninterpreted_sort(port.type.name.c_str());
 }
 
 z3::expr Verifier::toConst(const Binding &bnd, z3::context &ctx) const {

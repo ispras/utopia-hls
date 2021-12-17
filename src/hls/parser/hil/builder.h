@@ -70,7 +70,7 @@ public:
       const std::string &flow,
       const std::string &latency,
       const std::string &value = "") {
-    Port *port = new Port(name,
+    auto *port = new Port(name,
                           type,
                           std::stof(flow),
                           std::stoi(latency),
@@ -105,7 +105,7 @@ public:
   void addChan(const std::string &type, const std::string &name) {
     assert(currentGraph != nullptr && "Chan is outside a graph");
 
-    Chan *chan = new Chan(name, type, *currentGraph);
+    auto *chan = new Chan(name, type, *currentGraph);
     chans.insert({ name, chan });
     currentGraph->addChan(chan);
   }
@@ -132,7 +132,7 @@ public:
     auto i = chans.find(name);
     uassert(i != chans.end(), "Chan is not found: " << name);
 
-    Chan *chan = i->second;
+    auto *chan = i->second;
     if (currentInstance == nullptr) {
       assert(currentNode != nullptr && "Param is outside a node");
 

@@ -17,14 +17,30 @@
 
 namespace dfc {
 
+//===----------------------------------------------------------------------===//
+// Type
+//===----------------------------------------------------------------------===//
+
 struct type {
   virtual std::string name() const = 0;
   virtual std::size_t size() const = 0;
 };
 
+//===----------------------------------------------------------------------===//
+// Basic
+//===----------------------------------------------------------------------===//
+
 struct basic: public type {};
 
+//===----------------------------------------------------------------------===//
+// Untyped
+//===----------------------------------------------------------------------===//
+
 struct untyped: public basic {};
+
+//===----------------------------------------------------------------------===//
+// Fixed
+//===----------------------------------------------------------------------===//
 
 template<std::size_t IntBits, std::size_t FracBits, bool IsSigned>
 struct fix: public basic {
@@ -41,10 +57,10 @@ struct fix: public basic {
 };
 
 template<std::size_t IntBits, std::size_t FracBits>
-struct sfix: public fix<IntBits, FracBits, true> {};
+using sfix = fix<IntBits, FracBits, true>;
 
 template<std::size_t Bits>
-struct sint: public sfix<Bits, 0> {};
+using sint = sfix<Bits, 0>;
 
 using sint8  = sint<8>;
 using sint16 = sint<16>;
@@ -52,16 +68,20 @@ using sint32 = sint<32>;
 using sint64 = sint<64>;
 
 template<std::size_t IntBits, std::size_t FracBits>
-struct ufix: public fix<IntBits, FracBits, false> {};
+using ufix = fix<IntBits, FracBits, false>;
 
 template<std::size_t Bits>
-struct uint: public ufix<Bits, 0> {};
+using uint = ufix<Bits, 0>;
 
 using bit    = uint<1>;
 using uint8  = uint<8>;
 using uint16 = uint<16>;
 using uint32 = uint<32>;
 using uint64 = uint<64>;
+
+//===----------------------------------------------------------------------===//
+// Float
+//===----------------------------------------------------------------------===//
 
 template<std::size_t ExpBits, std::size_t Precision>
 struct real: public basic {
@@ -80,6 +100,10 @@ using float16 = real<5, 11>;
 using float32 = real<8, 24>;
 using float64 = real<11, 53>;
 
+//===----------------------------------------------------------------------===//
+// Bits
+//===----------------------------------------------------------------------===//
+
 template<std::size_t Bits>
 struct bits: public basic {
   static constexpr std::size_t type_size = Bits;
@@ -92,7 +116,15 @@ struct bits: public basic {
   std::size_t size() const override { return type_size; }
 };
 
+//===----------------------------------------------------------------------===//
+// Composite
+//===----------------------------------------------------------------------===//
+
 class composite: public type {};
+
+//===----------------------------------------------------------------------===//
+// Tuple
+//===----------------------------------------------------------------------===//
 
 template<typename Head, typename... Tail>
 struct tuple: public composite {
@@ -110,6 +142,10 @@ struct tuple: public composite {
   std::size_t size() const override { return type_size; }
 };
 
+//===----------------------------------------------------------------------===//
+// Complex
+//===----------------------------------------------------------------------===//
+
 template<typename Type>
 struct complex: public tuple<Type, Type> {
   static std::string type_name() {
@@ -118,6 +154,10 @@ struct complex: public tuple<Type, Type> {
 
   std::string name() const override { return type_name(); }
 };
+
+//===----------------------------------------------------------------------===//
+// Tensor
+//===----------------------------------------------------------------------===//
 
 template<typename Type, std::size_t... Sizes>
 struct tensor: public composite {
@@ -136,10 +176,10 @@ struct tensor: public composite {
 };
 
 template<typename Type, std::size_t Size>
-struct vector: public tensor<Type, Size> {};
+using vector = tensor<Type, Size>;
 
 template<typename Type, std::size_t Rows, std::size_t Cols>
-struct matrix: public tensor<Type, Rows, Cols> {};
+using matrix = tensor<Type, Rows, Cols>;
 
 } // namespace dfc
 

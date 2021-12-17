@@ -15,6 +15,27 @@
 
 namespace eda::hls::model {
 
+//===----------------------------------------------------------------------===//
+// Type
+//===----------------------------------------------------------------------===//
+
+const Type& Type::get(const std::string &name) {
+  static std::unordered_map<std::string, std::unique_ptr<Type>> types;
+
+  auto i = types.find(name);
+  if (i != types.end())
+    return *i->second;
+
+  auto *type = new CustomType(name);
+  types.insert({ name, std::unique_ptr<Type>(type) });
+
+  return *type;
+}
+
+//===----------------------------------------------------------------------===//
+// Graph
+//===----------------------------------------------------------------------===//
+
 void Graph::instantiate(
     const Graph &graph,
     const std::string &name,
@@ -90,6 +111,10 @@ void Graph::instantiate(
   } // for nodes.
 }
 
+//===----------------------------------------------------------------------===//
+// Model
+//===----------------------------------------------------------------------===//
+
 void Model::save() {
   for (auto *transform : transforms)
     delete transform;
@@ -111,7 +136,15 @@ void Model::insertDelay(Chan &chan, unsigned latency) {
   transform->apply();
 }
 
-std::ostream& operator <<(std::ostream &out, const Port &port) {
+//===----------------------------------------------------------------------===//
+// Output
+//===----------------------------------------------------------------------===//
+
+std::ostream& operator<<(std::ostream &out, const Type &type) {
+  return out << type.name;
+}
+
+std::ostream& operator<<(std::ostream &out, const Port &port) {
   out << port.type << "<" << port.flow << ">" << " ";
   out << "#" << port.latency << " " << port.name;
   if (port.isConst)
@@ -119,7 +152,7 @@ std::ostream& operator <<(std::ostream &out, const Port &port) {
   return out;
 }
 
-static std::ostream& operator <<(std::ostream &out, const std::vector<Port*> &ports) {
+static std::ostream& operator<<(std::ostream &out, const std::vector<Port*> &ports) {
   bool comma = false;
   for (const Port *port: ports) {
     out << (comma ? ", " : "") << *port;
@@ -129,16 +162,16 @@ static std::ostream& operator <<(std::ostream &out, const std::vector<Port*> &po
   return out;
 }
 
-std::ostream& operator <<(std::ostream &out, const NodeType &nodetype) {
+std::ostream& operator<<(std::ostream &out, const NodeType &nodetype) {
   out << "  nodetype " << nodetype.name;
   return out << "(" << nodetype.inputs << ") => (" << nodetype.outputs << ");";
 }
 
-std::ostream& operator <<(std::ostream &out, const Chan &chan) {
+std::ostream& operator<<(std::ostream &out, const Chan &chan) {
   return out << "chan " << chan.type << " " << chan.name << ";";
 }
 
-static std::ostream& operator <<(std::ostream &out, const std::vector<Chan*> &chans) {
+static std::ostream& operator<<(std::ostream &out, const std::vector<Chan*> &chans) {
   bool comma = false;
   for (const Chan *chan: chans) {
     out << (comma ? ", " : "") << chan->name;
@@ -148,12 +181,12 @@ static std::ostream& operator <<(std::ostream &out, const std::vector<Chan*> &ch
   return out;
 }
 
-std::ostream& operator <<(std::ostream &out, const Node &node) {
+std::ostream& operator<<(std::ostream &out, const Node &node) {
   out << "node " << node.type.name << " " << node.name;
   return out << "(" << node.inputs << ") => (" << node.outputs << ");";
 }
 
-std::ostream& operator <<(std::ostream &out, const Graph &graph) {
+std::ostream& operator<<(std::ostream &out, const Graph &graph) {
   out << "  graph " << graph.name << " {" << std::endl;
 
   for (const Chan *chan: graph.chans)
@@ -165,7 +198,7 @@ std::ostream& operator <<(std::ostream &out, const Graph &graph) {
   return out << "  }";
 }
 
-std::ostream& operator <<(std::ostream &out, const Model &model) {
+std::ostream& operator<<(std::ostream &out, const Model &model) {
   out << "model " << model.name << "{" << std::endl;
 
   for (const NodeType *nodetype: model.nodetypes)

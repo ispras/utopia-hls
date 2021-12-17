@@ -12,6 +12,7 @@
 #include <map>
 #include <memory>
 #include <ostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -26,28 +27,177 @@ struct Model;
 struct Node;
 struct Transform;
 
-struct Port final {
-  Port(
-    const std::string &name,
-    const std::string &type,
-    float flow,
-    unsigned latency,
-    bool isConst,
-    unsigned value):
-      name(name),
-      type(type),
-      flow(flow),
-      latency(latency),
-      isConst(isConst),
-      value(value) {}
+//===----------------------------------------------------------------------===//
+// Type
+//===----------------------------------------------------------------------===//
 
+struct Type {
+  enum Kind {
+    CUSTOM, // uninterpreted identifer
+    FIXED,  // fixed<IntBits, FracBits, IsSigned>
+    FLOAT,  // float<ExpBits, Precision>
+    TUPLE,  // tuple<Type1, ..., TypeN>
+    TENSOR  // tensor<Type, Dim1, ..., DimN>
+  };
+
+  static const Type& get(const std::string &name);
+
+  Type(Kind kind, const std::string &name, std::size_t size):
+    kind(kind), name(name), size(size) {}
+
+  virtual ~Type() {}
+
+  bool operator==(const Type &rhs) const {
+    return name == rhs.name;
+  }
+
+  bool operator!=(const Type &rhs) const {
+    return name != rhs.name;
+  }
+
+  const Kind kind;
   const std::string name;
-  const std::string type;
+  const std::size_t size;
+};
+
+struct CustomType final: public Type {
+  CustomType(const std::string name):
+    Type(CUSTOM, name, 1) {}
+};
+
+struct FixedType final: public Type {
+  FixedType(std::size_t intBits, std::size_t fracBits, bool isSigned):
+    Type(FIXED, name(intBits, fracBits, isSigned), intBits + fracBits),
+    intBits(intBits),
+    fracBits(fracBits),
+    isSigned(isSigned) {}
+
+  const std::size_t intBits;
+  const std::size_t fracBits;
+  const bool isSigned;
+
+private:
+  static std::string name(std::size_t intBits,
+                          std::size_t fracBits,
+                          bool isSigned) {
+    return "fixed_" + std::to_string(intBits)  + "_"
+                    + std::to_string(fracBits) + "_"
+                    + std::to_string(isSigned);
+  }
+};
+
+struct FloatType final: public Type {
+  FloatType(std::size_t expBits, std::size_t precision):
+    Type(FLOAT, name(expBits, precision), expBits + precision),
+    expBits(expBits),
+    precision(precision) {}
+
+  const std::size_t expBits;
+  const std::size_t precision;
+
+private:
+  static std::string name(std::size_t expBits, std::size_t precision) {
+    return "float_" + std::to_string(expBits) + "_"
+                    + std::to_string(precision);
+  }
+};
+
+struct TupleType final: public Type {
+  TupleType(const std::vector<const Type*> &types):
+    Type(TUPLE, name(types), size(types)),
+    types(types) {}
+
+  const std::vector<const Type*> types;
+
+private:
+  static std::string name(const std::vector<const Type*> &types) {
+    std::stringstream out;
+
+    out << "tuple";
+    for (const auto *type : types)
+      out << "_" << type->name;
+
+    return out.str();
+  }
+
+  static std::size_t size(const std::vector<const Type*> &types) {
+    std::size_t sum = 0;
+    for (const auto *type : types)
+      sum += type->size;
+
+    return sum;
+  }
+};
+
+struct TensorType final: public Type {
+  TensorType(const Type *type, const std::vector<std::size_t> &dims):
+    Type(TENSOR, name(type, dims), size(type, dims)),
+    type(type),
+    dims(dims) {}
+
+  const Type *type;
+  const std::vector<std::size_t> dims;
+
+private:
+  static std::string name(const Type *type,
+                          const std::vector<std::size_t> &dims) {
+    std::stringstream out;
+
+    out << "tensor_" << type->name;
+    for (auto dim : dims)
+      out << "_" << dim;
+
+    return out.str();
+  }
+
+  static std::size_t size(const Type *type,
+                          const std::vector<std::size_t> &dims) {
+    std::size_t mul = 1;
+    for (auto dim : dims)
+      mul *= dim;
+
+    return type->size * mul;
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// Port
+//===----------------------------------------------------------------------===//
+
+struct Port final {
+  Port(const std::string &name,
+       const Type &type,
+       float flow,
+       unsigned latency,
+       bool isConst,
+       unsigned value):
+    name(name),
+    type(type),
+    flow(flow),
+    latency(latency),
+    isConst(isConst),
+    value(value) {}
+
+  /// \deprecated
+  Port(const std::string &name,
+       const std::string &type,
+       float flow,
+       unsigned latency,
+       bool isConst,
+       unsigned value):
+    Port(name, Type::get(type), flow, latency, isConst, value) {}
+ 
+  const std::string name;
+  const Type &type;
   const float flow;
   const unsigned latency;
   const bool isConst;
   const unsigned value;
 };
+
+//===----------------------------------------------------------------------===//
+// NodeType
+//===----------------------------------------------------------------------===//
 
 struct NodeType final {
   NodeType(const std::string &name, Model &model):
@@ -132,6 +282,10 @@ struct NodeType final {
   Model &model;
 };
 
+//===----------------------------------------------------------------------===//
+// Binding
+//===----------------------------------------------------------------------===//
+
 struct Binding final {
   Binding() = default;
   Binding(const Node *node, const Port *port):
@@ -144,6 +298,10 @@ struct Binding final {
   const Node *node = nullptr;
   const Port *port = nullptr;
 };
+
+//===----------------------------------------------------------------------===//
+// Chan
+//===----------------------------------------------------------------------===//
 
 struct Chan final {
   Chan(const std::string &name, const std::string &type, Graph &graph):
@@ -158,6 +316,10 @@ struct Chan final {
   // Reference to the parent.
   Graph &graph;
 };
+
+//===----------------------------------------------------------------------===//
+// Node
+//===----------------------------------------------------------------------===//
 
 struct Node final {
   Node(const std::string &name, const NodeType &type, Graph &graph):
@@ -201,6 +363,10 @@ struct Node final {
   Graph &graph;
 };
 
+//===----------------------------------------------------------------------===//
+// Graph
+//===----------------------------------------------------------------------===//
+
 struct Graph final {
   Graph(const std::string &name, Model &model):
     name(name), model(model) {}
@@ -243,6 +409,10 @@ struct Graph final {
   Model &model;
 };
 
+//===----------------------------------------------------------------------===//
+// Model
+//===----------------------------------------------------------------------===//
+
 struct Model final {
   Model(const std::string &name):
     name(name) {}
@@ -283,11 +453,16 @@ struct Model final {
   std::vector<Transform*> transforms;
 };
 
-std::ostream& operator <<(std::ostream &out, const Port &port);
-std::ostream& operator <<(std::ostream &out, const NodeType &nodetype);
-std::ostream& operator <<(std::ostream &out, const Chan &chan);
-std::ostream& operator <<(std::ostream &out, const Node &node);
-std::ostream& operator <<(std::ostream &out, const Graph &graph);
-std::ostream& operator <<(std::ostream &out, const Model &model);
+//===----------------------------------------------------------------------===//
+// Output
+//===----------------------------------------------------------------------===//
+
+std::ostream& operator<<(std::ostream &out, const Type &type);
+std::ostream& operator<<(std::ostream &out, const Port &port);
+std::ostream& operator<<(std::ostream &out, const NodeType &nodetype);
+std::ostream& operator<<(std::ostream &out, const Chan &chan);
+std::ostream& operator<<(std::ostream &out, const Node &node);
+std::ostream& operator<<(std::ostream &out, const Graph &graph);
+std::ostream& operator<<(std::ostream &out, const Model &model);
 
 } // namespace eda::hls::model
