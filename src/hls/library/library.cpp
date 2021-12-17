@@ -27,9 +27,16 @@ std::shared_ptr<MetaElement> Library::find(const NodeType &nodetype) {
 }
 
 std::shared_ptr<MetaElement> Library::find(const std::string &name) const {
+  std::string lowerCaseName = name;
+  unsigned x = 0;
+  while(name[x]) {
+    lowerCaseName[x] = tolower(lowerCaseName[x]);
+    x++;
+  }
+
   const auto i = std::find_if(library.begin(), library.end(),
-    [&name](const std::shared_ptr<MetaElement> &metaElement) {
-      return metaElement->name == name;
+    [&lowerCaseName](const std::shared_ptr<MetaElement> &metaElement) {
+      return metaElement->name == lowerCaseName;
     });
 
   return i == library.end() ? nullptr : *i;

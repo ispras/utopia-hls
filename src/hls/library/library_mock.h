@@ -38,13 +38,17 @@ inline std::unique_ptr<Element> MetaElementMock::construct(
   std::string inputs, outputs, ifaceWires, regs, fsm, assigns;
   unsigned pos = 0, inputLength = 0, outputLength = 0;
   std::string outputType;
-  bool quickProcess = false;
+  bool quickProcess = true;
 
   if (name == "merge" || name == "split" || name == "delay") {
     outputType = std::string("reg ");
-    quickProcess = true;
+  } else if (name == "add" || name == "sub" || name == "c128" ||
+             name == "c181" || name == "c4" || name == "c8192" ||
+             name == "mul") {
+    outputType = std::string("wire ");
   } else {
     outputType = std::string("wire ");
+    quickProcess = false;
   }
 
   if (!quickProcess) {
@@ -194,7 +198,62 @@ inline std::unique_ptr<Element> MetaElementMock::construct(
     element->ir = std::string("\n") + ifaceWires + inputs + outputs + regs + ir;
     return element;
   }
+  else if (name == "add" || name == "sub" || name == "mul") {
+    std::vector<std::string> inPortNames;
+    std::vector<std::string> outPortNames;
 
+    for (auto port : ports) {
+      if (port.name == "clock" || port.name == "reset") {
+        continue;
+      }
+      if (port.direction == Port::IN || port.direction == Port::INOUT) {
+        inPortNames.push_back(port.name);
+      }
+      if (port.direction == Port::OUT || port.direction == Port::INOUT) {
+        outPortNames.push_back(port.name);
+      }
+    }
+
+    ir += "assign {";
+    bool comma = false;
+    for (auto portName : outPortNames) {
+      ir += (comma ? ", " : "") + portName;
+      if (!comma) {
+        comma = true;
+      }
+    }
+    ir += "} = ";
+    bool needAction = false;
+    std::string action = (name == "add" ? " + " : name == "sub" ? " - " : " * ");
+    for (auto portName : inPortNames) {
+      ir += (needAction ? action : "") + portName;
+      if (!needAction) {
+        needAction = true;
+      }
+    }
+    ir += ";\n";
+    element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
+    return element;
+  }
+  else if (name == "c128" || name == "c181" || name == "c4" || name == "c8192") {
+    std::string outPortName;
+    for (auto port : ports) {
+      if (name == "clock" || name == "reset") {
+        continue;
+      }
+      else if (port.direction == Port::OUT || port.direction == Port::INOUT) {
+        outPortName = port.name;
+        break;
+      }
+    }
+    ir += std::string("assign ") + outPortName + " = " +
+          (name == "c128" ? "128" :
+           name == "c181" ? "181" :
+           name == "c4"   ? "4"   :
+           name == "c8192" ? "8192" : "0") + ";\n";
+    element->ir = std::string("\n") + ifaceWires + outputs + ir;
+    return element;
+  }
 
   // Finish creating the first stage of pipeline.
   if (!fsmNotCreated) {
@@ -277,11 +336,11 @@ inline std::shared_ptr<MetaElement> MetaElementMock::create(
   } else if (name == "delay") {
     ports.push_back(Port("in", Port::IN, 0, 1));
     ports.push_back(Port("out", Port::OUT, 1, 1));
-  } else*/ if (name == "add" || name == "sub") {
+  } else*/ if (name == "add1" || name == "sub1") {
     ports.push_back(Port("a", Port::IN, 0, 4));
     ports.push_back(Port("b", Port::IN, 0, 4));
-    ports.push_back(Port("c", Port::OUT, 2, 4));
     ports.push_back(Port("d", Port::OUT, 2, 1));
+    ports.push_back(Port("c", Port::OUT, 2, 4));
   } else {
     uassert(false, "Call createMetaElement by NodeType for element " << name);
   }
@@ -307,7 +366,14 @@ inline std::shared_ptr<MetaElement> MetaElementMock::create(
   ports.push_back(Port("clock", Port::IN, 0, 1));
   ports.push_back(Port("reset", Port::IN, 0, 1));
 
-  return std::shared_ptr<MetaElement>(new MetaElementMock(nodetype.name, params, ports));
+  std::string lowerCaseName = nodetype.name;
+  unsigned i = 0;
+  while (lowerCaseName[i]) {
+    lowerCaseName[i] = tolower(lowerCaseName[i]);
+    i++;
+  }
+
+  return std::shared_ptr<MetaElement>(new MetaElementMock(lowerCaseName, params, ports));
 }
 
 // MetaElement:
@@ -395,8 +461,8 @@ static struct LibraryInitializer {
     /*Library::get().add(MetaElementMock::create("merge"));
     Library::get().add(MetaElementMock::create("split"));
     Library::get().add(MetaElementMock::create("delay"));*/
-    Library::get().add(MetaElementMock::create("add"));
-    Library::get().add(MetaElementMock::create("sub"));
+    Library::get().add(MetaElementMock::create("add1"));
+    Library::get().add(MetaElementMock::create("sub1"));
   }
 } libraryInitializer;
 

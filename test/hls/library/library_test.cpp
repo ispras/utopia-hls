@@ -48,6 +48,6 @@ TEST(LibraryTest, PrintIDCTHilTest) {
 }
 
 TEST(LibraryTest, PrintAddTest) {
-  EXPECT_EQ(callLibraryElementTest("add"), 0);
+  EXPECT_EQ(callLibraryElementTest("add1"), 0);
 }
 
