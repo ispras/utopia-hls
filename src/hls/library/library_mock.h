@@ -44,7 +44,13 @@ inline std::unique_ptr<Element> MetaElementMock::construct(
     outputType = std::string("reg ");
   } else if (name == "add" || name == "sub" || name == "c128" ||
              name == "c181" || name == "c4" || name == "c8192" ||
-             name == "mul") {
+             name == "mul" ||
+             name == "w1" || name == "w1_add_w7" || name == "w1_sub_w7" ||
+             name == "w2" || name == "w2_add_w6" || name == "w2_sub_w6" ||
+             name == "w3" || name == "w3_add_w5" || name == "w3_sub_w5" ||
+             name == "w5" || name == "w6"        || name == "w7" ||
+             name == "shl_11" || name == "shl_8" ||
+             name == "shr_14" || name == "shr_8" || name == "shr_3") {
     outputType = std::string("wire ");
   } else {
     outputType = std::string("wire ");
@@ -235,7 +241,35 @@ inline std::unique_ptr<Element> MetaElementMock::construct(
     element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
     return element;
   }
-  else if (name == "c128" || name == "c181" || name == "c4" || name == "c8192") {
+  else if (name == "shl_11" || name == "shl_8" ||
+           name == "shr_14" || name == "shr_8" || name == "shr_3") {
+    std::string inPortName, outPortName;
+    for (auto port : ports) {
+      if (port.name == "clock" || port.name == "reset") {
+        continue;
+      }
+      if (port.direction == Port::IN || port.direction == Port::INOUT) {
+        inPortName = port.name;
+      }
+      if (port.direction == Port::OUT || port.direction == Port::INOUT) {
+        outPortName = port.name;
+      }
+    }
+    ir += "assign " + outPortName + " = " + inPortName +
+      (name == "shl_11" ? " << 11" :
+       name == "shl_8"  ? " << 8"  :
+       name == "shr_14" ? " >> 14" :
+       name == "shr_8"  ? " >> 8"  :
+       name == "shr_3"  ? " >> 3" : "");
+    ir += ";\n";
+    element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
+    return element;
+  }
+  else if (name == "c128" || name == "c181" || name == "c4" || name == "c8192" ||
+           name == "w1"   || name == "w1_add_w7" || name == "w1_sub_w7" ||
+           name == "w2"   || name == "w2_add_w6" || name == "w2_sub_w6" ||
+           name == "w3"   || name == "w3_add_w5" || name == "w3_sub_w5" ||
+           name == "w5"   || name == "w6"        || name == "w7") {
     std::string outPortName;
     for (auto port : ports) {
       if (name == "clock" || name == "reset") {
@@ -250,7 +284,19 @@ inline std::unique_ptr<Element> MetaElementMock::construct(
           (name == "c128" ? "128" :
            name == "c181" ? "181" :
            name == "c4"   ? "4"   :
-           name == "c8192" ? "8192" : "0") + ";\n";
+           name == "c8192" ? "8192" :
+           name == "w1" ? "2841" :
+           name == "w1_add_w7" ? "(2841+565)" :
+           name == "w1_sub_w7" ? "(2841-565)" :
+           name == "w2" ? "2676" :
+           name == "w2_add_w6" ? "(2676+1108)" :
+           name == "w2_sub_w6" ? "(2676-1108)" :
+           name == "w3" ? "2408" :
+           name == "w3_add_w5" ? "(2408+1609)" :
+           name == "w3_sub_w5" ? "(2408-1609)" :
+           name == "w5" ? "1609" :
+           name == "w6" ? "1108" :
+           name == "w7" ? "565"  :  "0") + ";\n";
     element->ir = std::string("\n") + ifaceWires + outputs + ir;
     return element;
   }
