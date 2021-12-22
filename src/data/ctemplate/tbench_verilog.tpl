@@ -49,7 +49,6 @@ module {{MODULE_NAME}}_tb;
 		{{NAME}} = $urandom;{{/ST}}
 		{{/TESTS}}
 
-		//#dumpoff;
 		$finish;
 	end
 endmodule
