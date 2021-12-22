@@ -7,23 +7,35 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/compiler/compiler.h"
+#include "hls/debugger/debugger.h"
 #include "hls/library/library.h"
 #include "hls/library/library_mock.h"
+#include "hls/scheduler/dijkstra.h"
+#include "hls/scheduler/scheduler.h"
+
+#include <ctemplate/template.h>
 
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <memory>
 #include <stdlib.h>
 #include <string.h>
 
+using namespace eda::hls::debugger;
 using namespace eda::hls::library;
 using namespace eda::hls::model;
+using namespace eda::hls::scheduler;
 
 namespace eda::hls::compiler {
 
 const std::string chanSourceToString(const eda::hls::model::Chan &chan) {
   return chan.source.node->name + "_" + chan.source.port->name;
+}
+
+bool Port::isClock() const {
+  return name == "clock";
 }
 
 void Instance::addInput(const Port &inputPort) {
@@ -325,7 +337,38 @@ void Circuit::addFirModule(const FirrtlModule &firModule) {
 }
 
 void Circuit::addExternalModule(const ExternalModule &externalModule) {
-  externalModules.insert({externalModule.moduleName, externalModule});
+  extModules.insert({externalModule.moduleName, externalModule});
+}
+
+FirrtlModule* Circuit::findFirModule(const std::string &name) const {
+  auto i = std::find_if(firModules.begin(), firModules.end(),
+      [&name](std::pair<std::string, FirrtlModule> const &pair) {
+          return pair.first == name; });
+
+  return const_cast<FirrtlModule*>
+      (i != firModules.end() ? &(i->second) : nullptr);
+}
+
+ExternalModule* Circuit::findExtModule(const std::string &name) const {
+  auto i = std::find_if(extModules.begin(), extModules.end(),
+      [&name](std::pair<std::string, ExternalModule> const &pair) {
+          return pair.first == name; });
+
+  return const_cast<ExternalModule*>
+      (i != extModules.end() ? &(i->second) : nullptr);
+}
+
+Module* Circuit::findModule(const std::string &name) const {
+
+  Module *firModule = findFirModule(name);
+  Module *extModule = findExtModule(name);
+
+  return firModule == nullptr ?
+      (extModule == nullptr ? nullptr : extModule) : firModule;
+}
+
+Module* Circuit::findMain() const {
+  return findModule("main");
 }
 
 void Circuit::printFirrtl(std::ostream &out) const {
@@ -334,14 +377,14 @@ void Circuit::printFirrtl(std::ostream &out) const {
   for (const auto &pair : firModules) {
     pair.second.printFirrtl(out);
   }
-  for (const auto &pair : externalModules) {
+  for (const auto &pair : extModules) {
     pair.second.printFirrtlDeclaration(out);
   }
   out << "}";
 }
 
 void Circuit::printVerilog(std::ostream &out) const {
-  for (const auto &pair : externalModules) {
+  for (const auto &pair : extModules) {
     pair.second.printVerilog(out);
   }
 }
@@ -375,7 +418,7 @@ std::ostream& operator <<(std::ostream &out, const Circuit &circuit) {
 }
 
 std::shared_ptr<Circuit> Compiler::constructCircuit() {
-  auto circuit = std::make_shared<Circuit>(std::string(model->main()->name));
+  circuit = std::make_shared<Circuit>(std::string(model->main()->name));
   for (const auto *nodetype : model->nodetypes) {
     circuit->addExternalModule(nodetype);
   }
@@ -385,5 +428,85 @@ std::shared_ptr<Circuit> Compiler::constructCircuit() {
 
 Compiler::Compiler(const Model &model) :
   model(std::make_shared<Model>(model)) {}
+
+void Compiler::printRndVlogTest(const std::string& tstPath, const int tstCnt) {
+
+  const std::filesystem::path path = tstPath;
+  std::filesystem::create_directories(path.parent_path());
+
+  std::ofstream tBenchFile(path);
+
+  ctemplate::TemplateDictionary *dict = new ctemplate::TemplateDictionary("tb");
+
+  // set generation time
+  auto time = std::time(nullptr);
+  auto *localTime = std::localtime(&time);
+  dict->SetFormattedValue("GEN_TIME",
+                          "%d-%d-%d %d:%d:%d",
+                          localTime->tm_mday,
+                          localTime->tm_mon + 1,
+                          localTime->tm_year + 1900,
+                          localTime->tm_hour,
+                          localTime->tm_min,
+                          localTime->tm_sec);
+
+  const Module *main = circuit->findMain();
+  dict->SetValue("MODULE_NAME", main->moduleName);
+
+  std::vector<std::string> bndNames;
+  // set registers for device inputs
+  std::vector<Port> inputs = main->inputs;
+  for (size_t i = 0; i < inputs.size(); i++) {
+    ctemplate::TemplateDictionary *inDict = dict->AddSectionDictionary("INS");
+    inDict->SetValue("IN_TYPE", "[0:0]"); // TODO: set type when implemented
+    const std::string iName = inputs[i].name;
+    inDict->SetValue("IN_NAME", iName);
+    bndNames.push_back(iName);
+  }
+
+  // set registers for device outputs
+  std::vector<Port> outputs = main->outputs;
+  for (size_t i = 0; i < outputs.size(); i++) {
+    ctemplate::TemplateDictionary *outDict = dict->AddSectionDictionary("OUTS");
+    outDict->SetValue("OUT_TYPE", "[0:0]"); // TODO: set type when implemented
+    const std::string oName = outputs[i].name;
+    outDict->SetValue("OUT_NAME", oName);
+    bndNames.push_back(oName);
+  }
+
+  // calculate model's latency and store it
+  DijkstraBalancer::get().balance(*model);
+  const int latency = DijkstraBalancer::get().getGraphLatency();
+  dict->SetIntValue("LATENCY", latency);
+
+  // set bindings to device under test
+  for (size_t i = 0; i < bndNames.size(); i++) {
+    ctemplate::TemplateDictionary *bndDict = dict->AddSectionDictionary("BIND");
+    bndDict->SetValue("WNAME", bndNames[i]);
+    bndDict->SetValue("SEP", (i == bndNames.size() - 1) ? "" : ",\n");
+  }
+  bndNames.clear();
+
+  // generate random stimuli
+  for (size_t i = 0; i < (long unsigned)tstCnt; i++) {
+    ctemplate ::TemplateDictionary *tDict = dict->AddSectionDictionary("TESTS");
+    for (size_t j = 0; j < inputs.size(); j++) {
+
+      if (inputs[j].isClock())
+          continue;
+
+      // TODO: set random values for inputs
+      ctemplate ::TemplateDictionary *sDict = tDict->AddSectionDictionary("ST");
+      sDict->SetValue("NAME", inputs[j].name);
+    }
+  }
+
+  // use the template to store testbench to file
+  std::string output;
+  const std::string vlogTpl = "./src/data/ctemplate/tbench_verilog.tpl";
+  ctemplate::ExpandTemplate(vlogTpl, ctemplate::DO_NOT_STRIP, dict, &output);
+  tBenchFile << output;
+  tBenchFile.close();
+}
 
 } // namespace eda::hls::compiler

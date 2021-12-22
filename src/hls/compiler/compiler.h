@@ -29,7 +29,6 @@ struct Wire final {
     type(type) {}
 };
 
-
 struct Port final {
   std::string name;
   bool isInput;
@@ -44,8 +43,9 @@ struct Port final {
     isInput(isInput),
     width(width),
     type(type) {}
-};
 
+  bool isClock() const;
+};
 
 struct Instance final {
   std::string instanceName;
@@ -73,7 +73,6 @@ struct Instance final {
   void addBinding(const Port &connectsFrom, const Port &connectTo);
 };
 
-
 struct Module {
 
   std::string moduleName;
@@ -93,7 +92,6 @@ struct Module {
 
 };
 
-
 struct FirrtlModule final : Module {
 
   FirrtlModule(const Model &model);
@@ -109,7 +107,6 @@ struct FirrtlModule final : Module {
 
 };
 
-
 struct ExternalModule final : Module {
 
   ExternalModule(const model::NodeType *nodetype);
@@ -121,16 +118,20 @@ struct ExternalModule final : Module {
 
 };
 
-
 struct Circuit final {
   std::string name;
   std::map<std::string, FirrtlModule> firModules;
-  std::map<std::string, ExternalModule> externalModules;
+  std::map<std::string, ExternalModule> extModules;
 
   Circuit(std::string moduleName);
 
   void addFirModule(const FirrtlModule &firModule);
   void addExternalModule(const ExternalModule &externalModule);
+  FirrtlModule* findFirModule(const std::string &name) const;
+  ExternalModule* findExtModule(const std::string &name) const;
+  Module* findModule(const std::string &name) const;
+  Module* findMain() const;
+
   void convertToSV(const std::string& inputFirrtlName) const;
   void print(std::ostream &out) const;
   void printFirrtl(std::ostream &out) const;
@@ -150,12 +151,22 @@ struct Compiler final {
                                                  --export-split-verilog";
 
   const std::shared_ptr<Model> model;
+  std::shared_ptr<Circuit> circuit;
 
   Compiler(const Model &model);
 
   void print(std::ostream &out) const;
 
   std::shared_ptr<Circuit> constructCircuit();
+
+  /**
+   * @brief Generates a Verilog random testbench for the current model.
+   *
+   * @param tstPath Path to testbench file to be created.
+   * @param tstCnt Number of test stimuli at random sequence
+   * @return Nothing, but "*.v" testbench should be created.
+   */
+  void printRndVlogTest(const std::string &tstPath, const int tstCnt);
 };
 
 std::ostream& operator <<(std::ostream &out, const Circuit &circuit);

@@ -19,30 +19,27 @@
 using namespace eda::hls::compiler;
 using namespace eda::hls::parser::hil;
 
-int compileSimpleHilTest(const std::string &inputFileName,
-                         const std::string &inputDirectoryName,
+int compileSimpleHilTest(const std::string &inputFilePath,
                          const std::string &outputFirrtlName,
                          const std::string &outputVerilogName,
-                         const std::string &outputDirectoryName) {
-  auto compiler = std::make_unique<Compiler>(*parse(inputDirectoryName +
-                                                    inputFileName));
+                         const std::string &outputDirName) {
+  auto compiler = std::make_unique<Compiler>(*parse(inputFilePath));
   auto circuit = compiler->constructCircuit();
-  circuit->printFiles(outputFirrtlName, outputVerilogName, outputDirectoryName);
+  circuit->printFiles(outputFirrtlName, outputVerilogName, outputDirName);
+  compiler->printRndVlogTest(outputDirName +"testbench.v", 10);
 
   return 0;
 }
 
 TEST(CompilerTest, CompileTestIdctTest) {
-  EXPECT_EQ(compileSimpleHilTest("idct.hil",
-                                 "./test/data/hil/",
+  EXPECT_EQ(compileSimpleHilTest("./test/data/hil/idct.hil",
                                  "outputFirrtlIdct.mlir",
                                  "outputVerilogIdct.v",
                                  "./test/data/hil/idct/"), 0);
 }
 
 TEST(CompilerTest, CompileTestHilTest) {
-  EXPECT_EQ(compileSimpleHilTest("test.hil",
-                                 "./test/data/hil/",
+  EXPECT_EQ(compileSimpleHilTest("./test/data/hil/test.hil",
                                  "outputFirrtlTest.mlir",
                                  "outputVerilogTest.v",
                                  "./test/data/hil/test/"), 0);
