@@ -2,12 +2,25 @@
 #include <stdio.h>
 #include "structs.hpp"
 #include <iostream>
+#include <stdlib.h>
 extern int yylineno;
 extern char* yytext;
 extern int yylex();
 void yyerror(const char *s);
 AST* head = new AST;
 Context* context = new Context;
+
+void expHandler()
+{
+    Exp* op2 = context->exp.back();
+    context->exp.pop_back();
+    Exp* op1 = context->exp.back();
+    context->exp.pop_back();
+    int op = context->opers.back();
+    context->opers.pop_back();
+    Exp* tmp = new Exp(op, op1, op2);
+    context->exp.push_back(tmp);
+};
 %}
 
 %locations
@@ -75,18 +88,12 @@ Expressions: Expression
 IDs: Identifiers
 {
     context->qualID = new QualID;
-    ID* tmp = new ID;
-    tmp->id = $1;
-    tmp->pos.line = @1.first_line;
-    tmp->pos.col = @1.first_column;
+    ID* tmp = new ID($1, @1.first_line, @1.first_column);
     context->qualID->addID(tmp);
 }
 | IDs Delimiters_comma Identifiers
 {
-    ID* tmp = new ID;
-    tmp->id = $3;
-    tmp->pos.line = @3.first_line;
-    tmp->pos.col = @3.first_column;
+    ID* tmp = new ID($3, @3.first_line, @3.first_column);
     context->qualID->addID(tmp);
 }
 ;
@@ -115,16 +122,15 @@ Delimiters_cir_op ActorPars Delimiters_cir_cl IOSig
 OptTimeClause Delimiters_colon OptActionActor ActorEnd
 {
     context->actor->timeClause = NULL;
-    ID* name = new ID;
-    name->id = $3;
-    name->pos.line = @3.first_line;
-    name->pos.col = @3.first_column;
+    ID* name = new ID($3, @3.first_line, @3.first_column);
     context->actor->id = name;
     for(int i = 0; i < context->actorPars.size(); ++i)
         context->actor->addActorPar(context->actorPars[i]);
     for(int i = 0; i < context->typePars.size(); ++i)
         context->actor->addTypePar(context->typePars[i]);
     head->actor = context->actor;
+    for(int i = 0; i < context->varDecls.size(); ++i)
+        context->actor->addVarDecl(context->varDecls[i]);
 }
 ;
 
@@ -144,23 +150,54 @@ ActorEnd: Key_end
 | Key_endactor
 ;
 
-OptActionActor:
-| Key_mutable VarDecltmp Delimiters_semicolon 
+VarDeclmute:
+Key_mutable VarDecltmp Delimiters_semicolon
 {
-    VarType* tmp = dynamic_cast<VarType*>(context->varDecls[0]);
-    tmp->_mutable = true;
-    context->actor->addVarType(tmp);
+    VarType* var = dynamic_cast<VarType*>(context->varDecls.back());
+    var->_mutable = true;
+    context->varDecls.pop_back();
+    context->varDecls.push_back(var);
 }
-OptActionActor
+
+VarDeclunmute:
+Identifiers OptionalEqExpression Delimiters_semicolon
+{
+    Exp* exp = context->exp.back();
+    context->exp.pop_back();
+    ID* name = new ID($1, @1.first_line, @1.first_column);
+    VarType* var = new VarType(false, name, NULL, exp);
+    context->varDecls.push_back(var);
+}
+;
+
+VarDeclunmutetype:
+Identifiers Identifiers OptionalEqExpression Delimiters_semicolon
+{
+    Exp* exp = context->exp.back();
+    context->exp.pop_back();
+    ID* name = new ID($2, @2.first_line, @2.first_column);
+    Type* type = new Type(new ID($1, @1.first_line, @1.first_column));
+    VarType* var = new VarType(false, name, type, exp);
+    context->varDecls.push_back(var);
+}
+;
+
+VarDeclunmutetypepars:
+Identifiers Delimiters_sq_op TypePars Delimiters_sq_cl 
+Identifiers OptionalEqExpression Delimiters_semicolon
+;
+
+
+OptActionActor:
+| VarDeclmute OptActionActor
 | FunDecl OptActionActor
 | ProcDecl OptActionActor
 | WrapActionInit OptActionActor
-| Identifiers OptionalEqExpression Delimiters_semicolon OptActionActor
-| Identifiers Identifiers OptionalEqExpression Delimiters_semicolon OptActionActor
+| VarDeclunmute OptActionActor
+| VarDeclunmutetype OptActionActor
 | Identifiers Delimiters_point OptActionTag WrapActionInit OptActionActor
 | Identifiers Delimiters_colon WrapActionInit OptActionActor
-| Identifiers Delimiters_sq_op TypePars Delimiters_sq_cl 
-Identifiers OptionalEqExpression Delimiters_semicolon OptActionActor
+| VarDeclunmutetypepars OptActionActor
 | Identifiers Delimiters_cir_op OptTypeAttrs Delimiters_cir_cl 
 Identifiers OptionalEqExpression Delimiters_semicolon OptActionActor
 | Delimiters_sq_op OptTypes Oper_doublearrow TypeTail 
@@ -178,74 +215,44 @@ OptActionTag: Identifiers Delimiters_colon
 
 TypePar: Identifiers
 {
-    TypePar * tmp = new TypePar;
-    tmp->type = NULL;
-    ID* name = new ID;
-    name->id = $1;
-    name->pos.line = @1.first_line;
-    name->pos.col = @1.first_column;
-    tmp->id = name;
+    ID* name = new ID($1, @1.first_line, @1.first_column);
+    TypePar* tmp = new TypePar(name);
     context->typePars.push_back(tmp);
 }
 | Identifiers Oper_less Type
 {
-    TypePar * tmp = new TypePar;
-    tmp->type = context->type;
-    ID* name = new ID;
-    name->id = $1;
-    name->pos.line = @1.first_line;
-    name->pos.col = @1.first_column;
-    tmp->id = name;
+    ID* name = new ID($1, @1.first_line, @1.first_column);
+    TypePar* tmp = new TypePar(name, context->type);
     context->typePars.push_back(tmp);
 }
 ;
 
 ActorPar: Type Identifiers Oper_equal Expression
 {
-    ActorPar* tmp = new ActorPar;
-    tmp->type = context->type;
-    tmp->exp = context->exp;
-    ID* name = new ID;
-    name->id = $2;
-    name->pos.line = @2.first_line;
-    name->pos.col = @2.first_column;
-    tmp->id = name;
+    Exp* exp = context->exp.back();
+    context->exp.pop_back();
+    ID* name = new ID($2, @2.first_line, @2.first_column);
+    ActorPar* tmp = new ActorPar(name, exp, context->type);
     context->actorPars.push_back(tmp);
 }
 | Identifiers Oper_equal Expression
 {
-    ActorPar* tmp = new ActorPar;
-    tmp->type = NULL;
-    tmp->exp = context->exp;
-    ID* name = new ID;
-    name->id = $1;
-    name->pos.line = @1.first_line;
-    name->pos.col = @1.first_column;
-    tmp->id = name;
+    Exp* exp = context->exp.back();
+    context->exp.pop_back();
+    ID* name = new ID($1, @1.first_line, @1.first_column);
+    ActorPar* tmp = new ActorPar(name, exp);
     context->actorPars.push_back(tmp);
 }
 | Type Identifiers
 {
-    ActorPar* tmp = new ActorPar;
-    tmp->type = context->type;
-    tmp->exp = NULL;
-    ID* name = new ID;
-    name->id = $2;
-    name->pos.line = @2.first_line;
-    name->pos.col = @2.first_column;
-    tmp->id = name;
+    ID* name = new ID($2, @2.first_line, @2.first_column);
+    ActorPar* tmp = new ActorPar(name, NULL, context->type);
     context->actorPars.push_back(tmp);
 }
 | Identifiers
 {
-    ActorPar* tmp = new ActorPar;
-    tmp->type = NULL;
-    tmp->exp = NULL;
-    ID* name = new ID;
-    name->id = $1;
-    name->pos.line = @1.first_line;
-    name->pos.col = @1.first_column;
-    tmp->id = name;
+    ID* name = new ID($1, @1.first_line, @1.first_column);
+    ActorPar* tmp = new ActorPar(name);
     context->actorPars.push_back(tmp);
 }
 ;
@@ -258,14 +265,8 @@ IOSig: PortDecls Oper_eqarrow {context->portType = 1;} PortDecls
 
 PortDecl: Key_multi Type Identifiers
 {
-    PortDecl* tmp = new PortDecl;
-    tmp->type = context->type;
-    ID* name = new ID;
-    name->id = $3;
-    name->pos.line = @3.first_line;
-    name->pos.col = @3.first_column;
-    tmp->id = name;
-    tmp->multi = true;
+    ID* name = new ID($3, @3.first_line, @3.first_column);
+    PortDecl* tmp = new PortDecl(true, name, context->type);
     if(context->portType == 0)
         context->actor->addInPort(tmp);
     else
@@ -273,14 +274,8 @@ PortDecl: Key_multi Type Identifiers
 }
 | Type Identifiers
 {
-    PortDecl* tmp = new PortDecl;
-    tmp->type = context->type;
-    ID* name = new ID;
-    name->id = $2;
-    name->pos.line = @2.first_line;
-    name->pos.col = @2.first_column;
-    tmp->id = name;
-    tmp->multi = false;
+    ID* name = new ID($2, @2.first_line, @2.first_column);
+    PortDecl* tmp = new PortDecl(false, name, context->type);
     if(context->portType == 0)
         context->actor->addInPort(tmp);
     else
@@ -288,13 +283,8 @@ PortDecl: Key_multi Type Identifiers
 }
 | Key_multi Identifiers
 {
-    PortDecl* tmp = new PortDecl;
-    ID* name = new ID;
-    name->id = $2;
-    name->pos.line = @2.first_line;
-    name->pos.col = @2.first_column;
-    tmp->id = name;
-    tmp->multi = true;
+    ID* name = new ID($2, @2.first_line, @2.first_column);
+    PortDecl* tmp = new PortDecl(true, name);
     if(context->portType == 0)
         context->actor->addInPort(tmp);
     else
@@ -302,13 +292,8 @@ PortDecl: Key_multi Type Identifiers
 }
 | Identifiers
 {
-    PortDecl* tmp = new PortDecl;
-    ID* name = new ID;
-    name->id = $1;
-    name->pos.line = @1.first_line;
-    name->pos.col = @1.first_column;
-    tmp->id = name;
-    tmp->multi = false;
+    ID* name = new ID($1, @1.first_line, @1.first_column);
+    PortDecl* tmp = new PortDecl(false, name);
     if(context->portType == 0)
         context->actor->addInPort(tmp);
     else
@@ -334,19 +319,12 @@ Import: SingleImport Delimiters_semicolon
 
 SingleImport: Key_import QualID Oper_equal Identifiers
 {
-    context->sImport = new SingleImport;
-    context->sImport->qualID = context->qualID;
-    ID * name = new ID;
-    name->id = $4;
-    name->pos.line = @4.first_line;
-    name->pos.col = @4.first_column;
-    context->sImport->alias = name;
+    ID* name = new ID($4, @4.first_line, @4.first_column);
+    context->sImport = new SingleImport(context->qualID, name);
 }
 | Key_import QualID
 {
-    context->sImport = new SingleImport;
-    context->sImport->qualID = context->qualID;
-    context->sImport->alias = NULL;
+    context->sImport = new SingleImport(context->qualID);
 }
 ;
 
@@ -360,19 +338,13 @@ GroupImport: Key_import Key_all QualID
 QualID: Identifiers 
 {
     QualID * tmp = new QualID;
-    ID * name = new ID;
-    name->id = $1;
-    name->pos.line = @1.first_line;
-    name->pos.col = @1.first_column;
+    ID* name = new ID($1, @1.first_line, @1.first_column);
     tmp->addID(name);
     context->qualID = tmp;
 }
 | QualID Delimiters_point Identifiers
 {
-    ID * name = new ID;
-    name->id = $3;
-    name->pos.line = @3.first_line;
-    name->pos.col = @3.first_column;
+    ID* name = new ID($3, @3.first_line, @3.first_column);
     context->qualID->addID(name);
 }
 ;
@@ -380,31 +352,20 @@ QualID: Identifiers
 OptPointID: Delimiters_point Identifiers
 {
     context->qualID = new QualID;
-    ID * name = new ID;
-    name->id = $2;
-    name->pos.line = @2.first_line;
-    name->pos.col = @2.first_column;
+    ID* name = new ID($2, @2.first_line, @2.first_column);
     context->qualID->addID(name);
 }
 | Delimiters_point Identifiers OptPointID
 {
-    
-    ID * name = new ID;
-    name->id = $2;
-    name->pos.line = @2.first_line;
-    name->pos.col = @2.first_column;
+    ID* name = new ID($2, @2.first_line, @2.first_column);
     context->qualID->addID(name);
 }
 ;
 
 Type: Identifiers
 {
-    context->type = new Type;
-    ID* name = new ID;
-    name->id = $1;
-    name->pos.line = @1.first_line;
-    name->pos.col = @1.first_column;
-    context->type->id = name;
+    ID* name = new ID($1, @1.first_line, @1.first_column);
+    context->type = new Type(name);
 }
 | Identifiers Delimiters_sq_op TypePars Delimiters_sq_cl
 | Identifiers Delimiters_cir_op OptTypeAttrs Delimiters_cir_cl
@@ -430,37 +391,61 @@ TypeAttr: Identifiers Delimiters_colon Type
 | Identifiers Oper_equal Expression
 ;
 
-Operator: Oper_star
-| Oper_plus
+Operatorlvl0: Oper_plus
+{
+    context->opers.push_back(ADD);
+}
 | Oper_minus
+{
+    context->opers.push_back(SUB);
+}
+;
+
+Operatorlvl1: Oper_star
+{
+    context->opers.push_back(MUL);
+}
 | Oper_div
-| Oper_more
+{
+    context->opers.push_back(DIV);
+}
+;
+
+Operatorlvl2: Oper_more
+{
+    context->opers.push_back(MORE);
+}
 | Oper_less
+{
+    context->opers.push_back(LESS);
+}
 | Oper_equal
+{
+    context->opers.push_back(EQ);
+}
+
+Expression: Expressionlvl0
+| Expression Operatorlvl0 Expressionlvl0
+{
+    expHandler();
+}
 ;
 
-Expression: PrimaryExpression
+Expressionlvl0: Expressionlvl1
+| Expressionlvl0 Operatorlvl1 Expressionlvl1
 {
-    context->exp = new Exp;
-    for(int i = 0; i < context->expContent.size(); ++i)
-        context->exp->addToExp(context->expContent[i]);
-    context->expContent.clear();
+    expHandler();
 }
-| PrimaryExpression Operator
-{
-    context->expContent.push_back(context->oper);
-}
-Expression
 ;
 
-PrimaryExpression: Operator SingleExpression ExpCycleOfIndexFieldFunc
+Expressionlvl1: PrimaryExpression
+| Expressionlvl1 Operatorlvl2 PrimaryExpression
 {
-    PrimaryExp* tmp = new PrimaryExp;
-    tmp->singleExp = context->singleExp;
-    tmp->oper = context->oper;
-    context->expContent.push_back(tmp);
-    //todo: ExpCycleOfIndexFieldFunc
+    expHandler();
 }
+;
+
+PrimaryExpression: Operatorlvl0 SingleExpression ExpCycleOfIndexFieldFunc
 | SingleExpression ExpCycleOfIndexFieldFunc
 ;
 
@@ -476,44 +461,23 @@ OptionalExp: Delimiters_cir_cl
 
 SingleExpression: Key_old Identifiers
 {
-    IDExp* tmp = new IDExp;
-    tmp->old = true;
-    ID* name = new ID;
-    name->id = $2;
-    name->pos.line = @2.first_line;
-    name->pos.col = @2.first_column;
-    tmp->id = name;
-    context->singleExp = tmp;
+    ID* id = new ID($2, @2.first_line, @2.first_column);
+    Exp* tmp = new Exp(IDEXPOLD, NULL, NULL, NULL, id);
+    context->exp.push_back(tmp);
 }
 | Identifiers
 {
-    IDExp* tmp = new IDExp;
-    tmp->old = false;
-    ID* name = new ID;
-    name->id = $1;
-    name->pos.line = @1.first_line;
-    name->pos.col = @1.first_column;
-    tmp->id = name;
-    context->singleExp = tmp;
+    ID* id = new ID($1, @1.first_line, @1.first_column);
+    Exp* tmp = new Exp(IDEXPNOOLD, NULL, NULL, NULL, id);
+    context->exp.push_back(tmp);
 }
 | ExpressionLiteral
 | Delimiters_cir_op Expression Delimiters_cir_cl
-{
-    BracketsExp * tmp = new BracketsExp;
-    tmp->exp = context->exp;
-    context->singleExp = tmp;
-}
 | Key_if IfExpression
-{
-    context->singleExp = context->ifExp;
-}
 | Key_const Key_lambda LambdaExpression
 | Key_lambda LambdaExpression
 | Key_proc ProcExpression
 | Key_let LetExpression
-{
-    context->singleExp = context->letExp;
-}
 | Delimiters_sq_op ListComprehension
 | Delimiters_fig_op SetComprehension
 | Key_map MapComprehension
@@ -521,46 +485,42 @@ SingleExpression: Key_old Identifiers
 
 ExpressionLiteral: Numeric_literals
 {
-    ExpLiteral* tmp = new ExpLiteral;
-    ID* lit = new ID;
-    lit->id = std::to_string($1);
-    tmp->expLiteral = lit;
+    ID* id = new ID(to_string($1), @1.first_line, @1.first_column);
+    Exp* tmp = new Exp(NOOP, NULL, NULL, NULL, id);
+    context->exp.push_back(tmp);
 }
 | Key_true
 {
-    ExpLiteral* tmp = new ExpLiteral;
-    ID* lit = new ID;
-    lit->id = "true";
-    tmp->expLiteral = lit;
+    ID* id = new ID("1", @1.first_line, @1.first_column);
+    Exp* tmp = new Exp(NOOP, NULL, NULL, NULL, id);
+    context->exp.push_back(tmp);
 }
 | Key_false
 {
-    ExpLiteral* tmp = new ExpLiteral;
-    ID* lit = new ID;
-    lit->id = "false";
-    tmp->expLiteral = lit;
+    ID* id = new ID("0", @1.first_line, @1.first_column);
+    Exp* tmp = new Exp(NOOP, NULL, NULL, NULL, id);
+    context->exp.push_back(tmp);
 }
 | Key_null
 {
-    ExpLiteral* tmp = new ExpLiteral;
-    ID* lit = new ID;
-    lit->id = "null";
-    tmp->expLiteral = lit;
+    ID* id = new ID("0", @1.first_line, @1.first_column);
+    Exp* tmp = new Exp(NOOP, NULL, NULL, NULL, id);
+    context->exp.push_back(tmp);
 }
 ;
 
 IfExpression: Expression
-{
-    context->ifExp = new IfExp;
-    context->ifExp->ifExp = context->exp;
-}
 Key_then Expression
-{
-    context->ifExp->thenExp = context->exp;
-}
 Key_else Expression IfExpressionEnd
 {
-    context->ifExp->elseExp = context->exp;
+    Exp* op3 = context->exp.back();
+    context->exp.pop_back();
+    Exp* op2 = context->exp.back();
+    context->exp.pop_back();
+    Exp* op1 = context->exp.back();
+    context->exp.pop_back();
+    Exp* tmp = new Exp(ITE, op1, op2, op3);
+    context->exp.push_back(tmp);
 }
 ;
 
@@ -598,22 +558,13 @@ LambdaExpressionEnd: Key_end
 
 FormalPar: Type Identifiers
 {
-    context->formalPar = new FormalPar;
-    context->formalPar->type = context->type;
-    ID* name = new ID;
-    name->id = $2;
-    name->pos.line = @2.first_line;
-    name->pos.col = @2.first_column;
-    context->formalPar->id = name;
+    ID* name = new ID($2, @2.first_line, @2.first_column);
+    context->formalPar = new FormalPar(name, context->type);
 }
 | Identifiers
 {
-    context->formalPar = new FormalPar;
-    ID* name = new ID;
-    name->id = $1;
-    name->pos.line = @1.first_line;
-    name->pos.col = @1.first_column;
-    context->formalPar->id = name;
+    ID* name = new ID($1, @1.first_line, @1.first_column);
+    context->formalPar = new FormalPar(name);
 }
 ;
 
@@ -636,9 +587,6 @@ ProcExpressionEnd: Key_end
 
 FunDecl: Key_function Identifiers Delimiters_cir_op
 OptFormalPars Delimiters_cir_cl OptVarDeclsColon Expression Key_end
-{
-
-}
 ;
 
 OptVarDeclsColon:
@@ -698,17 +646,12 @@ Expression CycleGenExpression
 
 OptType: Identifiers
 {
-    context->id = new ID;
-    context->id->id = $1;
-    context->id->pos.line = @1.first_line;
-    context->id->pos.col = @1.first_column;
+    context->id = new ID($1, @1.first_line, @1.first_column);
+    context->type = NULL;
 }
 | Type Identifiers
 {
-    context->id = new ID;
-    context->id->id = $2;
-    context->id->pos.line = @2.first_line;
-    context->id->pos.col = @2.first_column;
+    context->id = new ID($2, @2.first_line, @2.first_column);
 }
 ;
 
@@ -844,10 +787,9 @@ CycleChooseGenExpression:
 
 VarDecltmp: OptType OptionalEqExpression
 {
-    VarType* var = new VarType;
-    var->type = context->type;
-    var->exp = context->exp;
-    var->id = context->id;
+    Exp* exp = context->exp.back();
+    context->exp.pop_back();
+    VarType* var = new VarType(false, context->id, context->type, exp);
     context->varDecls.push_back(var);
 }
 ;
@@ -858,7 +800,7 @@ OptionalMutable:
 
 OptionalEqExpression:
 {
-    context->exp = NULL;
+    context->exp.push_back(NULL);
 }
 | Equal Expression
 ;
@@ -884,20 +826,14 @@ ActionEnd: Key_end
 ActionTag: Identifiers
 {
     context->actionTag = new ActionTag;
-    ID* name = new ID;
-    name->id = $1;
-    name->pos.line = @1.first_line;
-    name->pos.col = @1.first_column;
+    ID* name = new ID($1, @1.first_line, @1.first_column);
     context->actionTag->qualID = new QualID;
     context->actionTag->qualID->addID(name);
 }
 | Identifiers
 {
     context->qualID = new QualID;
-    ID* name = new ID;
-    name->id = $1;
-    name->pos.line = @1.first_line;
-    name->pos.col = @1.first_column;
+    ID* name = new ID($1, @1.first_line, @1.first_column);
     context->qualID->addID(name);
 }
 OptPointID
@@ -940,10 +876,7 @@ Delimiters_sq_cl OptRepeatClause OptChannelSelector
 OptIDcolon: {context->id = NULL;}
 | Identifiers Delimiters_colon
 {
-    context->id = new ID;
-    context->id->id = $1;
-    context->id->pos.line = @1.first_line;
-    context->id->pos.col = @1.first_column;
+    context->id = new ID($1, @1.first_line, @1.first_column);
 }
 ;
 
@@ -971,7 +904,8 @@ OptionalAT2:
 RepeatClause: Key_repeat Expression
 {
     context->repeatClause = new RepeatClause;
-    context->repeatClause->exp = context->exp;
+    context->repeatClause->exp = context->exp[0];
+    context->exp.pop_back();    
 }
 ;
 
