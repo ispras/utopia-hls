@@ -35,77 +35,138 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   for (const auto *node : graph->nodes) {
     auto metaElement = Library::get().find(node->type);
     Parameters nodeParams(node->name, metaElement->params);
-    //nodeParams.set("f", criteria.frequency.max);
     params.insert({ node->name, nodeParams });
   }
 
   std::ofstream ostrm("debug_file.txt", std::ios::out);
+
+  int y1, y2;
+
+  // Check if the task is solvable
+  int cur_f = criteria.frequency.min;
+  count_params(model, params, indicators, cur_f, defaultParams);
+  if (!criteria.check(indicators)) { // even if the frequency is minimal the params don't match constratints
+      ostrm << "There is no solution" << std::endl;
+      ostrm << "Frequency: " << indicators.frequency << std::endl;
+      ostrm << "Latency: " << indicators.latency << std::endl;
+      ostrm << "Throughput: " << indicators.throughput << std::endl;
+      ostrm << "Power: " << indicators.power << std::endl;
+      ostrm << "Area: " << indicators.area << std::endl;
+      ostrm.close();
+      return params;
+  }
+
+  cur_f = criteria.frequency.max;
+  int x2 = cur_f;
+  count_params(model, params, indicators, cur_f, defaultParams);
+  if (criteria.check(indicators)) { // the maximum frequency is the solution
+      ostrm << "Maximum frequency is the solution" << std::endl;
+      ostrm << "Frequency: " << indicators.frequency << std::endl;
+      ostrm << "Latency: " << indicators.latency << std::endl;
+      ostrm << "Throughput: " << indicators.throughput << std::endl;
+      ostrm << "Power: " << indicators.power << std::endl;
+      ostrm << "Area: " << indicators.area << std::endl;
+      ostrm.close();
+      return params;
+  }
+  y2 = indicators.area;
+  ostrm << "First step: " << x2 << " " << y2 << std::endl;
+
+  int x1 = criteria.frequency.max - (criteria.frequency.max - criteria.frequency.min) / 10;
+  count_params(model, params, indicators, x1, defaultParams);
+  y1 = indicators.area;
+  ostrm << "Second step: " << x1 << " " << y1 << std::endl;
+
+  float k = float(y1 - y2) / float(x1 - x2);
+  float b = float(y1 - x1 * k);
+
+  ostrm << "k: " << k << " b: " << b << std::endl;
+  cur_f = (criteria.area.max - b) / k;
+  ostrm << "estimate: " << cur_f << std::endl;
+  count_params(model, params, indicators, cur_f, defaultParams);
+  ostrm << "area: " << indicators.area << std::endl;
+  
+  int sign;
+  if(indicators.area > criteria.area.max) {
+    sign = -1;
+  } else {
+    sign = 1;
+  }
+  int grid = (criteria.frequency.max - criteria.frequency.min) / 100;
+
+  std::ofstream csv("exp.csv", std::ios::out);
   ostrm << "Running optimization loop" << std::endl;
-  unsigned cur_f = criteria.frequency.max;
+  csv << "Frequency,Throughput,Latency,Power,Area" << std::endl;
+
   // Optimization loop.
-  const unsigned N = 3;
+  const unsigned N = 5;
   for (unsigned i = 0; i < N; i++) {
-    // Update the values of the parameters.
-    for (const auto *node : graph->nodes) {
-      auto nodeParams = params.find(node->name);
-      if (nodeParams == params.end())
-        continue;
 
-      /*for (auto param : nodeParams->second.params) {
-        ostrm << param.second.name << ": " << param.second.value << std::endl;
-        //param.set("f", param.second.value / 2);
-      }*/
-      nodeParams->second.set("f", cur_f);
-    }
+    cur_f += sign * grid;
 
-    // Balance flows and align times.
-    LpSolver::get().balance(model);
-    
-    indicators.latency = 100; // FIXME
-    indicators.frequency = cur_f; // FIXME
-
-    // Estimate the integral indicators.
-    indicators.throughput = indicators.frequency;
-    indicators.power = 0;
-    indicators.area = 0;
-
-    for (const auto *node : graph->nodes) {
-      auto metaElement = Library::get().find(node->type);
-      assert(metaElement && "MetaElement is not found");
-      auto nodeParams = params.find(node->name);
-
-      Indicators nodeIndicators;
-
-      metaElement->estimate(
-        nodeParams == params.end()
-          ? defaultParams       // For inserted nodes 
-          : nodeParams->second, // For existing nodes
-        nodeIndicators);
-
-      indicators.power += nodeIndicators.power;
-      indicators.area += nodeIndicators.area;
-
-    }
-    ostrm << "Iteration #" << i << std::endl;
-    ostrm << std::endl << "Frequency: " << indicators.frequency << std::endl;
-    ostrm << "Latency: " << indicators.latency << std::endl;
-    ostrm << "Throughput: " << indicators.throughput << std::endl;
-    ostrm << "Power: " << indicators.power << std::endl;
-    ostrm << "Area: " << indicators.area << std::endl << std::endl;
+    ostrm << "Cur f: " << cur_f << std::endl;
+    count_params(model, params, indicators, cur_f, defaultParams);
+    ostrm << "Cur a: " << indicators.area << std::endl;
+    csv << indicators.frequency << "," << indicators.throughput << "," << indicators.latency << "," << indicators.power << "," << indicators.area << std::endl;
     
     // Check the constraints.
-    /*if (criteria.check(indicators)) {
-      // Acceptable.
-      break; // FIXME
-    }*/
+    if (criteria.check(indicators)) {
+      ostrm << "Break because solution is found. Number of iterations is: " << i;
+      break;
+    }
 
-    cur_f = cur_f / 2;
     // Reset to the initial model state.
     model.undo();
   }
 
   ostrm.close();
+  csv.close();
   return params;
+}
+
+void ParametersOptimizer::count_params(Model& model,
+                                      std::map<std::string, Parameters>& params,
+                                      Indicators& indicators, unsigned f,
+                                      Parameters& defaultParams) const {
+  Graph *graph = model.main();
+  // Update the values of the parameters.
+  for (const auto *node : graph->nodes) {
+    auto nodeParams = params.find(node->name);
+    if (nodeParams == params.end()) {
+      continue;
+    }
+        
+    nodeParams->second.set("f", f);
+  }
+
+  // Balance flows and align times.
+  LpSolver::get().balance(model);
+    
+  indicators.latency = LpSolver::get().getGraphLatency();
+  indicators.frequency = f;
+
+  // Estimate the integral indicators.
+  indicators.throughput = indicators.frequency;
+  indicators.power = 0;
+  indicators.area = 0;
+
+  for (const auto *node : graph->nodes) {
+    auto metaElement = Library::get().find(node->type);
+    assert(metaElement && "MetaElement is not found");
+    auto nodeParams = params.find(node->name);
+
+    Indicators nodeIndicators;
+
+    metaElement->estimate(
+      nodeParams == params.end()
+        ? defaultParams       // For inserted nodes 
+        : nodeParams->second, // For existing nodes
+      nodeIndicators);
+
+    indicators.power += nodeIndicators.power;
+    indicators.area += nodeIndicators.area;
+
+  }
 }
 
 } // namespace eda::hls::scheduler
