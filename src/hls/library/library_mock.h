@@ -50,7 +50,8 @@ inline std::unique_ptr<Element> MetaElementMock::construct(
              name == "w3" || name == "w3_add_w5" || name == "w3_sub_w5" ||
              name == "w5" || name == "w6"        || name == "w7" ||
              name == "shl_11" || name == "shl_8" ||
-             name == "shr_14" || name == "shr_8" || name == "shr_3") {
+             name == "shr_14" || name == "shr_8" || name == "shr_3" ||
+             name == "dup_2" || name == "clip") {
     outputType = std::string("wire ");
   } else {
     outputType = std::string("wire ");
@@ -242,7 +243,8 @@ inline std::unique_ptr<Element> MetaElementMock::construct(
     return element;
   }
   else if (name == "shl_11" || name == "shl_8" ||
-           name == "shr_14" || name == "shr_8" || name == "shr_3") {
+           name == "shr_14" || name == "shr_8" || name == "shr_3" ||
+           name == "clip") {
     std::string inPortName, outPortName;
     for (auto port : ports) {
       if (port.name == "clock" || port.name == "reset") {
@@ -255,13 +257,48 @@ inline std::unique_ptr<Element> MetaElementMock::construct(
         outPortName = port.name;
       }
     }
-    ir += "assign " + outPortName + " = " + inPortName +
-      (name == "shl_11" ? " << 11" :
-       name == "shl_8"  ? " << 8"  :
-       name == "shr_14" ? " >> 14" :
-       name == "shr_8"  ? " >> 8"  :
-       name == "shr_3"  ? " >> 3" : "");
-    ir += ";\n";
+    if (name == "clip") {
+      ir += "assign " + outPortName + " = clip16(" + inPortName + ");\n";
+      ir += std::string("function [15:0] clip16;\n") +
+            "  input [15:0] in;\n" +
+            "  begin\n" +
+            "    if (in[15] == 1 && in[14:8] != 7'h7F)\n" +
+            "      clip16 = 8'h80;\n" +
+            "    else if (in[15] == 0 && in [14:8] != 0)\n" +
+            "      clip16 = 8'h7F;\n" +
+            "    else\n" +
+            "      clip16 = in;\n" +
+            "  end\n" +
+            "endfunction\n";
+    } else {
+      ir += "assign " + outPortName + " = " + inPortName +
+        (name == "shl_11" ? " << 11" :
+         name == "shl_8"  ? " << 8"  :
+         name == "shr_14" ? " >> 14" :
+         name == "shr_8"  ? " >> 8"  :
+         name == "shr_3"  ? " >> 3"  : "");
+      ir += ";\n";
+    }
+    element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
+    return element;
+  }
+  else if (name == "dup_2") {
+    std::string inPortName;
+    std::vector<std::string> outPortNames;
+    for (auto port : ports) {
+      if (port.name == "clock" || port.name == "reset") {
+        continue;
+      }
+      if (port.direction == Port::IN || port.direction == Port::INOUT) {
+        inPortName = port.name;
+      }
+      if (port.direction == Port::OUT || port.direction == Port::INOUT) {
+        outPortNames.push_back(port.name);
+      }
+    }
+    for (auto outPortName : outPortNames) {
+      ir += "assign " + outPortName + " = " + inPortName + ";\n";
+    }
     element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
     return element;
   }
