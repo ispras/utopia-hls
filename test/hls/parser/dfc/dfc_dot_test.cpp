@@ -17,44 +17,16 @@
 #include <iostream>
 
 DFC_KERNEL(DotProduct) {
-  static constexpr std::size_t N = 4;
+  static const std::size_t N = 8;
 
   DFC_KERNEL_CTOR(DotProduct) {
-    std::array<dfc::input<dfc::uint32>, N> x;
-    std::array<dfc::input<dfc::uint32>, N> y;
-    dfc::output<dfc::uint32> z;
+    std::array<dfc::input<dfc::uint32>, N> x, y;
+    dfc::stream<dfc::uint32> z;
 
-    kernel(x, y, z);
-  }
-
-  void add_kernel(dfc::input<dfc::uint32> x,
-                  dfc::input<dfc::uint32> y,
-                  dfc::output<dfc::uint32> z) {
-    z = x + y;
-  }
-
-  void mul_kernel(dfc::input<dfc::uint32> x,
-                  dfc::input<dfc::uint32> y,
-                  dfc::output<dfc::uint32> z) {
-    z = x * y;
-  }
-
-  void kernel(std::array<dfc::input<dfc::uint32>, N> x,
-              std::array<dfc::input<dfc::uint32>, N> y,
-              dfc::output<dfc::uint32> z) {
-    std::array<dfc::stream<dfc::uint32>, N> m;
-    std::array<dfc::stream<dfc::uint32>, N> a;
-
-    for (std::size_t i = 0; i < N; i++) {
-      mul_kernel(x[i], y[i], m[i].to_output());
-    }
-
-    a[0] = m[0];
+    z = x[0] * y[0];
     for (std::size_t i = 1; i < N; i++) {
-      add_kernel(a[i-1].to_input(), m[i].to_input(), a[i].to_output());
+      z += x[i] * y[i];
     }
-
-    z = a[N-1];
   }
 };
 

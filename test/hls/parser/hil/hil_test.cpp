@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include <fstream>
 #include <iostream>
 #include <memory>
 
@@ -25,7 +26,10 @@ int hilTest(const std::string &filename) {
     return -1;
 
   std::cout << *model;
-  printDot(std::cout, *model);
+
+  std::ofstream output(filename + ".dot");
+  printDot(output, *model);
+  output.close();
 
   return 0;
 }
