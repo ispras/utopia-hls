@@ -19,6 +19,16 @@ else()
   message(STATUS "Z3_DIR env var is not set.")
 endif()
 
+# Use custom build of CTemplate if CT_DIR env var is specified
+if(DEFINED ENV{CT_DIR})
+  message(STATUS "CT_DIR env var is set.")
+  set(CT_DIR $ENV{CT_DIR})
+  link_directories(${CT_DIR}/lib)
+  set(CMAKE_CXX_FLAGS "-I${CT_DIR}/include ${CMAKE_CXX_FLAGS}")
+else()
+  message(STATUS "CT_DIR env var is not set.")
+endif()
+
 include_directories(lib/easyloggingpp)
 
 add_subdirectory(lib)
