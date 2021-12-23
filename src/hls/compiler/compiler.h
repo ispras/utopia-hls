@@ -89,7 +89,6 @@ struct Module {
   void addOutput(const Port &outputPort);
   void printBody(std::ostream &out) const;
   void printEmptyLine(std::ostream &out) const;
-
 };
 
 struct FirrtlModule final : Module {
@@ -104,7 +103,6 @@ struct FirrtlModule final : Module {
   void printDeclaration(std::ostream &out) const;
   void printEpilogue(std::ostream &out) const;;
   void printFirrtl(std::ostream &out) const;
-
 };
 
 struct ExternalModule final : Module {
@@ -115,7 +113,6 @@ struct ExternalModule final : Module {
   void printFirrtlDeclaration(std::ostream &out) const;
   void printEpilogue(std::ostream &out) const;
   void printVerilog(std::ostream &out) const;
-
 };
 
 struct Circuit final {
