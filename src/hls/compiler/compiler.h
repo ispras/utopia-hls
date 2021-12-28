@@ -74,7 +74,6 @@ struct Instance final {
 };
 
 struct Module {
-
   std::string moduleName;
   std::vector<Wire> wires;
   std::vector<Instance> instances;
@@ -87,32 +86,16 @@ struct Module {
   void addBody(const std::string &body);
   void addInput(const Port &inputPort);
   void addOutput(const Port &outputPort);
-  void printBody(std::ostream &out) const;
-  void printEmptyLine(std::ostream &out) const;
 };
 
 struct FirrtlModule final : Module {
-
   FirrtlModule(const Model &model);
-
   //void addWire(const Wire &inputWire);
   void addInstance(const Instance &inputInstance);
-  //void printWires(std::ostream &out) const;
-  void printInstances(std::ostream &out) const;
-  void printConnections(std::ostream &out) const;
-  void printDeclaration(std::ostream &out) const;
-  void printEpilogue(std::ostream &out) const;;
-  void printFirrtl(std::ostream &out) const;
 };
 
 struct ExternalModule final : Module {
-
   ExternalModule(const model::NodeType *nodetype);
-
-  void printDeclaration(std::ostream &out) const;
-  void printFirrtlDeclaration(std::ostream &out) const;
-  void printEpilogue(std::ostream &out) const;
-  void printVerilog(std::ostream &out) const;
 };
 
 struct Circuit final {
@@ -129,13 +112,6 @@ struct Circuit final {
   Module* findModule(const std::string &name) const;
   Module* findMain() const;
 
-  void convertToSV(const std::string& inputFirrtlName) const;
-  void print(std::ostream &out) const;
-  void printFirrtl(std::ostream &out) const;
-  void printVerilog(std::ostream &out) const;
-  void printFiles(const std::string &outputFirrtlName,
-                  const std::string &outputVerilogName,
-                  const std::string &outputDirectoryName) const;
 };
 
 struct Compiler final {
@@ -152,9 +128,33 @@ struct Compiler final {
 
   Compiler(const Model &model);
 
-  void print(std::ostream &out) const;
-
   std::shared_ptr<Circuit> constructCircuit();
+
+  void printBody(const Module &module, std::ostream &out) const;
+  void printEmptyLine(std::ostream &out) const;
+
+  //void printWires(std::ostream &out) const;
+  void printInstances(const FirrtlModule &firmodule, std::ostream &out) const;
+  void printConnections(const FirrtlModule &firmodule, std::ostream &out) const;
+  void printDeclaration(const FirrtlModule &firmodule, std::ostream &out) const;
+  void printEpilogue(const FirrtlModule &firmodule, std::ostream &out) const;
+  void printFirrtlModule(const FirrtlModule &firmodule,
+                         std::ostream &out) const;
+
+  void printDeclaration(const ExternalModule &extmodule,
+                        std::ostream &out) const;
+  void printFirrtlDeclaration(const ExternalModule &extmodule,
+                              std::ostream &out) const;
+  void printEpilogue(const ExternalModule &extmodule, std::ostream &out) const;
+  void printVerilogModule(const ExternalModule &extmodule,
+                          std::ostream &out) const;
+
+  void convertToSV(const std::string& inputFirrtlName) const;
+  void printFirrtl(std::ostream &out) const;
+  void printVerilog(std::ostream &out) const;
+  void printFiles(const std::string &outputFirrtlName,
+                  const std::string &outputVerilogName,
+                  const std::string &outputDirectoryName) const;
 
   /**
    * @brief Generates a Verilog random testbench for the current model.

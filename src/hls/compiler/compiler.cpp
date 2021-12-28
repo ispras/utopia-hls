@@ -66,14 +66,6 @@ void Module::addOutput(const Port &outputPort) {
   outputs.push_back(outputPort);
 }
 
-void Module::printBody(std::ostream &out) const {
-  out << body;
-}
-
-void Module::printEmptyLine(std::ostream &out) const {
-  out << "\n";
-}
-
 /*void Module::addWire(const Wire &inputWire) {
   wires.push_back(inputWire);
 }*/
@@ -95,62 +87,6 @@ ExternalModule::ExternalModule(const model::NodeType* nodetype) : Module() {
   auto meta = Library::get().find(*nodetype);
   auto element = meta->construct(meta->params);
   addBody(element->ir);
-}
-
-void ExternalModule::printDeclaration(std::ostream &out) const {
-  out << "module " << moduleName << "(\n";
-  bool hasComma = false;
-  for (const auto &input : inputs) {
-    out << (hasComma ? ",\n" : "\n");
-    out << Compiler::indent << input.name;
-    if (input.width != 1) {
-      out << "[" << input.width << ":" << 0 << "],\n";
-    }
-    hasComma = true;
-  }
-  for (const auto &output : outputs) {
-    out << (hasComma ? ",\n" : "\n");
-    out << Compiler::indent << output.name;
-    if (output.width != 1) {
-      out << "[" << output.width << ":" << 0 << "],\n";
-    }
-    hasComma = true;
-  }
-  out << ");\n";
-}
-
-void ExternalModule::printEpilogue(std::ostream &out) const {
-  out << "endmodule " << "//" << moduleName;
-  printEmptyLine(out);
-}
-
-void ExternalModule::printVerilog(std::ostream &out) const {
-  printDeclaration(out);
-  printBody(out);
-  printEpilogue(out);
-  printEmptyLine(out);
-}
-
-void ExternalModule::printFirrtlDeclaration(std::ostream &out) const {
-  out << Compiler::indent << Compiler::opPrefix << "extmodule @" <<
-  moduleName << "(";
-  bool hasComma = false;
-  for (const auto &input : inputs) {
-    out << (hasComma ? ",\n" : "\n");
-    out << Compiler::indent << Compiler::indent <<  "in " <<
-        input.name << " : " << Compiler::typePrefix << input.type;
-    if (input.type != "reset" && input.type != "clock") {
-      out << "<" << input.width << ">";
-    }
-    hasComma = true;
-  }
-  for (const auto &output : outputs) {
-    out << (hasComma ? ",\n" : "\n");
-    out << Compiler::indent << Compiler::indent <<  "out " <<  output.name <<
-        ": " << Compiler::typePrefix << output.type << "<" << output.width <<
-        ">";
-  }
-  out << ")\n";
 }
 
 FirrtlModule::FirrtlModule(const eda::hls::model::Model &model) : Module() {
@@ -217,8 +153,50 @@ void FirrtlModule::addInstance(const Instance &inputInstance) {
   }
 }*/
 
-void FirrtlModule::printInstances(std::ostream &out) const {
-  for (const auto &instance : instances) {
+Circuit::Circuit(std::string moduleName) : name(moduleName) {}
+
+void Circuit::addFirModule(const FirrtlModule &firModule) {
+  firModules.insert({firModule.moduleName, firModule});
+}
+
+void Circuit::addExternalModule(const ExternalModule &externalModule) {
+  extModules.insert({externalModule.moduleName, externalModule});
+}
+
+FirrtlModule* Circuit::findFirModule(const std::string &name) const {
+  auto i = std::find_if(firModules.begin(), firModules.end(),
+      [&name](std::pair<std::string, FirrtlModule> const &pair) {
+          return pair.first == name; });
+
+  return const_cast<FirrtlModule*>
+      (i != firModules.end() ? &(i->second) : nullptr);
+}
+
+ExternalModule* Circuit::findExtModule(const std::string &name) const {
+  auto i = std::find_if(extModules.begin(), extModules.end(),
+      [&name](std::pair<std::string, ExternalModule> const &pair) {
+          return pair.first == name; });
+
+  return const_cast<ExternalModule*>
+      (i != extModules.end() ? &(i->second) : nullptr);
+}
+
+Module* Circuit::findModule(const std::string &name) const {
+
+  Module *firModule = findFirModule(name);
+  Module *extModule = findExtModule(name);
+
+  return firModule == nullptr ?
+      (extModule == nullptr ? nullptr : extModule) : firModule;
+}
+
+Module* Circuit::findMain() const {
+  return findModule("main");
+}
+
+void Compiler::printInstances(const FirrtlModule &firmodule,
+                              std::ostream &out) const {
+  for (const auto &instance : firmodule.instances) {
     out << Compiler::indent << Compiler::indent;
     out << Compiler::varPrefix << instance.instanceName << "_" << "clock" <<
         "," << " ";
@@ -262,8 +240,9 @@ void FirrtlModule::printInstances(std::ostream &out) const {
   }
 }
 
-void FirrtlModule::printConnections(std::ostream &out) const {
-  for (const auto &instance : instances) {
+void Compiler::printConnections(const FirrtlModule &firmodule,
+                                std::ostream &out) const {
+  for (const auto &instance : firmodule.instances) {
     out << Compiler::indent << Compiler::indent << Compiler::opPrefix <<
         "connect " << Compiler::varPrefix << instance.instanceName + "_" +
         "clock, " << Compiler::varPrefix << "clock" << " : " <<
@@ -288,10 +267,11 @@ void FirrtlModule::printConnections(std::ostream &out) const {
   }
 }
 
-void FirrtlModule::printDeclaration(std::ostream &out) const {
-  out << Compiler::indent << Compiler::opPrefix << "module @" << moduleName <<
-      " (\n";
-  for (const auto &input : inputs) {
+void Compiler::printDeclaration(const FirrtlModule &firmodule,
+                                std::ostream &out) const {
+  out << Compiler::indent << Compiler::opPrefix << "module @" <<
+      firmodule.moduleName << " (\n";
+  for (const auto &input : firmodule.inputs) {
     out << Compiler::indent << Compiler::indent <<  "in " <<
         Compiler::varPrefix << input.name << " : " << Compiler::typePrefix <<
         input.type;
@@ -302,7 +282,7 @@ void FirrtlModule::printDeclaration(std::ostream &out) const {
     }
   }
   bool hasComma = false;
-  for (const auto &output : outputs) {
+  for (const auto &output : firmodule.outputs) {
     out << (hasComma ? ",\n" : "\n");
     out << Compiler::indent << Compiler::indent <<  "out " <<
         Compiler::varPrefix << output.name << ": " << Compiler::typePrefix <<
@@ -313,91 +293,120 @@ void FirrtlModule::printDeclaration(std::ostream &out) const {
   out << Compiler::indent << Compiler::indent << "{\n";
 }
 
-void FirrtlModule::printEpilogue(std::ostream &out) const {
+void Compiler::printEpilogue(const FirrtlModule &firmodule,
+                             std::ostream &out) const {
   out << Compiler::indent << Compiler::indent << "} ";
   printEmptyLine(out);
 }
 
-void FirrtlModule::printFirrtl(std::ostream &out) const {
-  printDeclaration(out);
+void Compiler::printFirrtlModule(const FirrtlModule &firmodule,
+                                 std::ostream &out) const {
+  printDeclaration(firmodule, out);
   printEmptyLine(out);
-  //printWires(out);
+  //printWires(firmodule, out);
   printEmptyLine(out);
-  printInstances(out);
-  printConnections(out);
-  printBody(out);
-  printEpilogue(out);
+  printInstances(firmodule, out);
+  printConnections(firmodule, out);
+  printBody(firmodule, out);
+  printEpilogue(firmodule, out);
   printEmptyLine(out);
 }
 
-Circuit::Circuit(std::string moduleName) : name(moduleName) {}
-
-void Circuit::addFirModule(const FirrtlModule &firModule) {
-  firModules.insert({firModule.moduleName, firModule});
-}
-
-void Circuit::addExternalModule(const ExternalModule &externalModule) {
-  extModules.insert({externalModule.moduleName, externalModule});
-}
-
-FirrtlModule* Circuit::findFirModule(const std::string &name) const {
-  auto i = std::find_if(firModules.begin(), firModules.end(),
-      [&name](std::pair<std::string, FirrtlModule> const &pair) {
-          return pair.first == name; });
-
-  return const_cast<FirrtlModule*>
-      (i != firModules.end() ? &(i->second) : nullptr);
-}
-
-ExternalModule* Circuit::findExtModule(const std::string &name) const {
-  auto i = std::find_if(extModules.begin(), extModules.end(),
-      [&name](std::pair<std::string, ExternalModule> const &pair) {
-          return pair.first == name; });
-
-  return const_cast<ExternalModule*>
-      (i != extModules.end() ? &(i->second) : nullptr);
-}
-
-Module* Circuit::findModule(const std::string &name) const {
-
-  Module *firModule = findFirModule(name);
-  Module *extModule = findExtModule(name);
-
-  return firModule == nullptr ?
-      (extModule == nullptr ? nullptr : extModule) : firModule;
-}
-
-Module* Circuit::findMain() const {
-  return findModule("main");
-}
-
-void Circuit::printFirrtl(std::ostream &out) const {
-  out << Compiler::opPrefix << "circuit " << "\"" << name <<
-      "\" " << "{\n";
-  for (const auto &pair : firModules) {
-    pair.second.printFirrtl(out);
+void Compiler::printDeclaration(const ExternalModule &extmodule,
+                                std::ostream &out) const {
+  out << "module " << extmodule.moduleName << "(\n";
+  bool hasComma = false;
+  for (const auto &input : extmodule.inputs) {
+    out << (hasComma ? ",\n" : "\n");
+    out << Compiler::indent << input.name;
+    if (input.width != 1) {
+      out << "[" << input.width << ":" << 0 << "],\n";
+    }
+    hasComma = true;
   }
-  for (const auto &pair : extModules) {
-    pair.second.printFirrtlDeclaration(out);
+  for (const auto &output : extmodule.outputs) {
+    out << (hasComma ? ",\n" : "\n");
+    out << Compiler::indent << output.name;
+    if (output.width != 1) {
+      out << "[" << output.width << ":" << 0 << "],\n";
+    }
+    hasComma = true;
+  }
+  out << ");\n";
+}
+
+void Compiler::printEpilogue(const ExternalModule &extmodule,
+                             std::ostream &out) const {
+  out << "endmodule " << "//" << extmodule.moduleName;
+  printEmptyLine(out);
+}
+
+void Compiler::printVerilogModule(const ExternalModule &extmodule,
+                                  std::ostream &out) const {
+  printDeclaration(extmodule, out);
+  printBody(extmodule, out);
+  printEpilogue(extmodule, out);
+  printEmptyLine(out);
+}
+
+void Compiler::printFirrtlDeclaration(const ExternalModule &extmodule,
+                                      std::ostream &out) const {
+  out << Compiler::indent << Compiler::opPrefix << "extmodule @" <<
+  extmodule.moduleName << "(";
+  bool hasComma = false;
+  for (const auto &input : extmodule.inputs) {
+    out << (hasComma ? ",\n" : "\n");
+    out << Compiler::indent << Compiler::indent <<  "in " <<
+        input.name << " : " << Compiler::typePrefix << input.type;
+    if (input.type != "reset" && input.type != "clock") {
+      out << "<" << input.width << ">";
+    }
+    hasComma = true;
+  }
+  for (const auto &output : extmodule.outputs) {
+    out << (hasComma ? ",\n" : "\n");
+    out << Compiler::indent << Compiler::indent <<  "out " <<  output.name <<
+        ": " << Compiler::typePrefix << output.type << "<" << output.width <<
+        ">";
+  }
+  out << ")\n";
+}
+
+void Compiler::printBody(const Module &module, std::ostream &out) const {
+  out << module.body;
+}
+
+void Compiler::printEmptyLine(std::ostream &out) const {
+  out << "\n";
+}
+
+void Compiler::printFirrtl(std::ostream &out) const {
+  out << Compiler::opPrefix << "circuit " << "\"" << circuit->name <<
+      "\" " << "{\n";
+  for (const auto &pair : circuit->firModules) {
+    printFirrtlModule(pair.second, out);
+  }
+  for (const auto &pair : circuit->extModules) {
+    printFirrtlDeclaration(pair.second, out);
   }
   out << "}";
 }
 
-void Circuit::printVerilog(std::ostream &out) const {
-  for (const auto &pair : extModules) {
-    pair.second.printVerilog(out);
+void Compiler::printVerilog(std::ostream &out) const {
+  for (const auto &pair : circuit->extModules) {
+    printVerilogModule(pair.second, out);
   }
 }
 
-void Circuit::convertToSV(const std::string& inputFirrtlName) const {
+void Compiler::convertToSV(const std::string& inputFirrtlName) const {
   system((std::string(Compiler::circt) +
           inputFirrtlName +
           std::string(Compiler::circt_options)).c_str());
 }
 
-void Circuit::printFiles(const std::string& outputFirrtlName,
-                         const std::string& outputVerilogName,
-                         const std::string& outputDirectoryName) const {
+void Compiler::printFiles(const std::string& outputFirrtlName,
+                          const std::string& outputVerilogName,
+                          const std::string& outputDirectoryName) const {
   std::ofstream outputFile;
   outputFile.open(outputDirectoryName + outputFirrtlName);
   printFirrtl(outputFile);
@@ -409,12 +418,6 @@ void Circuit::printFiles(const std::string& outputFirrtlName,
   outputFile.open(outputDirectoryName + outputVerilogName);
   printVerilog(outputFile);
   outputFile.close();
-}
-
-std::ostream& operator <<(std::ostream &out, const Circuit &circuit) {
-  circuit.printFirrtl(out);
-  circuit.printVerilog(out);
-  return out;
 }
 
 std::shared_ptr<Circuit> Compiler::constructCircuit() {
