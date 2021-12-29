@@ -78,7 +78,7 @@ assign tmp4    = tmp3 - x[3][2];
 
 // fourth stage
 wire signed [`ML*2-1:0] tmp5;
-assign tmp5 = b0 << 3;
+assign tmp5 = $signed(i0) << 3;
 assign b0 = br ? tmp5[`ML-1:0] : (x[7][3] + x[1][3]) >>> 8;
 assign b1 = br ? tmp5[`ML-1:0] : (x[3][3] + x[2][3]) >>> 8;
 assign b2 = br ? tmp5[`ML-1:0] : (x[0][3] + x[4][3]) >>> 8;
@@ -160,7 +160,7 @@ assign x[7][3] = tmp3 + x[3][2];
 assign tmp4    = tmp3 - x[3][2];
 
 // fourth stage
-wire signed [`ML-1:0] tmp5 = iclp16((b0 + 32) >>> 6);
+wire signed [`ML-1:0] tmp5 = iclp16(($signed(i0) + 32) >>> 6);
 assign b0 = br ? tmp5 : iclp16((x[7][3] + x[1][3]) >>> 14);
 assign b1 = br ? tmp5 : iclp16((x[3][3] + x[2][3]) >>> 14);
 assign b2 = br ? tmp5 : iclp16((x[0][3] + x[4][3]) >>> 14);
@@ -280,5 +280,20 @@ initial begin
   #10;
   $display("out_reg (hex) = %x", out_reg);
 
+  for (i = 0; i < 64; i = i + 1) begin
+    b[i] <= 0;
+  end
+  b[0] <= -166;
+  b[1] <= -7;
+  b[2] <= -4;
+  b[3] <= -4;
+  b[8] <= -2;
+  b[15] <= -2;
+
+  #10;
+  out_reg <= out;
+
+  #10;
+  $display("out_reg (hex) = %x", out_reg);
 end
 endmodule // top
