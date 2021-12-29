@@ -7,6 +7,18 @@
 `define W6 1108
 `define W7 565
 
+`define G0 'h000000000000000100000001ffff00060000ffff0000ffff0001fffd0004fff50001000200000003fffe0006fff9001afffffffe0001fffc0003fff8000bffdf00020004ffff0007fffb000dffef003cfffefffb0001fff70007fff00017ffb90005000cfffd0015fff10027ffcc00b0fffcfff40005ffea0013ffd6003fff53
+
+`define G1 'h000000000000ffff0000ffff0001fffa0000000100000001ffff0003fffc000bfffffffe0000fffd0002fffa0007ffe600010002ffff0004fffd0008fff50021fffefffc0001fff90005fff30011ffc400020005ffff0009fff90010ffe90047fffbfff40003ffeb000fffd90034ff500004000cfffb0016ffed002affc100ad
+
+`define G2 'h0003000300030003000300030003000200030003000300030003000300030002000300030003000300030003000300020003000300030003000300030003000200030003000300030003000300030002000300030003000300030003000300020003000300030003000300030003000200030003000300030003000300030002
+
+`define G3 'h0003000300030002000100010000000000030003000300020001000100000000000300030002000200010001000000000003000300020002000100010001000000030003000200020001000100010001000300020002000200010001000100010002000200020002000100010001000100020002000200020001000100010001
+
+`define G4 'hffecffecffecffecffecffecffeaffe9ffedffecffecffecffecffecffeaffe9ffedffecffecffecffecffecffeaffe9ffedffecffecffecffecffecffeaffe9ffedffecffecffecffecffecffeaffe9ffecffecffebffecffecffebffeaffe9ffecffebffebffebffecffebffeaffe8ffecffebffebffebffebffebffe9ffe8
+
+`define G5 'hffdbffdaffdfffe2fff4fff7ffd1ffd4ffccffd2ffe6ffeffff2ffebffdaffd8ffbeffd4ffdffff1fffcffceffd5ffd7ffd6ffd5ffe1ffedfff8ffcbffd9ffe2ffddffdfffdffff4ffe0ffcfffdcffe9ffdeffeaffeefffbffd3ffc3ffe1fff2ffefffe8fff2fff5ffb7ffd1ffe40005fff8ffeaffefffd5ffc3ffe6fff60015
+
 module idctrow(input [`ML-1:0] i0, input [`ML-1:0] i1, input [`ML-1:0] i2, input [`ML-1:0] i3,
                input [`ML-1:0] i4, input [`ML-1:0] i5, input [`ML-1:0] i6, input [`ML-1:0] i7,
                output [`ML-1:0] b0, output [`ML-1:0] b1, output [`ML-1:0] b2, output [`ML-1:0] b3,
@@ -268,6 +280,11 @@ initial begin
   out_reg <= out;
 
   #10;
+  if (out_reg != `G0) begin
+    $display("Error in assert №0!");
+    $finish;
+  end
+  #10;
   $display("out_reg (hex) = %x", out_reg);
 
   for (i = 0; i < 64; i = i + 1) begin
@@ -276,7 +293,49 @@ initial begin
 
   #10;
   out_reg <= out;
-
+  
+  #10;
+  if (out_reg != `G1) begin
+    $display("Error in assert №1!");
+    $finish;
+  end
+  #10;
+  $display("out_reg (hex) = %x", out_reg);
+  
+  for (i = 0; i < 64; i = i + 1) begin
+    b[i] <= 0;
+  end
+  
+  b[0] <= 23;
+  b[1] <= -1;
+  b[2] <= -2;
+  
+  #10;
+  out_reg <= out;
+  
+  #10;
+  if (out_reg != `G2) begin
+    $display("Error in assert №2!");
+    $finish;
+  end
+  #10;
+  $display("out_reg (hex) = %x", out_reg);
+  
+  for (i = 0; i < 64; i = i + 1) begin
+    b[i] <= 0;
+  end
+  b[0] <= 13;
+  b[1] <= -7;
+  b[9] <= 2;
+  
+  #10;
+  out_reg <= out;
+  
+  #10;
+  if (out_reg != `G3) begin
+    $display("Error in assert №3!");
+    $finish;
+  end
   #10;
   $display("out_reg (hex) = %x", out_reg);
 
@@ -288,12 +347,87 @@ initial begin
   b[2] <= -4;
   b[3] <= -4;
   b[8] <= -2;
-  b[15] <= -2;
+  b[16] <= -2;
 
   #10;
   out_reg <= out;
 
   #10;
+  if (out_reg != `G4) begin
+    $display("Error in assert №4!");
+    $finish;
+  end
+  #10;
   $display("out_reg (hex) = %x", out_reg);
+  
+  for (i = 0; i < 64; i = i + 1) begin
+    b[i] <= 0;
+  end
+  
+  b[0] <= -240;
+  b[1] <= 8;
+  b[2] <= -11;
+  b[3] <= 47;
+  b[4] <= 26;
+  b[5] <= -6;
+  b[7] <= 5;
+  
+  b[8] <= 28;
+  b[9] <= -6;
+  b[10] <= 85;
+  b[11] <= 44;
+  b[12] <= -4;
+  b[13] <= -25;
+  b[14] <= 5;
+  b[15] <= 16;
+  
+  b[16] <= 21;
+  b[17] <= 8;
+  b[18] <= 32;
+  b[19] <= -16;
+  b[20] <= -24;
+  b[22] <= 30;
+  b[23] <= 12;
+  
+  b[24] <= -2;
+  b[25] <= 18;
+  b[27] <= -2;
+  b[29] <= 7;
+  b[31] <= -15;
+  
+  b[32] <= 7;
+  b[33] <= 4;
+  b[34] <= 15;
+  b[35] <= -24;
+  b[37] <= 9;
+  b[38] <= 8;
+  b[39] <= -6;
+  
+  b[40] <= 4;
+  b[41] <= 9;
+  b[43] <= -5;
+  b[44] <= -6;
+  
+  b[48] <= -4;
+  b[50] <= -6;
+  b[53] <= 10;
+  b[54] <= -10;
+  b[55] <= -8;
+  
+  b[56] <= 6;
+  b[63] <= -8;
+  
+  #10;
+  out_reg <= out;
+  
+  #10;
+  if (out_reg != `G5) begin
+    $display("Error in assert №5!");
+    $finish;
+  end
+  #10;
+  $display("out_reg (hex) = %x", out_reg);
+  
+
 end
 endmodule // top
