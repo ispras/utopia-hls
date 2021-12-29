@@ -164,21 +164,17 @@ void Circuit::addExternalModule(const ExternalModule &externalModule) {
 }
 
 FirrtlModule* Circuit::findFirModule(const std::string &name) const {
-  auto i = std::find_if(firModules.begin(), firModules.end(),
-      [&name](std::pair<std::string, FirrtlModule> const &pair) {
-          return pair.first == name; });
+  auto iter = firModules.find(name);
 
-  return const_cast<FirrtlModule*>
-      (i != firModules.end() ? &(i->second) : nullptr);
+  return const_cast<FirrtlModule*>(
+      (iter == firModules.end()) ? nullptr : &(iter->second));
 }
 
 ExternalModule* Circuit::findExtModule(const std::string &name) const {
-  auto i = std::find_if(extModules.begin(), extModules.end(),
-      [&name](std::pair<std::string, ExternalModule> const &pair) {
-          return pair.first == name; });
+  auto iter = extModules.find(name);
 
-  return const_cast<ExternalModule*>
-      (i != extModules.end() ? &(i->second) : nullptr);
+  return const_cast<ExternalModule*>(
+      (iter == extModules.end()) ? nullptr : &(iter->second));
 }
 
 Module* Circuit::findModule(const std::string &name) const {
