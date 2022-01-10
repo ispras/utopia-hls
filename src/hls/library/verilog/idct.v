@@ -7,18 +7,6 @@
 `define W6 1108
 `define W7 565
 
-`define G0 'h000000000000000100000001ffff00060000ffff0000ffff0001fffd0004fff50001000200000003fffe0006fff9001afffffffe0001fffc0003fff8000bffdf00020004ffff0007fffb000dffef003cfffefffb0001fff70007fff00017ffb90005000cfffd0015fff10027ffcc00b0fffcfff40005ffea0013ffd6003fff53
-
-`define G1 'h000000000000ffff0000ffff0001fffa0000000100000001ffff0003fffc000bfffffffe0000fffd0002fffa0007ffe600010002ffff0004fffd0008fff50021fffefffc0001fff90005fff30011ffc400020005ffff0009fff90010ffe90047fffbfff40003ffeb000fffd90034ff500004000cfffb0016ffed002affc100ad
-
-`define G2 'h0003000300030003000300030003000200030003000300030003000300030002000300030003000300030003000300020003000300030003000300030003000200030003000300030003000300030002000300030003000300030003000300020003000300030003000300030003000200030003000300030003000300030002
-
-`define G3 'h0003000300030002000100010000000000030003000300020001000100000000000300030002000200010001000000000003000300020002000100010001000000030003000200020001000100010001000300020002000200010001000100010002000200020002000100010001000100020002000200020001000100010001
-
-`define G4 'hffecffecffecffecffecffecffeaffe9ffedffecffecffecffecffecffeaffe9ffedffecffecffecffecffecffeaffe9ffedffecffecffecffecffecffeaffe9ffedffecffecffecffecffecffeaffe9ffecffecffebffecffecffebffeaffe9ffecffebffebffebffecffebffeaffe8ffecffebffebffebffebffebffe9ffe8
-
-`define G5 'hffdbffdaffdfffe2fff4fff7ffd1ffd4ffccffd2ffe6ffeffff2ffebffdaffd8ffbeffd4ffdffff1fffcffceffd5ffd7ffd6ffd5ffe1ffedfff8ffcbffd9ffe2ffddffdfffdffff4ffe0ffcfffdcffe9ffdeffeaffeefffbffd3ffc3ffe1fff2ffefffe8fff2fff5ffb7ffd1ffe40005fff8ffeaffefffd5ffc3ffe6fff60015
-
 module idctrow(input [`ML-1:0] i0, input [`ML-1:0] i1, input [`ML-1:0] i2, input [`ML-1:0] i3,
                input [`ML-1:0] i4, input [`ML-1:0] i5, input [`ML-1:0] i6, input [`ML-1:0] i7,
                output [`ML-1:0] b0, output [`ML-1:0] b1, output [`ML-1:0] b2, output [`ML-1:0] b3,
@@ -257,9 +245,19 @@ endmodule // Fast_IDCT
 
 module top ();
 integer i;
+integer j;
 reg signed [`ML-1:0] b [63:0];
 wire [`ML*8*8-1:0] out;
 reg [`ML*8*8-1:0] out_reg;
+reg [`ML-1:0] buffer;
+
+
+reg signed [`ML-1:0] exres1 [63:0];
+reg signed [`ML-1:0] exres2 [63:0];
+reg signed [`ML-1:0] exres3 [63:0];
+reg signed [`ML-1:0] exres4 [63:0];
+
+
 Fast_IDCT idct({b[63], b[62], b[61], b[60], b[59], b[58], b[57], b[56],
                 b[55], b[54], b[53], b[52], b[51], b[50], b[49], b[48],
                 b[47], b[46], b[45], b[44], b[43], b[42], b[41], b[40],
@@ -269,38 +267,216 @@ Fast_IDCT idct({b[63], b[62], b[61], b[60], b[59], b[58], b[57], b[56],
                 b[15], b[14], b[13], b[12], b[11], b[10], b[09], b[08],
                 b[07], b[06], b[05], b[04], b[03], b[02], b[01], b[00]}, out);
 initial begin
+
+  //Expected result for test 1.
+  for (i = 0; i < 64; i = i + 1) begin
+    exres1[i] <= 3;
+  end
+  for (i = 0; i < 8; i = i + 1) begin
+    exres1[i * 8] <= 2;
+  end
+  
+  //Expected result for test 2.
+  for (i = 0; i < 4; i = i + 1) begin
+    exres2[i * 8] <= 1;
+    exres2[i * 8 + 1] <= 1;
+    exres2[i * 8 + 2] <= 1;
+    exres2[i * 8 + 3] <= 1;
+    exres2[i * 8 + 4] <= 2;
+    exres2[i * 8 + 5] <= 2;
+    exres2[i * 8 + 6] <= 2;
+    exres2[i * 8 + 7] <= 2;
+  end
+  
+  exres2[23] <= 3;
+  exres2[30] <= 3;
+  exres2[31] <= 3;
+  
+  exres2[32] <= 0;
+  exres2[33] <= 1;
+  exres2[34] <= 1;
+  exres2[35] <= 1;
+  exres2[36] <= 2;
+  exres2[37] <= 2;
+  exres2[38] <= 3;
+  exres2[39] <= 3;
+  
+  exres2[40] <= 0;
+  exres2[41] <= 0;
+  exres2[42] <= 1;
+  exres2[43] <= 1;
+  exres2[44] <= 2;
+  exres2[45] <= 2;
+  exres2[46] <= 3;
+  exres2[47] <= 3;
+  
+  exres2[48] <= 0;
+  exres2[49] <= 0;
+  exres2[50] <= 1;
+  exres2[51] <= 1;
+  exres2[52] <= 2;
+  exres2[53] <= 3;
+  exres2[54] <= 3;
+  exres2[55] <= 3;
+  
+  exres2[56] <= 0;
+  exres2[57] <= 0;
+  exres2[58] <= 1;
+  exres2[59] <= 1;
+  exres2[60] <= 2;
+  exres2[61] <= 3;
+  exres2[62] <= 3;
+  exres2[63] <= 3;
+  
+  //Expected result for test 3.
+  exres3[0] <= -24;
+  exres3[1] <= -23;
+  exres3[2] <= -21;
+  exres3[3] <= -21;
+  exres3[4] <= -21;
+  exres3[5] <= -21;
+  exres3[6] <= -21;
+  exres3[7] <= -20;
+  
+  exres3[8] <= -24;
+  exres3[9] <= -22;
+  exres3[10] <= -21;
+  exres3[11] <= -20;
+  exres3[12] <= -21;
+  exres3[13] <= -21;
+  exres3[14] <= -21;
+  exres3[15] <= -20;
+  
+  exres3[16] <= -23;
+  exres3[17] <= -22;
+  exres3[18] <= -21;
+  exres3[19] <= -20;
+  exres3[20] <= -20;
+  exres3[21] <= -21;
+  exres3[22] <= -20;
+  exres3[23] <= -20;
+  
+  exres3[24] <= -23;
+  exres3[25] <= -22;
+  exres3[26] <= -20;
+  exres3[27] <= -20;
+  exres3[28] <= -20;
+  exres3[29] <= -20;
+  exres3[30] <= -20;
+  exres3[31] <= -19;
+  
+  exres3[32] <= -23;
+  exres3[33] <= -22;
+  exres3[34] <= -20;
+  exres3[35] <= -20;
+  exres3[36] <= -20;
+  exres3[37] <= -20;
+  exres3[38] <= -20;
+  exres3[39] <= -19;
+  
+  exres3[40] <= -23;
+  exres3[41] <= -22;
+  exres3[42] <= -20;
+  exres3[43] <= -20;
+  exres3[44] <= -20;
+  exres3[45] <= -20;
+  exres3[46] <= -20;
+  exres3[47] <= -19;
+  
+  exres3[48] <= -23;
+  exres3[49] <= -22;
+  exres3[50] <= -20;
+  exres3[51] <= -20;
+  exres3[52] <= -20;
+  exres3[53] <= -20;
+  exres3[54] <= -20;
+  exres3[55] <= -19;
+  
+  exres3[56] <= -23;
+  exres3[57] <= -22;
+  exres3[58] <= -20;
+  exres3[59] <= -20;
+  exres3[60] <= -20;
+  exres3[61] <= -20;
+  exres3[62] <= -20;
+  exres3[63] <= -20;
+  
+  //Exrected result for test 4.
+  exres4[0] <= 21;
+  exres4[1] <= -10;
+  exres4[2] <= -26;
+  exres4[3] <= -61;
+  exres4[4] <= -43;
+  exres4[5] <= -17;
+  exres4[6] <= -22;
+  exres4[7] <= -8;
+  
+  exres4[8] <= 5;
+  exres4[9] <= -28;
+  exres4[10] <= -47;
+  exres4[11] <= -73;
+  exres4[12] <= -11;
+  exres4[13] <= -14;
+  exres4[14] <= -24;
+  exres4[15] <= -17;
+  
+  exres4[16] <= -14;
+  exres4[17] <= -31;
+  exres4[18] <= -61;
+  exres4[19] <= -45;
+  exres4[20] <= -5;
+  exres4[21] <= -18;
+  exres4[22] <= -22;
+  exres4[23] <= -34;
+  
+  exres4[24] <= -23;
+  exres4[25] <= -36;
+  exres4[26] <= -49;
+  exres4[27] <= -32;
+  exres4[28] <= -12;
+  exres4[29] <= -33;
+  exres4[30] <= -33;
+  exres4[31] <= -35;
+  
+  exres4[32] <= -30;
+  exres4[33] <= -39;
+  exres4[34] <= -53;
+  exres4[35] <= -8;
+  exres4[36] <= -19;
+  exres4[37] <= -31;
+  exres4[38] <= -43;
+  exres4[39] <= -42;
+  
+  exres4[40] <= -41;
+  exres4[41] <= -43;
+  exres4[42] <= -50;
+  exres4[43] <= -4;
+  exres4[44] <= -15;
+  exres4[45] <= -33;
+  exres4[46] <= -44;
+  exres4[47] <= -66;
+  
+  exres4[48] <= -40;
+  exres4[49] <= -38;
+  exres4[50] <= -21;
+  exres4[51] <= -14;
+  exres4[52] <= -17;
+  exres4[53] <= -26;
+  exres4[54] <= -46;
+  exres4[55] <= -52;
+  
+  exres4[56] <= -44;
+  exres4[57] <= -47;
+  exres4[58] <= -9;
+  exres4[59] <= -12;
+  exres4[60] <= -30;
+  exres4[61] <= -33;
+  exres4[62] <= -38;
+  exres4[63] <= -37;
+  
+  
   $dumpfile("test.vcd");
   $dumpvars(6, top);
-
-  for (i = 0; i < 64; i = i + 1) begin
-    b[i] <= -1*i;
-  end
-
-  #10;
-  out_reg <= out;
-
-  #10;
-  if (out_reg != `G0) begin
-    $display("Error in assert №0!");
-    $finish;
-  end
-  #10;
-  $display("out_reg (hex) = %x", out_reg);
-
-  for (i = 0; i < 64; i = i + 1) begin
-    b[i] <= 1*i;
-  end
-
-  #10;
-  out_reg <= out;
-  
-  #10;
-  if (out_reg != `G1) begin
-    $display("Error in assert №1!");
-    $finish;
-  end
-  #10;
-  $display("out_reg (hex) = %x", out_reg);
   
   for (i = 0; i < 64; i = i + 1) begin
     b[i] <= 0;
@@ -314,13 +490,17 @@ initial begin
   out_reg <= out;
   
   #10;
-  if (out_reg != `G2) begin
-    $display("Error in assert №2!");
-    $finish;
+  for (i = 0; i < 64; i = i + 1) begin
+    for (j = 0; j < 16; j = j + 1) begin
+      buffer[`ML - 1 - j] = out_reg[((i + 1) * 16 - 1) - j];
+    end
+    if (buffer != exres1[i]) begin
+      $display("Unexpected result in test 1: expected %d got %d!", exres1[i], buffer);
+      $finish;
+    end
   end
+  $display("TEST 1 PASSED!");
   #10;
-  $display("out_reg (hex) = %x", out_reg);
-  
   for (i = 0; i < 64; i = i + 1) begin
     b[i] <= 0;
   end
@@ -332,12 +512,17 @@ initial begin
   out_reg <= out;
   
   #10;
-  if (out_reg != `G3) begin
-    $display("Error in assert №3!");
-    $finish;
+  for (i = 0; i < 64; i = i + 1) begin
+    for (j = 0; j < 16; j = j + 1) begin
+      buffer[`ML - 1 - j] = out_reg[((i + 1) * 16 - 1) - j];
+    end
+    if (buffer != exres2[i]) begin
+      $display("Unexpected result in test 2: expected %d got %d!", exres2[i], buffer);
+      $finish;
+    end
   end
+  $display("TEST 2 PASSED!");
   #10;
-  $display("out_reg (hex) = %x", out_reg);
 
   for (i = 0; i < 64; i = i + 1) begin
     b[i] <= 0;
@@ -353,12 +538,17 @@ initial begin
   out_reg <= out;
 
   #10;
-  if (out_reg != `G4) begin
-    $display("Error in assert №4!");
-    $finish;
+  for (i = 0; i < 64; i = i + 1) begin
+    for (j = 0; j < 16; j = j + 1) begin
+      buffer[`ML - 1 - j] = out_reg[((i + 1) * 16 - 1) - j];
+    end
+    if (buffer != exres3[i]) begin
+      $display("Unexpected result in test 3: expected %d got %d!", exres3[i], buffer);
+      $finish;
+    end
   end
+  $display("TEST 3 PASSED!");
   #10;
-  $display("out_reg (hex) = %x", out_reg);
   
   for (i = 0; i < 64; i = i + 1) begin
     b[i] <= 0;
@@ -421,13 +611,17 @@ initial begin
   out_reg <= out;
   
   #10;
-  if (out_reg != `G5) begin
-    $display("Error in assert №5!");
-    $finish;
+  for (i = 0; i < 64; i = i + 1) begin
+    for (j = 0; j < 16; j = j + 1) begin
+      buffer[`ML - 1 - j] = out_reg[((i + 1) * 16 - 1) - j];
+    end
+    if (buffer != exres4[i]) begin
+      $display("Unexpected result in test 4: expected %d got %d!", exres4[i], buffer);
+      $finish;
+    end
   end
+  $display("TEST 4 PASSED!");
   #10;
-  $display("out_reg (hex) = %x", out_reg);
   
-
 end
 endmodule // top
