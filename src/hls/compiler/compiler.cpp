@@ -76,13 +76,21 @@ void Module::addBody(const std::string &body) {
 
 ExternalModule::ExternalModule(const model::NodeType* nodetype) : Module() {
   moduleName = nodetype->name;
-  addInput(Port("clock", true, 1, "clock"));
-  addInput(Port("reset", true, 1, "reset"));
+  addInput(Port("clock", true, Type("clock", 1, false, 1)));
+  addInput(Port("reset", true, Type("reset", 1, false, 1)));
   for (const auto *input : nodetype->inputs) {
-    addInput(Port(input->name, true));
+      /*const FixedType* fixed = (const FixedType*)&(input->type);*/
+      addInput(Port(input->name, true, Type("sint",
+                                            16,
+                                            false,
+                                            1)));
   }
   for (const auto *output : nodetype->outputs) {
-    addOutput(Port(output->name, false));
+      /*const FixedType* fixed = (const FixedType*)&(output->type);*/
+      addOutput(Port(output->name, false, Type("sint",
+                                               16,
+                                               false,
+                                               1)));
   }
   auto meta = Library::get().find(*nodetype);
   auto element = meta->construct(meta->params);
@@ -93,17 +101,25 @@ FirrtlModule::FirrtlModule(const eda::hls::model::Model &model) : Module() {
   const auto* graph = model.main();
   moduleName = graph->name;
   //Inputs & Outputs
-  addInput(Port("clock", true, 1, "clock"));
-  addInput(Port("reset", true, 1, "reset"));
+  addInput(Port("clock", true, Type("clock", 1, false, 1)));
+  addInput(Port("reset", true, Type("reset", 1, false, 1)));
   for (const auto *node : graph->nodes) {
     if (node->isSource()) {
       for (const auto *output : node->outputs) {
-        addInput(Port(output->name, true));
+        /*const FixedType* fixed = (const FixedType*)&(output->type);*/
+        addInput(Port(output->name, true, Type("sint",
+                                               16,
+                                               false,
+                                               1)));
       }
     }
     if (node->isSink()) {
       for (const auto *input : node->inputs) {
-        addOutput(Port(input->name, false));
+        /*const FixedType* fixed = (const FixedType*)&(input->type);*/
+        addOutput(Port(input->name, false, Type("sint",
+                                                16,
+                                                false,
+                                                1)));
       }
     }
   }
@@ -112,25 +128,46 @@ FirrtlModule::FirrtlModule(const eda::hls::model::Model &model) : Module() {
     addInstance(Instance(node->name,
                          node->type.name));
     for (const auto *input : node->inputs) {
-      Port inputPort(node->name + "_" + input->target.port->name, true);
+      /*const FixedType* fixed = (const FixedType*)&(input->type);*/
+      Port inputPort(node->name + "_" + input->target.port->name, true, Type(
+                                              "sint",
+                                              16,
+                                              false,
+                                              1));
       instances.back().addInput(inputPort);
     }
     for (const auto *moduleInput : node->type.inputs) {
-      Port inputPort(moduleInput->name, true);
+      /*const FixedType* fixed = (const FixedType*)&(moduleInput->type);*/
+      Port inputPort(moduleInput->name, true, Type("sint",
+                                                   16,
+                                                   false,
+                                                   1));
       instances.back().addModuleInput(inputPort);
     }
 
     for (const auto *output : node->outputs) {
-      Port outputPort(node->name + "_" + output->source.port->name, false);
+      /*const FixedType* fixed = (const FixedType*)&(output->type);*/
+      Port outputPort(node->name + "_" + output->source.port->name, false, Type(
+                                              "sint",
+                                              16,
+                                              false,
+                                              1));
       instances.back().addOutput(outputPort);
       if (node->type.name != "sink") {
         Port connectsTo(output->target.node->name + "_" +
-            output->target.port->name, true);
+            output->target.port->name, true, Type("sint",
+                                                  16,
+                                                  false,
+                                                  1));
         instances.back().addBinding(outputPort, connectsTo);
       }
     }
     for (const auto *moduleOutput : node->type.outputs) {
-      Port outputPort(moduleOutput->name, false);
+      /*const FixedType* fixed = (const FixedType*)&(moduleOutput->type);*/
+      Port outputPort(moduleOutput->name, false, Type("sint",
+                                                      16,
+                                                      false,
+                                                      1));
       instances.back().addModuleOutput(outputPort);
     }
     addBody("");
@@ -219,16 +256,16 @@ void Compiler::printInstances(const FirrtlModule &firmodule,
     for (const auto &input : instance.moduleInputs) {
       out << (hasComma ? ", " : " ");
       out << "in " << input.name << ": ";
-      out << Compiler::typePrefix << input.type;
-      out << "<" << input.width << ">";
+      out << Compiler::typePrefix << input.type.name;
+      out << "<" << input.type.element_width << ">";
       hasComma = true;
     }
 
     for (const auto &output : instance.moduleOutputs) {
       out << (hasComma ? ", " : " ");
       out << "out " << output.name << ": ";
-      out << Compiler::typePrefix << output.type;
-      out << "<" << output.width << ">";
+      out << Compiler::typePrefix << output.type.name;
+      out << "<" << output.type.element_width << ">";
       hasComma = true;
     }
 
@@ -253,11 +290,11 @@ void Compiler::printConnections(const FirrtlModule &firmodule,
       out << Compiler::indent << Compiler::indent << Compiler::opPrefix <<
           "connect " << Compiler::varPrefix << pair.second.name << ", "
           << Compiler::varPrefix << pair.first.name;
-      out <<  " : " << Compiler::typePrefix << pair.second.type;
-      out << "<" << pair.second.width << ">";
+      out <<  " : " << Compiler::typePrefix << pair.second.type.name;
+      out << "<" << pair.second.type.element_width << ">";
       out << ", ";
-      out << Compiler::typePrefix << pair.second.type;
-      out << "<" << pair.second.width << ">";
+      out << Compiler::typePrefix << pair.second.type.name;
+      out << "<" << pair.second.type.element_width << ">";
       out << "\n";
     }
   }
@@ -270,9 +307,9 @@ void Compiler::printDeclaration(const FirrtlModule &firmodule,
   for (const auto &input : firmodule.inputs) {
     out << Compiler::indent << Compiler::indent <<  "in " <<
         Compiler::varPrefix << input.name << " : " << Compiler::typePrefix <<
-        input.type;
+        input.type.name;
     if (input.name != "clock" && input.name != "reset") {
-      out << "<" << input.width << ">,\n";
+      out << "<" << input.type.element_width << ">,\n";
     } else {
       out << ",\n";
     }
@@ -282,7 +319,7 @@ void Compiler::printDeclaration(const FirrtlModule &firmodule,
     out << (hasComma ? ",\n" : "\n");
     out << Compiler::indent << Compiler::indent <<  "out " <<
         Compiler::varPrefix << output.name << ": " << Compiler::typePrefix <<
-        output.type << "<" << output.width << ">";
+        output.type.name << "<" << output.type.element_width << ">";
     hasComma = true;
   }
   out << ")\n";
@@ -315,17 +352,17 @@ void Compiler::printDeclaration(const ExternalModule &extmodule,
   for (const auto &input : extmodule.inputs) {
     out << (hasComma ? ",\n" : "\n");
     out << Compiler::indent << input.name;
-    if (input.width != 1) {
-      out << "[" << input.width << ":" << 0 << "],\n";
-    }
+    /*if (input.type.element_width != 1) {
+      out << "[" << input.type.element_width - 1 << ":" << 0 << "]";
+    }*/
     hasComma = true;
   }
   for (const auto &output : extmodule.outputs) {
     out << (hasComma ? ",\n" : "\n");
     out << Compiler::indent << output.name;
-    if (output.width != 1) {
-      out << "[" << output.width << ":" << 0 << "],\n";
-    }
+    /*if (output.type.element_width != 1) {
+      out << "[" << output.type.element_width - 1 << ":" << 0 << "]";
+    }*/
     hasComma = true;
   }
   out << ");\n";
@@ -353,17 +390,17 @@ void Compiler::printFirrtlDeclaration(const ExternalModule &extmodule,
   for (const auto &input : extmodule.inputs) {
     out << (hasComma ? ",\n" : "\n");
     out << Compiler::indent << Compiler::indent <<  "in " <<
-        input.name << " : " << Compiler::typePrefix << input.type;
-    if (input.type != "reset" && input.type != "clock") {
-      out << "<" << input.width << ">";
+        input.name << " : " << Compiler::typePrefix << input.type.name;
+    if (input.type.name != "reset" && input.type.name != "clock") {
+      out << "<" << input.type.element_width << ">";
     }
     hasComma = true;
   }
   for (const auto &output : extmodule.outputs) {
     out << (hasComma ? ",\n" : "\n");
     out << Compiler::indent << Compiler::indent <<  "out " <<  output.name <<
-        ": " << Compiler::typePrefix << output.type << "<" << output.width <<
-        ">";
+        ": " << Compiler::typePrefix << output.type.name << "<" <<
+         output.type.element_width << ">";
   }
   out << ")\n";
 }
@@ -410,7 +447,7 @@ void Compiler::printFiles(const std::string& outputFirrtlName,
   convertToSV(outputDirectoryName + outputFirrtlName);
   std::filesystem::create_directory(outputDirectoryName);
   std::filesystem::rename("main.sv", (outputDirectoryName +
-                                        std::string("main.sv")).c_str());
+                                      std::string("main.sv")).c_str());
   outputFile.open(outputDirectoryName + outputVerilogName);
   printVerilog(outputFile);
   outputFile.close();
@@ -457,7 +494,7 @@ void Compiler::printRndVlogTest(const std::string& tstPath, const int tstCnt) {
   std::vector<Port> inputs = main->inputs;
   for (size_t i = 0; i < inputs.size(); i++) {
     ctemplate::TemplateDictionary *inDict = dict->AddSectionDictionary("INS");
-    inDict->SetValue("IN_TYPE", "[0:0]"); // TODO: set type when implemented
+    inDict->SetValue("IN_TYPE", "[15:0]"); // TODO: set type when implemented
     const std::string iName = inputs[i].name;
     inDict->SetValue("IN_NAME", iName);
     bndNames.push_back(iName);
@@ -467,7 +504,7 @@ void Compiler::printRndVlogTest(const std::string& tstPath, const int tstCnt) {
   std::vector<Port> outputs = main->outputs;
   for (size_t i = 0; i < outputs.size(); i++) {
     ctemplate::TemplateDictionary *outDict = dict->AddSectionDictionary("OUTS");
-    outDict->SetValue("OUT_TYPE", "[0:0]"); // TODO: set type when implemented
+    outDict->SetValue("OUT_TYPE", "[15:0]"); // TODO: set type when implemented
     const std::string oName = outputs[i].name;
     outDict->SetValue("OUT_NAME", oName);
     bndNames.push_back(oName);

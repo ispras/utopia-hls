@@ -37,9 +37,9 @@ TEST(CompilerTest, CompileTestIdctTest) {
                                  "./test/data/hil/idct/"), 0);
 }
 
-TEST(CompilerTest, CompileTestHilTest) {
+/*TEST(CompilerTest, CompileTestHilTest) {
   EXPECT_EQ(compileSimpleHilTest("./test/data/hil/test.hil",
                                  "outputFirrtlTest.mlir",
                                  "outputVerilogTest.v",
                                  "./test/data/hil/test/"), 0);
-}
+}*/

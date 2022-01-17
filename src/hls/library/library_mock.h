@@ -81,7 +81,7 @@ inline std::unique_ptr<Element> MetaElementMock::construct(
     }
 
     std::string portDeclr =
-      (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) + ":0]" :
+      (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) + ":0] " :
                         std::string("")) + port.name + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
@@ -439,10 +439,10 @@ inline std::shared_ptr<MetaElement> MetaElementMock::create(
   // Copy ports from model
   Ports ports;
   for (const auto *input: nodetype.inputs) {
-    ports.push_back(Port(input->name, Port::IN, input->latency, 1 /*arg->length*/));
+    ports.push_back(Port(input->name, Port::IN, input->latency, 16 /*arg->length*/));//TODO
   }
   for (const auto *output: nodetype.outputs) {
-    ports.push_back(Port(output->name, Port::OUT, output->latency, 1 /*arg->length*/));
+    ports.push_back(Port(output->name, Port::OUT, output->latency, 16 /*arg->length*/));//TODO
   }
 
   // Add clk and rst ports: these ports are absent in the lists above.
