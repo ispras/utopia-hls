@@ -18,30 +18,40 @@ namespace eda::hls::compiler {
 
 struct Wire final {
   std::string name;
-  size_t width;
-  std::string type;
+  Type type;
 
   Wire(const std::string &name,
-       const size_t width = 1,
-       const std::string &type = "uint") :
+       const Type &type) :
     name(name),
-    width(width),
     type(type) {}
+};
+
+struct Type final {
+  std::string name;
+  std::size_t element_width;
+  bool isContainer;
+  std::size_t element_count;
+
+  Type(const std::string &name,
+       const std::size_t element_width,
+       bool isContainer,
+       const std::size_t element_count) :
+       name(name),
+       element_width(element_width),
+       isContainer(isContainer),
+       element_count(element_count) {}
 };
 
 struct Port final {
   std::string name;
   bool isInput;
-  size_t width;
-  std::string type;
+  Type type;
 
   Port(const std::string &name,
        const bool isInput,
-       const size_t width = 1,
-       const std::string &type = "uint") :
+       const Type &type) :
     name(name),
     isInput(isInput),
-    width(width),
     type(type) {}
 
   bool isClock() const;

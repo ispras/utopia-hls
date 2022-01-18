@@ -107,34 +107,50 @@ FirrtlModule::FirrtlModule(const eda::hls::model::Model &model) : Module() {
     if (node->isSource()) {
       for (const auto *output : node->outputs) {
         /*const FixedType* fixed = (const FixedType*)&(output->type);*/
-        addInput(Port(output->name, true, Type("sint",
-                                               16,
-                                               false,
-                                               1)));
+        Port outputPort (node->name + "_" + output->target.port->name, true,
+                         Type("sint",
+                              16,
+                              false,
+                              1));
+        addInput(outputPort);
       }
     }
     if (node->isSink()) {
       for (const auto *input : node->inputs) {
         /*const FixedType* fixed = (const FixedType*)&(input->type);*/
-        addOutput(Port(input->name, false, Type("sint",
-                                                16,
-                                                false,
-                                                1)));
+        Port inputPort(node->name + "_" + input->target.port->name, false,
+                        Type("sint",
+                             16,
+                             false,
+                             1));
+        addOutput(Port(inputPort));
       }
     }
   }
   //Instances
   for (const auto *node : graph->nodes) {
+    //Skip dummies
+    if (node->isSource() || node->isSink()) {
+      continue;
+    }
     addInstance(Instance(node->name,
                          node->type.name));
     for (const auto *input : node->inputs) {
       /*const FixedType* fixed = (const FixedType*)&(input->type);*/
-      Port inputPort(node->name + "_" + input->target.port->name, true, Type(
-                                              "sint",
-                                              16,
-                                              false,
-                                              1));
+      Port inputPort(node->name + "_" + input->target.port->name, true,
+                       Type("sint",
+                            16,
+                            false,
+                            1));
       instances.back().addInput(inputPort);
+      if (input->source.node->isSource()) {
+        Port connectsFrom(input->source.node->name + "_" +
+            input->source.port->name, true, Type("sint",
+                                                  16,
+                                                  false,
+                                                  1));
+        instances.back().addBinding(connectsFrom, inputPort);
+      }
     }
     for (const auto *moduleInput : node->type.inputs) {
       /*const FixedType* fixed = (const FixedType*)&(moduleInput->type);*/
@@ -147,11 +163,11 @@ FirrtlModule::FirrtlModule(const eda::hls::model::Model &model) : Module() {
 
     for (const auto *output : node->outputs) {
       /*const FixedType* fixed = (const FixedType*)&(output->type);*/
-      Port outputPort(node->name + "_" + output->source.port->name, false, Type(
-                                              "sint",
-                                              16,
-                                              false,
-                                              1));
+      Port outputPort(node->name + "_" + output->source.port->name, false,
+                      Type("sint",
+                           16,
+                           false,
+                           1));
       instances.back().addOutput(outputPort);
       if (node->type.name != "sink") {
         Port connectsTo(output->target.node->name + "_" +
@@ -494,7 +510,11 @@ void Compiler::printRndVlogTest(const std::string& tstPath, const int tstCnt) {
   std::vector<Port> inputs = main->inputs;
   for (size_t i = 0; i < inputs.size(); i++) {
     ctemplate::TemplateDictionary *inDict = dict->AddSectionDictionary("INS");
-    inDict->SetValue("IN_TYPE", "[15:0]"); // TODO: set type when implemented
+    if (inputs[i].name == "clock" || inputs[i].name == "reset") {
+      inDict->SetValue("IN_TYPE", ""); // TODO: set type when implemented
+    } else {
+      inDict->SetValue("IN_TYPE", "[15:0]"); // TODO: set type when implemented
+    }
     const std::string iName = inputs[i].name;
     inDict->SetValue("IN_NAME", iName);
     bndNames.push_back(iName);
