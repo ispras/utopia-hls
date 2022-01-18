@@ -17,7 +17,7 @@ class simulated_annealing {
                         std::function<float(std::vector<float>)> tar_fun,
                         std::function<void(std::vector<float>&, const std::vector<float>&, float)> step_fun,
                         std::function<float(int, float)> temp_fun);
-    void optimize(std::vector<float>& x);
+    void optimize(std::vector<float>& param);
 
   private:
     float get_probabiliy(float prev_f, float cur_f, float temp);
