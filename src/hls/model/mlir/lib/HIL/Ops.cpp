@@ -6,10 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "HIL/HILOps.h"
-#include "HIL/HILDialect.h"
+#include "HIL/Ops.h"
+#include "HIL/Dialect.h"
 #include "mlir/IR/OpImplementation.h"
 
-
 #define GET_OP_CLASSES
-#include "HIL/HILOps.cpp.inc"
+#include "HIL/Ops.cpp.inc"

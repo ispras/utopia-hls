@@ -9,7 +9,7 @@
 #ifndef HIL_OPS
 #define HIL_OPS
 
-include "HILDialect.td"
+include "Dialect.td"
 
 class HIL_Container<string mnemonic, list<OpTrait> traits = []> :
   HIL_Op<mnemonic, !listconcat(traits, [

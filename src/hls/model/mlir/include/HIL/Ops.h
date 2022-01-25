@@ -17,6 +17,6 @@
 #include "mlir/Interfaces/SideEffectInterfaces.h"
 
 #define GET_OP_CLASSES
-#include "HIL/HILOps.h.inc"
+#include "HIL/Ops.h.inc"
 
 #endif // HIL_HILOPS_H

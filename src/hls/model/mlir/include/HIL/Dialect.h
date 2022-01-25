@@ -11,8 +11,8 @@
 
 #include "mlir/IR/Dialect.h"
 
-#include "HIL/HILOpsDialect.h.inc"
+#include "HIL/OpsDialect.h.inc"
 #define GET_TYPEDEF_CLASSES
-#include "HIL/HILOpsTypes.h.inc"
+#include "HIL/OpsTypes.h.inc"
 
 #endif // HIL_HILDIALECT_H

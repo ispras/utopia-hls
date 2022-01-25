@@ -20,9 +20,9 @@
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/ToolOutputFile.h"
 
-#include "HIL/HILCombine.h"
-#include "HIL/HILDialect.h"
-#include "HIL/HILModel.h"
+#include "HIL/Combine.h"
+#include "HIL/Dialect.h"
+#include "HIL/Model.h"
 
 namespace cl = llvm::cl;
 

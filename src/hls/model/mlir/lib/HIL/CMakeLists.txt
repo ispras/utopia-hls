@@ -1,9 +1,9 @@
 add_mlir_dialect_library(MLIRHIL
-        HILDialect.cpp
-        HILOps.cpp
-        HILCombine.cpp
-        HILModel.cpp
-        HILDumper.cpp
+        Dialect.cpp
+        Ops.cpp
+        Combine.cpp
+        Model.cpp
+        Dumper.cpp
         ${PROJECT_SOURCE_DIR}/../../parser/hil/builder.cpp
         ${PROJECT_SOURCE_DIR}/../model.cpp
 
@@ -11,7 +11,7 @@ add_mlir_dialect_library(MLIRHIL
         ${PROJECT_SOURCE_DIR}/include/HIL
 
         DEPENDS
-        MLIRHILOpsIncGen
+        MLIROpsIncGen
 
 	LINK_LIBS PUBLIC
 	MLIRIR

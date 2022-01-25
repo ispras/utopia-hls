@@ -6,17 +6,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "HIL/HILDialect.h"
-#include "HIL/HILOps.h"
+#include "HIL/Dialect.h"
+#include "HIL/Ops.h"
 #include "mlir/IR/DialectImplementation.h"
 #include "llvm/ADT/TypeSwitch.h"
 
 using namespace mlir;
 using namespace mlir::hil;
 
-#include "HIL/HILOpsDialect.cpp.inc"
+#include "HIL/OpsDialect.cpp.inc"
 #define GET_TYPEDEF_CLASSES
-#include "HIL/HILOpsTypes.cpp.inc"
+#include "HIL/OpsTypes.cpp.inc"
 #undef GET_TYPEDEF_CLASSES
 
 //===----------------------------------------------------------------------===//
@@ -25,11 +25,11 @@ using namespace mlir::hil;
 void HILDialect::initialize() {
   addOperations<
 #define GET_OP_LIST
-#include "HIL/HILOps.cpp.inc"
+#include "HIL/Ops.cpp.inc"
       >();
   addTypes<
 #define GET_TYPEDEF_LIST
-#include "HIL/HILOpsTypes.cpp.inc"
+#include "HIL/OpsTypes.cpp.inc"
 #undef GET_TYPEDEF_LIST
       >();
 }
