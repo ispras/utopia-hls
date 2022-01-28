@@ -10,36 +10,36 @@
 hil.model "M" {
   hil.nodetypes {
     hil.nodetype "source" [] => [
-      !hil.output<"X"<1.0> 0 "x">,
-      !hil.output<"Y"<1.0> 0 "y">
+      #hil.output<"X"<1.0> 0 "x">,
+      #hil.output<"Y"<1.0> 0 "y">
     ]
     hil.nodetype "split" [
-      !hil.input<"X"<1.0> "x">
+      #hil.input<"X"<1.0> "x">
     ] => [
-      !hil.output<"X"<0.5> 1 "x1">,
-      !hil.output<"X"<0.5> 1 "x2">
+      #hil.output<"X"<0.5> 1 "x1">,
+      #hil.output<"X"<0.5> 1 "x2">
     ]
     hil.nodetype "kernel1" [
-      !hil.input<"X"<1.0> "x">,
-      !hil.input<"Y"<0.5> "y">
+      #hil.input<"X"<1.0> "x">,
+      #hil.input<"Y"<0.5> "y">
     ] => [
-      !hil.output<"Z"<0.25> 1 "z">,
-      !hil.output<"W"<1.0> 2 "w">
+      #hil.output<"Z"<0.25> 1 "z">,
+      #hil.output<"W"<1.0> 2 "w">
     ]
     hil.nodetype "kernel2" [
-      !hil.input<"X"<0.5> "x">,
-      !hil.input<"W"<0.5> "w">
+      #hil.input<"X"<0.5> "x">,
+      #hil.input<"W"<0.5> "w">
     ] => [
-      !hil.output<"Z"<0.25> 1 "z">
+      #hil.output<"Z"<0.25> 1 "z">
     ]
     hil.nodetype "merge" [
-      !hil.input<"Z"<0.5> "z1">,
-      !hil.input<"Z"<0.5> "z2">
+      #hil.input<"Z"<0.5> "z1">,
+      #hil.input<"Z"<0.5> "z2">
     ] => [
-      !hil.output<"Z"<1.0> 1 "z">
+      #hil.output<"Z"<1.0> 1 "z">
     ]
     hil.nodetype "sink" [
-      !hil.input<"Z"<1.0> "z">
+      #hil.input<"Z"<1.0> "z">
     ] => []
   }
 

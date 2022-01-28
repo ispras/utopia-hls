@@ -37,4 +37,6 @@ class HIL_Op<string mnemonic, list<OpTrait> traits = []> :
 /*         DialectType<HIL_Dialect, condition, descr>; */
 class HIL_Type<string name> : TypeDef<HIL_Dialect, name> { }
 
+class HIL_Attr<string name> : AttrDef<HIL_Dialect, name> { }
+
 #endif // HIL_DIALECT

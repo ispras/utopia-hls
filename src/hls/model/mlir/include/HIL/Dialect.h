@@ -14,5 +14,7 @@
 #include "HIL/OpsDialect.h.inc"
 #define GET_TYPEDEF_CLASSES
 #include "HIL/OpsTypes.h.inc"
+#define GET_ATTRDEF_CLASSES
+#include "HIL/OpsAttributes.h.inc"
 
 #endif // HIL_HILDIALECT_H

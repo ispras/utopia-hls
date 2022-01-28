@@ -12,12 +12,15 @@
 #include "llvm/ADT/TypeSwitch.h"
 
 using namespace mlir;
-using namespace mlir::hil;
+using namespace hil;
 
 #include "HIL/OpsDialect.cpp.inc"
 #define GET_TYPEDEF_CLASSES
 #include "HIL/OpsTypes.cpp.inc"
 #undef GET_TYPEDEF_CLASSES
+#define GET_ATTRDEF_CLASSES
+#include "HIL/OpsAttributes.cpp.inc"
+#undef GET_ATTRDEF_CLASSES
 
 //===----------------------------------------------------------------------===//
 // HIL dialect.
@@ -30,20 +33,38 @@ void HILDialect::initialize() {
   addTypes<
 #define GET_TYPEDEF_LIST
 #include "HIL/OpsTypes.cpp.inc"
-#undef GET_TYPEDEF_LIST
+      >();
+  addAttributes<
+#define GET_ATTRDEF_LIST
+#include "HIL/OpsAttributes.cpp.inc"
       >();
 }
 
-Type HILDialect::parseType(DialectAsmParser &parser) const {
+/* Type HILDialect::parseType(DialectAsmParser &parser) const { */
+/*   StringRef data_type; */
+/*   if (parser.parseKeyword(&data_type)) */
+/*     return {}; */
+/*   Type value; */
+/*   generatedTypeParser(parser, data_type, value); */
+/*   return value; */
+/* } */
+
+/* void HILDialect::printType(Type type, */
+/*                            DialectAsmPrinter &printer) const { */
+/*   (void)generatedTypePrinter(type, printer); */
+/* } */
+
+Attribute HILDialect::parseAttribute(DialectAsmParser &parser,
+                         Type type) const {
   StringRef data_type;
   if (parser.parseKeyword(&data_type))
-    return Type();
-  mlir::Type value;
-  generatedTypeParser(parser, data_type, value);
+    return {};
+  Attribute value;
+  generatedAttributeParser(parser, data_type, type, value);
   return value;
 }
 
-void HILDialect::printType(mlir::Type type,
-                           mlir::DialectAsmPrinter &printer) const {
-  (void)generatedTypePrinter(type, printer);
+void HILDialect::printAttribute(Attribute attr,
+                           DialectAsmPrinter &printer) const {
+  (void)generatedAttributePrinter(attr, printer);
 }

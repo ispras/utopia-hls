@@ -1,6 +1,9 @@
 #include "HIL/Combine.h"
+#include "HIL/API.h"
 #include "HIL/Dialect.h"
+#include "HIL/Model.h"
 #include "HIL/Ops.h"
+#include "HIL/Utils.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/Matchers.h"
 #include "mlir/IR/PatternMatch.h"
@@ -8,6 +11,7 @@
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "mlir/Transforms/Passes.h"
 
+#include <iostream>
 #include <optional>
 
 using namespace mlir;
@@ -27,11 +31,7 @@ public:
     }
     auto context = chans_op.getContext();
     auto outer_region_ops = chans_op->getParentRegion()->getOps();
-    auto nodes_op_it =
-        std::find_if(outer_region_ops.begin(), outer_region_ops.end(),
-                     [](Operation &op) { return isa<Nodes>(op); });
-    assert(nodes_op_it != outer_region_ops.end());
-    auto nodes_op = cast<Nodes>(*nodes_op_it);
+    auto nodes_op = find_elem_by_type<Nodes>(outer_region_ops).value();
     std::map<std::string, std::string> chan_to_source;
     std::map<std::string, std::string> chan_to_target;
     for (auto &nodes_block_op : nodes_op.getBody()->getOperations()) {
@@ -67,11 +67,110 @@ public:
       rewriter.setInsertionPoint(&chans_block_op);
       rewriter.replaceOpWithNewOp<Chan>(
           &chans_block_op, chan_op.typeName(), chan_op.varName(),
-          StringAttr().get(context, node_from.value()),
-          StringAttr().get(context, node_to.value()));
+          StringAttr{}.get(context, node_from.value()),
+          StringAttr{}.get(context, node_to.value()));
     }
     return success();
   }
+};
+
+class SimpleRewriter : public PatternRewriter {
+public:
+  SimpleRewriter(MLIRContext *context) : PatternRewriter(context) {}
+};
+
+class InsertDelayPass : public RewritePattern {
+public:
+  InsertDelayPass(MLIRContext *context, std::string chan_name, unsigned latency)
+      : RewritePattern(MatchAnyOpTypeTag(), /*benefit=*/1, context),
+        chan_name_(chan_name), latency_(latency) {}
+
+  LogicalResult matchAndRewrite(Operation *op,
+                                PatternRewriter &rewriter) const override {
+    auto chan_op = dyn_cast<Chan>(*op);
+    if (!chan_op || chan_op.varName() != chan_name_) {
+      return failure();
+    }
+    auto chans_op = cast<Chans>(*chan_op->getParentOp());
+    auto model_op = cast<Model>(*chans_op->getParentOp()->getParentOp());
+    auto &model_ops = model_op.getBody()->getOperations();
+    auto nodetypes_op = find_elem_by_type<NodeTypes>(model_ops).value();
+    auto graph_op = find_elem_by_type<Graph>(model_ops).value();
+    auto &graph_ops = graph_op.getBody()->getOperations();
+    auto nodes_op = find_elem_by_type<Nodes>(graph_ops).value();
+    auto n_nodes = nodes_op.getBody()->getOperations().size();
+
+    auto chan_type = chan_op.typeName();
+    auto node_from = chan_op.nodeFromAttr();
+    auto node_to = chan_op.nodeToAttr();
+
+    auto btw_type_name =
+        "delay_" + chan_type.str() + "_" + std::to_string(latency_);
+    auto btw_name = btw_type_name + "_" + std::to_string(n_nodes);
+
+    // Check if we already added a delay
+    bool already_added_delay = false;
+    nodetypes_op.walk([&](NodeType op) {
+      if (!already_added_delay && op.name() == btw_type_name) {
+        already_added_delay = true;
+      }
+    });
+    if (already_added_delay) {
+      return failure();
+    }
+
+    auto context = nodetypes_op.getContext();
+    // Add nodetype
+    auto in_attr =
+        InputArgAttr::get(context, chan_type.str(), new double{1.0}, "in");
+    auto out_attr = OutputArgAttr::get(context, chan_type.str(),
+                                       new double{1.0}, latency_, "out", "0");
+    std::array<Attribute, 1> in_attrs{in_attr};
+    std::array<Attribute, 1> out_attrs{out_attr};
+    rewriter.setInsertionPointToEnd(nodetypes_op.getBody());
+    rewriter.create<NodeType>(
+        nodetypes_op.getLoc(), StringAttr{}.get(context, btw_type_name),
+        ArrayAttr::get(context, in_attrs), ArrayAttr::get(context, out_attrs));
+    auto new_chan_name = btw_name + "_out";
+    // Add a splitting node
+    rewriter.setInsertionPointToEnd(nodes_op.getBody());
+    std::array<Attribute, 1> in_chans{chan_op.varNameAttr()};
+    std::array<Attribute, 1> out_chans{
+        StringAttr{}.get(context, new_chan_name)};
+    rewriter.create<Node>(
+        nodetypes_op.getLoc(), StringAttr{}.get(context, btw_type_name),
+        StringAttr{}.get(context, btw_name), ArrayAttr::get(context, in_chans),
+        ArrayAttr::get(context, out_chans));
+    // Split the channel with the node
+    rewriter.setInsertionPointToEnd(chans_op.getBody());
+    rewriter.create<Chan>(chans_op.getLoc(), chan_op.typeName(), new_chan_name,
+                          StringAttr{}.get(context, btw_name), node_to);
+    rewriter.replaceOpWithNewOp<Chan>(chan_op, chan_op.typeName(),
+                                      chan_op.varName(), node_from,
+                                      StringAttr{}.get(context, btw_name));
+    // Rename target node's input channel
+    nodes_op.walk([&](Node op) {
+      if (op.name() == node_to.getValue()) {
+        auto &&args = op.commandArguments();
+        std::vector<Attribute> in_chans{args.begin(), args.end()};
+        for (auto &in_chan_name : in_chans) {
+          if (in_chan_name.cast<StringAttr>().getValue() == chan_name_) {
+            in_chan_name = StringAttr{}.get(context, new_chan_name);
+            break;
+          }
+        }
+        rewriter.setInsertionPoint(op);
+        rewriter.replaceOpWithNewOp<Node>(
+            op, op.nodeTypeNameAttr(), op.nameAttr(),
+            ArrayAttr::get(context, in_chans), op.commandResultsAttr());
+      }
+    });
+    return success();
+  }
+
+private:
+  const std::string chan_name_;
+  const unsigned latency_;
 };
 } // namespace
 
@@ -127,7 +226,7 @@ protected:
   ::mlir::Pass::Option<int64_t> maxIterations{
       *this, "max-iterations",
       ::llvm::cl::desc("Seed the worklist in general top-down order"),
-      ::llvm::cl::init(10)};
+      ::llvm::cl::init(1)};
   ::mlir::Pass::ListOption<std::string> disabledPatterns{
       *this, "disable-patterns",
       ::llvm::cl::desc(
@@ -169,6 +268,32 @@ struct GraphCanonicalizer : public CanonicalizerBase<GraphCanonicalizer> {
   FrozenRewritePatternSet patterns;
 };
 } // namespace
+
+namespace mlir::transforms {
+void run_pass(MLIRModule &m, RewritePattern &&pass) {
+  auto context = m.get_context();
+  SimpleRewriter rewriter(context);
+  m.get_root()->walk(
+      [&](Operation *op) { (void)pass.matchAndRewrite(op, rewriter); });
+}
+
+std::function<void(MLIRModule &)> ChanAddSourceTarget() {
+  return [=](MLIRModule &m) {
+    auto context = m.get_context();
+    ChansRewritePass pass{context};
+    run_pass(m, std::move(pass));
+  };
+}
+
+std::function<void(MLIRModule &)> InsertDelay(std::string chan_name,
+                                              unsigned latency) {
+  return [=](MLIRModule &m) {
+    auto context = m.get_context();
+    InsertDelayPass pass{context, chan_name, latency};
+    run_pass(m, std::move(pass));
+  };
+}
+} // namespace mlir::transforms
 
 std::unique_ptr<Pass> createGraphRewritePass() {
   return std::make_unique<GraphCanonicalizer>();

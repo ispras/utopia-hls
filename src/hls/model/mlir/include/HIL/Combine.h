@@ -9,6 +9,8 @@
 #ifndef HIL_HILCOMBINE_H
 #define HIL_HILCOMBINE_H
 
+#include "HIL/Model.h"
+
 #include "mlir/Pass/Pass.h"
 
 std::unique_ptr<mlir::Pass> createGraphRewritePass();

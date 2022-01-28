@@ -26,8 +26,7 @@ using ModelPort = eda::hls::model::Port;
 
 namespace detail {
 
-template <typename T>
-class quoted {
+template <typename T> class quoted {
 public:
   quoted(const T &data) : data_(data) {}
   template <typename U>
@@ -42,8 +41,7 @@ std::ostream &operator<<(std::ostream &os, const quoted<T> &q) {
   return os << '"' << q.data_ << '"';
 }
 
-template <typename T>
-class curly_braced {
+template <typename T> class curly_braced {
 public:
   curly_braced(const T &data) : data_(data) {}
   template <typename U>
@@ -70,8 +68,7 @@ public:
     indent_width_ -= indent_step_;
   }
 
-  template <typename T>
-  indented_ostream &operator<<(const T &x) {
+  template <typename T> indented_ostream &operator<<(const T &x) {
     if (is_line_beginning_) {
       os_ << std::string(indent_width_, indent_char_);
       is_line_beginning_ = false;
@@ -122,8 +119,7 @@ private:
   indented_ostream &os_;
 };
 
-template <typename T>
-class ModelDumper {
+template <typename T> class ModelDumper {
 public:
   ModelDumper(const T &node, indented_ostream &os) : node_(node), os_(os) {}
   void dump();
@@ -138,23 +134,20 @@ private:
 };
 
 enum class PortType { Input, Output };
-template <PortType>
-struct Port {
+template <PortType> struct Port {
   Port(const ModelPort &model_port) : model_port(model_port) {}
   const ModelPort &model_port;
 };
 using InputPort = Port<PortType::Input>;
 using OutputPort = Port<PortType::Output>;
 
-template <>
-void ModelDumper<Port<PortType::Input>>::dump() {
+template <> void ModelDumper<Port<PortType::Input>>::dump() {
   const auto &port = node_.model_port;
   os_ << "!hil.input<" << quoted(port.type) << curly_braced(port.flow) << ' '
       << quoted(port.name) << ">";
 }
 
-template <>
-void ModelDumper<Port<PortType::Output>>::dump() {
+template <> void ModelDumper<Port<PortType::Output>>::dump() {
   const auto &port = node_.model_port;
   os_ << "!hil.output<" << quoted(port.type) << curly_braced(port.flow) << ' '
       << port.latency << ' ' << quoted(port.name);
@@ -164,8 +157,7 @@ void ModelDumper<Port<PortType::Output>>::dump() {
   os_ << ">";
 }
 
-template <>
-void ModelDumper<NodeType>::dump() {
+template <> void ModelDumper<NodeType>::dump() {
   os_ << "hil.nodetype " << quoted(node_.name) << " [";
   {
     indent_block _(os_);
@@ -198,13 +190,11 @@ void ModelDumper<NodeType>::dump() {
   os_ << '\n' << "]";
 }
 
-template <>
-void ModelDumper<Chan>::dump() {
+template <> void ModelDumper<Chan>::dump() {
   os_ << "hil.chan " << quoted(node_.type) << ' ' << quoted(node_.name);
 }
 
-template <>
-void ModelDumper<Node>::dump() {
+template <> void ModelDumper<Node>::dump() {
   os_ << "hil.node " << quoted(node_.type.name) << ' ' << quoted(node_.name)
       << " [";
   {
@@ -237,8 +227,7 @@ void ModelDumper<Node>::dump() {
   os_ << '\n' << "]";
 }
 
-template <>
-void ModelDumper<Graph>::dump() {
+template <> void ModelDumper<Graph>::dump() {
   os_ << "hil.graph " << quoted(node_.name) << "{\n";
   {
     indent_block _(os_);
@@ -264,8 +253,7 @@ void ModelDumper<Graph>::dump() {
   os_ << "}\n";
 }
 
-template <>
-void ModelDumper<Model>::dump() {
+template <> void ModelDumper<Model>::dump() {
   os_ << "hil.model " << quoted(node_.name) << " {" << '\n';
   {
     indent_block _(os_);

@@ -68,7 +68,47 @@ def HIL_Nodes : HIL_Container<"nodes", [HasParent<"Graph">]> {
   }];
 }
 
-def InputArgType : HIL_Type<"InputArg"> {
+/* def InputArgType : HIL_Type<"InputArg"> { */
+/*   let mnemonic = "input"; */
+/*  */
+/*   let summary = "Input argument"; */
+/*  */
+/*   let description = [{ */
+/*     Input arg type */
+/*   }]; */
+/*  */
+/*   let parameters = (ins */
+/*     "std::string":$typeName, */
+/*     "double*":$flow, */
+/*     "std::string":$name); */
+/*  */
+/*   let printer = [{ */
+/*     $_printer << "input<\"" << */
+/*       getImpl()->typeName << "\"<" << *getImpl()->flow << ">" << " " << '"' << getImpl()->name << '"' << ">"; */
+/*   }]; */
+/*  */
+/*   let parser = [{ */
+/*     if ($_parser.parseLess()) */
+/*       return {}; */
+/*     std::string typeName; */
+/*     if ($_parser.parseString(&typeName)) */
+/*       return {}; */
+/*     if ($_parser.parseLess()) */
+/*       return {}; */
+/*     double *flow = new double{}; */
+/*     if ($_parser.parseFloat(*flow)) */
+/*       return {}; */
+/*     if ($_parser.parseGreater()) */
+/*       return {}; */
+/*     std::string name; */
+/*     if ($_parser.parseString(&name)) */
+/*       return {}; */
+/*     if ($_parser.parseGreater()) */
+/*       return {}; */
+/*     return get($_ctxt, typeName, flow, name); */
+/*   }]; */
+/* } */
+def InputArgAttr : HIL_Attr<"InputArg"> {
   let mnemonic = "input";
 
   let summary = "Input argument";
@@ -89,27 +129,27 @@ def InputArgType : HIL_Type<"InputArg"> {
 
   let parser = [{
     if ($_parser.parseLess())
-      return Type();
+      return {};
     std::string typeName;
     if ($_parser.parseString(&typeName))
-      return Type();
+      return {};
     if ($_parser.parseLess())
-      return Type();
+      return {};
     double *flow = new double{};
     if ($_parser.parseFloat(*flow))
-      return Type();
+      return {};
     if ($_parser.parseGreater())
-      return Type();
+      return {};
     std::string name;
     if ($_parser.parseString(&name))
-      return Type();
+      return {};
     if ($_parser.parseGreater())
-      return Type();
+      return {};
     return get($_ctxt, typeName, flow, name);
   }];
 }
 
-def OutputArgType : HIL_Type<"OutputArg"> {
+def OutputArgAttr : HIL_Attr<"OutputArg"> {
   let mnemonic = "output";
 
   let summary = "Output argument";
@@ -131,39 +171,38 @@ def OutputArgType : HIL_Type<"OutputArg"> {
 
   let parser = [{
     if ($_parser.parseLess())
-      return Type();
+      return {};
     std::string typeName;
     if ($_parser.parseString(&typeName))
-      return Type();
+      return {};
     if ($_parser.parseLess())
-      return Type();
+      return {};
     double *flow = new double{};
     if ($_parser.parseFloat(*flow))
-      return Type();
+      return {};
     if ($_parser.parseGreater())
-      return Type();
+      return {};
     unsigned latency;
     if ($_parser.parseInteger(latency))
-      return Type();
+      return {};
     std::string name;
     if ($_parser.parseString(&name))
-      return Type();
+      return {};
     if ($_parser.parseOptionalEqual()) {
       if ($_parser.parseGreater())
-        return Type();
+        return {};
       return get($_ctxt, typeName, flow, latency, name, "");
     }
     std::string value;
     if ($_parser.parseString(&value))
-      return Type();
+      return {};
     if ($_parser.parseGreater())
-      return Type();
+      return {};
     return get($_ctxt, typeName, flow, latency, name, value);
   }];
 }
 
-def InputArgTypeAttr : TypeAttrBase<"InputArgType", "input arg attribute">;
-def OutputArgTypeAttr : TypeAttrBase<"OutputArgType", "output arg attribute">;
+/* def OutputArgTypeAttr : TypeAttrBase<"OutputArgType", "output arg attribute">; */
 
 def HIL_NodeType : HIL_Op<"nodetype", [HasParent<"NodeTypes">]> {
   let summary = "Node type.";
@@ -173,8 +212,8 @@ def HIL_NodeType : HIL_Op<"nodetype", [HasParent<"NodeTypes">]> {
 
   let arguments = (ins
     StrAttr:$name,
-    TypedArrayAttrBase<InputArgTypeAttr, "input args">:$commandArguments,
-    TypedArrayAttrBase<OutputArgTypeAttr, "output args">:$commandResults);
+    TypedArrayAttrBase<InputArgAttr, "input args">:$commandArguments,
+    TypedArrayAttrBase<OutputArgAttr, "output args">:$commandResults);
   let assemblyFormat = [{
     $name $commandArguments `=``>` $commandResults attr-dict
   }];

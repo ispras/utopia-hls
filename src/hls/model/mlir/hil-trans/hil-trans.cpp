@@ -1,4 +1,4 @@
-//===- hil-opt.cpp ---------------------------------------*- C++ -*-===//
+//===- hil-trans.cpp --------------------------------------------*- C++ -*-===//
 //
 // This file is licensed under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -20,6 +20,7 @@
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/ToolOutputFile.h"
 
+#include "HIL/API.h"
 #include "HIL/Combine.h"
 #include "HIL/Dialect.h"
 #include "HIL/Model.h"
@@ -54,42 +55,38 @@ int loadMLIR(mlir::MLIRContext &context, mlir::OwningModuleRef &module) {
   return 0;
 }
 
+using mlir::model::MLIRModule;
+
+void transform_mlir(MLIRModule& m) {
+  using namespace mlir::transforms;
+  Transformer transformer{std::move(m)};
+  transformer.apply_transform(ChanAddSourceTarget());
+  transformer.apply_transform(InsertDelay("z2", 7));
+  transformer.apply_transform(InsertDelay("z2", 9));
+  // transformer.undo_transforms();
+  m = transformer.done();
+}
+
+void print_mlir(MLIRModule& m) {
+  std::string errorMessage;
+  auto output = mlir::openOutputFile(outputFilename, &errorMessage);
+  if (!output) {
+    llvm::errs() << errorMessage << "\n";
+    exit(5);
+  }
+  m.print(output->os());
+}
+
 int main(int argc, char **argv) {
-  /* mlir::registerAsmPrinterCLOptions(); */
-  /* mlir::registerMLIRContextCLOptions(); */
-  /* mlir::registerPassManagerCLOptions(); */
-  /* mlir::registerDefaultTimingManagerCLOptions(); */
-  /* cl::ParseCommandLineOptions(argc, argv, "hil dialect"); */
-  /* eda::hls::model::parse_model_from_mlir_file(inputFilename); */
+  mlir::registerAsmPrinterCLOptions();
+  mlir::registerMLIRContextCLOptions();
+  mlir::registerPassManagerCLOptions();
+  mlir::registerDefaultTimingManagerCLOptions();
+  cl::ParseCommandLineOptions(argc, argv, "hil dialect");
 
-    mlir::registerAsmPrinterCLOptions();
-    mlir::registerMLIRContextCLOptions();
-    mlir::registerPassManagerCLOptions();
-    mlir::registerDefaultTimingManagerCLOptions();
-    cl::ParseCommandLineOptions(argc, argv, "hil dialect");
-    mlir::MLIRContext context;
-    context.getOrLoadDialect<mlir::hil::HILDialect>();
-    context.getOrLoadDialect<mlir::StandardOpsDialect>();
-    mlir::OwningModuleRef module;
+  MLIRModule m = MLIRModule::load_from_mlir_file(inputFilename);
+  transform_mlir(m);
+  print_mlir(m);
 
-    if (int error = loadMLIR(context, module))
-        return error;
-    mlir::PassManager pm(&context);
-
-    mlir::applyPassManagerCLOptions(pm);
-
-    pm.addPass(createGraphRewritePass());
-
-    if (mlir::failed(pm.run(*module)))
-        return 4;
-
-    std::string errorMessage;
-    auto output = mlir::openOutputFile(outputFilename, &errorMessage);
-    if (!output) {
-        llvm::errs() << errorMessage << "\n";
-        return 5;
-    }
-
-    module->print(output->os());
   return 0;
 }
