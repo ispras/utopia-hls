@@ -64,6 +64,9 @@ public:
 
 private:
   ParametersOptimizer() = default;
+
+  void count_params(Model& model, std::map<std::string, Parameters>& params,
+                    Indicators& indicators, unsigned f, Parameters& defaultParams) const;
 };
 
 } // namespace eda::hls::scheduler

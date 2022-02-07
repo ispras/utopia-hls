@@ -78,6 +78,7 @@ add_library(${MAIN_LIBRARY}
   hls/scheduler/param_optimizer.cpp
   hls/scheduler/scheduler.cpp
   hls/scheduler/solver.cpp
+  hls/scheduler/simulated_annealing.cpp
   rtl/compiler/compiler.cpp
   rtl/library/flibrary.cpp
   rtl/model/event.cpp

@@ -1,0 +1,24 @@
+Running optimization loop
+Iteration #0
+
+Frequency: 500000
+Latency: 100
+Throughput: 500000
+Power: 11928
+Area: 11928
+
+Iteration #1
+
+Frequency: 250000
+Latency: 100
+Throughput: 250000
+Power: 5920
+Area: 5920
+
+Iteration #2
+
+Frequency: 125000
+Latency: 100
+Throughput: 125000
+Power: 3904
+Area: 3904
