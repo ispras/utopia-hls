@@ -20,7 +20,7 @@ class simulated_annealing {
     void optimize(std::vector<float>& param);
 
   private:
-    float get_probabiliy(float prev_f, float cur_f, float temp);
+    float get_probabiliy(const float& prev_f, const float& cur_f, const float& temp);
 
     float temperature;
     float final_temp;
