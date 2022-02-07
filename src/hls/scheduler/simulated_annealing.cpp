@@ -10,7 +10,7 @@
 
 namespace eda::hls::scheduler {
     simulated_annealing::simulated_annealing(float init_temp, float fin_temp,
-                                            std::function<float(std::vector<float>)> tar_fun,
+                                            std::function<float(const std::vector<float>&)> tar_fun,
                                             std::function<void(std::vector<float>&, const std::vector<float>&, float)> step_fun,
                                             std::function<float(int, float)> temp_fun)
       : temperature(init_temp)
@@ -20,7 +20,7 @@ namespace eda::hls::scheduler {
       , temp_function(temp_fun) {}
     
     void simulated_annealing::optimize(std::vector<float>& param) {
-        std::vector<float> prev_param = param, cur_param = param;
+        std::vector<float> cur_param = param;
         float prev_f = target_function(param), cur_f, transition;
         srand (1);
         
@@ -29,7 +29,6 @@ namespace eda::hls::scheduler {
         while(temperature > final_temp && i < 10000) {
             step_function(cur_param, param, temperature);
             cur_f = target_function(cur_param);
-            prev_param = cur_param;
             transition = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
             if(transition < get_probabiliy(prev_f, cur_f, temperature)) {
                 param = cur_param;
