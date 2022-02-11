@@ -1,2 +1,5 @@
 build
 src/build
+.vscode
+myeasylog.log
+test/data/hil/idct.hil.dot
