@@ -7,8 +7,7 @@ namespace eda::hls::scheduler::optimizers {
                                             std::function<float(const std::vector<float>&)> tar_fun,
                                             std::function<void(std::vector<float>&, const std::vector<float>&, float)> step_fun,
                                             std::function<float(int, float)> temp_fun)
-      : abstract_optimizer()
-      , temperature(init_temp)
+      : temperature(init_temp)
       , final_temp(fin_temp)
       , target_function(tar_fun)
       , step_function(step_fun)

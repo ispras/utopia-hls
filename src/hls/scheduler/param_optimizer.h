@@ -72,7 +72,7 @@ private:
   ParametersOptimizer() = default;
 
   void count_params(Model& model, std::map<std::string, Parameters>& params,
-                    Indicators& indicators, unsigned f, Parameters& defaultParams) const;
+                    Indicators& indicators, unsigned frequency, Parameters& defaultParams) const;
 
   std::shared_ptr<optimizers::abstract_optimizer> math_optimizer;
 };
