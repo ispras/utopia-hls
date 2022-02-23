@@ -12,6 +12,8 @@ namespace eda::hls::scheduler::optimizers {
                         std::function<float(const std::vector<float>&)> tar_fun,
                         std::function<void(std::vector<float>&, const std::vector<float>&, float)> step_fun,
                         std::function<float(int, float)> temp_fun);
+        simulated_annealing_optimizer(const simulated_annealing_optimizer& optimizer) = default;
+        
         void optimize(std::vector<float>& param) override;
       private:
         float get_probabiliy(const float& prev_f, const float& cur_f, const float& temp);

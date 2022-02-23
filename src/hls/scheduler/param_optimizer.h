@@ -10,6 +10,7 @@
 
 #include "hls/library/library.h"
 #include "hls/model/model.h"
+#include "hls/scheduler/optimizers/abstract_optimizer.h"
 #include "util/singleton.h"
 
 #include <map>
@@ -62,11 +63,18 @@ public:
       Indicators &indicators
   ) const;
 
+  template <typename T>
+  void set_optimizer(const T& optimizer) {
+    math_optimizer = std::make_shared<T>(optimizer);
+  }
+
 private:
   ParametersOptimizer() = default;
 
   void count_params(Model& model, std::map<std::string, Parameters>& params,
                     Indicators& indicators, unsigned f, Parameters& defaultParams) const;
+
+  std::shared_ptr<optimizers::abstract_optimizer> math_optimizer;
 };
 
 } // namespace eda::hls::scheduler
