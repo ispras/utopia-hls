@@ -10,6 +10,7 @@
 
 #include <cassert>
 #include <fstream>
+#include <iomanip>
 
 #include "HIL/Dialect.h"
 #include "HIL/Dumper.h"
@@ -143,16 +144,16 @@ using OutputPort = Port<PortType::Output>;
 
 template <> void ModelDumper<Port<PortType::Input>>::dump() {
   const auto &port = node_.model_port;
-  os_ << "!hil.input<" << quoted(port.type) << curly_braced(port.flow) << ' '
+  os_ << "#hil.input<" << quoted(port.type) << curly_braced(port.flow) << ' '
       << quoted(port.name) << ">";
 }
 
 template <> void ModelDumper<Port<PortType::Output>>::dump() {
   const auto &port = node_.model_port;
-  os_ << "!hil.output<" << quoted(port.type) << curly_braced(port.flow) << ' '
+  os_ << "#hil.output<" << quoted(port.type) << curly_braced(port.flow) << ' '
       << port.latency << ' ' << quoted(port.name);
   if (port.isConst) {
-    os_ << " = " << port.value;
+    os_ << " = " << quoted(port.value);
   }
   os_ << ">";
 }
@@ -278,6 +279,7 @@ template <> void ModelDumper<Model>::dump() {
 namespace eda::hls::model {
 std::ostream &dump_model_mlir(const eda::hls::model::Model &model,
                               std::ostream &os) {
+  os << std::fixed << std::setprecision(8);
   detail::indented_ostream ios(os, 2, ' ');
   detail::ModelDumper(model, ios).dump();
   return os;

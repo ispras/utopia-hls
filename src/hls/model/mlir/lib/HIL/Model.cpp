@@ -5,7 +5,7 @@
 // Copyright 2021 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-//
+
 #include "mlir/InitAllDialects.h"
 
 #include <fstream>
@@ -43,7 +43,13 @@ MLIRModule MLIRModule::load_from_mlir_file(const std::string &filename) {
   return load_from_mlir(buf.str());
 }
 
-void MLIRModule::print(llvm::raw_fd_ostream &os) { module_->print(os); }
+MLIRModule MLIRModule::load_from_model(const eda::hls::model::Model &m) {
+  std::stringstream buf;
+  dump_model_mlir(m, buf);
+  return load_from_mlir(buf.str());
+}
+
+void MLIRModule::print(llvm::raw_ostream &os) { module_->print(os); }
 
 mlir::hil::Model MLIRModule::get_root() {
   return mlir::cast<mlir::hil::Model>(*module_->getOps().begin());
@@ -209,12 +215,12 @@ std::shared_ptr<Model> parse_model_from_mlir(const std::string &s) {
   auto mlir_model_layer = MLIRModule::load_from_mlir(s);
   auto m = MLIRBuilder<mlir::hil::Model>::build_model_from_mlir(
       mlir_model_layer, builder);
-  std::cerr << "***********MODEL_BEGIN**********" << std::endl;
-  std::cerr << *m << std::endl;
-  std::cerr << "************MODEL_END***********" << std::endl;
-  std::cerr << "***********MLIR_BEGIN***********" << std::endl;
-  dump_model_mlir(*m, std::cerr);
-  std::cerr << "************MLIR_END************" << std::endl;
+  /* std::cerr << "***********MODEL_BEGIN**********" << std::endl; */
+  /* std::cerr << *m << std::endl; */
+  /* std::cerr << "************MODEL_END***********" << std::endl; */
+  /* std::cerr << "***********MLIR_BEGIN***********" << std::endl; */
+  /* dump_model_mlir(*m, std::cerr); */
+  /* std::cerr << "************MLIR_END************" << std::endl; */
   return std::shared_ptr<Model>(std::move(m));
 }
 
@@ -226,7 +232,7 @@ std::shared_ptr<Model> parse_model_from_mlir_file(const std::string &filename) {
   } else { // fallback to stdin
     buf << std::cin.rdbuf();
   }
-  std::cout << buf.str() << std::endl;
+  //std::cout << buf.str() << std::endl;
   return parse_model_from_mlir(buf.str());
 }
 
