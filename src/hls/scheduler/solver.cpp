@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2021 ISP RAS (http://www.ispras.ru)
 //
-//===----------------------------------------------------------------------===
+//===----------------------------------------------------------------------===//
 
 #include "hls/scheduler/solver.h"
 
@@ -86,7 +86,7 @@ void LpSolver::collectGraphTime() {
   std::vector<double> latencies = helper.getResults();
   unsigned maxTime = 0;
   for (const auto *sink : sinkVars) {
-    unsigned index = sink->column_number - 1;
+    unsigned index = sink->columnNumber - 1;
     if (latencies[index] > maxTime) {
       maxTime = (unsigned)latencies[index];
     }
@@ -104,7 +104,7 @@ void LpSolver::balanceLatency(const Graph *graph) {
       sinks.push_back(varName);
     }
 
-    /// Agreement: inputs have to be synchronized
+    /// Agreement: inputs have to be synchronized (start_time = 0)
     if (node->isSource()) {
       synchronizeInput(varName);
     }
@@ -164,7 +164,7 @@ void LpSolver::genBufferConstraint(const std::string &dstName,
   std::vector<std::string> constrNames{bufName, TimePrefix + dstName, 
       TimePrefix + srcName};
   SolverVariable *bufferVariable = helper.addVariable(bufName, nullptr);
-  buffers.push_back(new Buffer{channel, 0, bufferVariable->column_number});
+  buffers.push_back(new Buffer{channel, 0, bufferVariable->columnNumber});
   
   // buf_next_prev = t_next - (t_prev + prev_latency)
   helper.addConstraint(constrNames, values, OperationType::Equal, 

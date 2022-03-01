@@ -141,12 +141,12 @@ private:
 
 struct SolverVariable final {
 
-  SolverVariable(const std::string &name, unsigned column_number, 
-      const Node *node) : name(name), column_number(column_number), 
+  SolverVariable(const std::string &name, unsigned colNumber, 
+      const Node *node) : name(name), columnNumber(colNumber), 
       node(node) {}
 
   std::string name;
-  unsigned column_number;
+  unsigned columnNumber;
   const Node *node;
 };
 

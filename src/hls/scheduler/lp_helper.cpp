@@ -93,7 +93,7 @@ std::shared_ptr<int[]> getColumnNumbers(
   std::shared_ptr<int[]> colno(new int[variables.size()]);
   int i = 0;
   for (const auto *var : variables) {
-    colno[i++] = var->column_number;
+    colno[i++] = var->columnNumber;
   }
   return colno;
 }
