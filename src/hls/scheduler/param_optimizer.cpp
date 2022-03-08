@@ -13,8 +13,8 @@
 #include "hls/scheduler/optimizers/simulated_annealing_optimizer.h"
 
 #include <cassert>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <string>
 
 namespace eda::hls::scheduler {
@@ -48,12 +48,14 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   // Check if the task is solvable
   int cur_f = criteria.frequency.min;
   count_params(model, params, indicators, cur_f, defaultParams);
+  model.undo();
   if (!criteria.check(indicators)) { // even if the frequency is minimal the params don't match constratints
       return params;
   }
 
   cur_f = criteria.frequency.max;
   count_params(model, params, indicators, cur_f, defaultParams);
+  model.undo();
   if (criteria.check(indicators)) { // the maximum frequency is the solution
       return params;
   }
@@ -70,45 +72,24 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     };
 
   std::function<float(const std::vector<float>&)> target_function = [&](const std::vector<float>& parameters) -> float {
-    Graph *graph = model.main();
-    // Update the values of the parameters.
-    int param_num = 1;
-    for (const auto *node : graph->nodes) {
-      auto nodeParams = params.find(node->name);
-      if (nodeParams == params.end()) {
-        continue;
-      }   
-      nodeParams->second.set("f", parameters[0]);
-    }
-    // Balance flows and align times.
-  LpSolver::get().balance(model);
-  indicators.latency = LpSolver::get().getGraphLatency();
-  indicators.frequency = parameters[0];
-  // Estimate the integral indicators.
-  indicators.throughput = indicators.frequency;
-  indicators.power = 0;
-  indicators.area = 0;
-  for (const auto *node : graph->nodes) {
-    auto metaElement = Library::get().find(node->type);
-    assert(metaElement && "MetaElement is not found");
-    auto nodeParams = params.find(node->name);
-    Indicators nodeIndicators;
-    metaElement->estimate(
-      nodeParams == params.end()
-        ? defaultParams       // For inserted nodes 
-        : nodeParams->second, // For existing nodes
-      nodeIndicators);
-
-    indicators.power += nodeIndicators.power;
-    indicators.area += nodeIndicators.area;
-  }
+    count_params(model, params, indicators, parameters[0], defaultParams);
+    model.undo();
     return indicators.frequency;
   };
 
+  std::function<float(const std::vector<float>, float)>
+      limitation_function = [&](const std::vector<float> parameters, float freq) -> float {
+        count_params(model, params, indicators, freq, defaultParams);
+        model.undo();
+        return indicators.area;
+      };
+
   float init_temp = 10000000000.0;
   float end_temp = 1.0;
+  float limit = 10000;
 
-  eda::hls::scheduler::optimizers::simulated_annealing_optimizer test(init_temp, end_temp, target_function, step_fun, temp_fun);
+  eda::hls::scheduler::optimizers::simulated_annealing_optimizer test(init_temp, end_temp, limit, target_function,
+                                                                      limitation_function, step_fun, temp_fun);
   test.optimize(optimized_values);
 
   ostrm << "After optimization" << std::endl;
