@@ -27,7 +27,8 @@ public:
   MLIRContext *get_context();
   static MLIRModule load_from_mlir(const std::string &s);
   static MLIRModule load_from_mlir_file(const std::string &filename);
-  void print(llvm::raw_fd_ostream &os);
+  static MLIRModule load_from_model(const eda::hls::model::Model& m);
+  void print(llvm::raw_ostream &os);
   mlir::hil::Model get_root();
 
 private:

@@ -166,7 +166,7 @@ def OutputArgAttr : HIL_Attr<"OutputArg"> {
     "std::string":$value);
 
   let printer = [{
-    $_printer << "output<\"" << getImpl()->typeName << "\"<" << *getImpl()->flow << ">" << " " << getImpl()->latency << " " << '"' << getImpl()->name << '"' << (getImpl()->value.empty() ? "" : " = " + getImpl()->value) << ">";
+    $_printer << "output<\"" << getImpl()->typeName << "\"<" << *getImpl()->flow << ">" << " " << getImpl()->latency << " " << '"' << getImpl()->name << '"' << (getImpl()->value.empty() ? "" : " = \"" + getImpl()->value + "\"") << ">";
   }];
 
   let parser = [{

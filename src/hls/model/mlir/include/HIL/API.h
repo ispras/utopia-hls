@@ -1,23 +1,70 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
 #pragma once
 
+#include <iostream>
 #include "Combine.h"
 #include "Model.h"
 #include "hls/model/model.h"
 
 namespace mlir::transforms {
+using eda::hls::model::Model;
 using mlir::model::MLIRModule;
-class Transformer {
+template <typename T> class Transformer {
 public:
   Transformer(MLIRModule &&module);
+  Transformer(const Model &model);
   Transformer(Transformer &&oth);
   void apply_transform(std::function<void(MLIRModule &)> transform);
   void undo_transforms();
-  MLIRModule done();
+  T done();
 
 private:
   MLIRModule module_;
   MLIRModule module_init_;
 };
+
+using mlir::model::MLIRModule;
+
+template <>
+inline Transformer<MLIRModule>::Transformer(MLIRModule &&module)
+    : module_(std::move(module)), module_init_(module_.clone()) {}
+template <>
+inline Transformer<Model>::Transformer(const Model &model)
+    : module_(MLIRModule::load_from_model(model)),
+      module_init_(module_.clone()) {}
+template <typename T>
+Transformer<T>::Transformer(Transformer &&oth)
+    : module_(std::move(oth.module_)),
+      module_init_(std::move(oth.module_init_)) {}
+template <typename T>
+void Transformer<T>::apply_transform(
+    std::function<void(MLIRModule &)> transform) {
+  transform(module_);
+}
+template <typename T> void Transformer<T>::undo_transforms() {
+  module_ = module_init_.clone();
+}
+
+template <> inline MLIRModule Transformer<MLIRModule>::done() {
+  (void)std::move(module_init_);
+  return std::move(module_);
+}
+
+template <> inline Model Transformer<Model>::done() {
+  (void)std::move(module_init_);
+  std::string buf;
+  llvm::raw_string_ostream os{buf};
+  module_.print(os);
+  auto model = std::move(*eda::hls::model::parse_model_from_mlir(buf));
+  return model;
+}
 
 std::function<void(MLIRModule &)> ChanAddSourceTarget();
 std::function<void(MLIRModule &)> InsertDelay(std::string chan_name,
