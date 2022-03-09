@@ -8,6 +8,7 @@
 
 #include "hls/library/library.h"
 #include "hls/model/model.h"
+#include "hls/scheduler/dse/design_explorer.h"
 #include "hls/scheduler/param_optimizer.h"
 #include "hls/scheduler/solver.h"
 
@@ -29,9 +30,6 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   assert(graph != nullptr && "Main graph is not found");
 
   // Collect the parameters for all nodes.
-  Parameters defaultParams("<default>");
-  defaultParams.add(Parameter("f", criteria.frequency, criteria.frequency.max)); // FIXME
-
   for (const auto *node : graph->nodes) {
     auto metaElement = Library::get().find(node->type);
     Parameters nodeParams(node->name, metaElement->params);
@@ -44,7 +42,8 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
 
   // Check if the task is solvable
   int cur_f = criteria.frequency.min;
-  count_params(model, params, indicators, cur_f, defaultParams);
+  estimate(model, params, indicators, cur_f);
+  model.undo();
   if (!criteria.check(indicators)) { // even if the frequency is minimal the params don't match constratints
       ostrm << "There is no solution" << std::endl;
       ostrm << "Frequency: " << indicators.frequency << std::endl;
@@ -58,7 +57,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
 
   cur_f = criteria.frequency.max;
   int x2 = cur_f;
-  count_params(model, params, indicators, cur_f, defaultParams);
+  estimate(model, params, indicators, cur_f);
   if (criteria.check(indicators)) { // the maximum frequency is the solution
       ostrm << "Maximum frequency is the solution" << std::endl;
       ostrm << "Frequency: " << indicators.frequency << std::endl;
@@ -69,11 +68,13 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
       ostrm.close();
       return params;
   }
+  model.undo();
   y2 = indicators.area;
   ostrm << "First step: " << x2 << " " << y2 << std::endl;
 
   int x1 = criteria.frequency.max - (criteria.frequency.max - criteria.frequency.min) / 10;
-  count_params(model, params, indicators, x1, defaultParams);
+  estimate(model, params, indicators, x1);
+  model.undo();
   y1 = indicators.area;
   ostrm << "Second step: " << x1 << " " << y1 << std::endl;
 
@@ -83,7 +84,8 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   ostrm << "k: " << k << " b: " << b << std::endl;
   cur_f = (criteria.area.max - b) / k;
   ostrm << "estimate: " << cur_f << std::endl;
-  count_params(model, params, indicators, cur_f, defaultParams);
+  estimate(model, params, indicators, cur_f);
+  model.undo();
   ostrm << "area: " << indicators.area << std::endl;
   
   int sign;
@@ -105,7 +107,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     cur_f += sign * grid;
 
     ostrm << "Cur f: " << cur_f << std::endl;
-    count_params(model, params, indicators, cur_f, defaultParams);
+    estimate(model, params, indicators, cur_f);
     ostrm << "Cur a: " << indicators.area << std::endl;
     csv << indicators.frequency << "," << indicators.throughput << "," << indicators.latency << "," << indicators.power << "," << indicators.area << std::endl;
     
@@ -124,49 +126,31 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   return params;
 }
 
-void ParametersOptimizer::count_params(Model& model,
-                                      std::map<std::string, Parameters>& params,
-                                      Indicators& indicators, unsigned f,
-                                      Parameters& defaultParams) const {
+void ParametersOptimizer::updateFrequency(Model& model, 
+    std::map<std::string, Parameters>& params, 
+    const unsigned frequency) const {
   Graph *graph = model.main();
-  // Update the values of the parameters.
   for (const auto *node : graph->nodes) {
     auto nodeParams = params.find(node->name);
     if (nodeParams == params.end()) {
       continue;
     }
-        
-    nodeParams->second.set("f", f);
+    nodeParams->second.set("f", frequency);
   }
+}
 
+
+void ParametersOptimizer::estimate(Model& model,
+    std::map<std::string, Parameters>& params,
+    Indicators& indicators, unsigned frequency) const {
+  // Update the values of the parameters.
+  updateFrequency(model, params, frequency);
   // Balance flows and align times.
   LpSolver::get().balance(model);
-    
   indicators.latency = LpSolver::get().getGraphLatency();
-  indicators.frequency = f;
-
-  // Estimate the integral indicators.
-  indicators.throughput = indicators.frequency;
-  indicators.power = 0;
-  indicators.area = 0;
-
-  for (const auto *node : graph->nodes) {
-    auto metaElement = Library::get().find(node->type);
-    assert(metaElement && "MetaElement is not found");
-    auto nodeParams = params.find(node->name);
-
-    Indicators nodeIndicators;
-
-    metaElement->estimate(
-      nodeParams == params.end()
-        ? defaultParams       // For inserted nodes 
-        : nodeParams->second, // For existing nodes
-      nodeIndicators);
-
-    indicators.power += nodeIndicators.power;
-    indicators.area += nodeIndicators.area;
-
-  }
+  // Estimate overall design indicators
+  dse::DesignExplorer::get().estimateIndicators(model, params, indicators);
+  
 }
 
 } // namespace eda::hls::scheduler
