@@ -18,6 +18,9 @@ set(CTEMPLATE_LIBRARY ctemplate_nothreads)
 find_package(FLEX REQUIRED)
 find_package(BISON REQUIRED)
 
+# Add mlir subproject
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/hls/model/mlir)
+
 # The configuration file w/ the project version.
 configure_file(config.h.in config.h)
 
@@ -103,6 +106,11 @@ add_dependencies(${MAIN_LIBRARY} HlsHilParserDir RtlRilParserDir)
 # The include directories.
 target_include_directories(${MAIN_LIBRARY} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(${MAIN_LIBRARY} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(${MAIN_LIBRARY} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/hls/model/mlir/include)
+target_include_directories(${MAIN_LIBRARY} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/hls/model/mlir/include)
+
+get_property(dialect_libs GLOBAL PROPERTY MLIR_DIALECT_LIBS)
+get_property(translation_libs GLOBAL PROPERTY MLIR_TRANSLATION_LIBS)
 
 # The libraries to link with.
 target_link_libraries(${MAIN_LIBRARY}
@@ -113,6 +121,8 @@ target_link_libraries(${MAIN_LIBRARY}
   ${Z3_LIBRARY}
   ${STDCXXFS_LIBRARY}
   ${CTEMPLATE_LIBRARY}
+  ${dialect_libs}
+  ${translation_libs}
 )
 
 # The project executable.

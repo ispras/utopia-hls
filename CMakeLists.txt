@@ -33,7 +33,5 @@ include_directories(lib/easyloggingpp)
 
 add_subdirectory(lib)
 add_subdirectory(src)
-add_subdirectory(test)
 
-# MLIR example from the LLVM project
-add_subdirectory(src/hls/model/mlir)
+add_subdirectory(test)

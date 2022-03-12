@@ -9,8 +9,8 @@
 #pragma once
 
 #include <iostream>
-#include "Combine.h"
-#include "Model.h"
+#include "HIL/Combine.h"
+#include "HIL/Model.h"
 #include "hls/model/model.h"
 
 namespace mlir::transforms {

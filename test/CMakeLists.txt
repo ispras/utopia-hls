@@ -27,6 +27,7 @@ add_executable(${TEST_TARGET}
   hls/compiler/compiler_test.cpp
   hls/debugger/debugger_test.cpp
   hls/library/library_test.cpp
+  hls/model/mlir/test_transforms.cpp
   hls/parser/dfc/dfc_dot_test.cpp
   hls/parser/dfc/dfc_idct_test.cpp
   hls/parser/hil/hil_test.cpp
