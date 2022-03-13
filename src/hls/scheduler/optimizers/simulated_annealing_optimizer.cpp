@@ -1,6 +1,8 @@
 #include "hls/scheduler/optimizers/simulated_annealing_optimizer.h"
 
 #include <cmath>
+#include <fstream>
+#include <iostream>
 
 namespace eda::hls::scheduler::optimizers {
     simulated_annealing_optimizer::simulated_annealing_optimizer(float init_temp, float fin_temp, float lim,
@@ -21,13 +23,15 @@ namespace eda::hls::scheduler::optimizers {
         float prev_f = target_function(param), cur_f, transition;
         srand (1);
         
-
+        std::ofstream ostrm("annealing.txt");
         int i = 1;
         while(temperature > final_temp && i < 10000) {
             step_function(cur_param, param, temperature);
             cur_f = target_function(cur_param);
             auto cur_lim = condition_function(cur_param, cur_f);
             transition = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+            ostrm << "Diff freq: " << (prev_f - cur_f) << std::endl;
+            ostrm << "Exp freq: " << ((prev_f - cur_f) / temperature) << std::endl;
             if(transition < get_probabiliy(prev_f, cur_f, cur_lim, temperature)) {
                 param = cur_param;
                 prev_f = cur_f;
@@ -37,15 +41,13 @@ namespace eda::hls::scheduler::optimizers {
             i++;
             temperature = temp_function(i, temperature);
         }
+        ostrm.close();
     }
 
     float simulated_annealing_optimizer::get_probabiliy(const float& prev_f, const float& cur_f,
                                                         const float& cur_lim, const float& temp) {
-        if(prev_f > cur_f && cur_lim <= limitation) {
+        if((prev_f > cur_f) && (cur_lim <= limitation)) {
             return 1.0;
-        }
-        if(cur_lim > limitation) {
-            return 0.0;
         }
         return exp((prev_f - cur_f) / temp);
     }

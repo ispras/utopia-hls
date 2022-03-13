@@ -67,13 +67,14 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   std::function<void(std::vector<float>&, const std::vector<float>&, float)>
     step_fun = [](std::vector<float>& x, const std::vector<float>& prev, float temp) -> void {
       for(int i = 0; i < x.size(); i++) {
-        x[i] = prev[i] - 0.2 * temp;
+        x[i] = prev[i] + temp * exp(-0.5 * prev[i] * prev[i]) / (std::sqrt(M_PI * 2));
       }
     };
 
   std::function<float(const std::vector<float>&)> target_function = [&](const std::vector<float>& parameters) -> float {
     count_params(model, params, indicators, parameters[0], defaultParams);
     model.undo();
+    ostrm << parameters[0] << " " << parameters[1] << std::endl;
     return indicators.frequency;
   };
 
@@ -81,6 +82,8 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
       limitation_function = [&](const std::vector<float> parameters, float freq) -> float {
         count_params(model, params, indicators, freq, defaultParams);
         model.undo();
+        ostrm << parameters[0] << " " << parameters[1] << std::endl;
+        ostrm << "Area: " << indicators.area << std::endl;
         return indicators.area;
       };
 
@@ -92,7 +95,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
                                                                       limitation_function, step_fun, temp_fun);
   test.optimize(optimized_values);
 
-  ostrm << "After optimization" << std::endl;
+  ostrm << std::endl << "After optimization" << std::endl;
   ostrm << "Frequency: " << indicators.frequency << std::endl;
   ostrm << "Throughput: " << indicators.throughput << std::endl;
   ostrm << "Latency: " << indicators.latency << std::endl;
