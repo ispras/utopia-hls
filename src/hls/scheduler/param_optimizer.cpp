@@ -35,7 +35,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
 
   std::ofstream ostrm("real.txt");
   std::vector<float> optimized_values;
-  optimized_values.push_back(criteria.frequency.max);
+  optimized_values.push_back(100000);
   for (const auto *node : graph->nodes) {
     auto metaElement = Library::get().find(node->type);
     Parameters nodeParams(node->name, metaElement->params);
@@ -65,15 +65,17 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   };
 
   std::function<void(std::vector<float>&, const std::vector<float>&, float)>
-    step_fun = [](std::vector<float>& x, const std::vector<float>& prev, float temp) -> void {
+    step_fun = [&](std::vector<float>& x, const std::vector<float>& prev, float temp) -> void {
       for(int i = 0; i < x.size(); i++) {
-        x[i] = prev[i] + temp * exp(-0.5 * prev[i] * prev[i]) / (std::sqrt(M_PI * 2));
+        auto diff = temp * exp((-0.5 * prev[i] * prev[i]) / temp) / (std::sqrt(M_PI * 2 * temp));
+        x[i] = prev[i] + diff;
       }
     };
 
   std::function<float(const std::vector<float>&)> target_function = [&](const std::vector<float>& parameters) -> float {
     count_params(model, params, indicators, parameters[0], defaultParams);
     model.undo();
+    ostrm << "Current parameters: " << std::endl;
     ostrm << parameters[0] << " " << parameters[1] << std::endl;
     return indicators.frequency;
   };
@@ -82,7 +84,6 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
       limitation_function = [&](const std::vector<float> parameters, float freq) -> float {
         count_params(model, params, indicators, freq, defaultParams);
         model.undo();
-        ostrm << parameters[0] << " " << parameters[1] << std::endl;
         ostrm << "Area: " << indicators.area << std::endl;
         return indicators.area;
       };

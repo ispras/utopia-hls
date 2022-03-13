@@ -30,8 +30,8 @@ namespace eda::hls::scheduler::optimizers {
             cur_f = target_function(cur_param);
             auto cur_lim = condition_function(cur_param, cur_f);
             transition = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-            ostrm << "Diff freq: " << (prev_f - cur_f) << std::endl;
-            ostrm << "Exp freq: " << ((prev_f - cur_f) / temperature) << std::endl;
+            ostrm << "Current params: " << cur_param[0] << " " << cur_param[1] << std::endl;
+            ostrm << "Previous params: " << param[0] << " " << param[1] << std::endl;
             if(transition < get_probabiliy(prev_f, cur_f, cur_lim, temperature)) {
                 param = cur_param;
                 prev_f = cur_f;
@@ -46,7 +46,7 @@ namespace eda::hls::scheduler::optimizers {
 
     float simulated_annealing_optimizer::get_probabiliy(const float& prev_f, const float& cur_f,
                                                         const float& cur_lim, const float& temp) {
-        if((prev_f > cur_f) && (cur_lim <= limitation)) {
+        if((prev_f < cur_f) && (cur_lim <= limitation)) {
             return 1.0;
         }
         return exp((prev_f - cur_f) / temp);
