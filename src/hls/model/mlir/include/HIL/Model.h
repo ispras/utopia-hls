@@ -1,8 +1,8 @@
-//===----------------------------------------------------------------------===//
+//===- Model.h - MLIR model ------------------*- C++ -*--------------------===//
 //
-// Part of the Utopia EDA Project, under the Apache License v2.0
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// This file is licensed under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -27,7 +27,7 @@ public:
   MLIRContext *get_context();
   static MLIRModule load_from_mlir(const std::string &s);
   static MLIRModule load_from_mlir_file(const std::string &filename);
-  static MLIRModule load_from_model(const eda::hls::model::Model& m);
+  static MLIRModule load_from_model(const eda::hls::model::Model &m);
   void print(llvm::raw_ostream &os);
   mlir::hil::Model get_root();
 
