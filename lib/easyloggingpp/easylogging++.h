@@ -351,14 +351,14 @@ ELPP_INTERNAL_DEBUGGING_OUT_INFO << ELPP_INTERNAL_DEBUGGING_MSG(internalInfoStre
 #if defined(ELPP_SYSLOG)
 #   include <syslog.h>
 #endif  // defined(ELPP_SYSLOG)
-#include <ctime>
-#include <cstring>
-#include <cstdlib>
 #include <cctype>
-#include <cwchar>
-#include <csignal>
 #include <cerrno>
+#include <csignal>
 #include <cstdarg>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#include <cwchar>
 #if defined(ELPP_UNICODE)
 #   include <locale>
 #  if ELPP_OS_WINDOWS
@@ -386,18 +386,18 @@ ELPP_INTERNAL_DEBUGGING_OUT_INFO << ELPP_INTERNAL_DEBUGGING_MSG(internalInfoStre
 #      endif // defined(ELPP_WINSOCK2)
 #  endif // defined(WIN32_LEAN_AND_MEAN)
 #endif  // ELPP_OS_UNIX
-#include <string>
-#include <vector>
-#include <map>
-#include <unordered_map>
-#include <utility>
-#include <functional>
 #include <algorithm>
 #include <fstream>
+#include <functional>
 #include <iostream>
-#include <sstream>
+#include <map>
 #include <memory>
+#include <sstream>
+#include <string>
 #include <type_traits>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 #if ELPP_THREADING_ENABLED
 #  if ELPP_USE_STD_THREADING
 #      include <mutex>
@@ -602,7 +602,7 @@ template<> struct hash<el::Level> {
     return hash<el::base::type::EnumType> {}(static_cast<el::base::type::EnumType>(l));
   }
 };
-}
+} // namespace std
 namespace el {
 /// @brief Static class that contains helper functions for el::Level
 class LevelHelper : base::StaticClass {
