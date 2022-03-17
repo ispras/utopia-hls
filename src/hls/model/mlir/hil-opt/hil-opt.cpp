@@ -38,8 +38,8 @@ int loadMLIR(mlir::MLIRContext &context, mlir::OwningModuleRef &module) {
   // Open file
   llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> fileOrErr =
       llvm::MemoryBuffer::getFileOrSTDIN(inputFilename);
-  if (std::error_code EC = fileOrErr.getError()) {
-    llvm::errs() << "Could not open input file: " << EC.message() << "\n";
+  if (std::error_code err = fileOrErr.getError()) {
+    llvm::errs() << "Could not open input file: " << err.message() << "\n";
     return -1;
   }
 
@@ -55,41 +55,37 @@ int loadMLIR(mlir::MLIRContext &context, mlir::OwningModuleRef &module) {
 }
 
 int main(int argc, char **argv) {
-  /* mlir::registerAsmPrinterCLOptions(); */
-  /* mlir::registerMLIRContextCLOptions(); */
-  /* mlir::registerPassManagerCLOptions(); */
-  /* mlir::registerDefaultTimingManagerCLOptions(); */
-  /* cl::ParseCommandLineOptions(argc, argv, "hil dialect"); */
-  /* eda::hls::model::parse_model_from_mlir_file(inputFilename); */
+  mlir::registerAsmPrinterCLOptions();
+  mlir::registerMLIRContextCLOptions();
+  mlir::registerPassManagerCLOptions();
+  mlir::registerDefaultTimingManagerCLOptions();
 
-    mlir::registerAsmPrinterCLOptions();
-    mlir::registerMLIRContextCLOptions();
-    mlir::registerPassManagerCLOptions();
-    mlir::registerDefaultTimingManagerCLOptions();
-    cl::ParseCommandLineOptions(argc, argv, "hil dialect");
-    mlir::MLIRContext context;
-    context.getOrLoadDialect<mlir::hil::HILDialect>();
-    context.getOrLoadDialect<mlir::StandardOpsDialect>();
-    mlir::OwningModuleRef module;
+  cl::ParseCommandLineOptions(argc, argv, "hil dialect");
 
-    if (int error = loadMLIR(context, module))
-        return error;
-    mlir::PassManager pm(&context);
+  mlir::MLIRContext context;
 
-    mlir::applyPassManagerCLOptions(pm);
+  context.getOrLoadDialect<mlir::hil::HILDialect>();
+  context.getOrLoadDialect<mlir::StandardOpsDialect>();
 
-    pm.addPass(createGraphRewritePass());
+  mlir::OwningModuleRef module;
 
-    if (mlir::failed(pm.run(*module)))
-        return 4;
+  if (int error = loadMLIR(context, module))
+    return error;
 
-    std::string errorMessage;
-    auto output = mlir::openOutputFile(outputFilename, &errorMessage);
-    if (!output) {
-        llvm::errs() << errorMessage << "\n";
-        return 5;
-    }
+  mlir::PassManager pm(&context);
+  mlir::applyPassManagerCLOptions(pm);
+  pm.addPass(createGraphRewritePass());
 
-    module->print(output->os());
+  if (mlir::failed(pm.run(*module)))
+    return 4;
+
+  std::string errorMessage;
+  auto output = mlir::openOutputFile(outputFilename, &errorMessage);
+  if (!output) {
+      llvm::errs() << errorMessage << "\n";
+      return 5;
+  }
+
+  module->print(output->os());
   return 0;
 }
