@@ -20,9 +20,9 @@ bool eqCheckTest(const std::string &fileM, const std::string &fileM2) {
 
   std::shared_ptr<Model> modelM = parse(fileM);
   std::shared_ptr<Model> modelM2 = parse(fileM2);
-  Verifier verifier = Verifier::get();
+  EqChecker checker = EqChecker::get();
 
-  return verifier.equivalent(*modelM.get(), *modelM2.get());
+  return checker.equivalent(*modelM.get(), *modelM2.get());
 }
 
 TEST(DebuggerTest, SolveKernel) {
