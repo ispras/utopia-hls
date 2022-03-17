@@ -12,9 +12,9 @@ using namespace eda::hls::model;
 
 namespace eda::hls::debugger {
 
-std::unique_ptr<Verifier> Verifier::instance = nullptr;
+std::unique_ptr<EqChecker> EqChecker::instance = nullptr;
 
-bool Verifier::equivalent(const Model &left, const Model &right) const {
+bool EqChecker::equivalent(const Model &left, const Model &right) const {
 
   z3::context ctx;
   z3::expr_vector nodes(ctx);
@@ -125,7 +125,7 @@ bool Verifier::equivalent(const Model &left, const Model &right) const {
   return false;
 }
 
-bool Verifier::match(const std::vector<Graph*> &left,
+bool EqChecker::match(const std::vector<Graph*> &left,
     const std::vector<Graph*> &right,
     std::pair<Graph*, Graph*> &matched) const {
 
@@ -156,7 +156,7 @@ bool Verifier::match(const std::vector<Graph*> &left,
   return false;
 }
 
-bool Verifier::match(const std::vector<Node*> &left,
+bool EqChecker::match(const std::vector<Node*> &left,
     const std::vector<Node*> &right,
     std::list<std::pair<Node*, Node*>> &matched) const {
   size_t lSize = left.size();
@@ -188,7 +188,7 @@ bool Verifier::match(const std::vector<Node*> &left,
   return true;
 }
 
-void Verifier::createExprs(const Graph &graph,
+void EqChecker::createExprs(const Graph &graph,
     z3::context &ctx,
     z3::expr_vector &nodes) const {
 
@@ -293,7 +293,7 @@ void Verifier::createExprs(const Graph &graph,
   }
 }
 
-std::vector<Node*> Verifier::getSources(const Graph &graph) const {
+std::vector<Node*> EqChecker::getSources(const Graph &graph) const {
 
   std::vector<Node*> result;
   std::vector<Node*> graphNodes = graph.nodes;
@@ -307,7 +307,7 @@ std::vector<Node*> Verifier::getSources(const Graph &graph) const {
   return result;
 }
 
-std::vector<Node*> Verifier::getSinks(const Graph &graph) const {
+std::vector<Node*> EqChecker::getSinks(const Graph &graph) const {
 
   std::vector<Node*> result;
   std::vector<Node*> graphNodes = graph.nodes;
@@ -321,19 +321,19 @@ std::vector<Node*> Verifier::getSinks(const Graph &graph) const {
   return result;
 }
 
-std::string Verifier::getModelName(const Node &node) const {
+std::string EqChecker::getModelName(const Node &node) const {
   return node.graph.model.name;
 }
 
-z3::sort Verifier::getSort(const Node &node, z3::context &ctx) const {
+z3::sort EqChecker::getSort(const Node &node, z3::context &ctx) const {
   return ctx.uninterpreted_sort(node.type.name.c_str());
 }
 
-z3::sort Verifier::getSort(const Port &port, z3::context &ctx) const {
+z3::sort EqChecker::getSort(const Port &port, z3::context &ctx) const {
   return ctx.uninterpreted_sort(port.type.name.c_str());
 }
 
-z3::expr Verifier::toConst(const Binding &bnd, z3::context &ctx) const {
+z3::expr EqChecker::toConst(const Binding &bnd, z3::context &ctx) const {
 
   const z3::sort fInSort = getSort(*bnd.port, ctx);
   const std::string modelName = getModelName(*bnd.node);
@@ -344,7 +344,7 @@ z3::expr Verifier::toConst(const Binding &bnd, z3::context &ctx) const {
   return ctx.constant(constName.c_str(), fInSort);
 }
 
-z3::expr Verifier::toConst(const Node &node, z3::context &ctx) const {
+z3::expr EqChecker::toConst(const Node &node, z3::context &ctx) const {
 
   const z3::sort fInSort = getSort(node, ctx);
   const std::string modelName = getModelName(node);
@@ -353,7 +353,7 @@ z3::expr Verifier::toConst(const Node &node, z3::context &ctx) const {
   return ctx.constant(constName.c_str(), fInSort);
 }
 
-z3::expr Verifier::toInFunc(const Node &node, const Chan &ch,
+z3::expr EqChecker::toInFunc(const Node &node, const Chan &ch,
     z3::context &ctx) const {
 
   const std::string modelName = getModelName(node);
@@ -366,7 +366,8 @@ z3::expr Verifier::toInFunc(const Node &node, const Chan &ch,
   return func(fArgs);
 }
 
-z3::sort_vector Verifier::getInSorts(const Node &node, z3::context &ctx) const {
+z3::sort_vector EqChecker::getInSorts(const Node &node,
+  z3::context &ctx) const {
 
   const unsigned arity = node.inputs.size();
   z3::sort_vector sorts(ctx);
@@ -377,7 +378,7 @@ z3::sort_vector Verifier::getInSorts(const Node &node, z3::context &ctx) const {
   return sorts;
 }
 
-z3::expr_vector Verifier::getFuncArgs(const Node &node,
+z3::expr_vector EqChecker::getFuncArgs(const Node &node,
     z3::context &ctx) const {
 
   const std::vector<Chan*> inputs = node.inputs;
