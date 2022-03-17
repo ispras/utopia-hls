@@ -61,6 +61,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 add_library(${MAIN_LIBRARY}
 
   # Manually-written sources.
+  gate/checker/checker.cpp
   gate/model/gate.cpp
   gate/model/gsymbol.cpp
   gate/model/netlist.cpp
