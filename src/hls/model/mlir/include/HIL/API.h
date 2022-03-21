@@ -1,11 +1,14 @@
-//===----------------------------------------------------------------------===//
+//===- API.h ------------------------------------------------- C++ -*------===//
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-
+//
+// MLIR transformer API.
+//
+//===----------------------------------------------------------------------===//
 #pragma once
 
 #include <iostream>
@@ -32,6 +35,8 @@ private:
 
 using mlir::model::MLIRModule;
 
+/* Copy constructors */
+
 template <>
 inline Transformer<MLIRModule>::Transformer(MLIRModule &&module)
     : module_(std::move(module)), module_init_(module_.clone()) {}
@@ -43,14 +48,20 @@ template <typename T>
 Transformer<T>::Transformer(Transformer &&oth)
     : module_(std::move(oth.module_)),
       module_init_(std::move(oth.module_init_)) {}
+
+/* Transform-related methods */
+
 template <typename T>
 void Transformer<T>::apply_transform(
     std::function<void(MLIRModule &)> transform) {
   transform(module_);
 }
+
 template <typename T> void Transformer<T>::undo_transforms() {
   module_ = module_init_.clone();
 }
+
+/* End-of-transformation methods */
 
 template <> inline MLIRModule Transformer<MLIRModule>::done() {
   (void)std::move(module_init_);
@@ -65,6 +76,8 @@ template <> inline Model Transformer<Model>::done() {
   auto model = std::move(*eda::hls::model::parse_model_from_mlir(buf));
   return model;
 }
+
+/* Transformations */
 
 std::function<void(MLIRModule &)> ChanAddSourceTarget();
 std::function<void(MLIRModule &)> InsertDelay(std::string chan_name,

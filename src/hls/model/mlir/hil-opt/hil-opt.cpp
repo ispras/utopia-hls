@@ -1,11 +1,15 @@
-//===- hil-opt.cpp ---------------------------------------*- C++ -*--------===//
+//===- hil-opt.cpp ------------------------------------------- C++ -*------===//
 //
 // This file is licensed under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
-
+//
+// This is a command line utility that reads *.mlir file, applies graph
+// rewriting pass on the program representation and stores the result back.
+//
+//===----------------------------------------------------------------------===//
 #include "mlir/IR/AsmState.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
