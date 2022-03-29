@@ -9,6 +9,7 @@
 #ifndef HIL_DIALECT
 #define HIL_DIALECT
 
+include "mlir/IR/AttrTypeBase.td"
 include "mlir/IR/OpBase.td"
 
 //===----------------------------------------------------------------------===//
@@ -30,7 +31,7 @@ def HIL_Dialect : Dialect {
 // Base hil operation definition.
 //===----------------------------------------------------------------------===//
 
-class HIL_Op<string mnemonic, list<OpTrait> traits = []> :
+class HIL_Op<string mnemonic, list<Trait> traits = []> :
         Op<HIL_Dialect, mnemonic, traits>;
 
 /* class HIL_Type<Pred condition, string descr=""> : */

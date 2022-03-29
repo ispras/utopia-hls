@@ -27,7 +27,7 @@ namespace mlir::model {
 MLIRModule MLIRModule::load_from_mlir(const std::string &s) {
   auto context = std::make_unique<mlir::MLIRContext>();
   context->getOrLoadDialect<mlir::hil::HILDialect>();
-  context->getOrLoadDialect<mlir::StandardOpsDialect>();
+  context->getOrLoadDialect<mlir::arith::ArithmeticDialect>();
   auto module = mlir::parseSourceString(s, context.get());
   return {std::move(context), std::move(module)};
 }
@@ -69,7 +69,7 @@ MLIRModule MLIRModule::clone() { return {context_, module_->clone()}; }
 MLIRContext *MLIRModule::get_context() { return module_->getContext(); }
 
 MLIRModule::MLIRModule(std::shared_ptr<mlir::MLIRContext> context,
-                       mlir::OwningModuleRef &&module)
+                       mlir::OwningOpRef<mlir::ModuleOp> &&module)
     : context_(std::move(context)), module_(std::move(module)) {}
 } // namespace mlir::model
 

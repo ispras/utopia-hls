@@ -11,7 +11,7 @@
 
 include "Dialect.td"
 
-class HIL_Container<string mnemonic, list<OpTrait> traits = []> :
+class HIL_Container<string mnemonic, list<Trait> traits = []> :
   HIL_Op<mnemonic, !listconcat(traits, [
     NoRegionArguments,
     NoTerminator,
@@ -122,6 +122,9 @@ def InputArgAttr : HIL_Attr<"InputArg"> {
     "double*":$flow,
     "std::string":$name);
 
+  let hasCustomAssemblyFormat = 1;
+
+/*
   let printer = [{
     $_printer << "input<\"" <<
       getImpl()->typeName << "\"<" << *getImpl()->flow << ">" << " " << '"' << getImpl()->name << '"' << ">";
@@ -147,6 +150,7 @@ def InputArgAttr : HIL_Attr<"InputArg"> {
       return {};
     return get($_ctxt, typeName, flow, name);
   }];
+*/
 }
 
 def OutputArgAttr : HIL_Attr<"OutputArg"> {
@@ -165,6 +169,9 @@ def OutputArgAttr : HIL_Attr<"OutputArg"> {
     "std::string":$name,
     "std::string":$value);
 
+  let hasCustomAssemblyFormat = 1;
+
+/*
   let printer = [{
     $_printer << "output<\"" << getImpl()->typeName << "\"<" << *getImpl()->flow << ">" << " " << getImpl()->latency << " " << '"' << getImpl()->name << '"' << (getImpl()->value.empty() ? "" : " = \"" + getImpl()->value + "\"") << ">";
   }];
@@ -200,6 +207,7 @@ def OutputArgAttr : HIL_Attr<"OutputArg"> {
       return {};
     return get($_ctxt, typeName, flow, latency, name, value);
   }];
+*/
 }
 
 /* def OutputArgTypeAttr : TypeAttrBase<"OutputArgType", "output arg attribute">; */

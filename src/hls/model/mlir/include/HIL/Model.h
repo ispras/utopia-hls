@@ -9,7 +9,7 @@
 #pragma once
 
 #include "mlir/IR/MLIRContext.h"
-#include "mlir/Parser.h"
+#include "mlir/Parser/Parser.h"
 #include "mlir/Pass/PassManager.h"
 #include "llvm/Support/SourceMgr.h"
 
@@ -33,9 +33,9 @@ public:
 
 private:
   MLIRModule(std::shared_ptr<mlir::MLIRContext> context,
-             mlir::OwningModuleRef &&module);
+             mlir::OwningOpRef<mlir::ModuleOp> &&module);
   std::shared_ptr<mlir::MLIRContext> context_;
-  mlir::OwningModuleRef module_;
+  mlir::OwningOpRef<mlir::ModuleOp> module_;
 };
 } // namespace mlir::model
 

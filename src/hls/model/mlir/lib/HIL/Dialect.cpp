@@ -54,6 +54,7 @@ void HILDialect::initialize() {
 /*   (void)generatedTypePrinter(type, printer); */
 /* } */
 
+/*
 Attribute HILDialect::parseAttribute(DialectAsmParser &parser,
                          Type type) const {
   StringRef data_type;
@@ -68,3 +69,25 @@ void HILDialect::printAttribute(Attribute attr,
                            DialectAsmPrinter &printer) const {
   (void)generatedAttributePrinter(attr, printer);
 }
+*/
+
+void InputArgAttr::print(mlir::AsmPrinter &printer) const {
+  // FIXME:
+}
+
+mlir::Attribute mlir::hil::InputArgAttr::parse(mlir::AsmParser &parser,
+                                               mlir::Type type) {
+  // FIXME:
+  return {};
+}
+
+void OutputArgAttr::print(mlir::AsmPrinter &printer) const {
+  // FIXME:
+}
+
+mlir::Attribute mlir::hil::OutputArgAttr::parse(mlir::AsmParser &parser,
+                                                mlir::Type type) {
+  // FIXME:
+  return {};
+}
+
