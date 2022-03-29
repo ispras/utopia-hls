@@ -74,6 +74,9 @@ private:
   void count_params(Model& model, std::map<std::string, Parameters>& params,
                     Indicators& indicators, unsigned frequency, Parameters& defaultParams) const;
 
+  double normalize(double value, double min, double max) const;
+  double denormalize(double value, double min, double max) const;
+
   std::shared_ptr<optimizers::abstract_optimizer> math_optimizer;
 };
 

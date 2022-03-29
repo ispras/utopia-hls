@@ -7,7 +7,7 @@
 namespace eda::hls::scheduler::optimizers {
     simulated_annealing_optimizer::simulated_annealing_optimizer(float init_temp, float fin_temp, float lim,
                                             std::function<float(const std::vector<float>&)> tar_fun,
-                                            std::function<float(const std::vector<float>&, float)> condition_fun,
+                                            std::function<float(const std::vector<float>&)> condition_fun,
                                             std::function<void(std::vector<float>&, const std::vector<float>&, float)> step_fun,
                                             std::function<float(int, float)> temp_fun)
       : temperature(init_temp)
@@ -28,11 +28,11 @@ namespace eda::hls::scheduler::optimizers {
         while(temperature > final_temp && i < 10000) {
             step_function(cur_param, param, temperature);
             cur_f = target_function(cur_param);
-            auto cur_lim = condition_function(cur_param, cur_f);
+            auto cur_lim = condition_function(cur_param);
             transition = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
             ostrm << "Current params: " << cur_param[0] << " " << cur_param[1] << std::endl;
             ostrm << "Previous params: " << param[0] << " " << param[1] << std::endl;
-            if(transition < get_probabiliy(prev_f, cur_f, cur_lim, temperature)) {
+            if(transition < get_probabiliy(prev_f, cur_f, cur_lim, temperature, param)) {
                 param = cur_param;
                 prev_f = cur_f;
             } else {
@@ -45,9 +45,20 @@ namespace eda::hls::scheduler::optimizers {
     }
 
     float simulated_annealing_optimizer::get_probabiliy(const float& prev_f, const float& cur_f,
-                                                        const float& cur_lim, const float& temp) {
-        if((prev_f < cur_f) && (cur_lim <= limitation)) {
+                                                        const float& cur_lim, const float& temp,
+                                                        const std::vector<float>& params) {
+        bool check_limits = true;
+        for(const auto& param : params) {
+            if(param > 1.0 || param < -1.0) {
+                check_limits = false;
+                break;
+            }
+        }
+        if((prev_f < cur_f) && (cur_lim <= limitation) && check_limits) {
             return 1.0;
+        }
+        if((cur_lim > limitation) || !check_limits) {
+            return -1.0;
         }
         return exp((prev_f - cur_f) / temp);
     }

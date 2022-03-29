@@ -33,14 +33,17 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   Parameters defaultParams("<default>");
   defaultParams.add(Parameter("f", criteria.frequency, criteria.frequency.max));
 
+  auto min_value = criteria.frequency.min;
+  auto max_value = criteria.frequency.max;
+
   std::ofstream ostrm("real.txt");
   std::vector<float> optimized_values;
-  optimized_values.push_back(100000);
+  optimized_values.push_back(normalize(10000, min_value, max_value));
   for (const auto *node : graph->nodes) {
     auto metaElement = Library::get().find(node->type);
     Parameters nodeParams(node->name, metaElement->params);
     for(const auto& iter : metaElement->params.params) {
-      optimized_values.push_back(iter.second.value);
+      optimized_values.push_back(normalize(iter.second.value, min_value, max_value));
     }
     params.insert({ node->name, nodeParams });
   }
@@ -67,22 +70,32 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   std::function<void(std::vector<float>&, const std::vector<float>&, float)>
     step_fun = [&](std::vector<float>& x, const std::vector<float>& prev, float temp) -> void {
       for(int i = 0; i < x.size(); i++) {
-        auto diff = temp * exp((-0.5 * prev[i] * prev[i]) / temp) / (std::sqrt(M_PI * 2 * temp));
+        auto norm = normalize(prev[i], min_value, max_value);
+        auto diff = exp((-0.5 * prev[i] * prev[i])) / (std::sqrt(M_PI * 2));
         x[i] = prev[i] + diff;
       }
     };
 
   std::function<float(const std::vector<float>&)> target_function = [&](const std::vector<float>& parameters) -> float {
-    count_params(model, params, indicators, parameters[0], defaultParams);
+    ostrm << "Current parameters before norm: " << std::endl;
+    ostrm << parameters[0] << " " << parameters[1] << std::endl;
+    std::vector<float> denormalized_parameters;
+    for(const auto& param : parameters) {
+      denormalized_parameters.push_back(denormalize(param, min_value, max_value));
+    }
+    count_params(model, params, indicators, denormalized_parameters[0], defaultParams);
     model.undo();
     ostrm << "Current parameters: " << std::endl;
-    ostrm << parameters[0] << " " << parameters[1] << std::endl;
+    ostrm << denormalized_parameters[0] << " " << denormalized_parameters[1] << std::endl;
     return indicators.frequency;
   };
 
-  std::function<float(const std::vector<float>, float)>
-      limitation_function = [&](const std::vector<float> parameters, float freq) -> float {
-        count_params(model, params, indicators, freq, defaultParams);
+  std::function<float(const std::vector<float>&)>
+      limitation_function = [&](const std::vector<float>& parameters) -> float {
+        float tmp = parameters[0];
+        tmp = denormalize(tmp, min_value, max_value);
+        ostrm << "Counting area for freq: " << tmp << std::endl;
+        count_params(model, params, indicators, tmp, defaultParams);
         model.undo();
         ostrm << "Area: " << indicators.area << std::endl;
         return indicators.area;
@@ -181,6 +194,14 @@ void ParametersOptimizer::count_params(Model& model,
     indicators.area += nodeIndicators.area;
 
   }
+}
+
+double ParametersOptimizer::normalize(double value, double min, double max) const {
+  return (value - min) / (max - min);
+}
+
+double ParametersOptimizer::denormalize(double value, double min, double max) const {
+  return value * (max - min) + min;
 }
 
 } // namespace eda::hls::scheduler
