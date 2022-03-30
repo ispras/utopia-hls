@@ -1,4 +1,4 @@
-//===- HILOps.td - HIL dialect ops -----------*- tablegen -*-===//
+//===- HILOps.td - HIL dialect ops -------------------------*- tablegen -*-===//
 //
 // This file is licensed under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -20,12 +20,12 @@ class HIL_Container<string mnemonic, list<Trait> traits = []> :
   let assemblyFormat = "$body attr-dict";
   let regions = (region SizedRegion<1>: $body);
   let extraClassDeclaration = [{
-    Block *getBody() {
-      Region& region = getOperation()->getRegion(0);
-      assert(region.hasOneBlock() && "The body should have one block.");
-      return &region.front();
-    }
-  }];
+  Block *getBody() {
+    Region& region = getOperation()->getRegion(0);
+    assert(region.hasOneBlock() && "The body should have one block.");
+    return &region.front();
+  }
+}];
 }
 
 def HIL_Model : HIL_Container<"model"> {
@@ -123,34 +123,6 @@ def InputArgAttr : HIL_Attr<"InputArg"> {
     "std::string":$name);
 
   let hasCustomAssemblyFormat = 1;
-
-/*
-  let printer = [{
-    $_printer << "input<\"" <<
-      getImpl()->typeName << "\"<" << *getImpl()->flow << ">" << " " << '"' << getImpl()->name << '"' << ">";
-  }];
-
-  let parser = [{
-    if ($_parser.parseLess())
-      return {};
-    std::string typeName;
-    if ($_parser.parseString(&typeName))
-      return {};
-    if ($_parser.parseLess())
-      return {};
-    double *flow = new double{};
-    if ($_parser.parseFloat(*flow))
-      return {};
-    if ($_parser.parseGreater())
-      return {};
-    std::string name;
-    if ($_parser.parseString(&name))
-      return {};
-    if ($_parser.parseGreater())
-      return {};
-    return get($_ctxt, typeName, flow, name);
-  }];
-*/
 }
 
 def OutputArgAttr : HIL_Attr<"OutputArg"> {
@@ -170,44 +142,6 @@ def OutputArgAttr : HIL_Attr<"OutputArg"> {
     "std::string":$value);
 
   let hasCustomAssemblyFormat = 1;
-
-/*
-  let printer = [{
-    $_printer << "output<\"" << getImpl()->typeName << "\"<" << *getImpl()->flow << ">" << " " << getImpl()->latency << " " << '"' << getImpl()->name << '"' << (getImpl()->value.empty() ? "" : " = \"" + getImpl()->value + "\"") << ">";
-  }];
-
-  let parser = [{
-    if ($_parser.parseLess())
-      return {};
-    std::string typeName;
-    if ($_parser.parseString(&typeName))
-      return {};
-    if ($_parser.parseLess())
-      return {};
-    double *flow = new double{};
-    if ($_parser.parseFloat(*flow))
-      return {};
-    if ($_parser.parseGreater())
-      return {};
-    unsigned latency;
-    if ($_parser.parseInteger(latency))
-      return {};
-    std::string name;
-    if ($_parser.parseString(&name))
-      return {};
-    if ($_parser.parseOptionalEqual()) {
-      if ($_parser.parseGreater())
-        return {};
-      return get($_ctxt, typeName, flow, latency, name, "");
-    }
-    std::string value;
-    if ($_parser.parseString(&value))
-      return {};
-    if ($_parser.parseGreater())
-      return {};
-    return get($_ctxt, typeName, flow, latency, name, value);
-  }];
-*/
 }
 
 /* def OutputArgTypeAttr : TypeAttrBase<"OutputArgType", "output arg attribute">; */

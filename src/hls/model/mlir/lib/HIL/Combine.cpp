@@ -33,45 +33,70 @@ public:
 
   LogicalResult matchAndRewrite(Operation *op,
                                 PatternRewriter &rewriter) const override {
+
+    // detect channels container operation
     auto chans_op = dyn_cast<Chans>(*op);
     if (!chans_op) {
       return failure();
     }
     auto context = chans_op.getContext();
     auto outer_region_ops = chans_op->getParentRegion()->getOps();
+
+    // find Nodes operation
     auto nodes_op = find_elem_by_type<Nodes>(outer_region_ops).value();
+
+    // in_chan_name->node_name map
     std::map<std::string, std::string> chan_to_source;
+
+    // out_chan_name->node_name map
     std::map<std::string, std::string> chan_to_target;
+
+    // iterate over Nodes' sub-operations, fill maps
     for (auto &nodes_block_op : nodes_op.getBody()->getOperations()) {
+
       auto node_op = cast<Node>(nodes_block_op);
       auto node_name = node_op.name().str();
+
       for (auto in_chan_op : node_op.commandArguments()) {
+
         auto in_chan_name = in_chan_op.cast<StringAttr>().getValue().str();
         chan_to_target[in_chan_name] = node_name;
       }
+
       for (auto out_chan_op : node_op.commandResults()) {
+
         auto out_chan_name = out_chan_op.cast<StringAttr>().getValue().str();
         chan_to_source[out_chan_name] = node_name;
       }
     }
+
+    // copy channels into vector
     std::vector<std::reference_wrapper<Operation>> ops;
     std::copy(chans_op.getBody()->getOperations().begin(),
               chans_op.getBody()->getOperations().end(),
               std::back_inserter(ops));
+
+    // iterate over channels
     for (auto &chans_block_op_ref : ops) {
+
       auto &chans_block_op = chans_block_op_ref.get();
       auto chan_op = cast<Chan>(chans_block_op);
       auto chan_name = chan_op.varName().str();
+
       std::optional<std::string> node_from;
       auto node_from_it = chan_to_source.find(chan_name);
+
       if (node_from_it != chan_to_source.end()) {
         node_from = node_from_it->second;
       }
+
       std::optional<std::string> node_to;
       auto node_to_it = chan_to_target.find(chan_name);
+
       if (node_to_it != chan_to_target.end()) {
         node_to = node_to_it->second;
       }
+
       rewriter.setInsertionPoint(&chans_block_op);
       rewriter.replaceOpWithNewOp<Chan>(
           &chans_block_op, chan_op.typeName(), chan_op.varName(),
@@ -95,6 +120,8 @@ public:
 
   LogicalResult matchAndRewrite(Operation *op,
                                 PatternRewriter &rewriter) const override {
+
+    // detect requested channel
     auto chan_op = dyn_cast<Chan>(*op);
     if (!chan_op || chan_op.varName() != chan_name_) {
       return failure();

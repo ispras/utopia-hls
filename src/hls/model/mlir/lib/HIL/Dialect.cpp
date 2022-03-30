@@ -71,23 +71,71 @@ void HILDialect::printAttribute(Attribute attr,
 }
 */
 
-void InputArgAttr::print(mlir::AsmPrinter &printer) const {
-  // FIXME:
+void mlir::hil::InputArgAttr::print(mlir::AsmPrinter &printer) const {
+  printer << "input<\"" <<
+      getTypeName() <<
+      "\"<" << getFlow()
+      << ">" << " " << '"' << getName() << '"' << ">";
 }
 
 mlir::Attribute mlir::hil::InputArgAttr::parse(mlir::AsmParser &parser,
                                                mlir::Type type) {
-  // FIXME:
-  return {};
+  if (parser.parseLess())
+      return {};
+    std::string typeName;
+    if (parser.parseString(&typeName))
+      return {};
+    if (parser.parseLess())
+      return {};
+    double *flow = new double{};
+    if (parser.parseFloat(*flow))
+      return {};
+    if (parser.parseGreater())
+      return {};
+    std::string name;
+    if (parser.parseString(&name))
+      return {};
+    if (parser.parseGreater())
+      return {};
+    return get(parser.getContext(), typeName, flow, name);
 }
 
-void OutputArgAttr::print(mlir::AsmPrinter &printer) const {
-  // FIXME:
+void mlir::hil::OutputArgAttr::print(mlir::AsmPrinter &printer) const {
+  printer << "output<\"" << getTypeName() << "\"<" << getFlow()
+      << ">" << " " << getLatency() << " " << '"' << getName()
+      << '"' << (getValue().empty() ? "" : " = \"" + getValue() + "\"") << ">";
 }
 
 mlir::Attribute mlir::hil::OutputArgAttr::parse(mlir::AsmParser &parser,
                                                 mlir::Type type) {
-  // FIXME:
-  return {};
+  if (parser.parseLess())
+      return {};
+    std::string typeName;
+    if (parser.parseString(&typeName))
+      return {};
+    if (parser.parseLess())
+      return {};
+    double *flow = new double{};
+    if (parser.parseFloat(*flow))
+      return {};
+    if (parser.parseGreater())
+      return {};
+    unsigned latency;
+    if (parser.parseInteger(latency))
+      return {};
+    std::string name;
+    if (parser.parseString(&name))
+      return {};
+    if (parser.parseOptionalEqual()) {
+      if (parser.parseGreater())
+        return {};
+      return get(parser.getContext(), typeName, flow, latency, name, "");
+    }
+    std::string value;
+    if (parser.parseString(&value))
+      return {};
+    if (parser.parseGreater())
+      return {};
+    return get(parser.getContext(), typeName, flow, latency, name, value);
 }
 
