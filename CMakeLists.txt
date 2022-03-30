@@ -30,6 +30,7 @@ else()
 endif()
 
 include_directories(lib/easyloggingpp)
+include_directories(lib/minisat)
 
 add_subdirectory(lib)
 add_subdirectory(src)
