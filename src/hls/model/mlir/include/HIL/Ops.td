@@ -9,7 +9,7 @@
 #ifndef HIL_OPS
 #define HIL_OPS
 
-include "Dialect.td"
+include "Attributes.td"
 
 class HIL_Container<string mnemonic, list<Trait> traits = []> :
   HIL_Op<mnemonic, !listconcat(traits, [
@@ -67,84 +67,6 @@ def HIL_Nodes : HIL_Container<"nodes", [HasParent<"Graph">]> {
     Container of `hil.node`
   }];
 }
-
-/* def InputArgType : HIL_Type<"InputArg"> { */
-/*   let mnemonic = "input"; */
-/*  */
-/*   let summary = "Input argument"; */
-/*  */
-/*   let description = [{ */
-/*     Input arg type */
-/*   }]; */
-/*  */
-/*   let parameters = (ins */
-/*     "std::string":$typeName, */
-/*     "double*":$flow, */
-/*     "std::string":$name); */
-/*  */
-/*   let printer = [{ */
-/*     $_printer << "input<\"" << */
-/*       getImpl()->typeName << "\"<" << *getImpl()->flow << ">" << " " << '"' << getImpl()->name << '"' << ">"; */
-/*   }]; */
-/*  */
-/*   let parser = [{ */
-/*     if ($_parser.parseLess()) */
-/*       return {}; */
-/*     std::string typeName; */
-/*     if ($_parser.parseString(&typeName)) */
-/*       return {}; */
-/*     if ($_parser.parseLess()) */
-/*       return {}; */
-/*     double *flow = new double{}; */
-/*     if ($_parser.parseFloat(*flow)) */
-/*       return {}; */
-/*     if ($_parser.parseGreater()) */
-/*       return {}; */
-/*     std::string name; */
-/*     if ($_parser.parseString(&name)) */
-/*       return {}; */
-/*     if ($_parser.parseGreater()) */
-/*       return {}; */
-/*     return get($_ctxt, typeName, flow, name); */
-/*   }]; */
-/* } */
-def InputArgAttr : HIL_Attr<"InputArg"> {
-  let mnemonic = "input";
-
-  let summary = "Input argument";
-
-  let description = [{
-    Input arg type
-  }];
-
-  let parameters = (ins
-    "std::string":$typeName,
-    "double*":$flow,
-    "std::string":$name);
-
-  let hasCustomAssemblyFormat = 1;
-}
-
-def OutputArgAttr : HIL_Attr<"OutputArg"> {
-  let mnemonic = "output";
-
-  let summary = "Output argument";
-
-  let description = [{
-    Output arg type
-  }];
-
-  let parameters = (ins
-    "std::string":$typeName,
-    "double*":$flow,
-    "unsigned":$latency,
-    "std::string":$name,
-    "std::string":$value);
-
-  let hasCustomAssemblyFormat = 1;
-}
-
-/* def OutputArgTypeAttr : TypeAttrBase<"OutputArgType", "output arg attribute">; */
 
 def HIL_NodeType : HIL_Op<"nodetype", [HasParent<"NodeTypes">]> {
   let summary = "Node type.";
