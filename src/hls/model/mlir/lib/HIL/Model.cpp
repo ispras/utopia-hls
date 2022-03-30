@@ -28,7 +28,7 @@ MLIRModule MLIRModule::load_from_mlir(const std::string &s) {
   auto context = std::make_unique<mlir::MLIRContext>();
   context->getOrLoadDialect<mlir::hil::HILDialect>();
   context->getOrLoadDialect<mlir::arith::ArithmeticDialect>();
-  auto module = mlir::parseSourceString(s, context.get());
+  auto module = mlir::parseSourceString<mlir::ModuleOp>(s, context.get());
   return {std::move(context), std::move(module)};
 }
 
