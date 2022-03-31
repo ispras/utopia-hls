@@ -72,7 +72,7 @@ void HILDialect::printAttribute(Attribute attr,
 */
 
 void mlir::hil::InputArgAttr::print(mlir::AsmPrinter &printer) const {
-  printer << "input<\"" <<
+  printer << "<\"" <<
       getTypeName() <<
       "\"<" << getFlow()
       << ">" << " " << '"' << getName() << '"' << ">";
@@ -101,7 +101,7 @@ mlir::Attribute mlir::hil::InputArgAttr::parse(mlir::AsmParser &parser,
 }
 
 void mlir::hil::OutputArgAttr::print(mlir::AsmPrinter &printer) const {
-  printer << "output<\"" << getTypeName() << "\"<" << getFlow()
+  printer << "<\"" << getTypeName() << "\"<" << getFlow()
       << ">" << " " << getLatency() << " " << '"' << getName()
       << '"' << (getValue().empty() ? "" : " = \"" + getValue() + "\"") << ">";
 }

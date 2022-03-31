@@ -125,7 +125,7 @@ TEST_F(SimpleModel, InsertDelay) {
   transformer.apply_transform(ChanAddSourceTarget());
   transformer.apply_transform(InsertDelay("x", 7));
   auto model_after = transformer.done();
-  // std::cout << model_after << std::endl;
+  std::cout << model_after << std::endl;
 }
 
 TEST_F(SimpleModel, InsertDelayUndo) {
