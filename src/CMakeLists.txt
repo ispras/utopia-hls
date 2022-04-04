@@ -13,6 +13,7 @@ set(DL_LIBRARY dl)
 set(COLAMD_LIBRARY colamd)
 set(STDCXXFS_LIBRARY stdc++fs)
 set(CTEMPLATE_LIBRARY ctemplate_nothreads)
+set(MINISAT_LIBRARY minisat)
 
 # The project requires flex/bison.
 find_package(FLEX REQUIRED)
@@ -122,6 +123,7 @@ target_link_libraries(${MAIN_LIBRARY}
   ${Z3_LIBRARY}
   ${STDCXXFS_LIBRARY}
   ${CTEMPLATE_LIBRARY}
+  ${MINISAT_LIBRARY}
   ${dialect_libs}
   ${translation_libs}
 )

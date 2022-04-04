@@ -24,6 +24,7 @@ endif()
 enable_testing()
 
 add_executable(${TEST_TARGET}
+  gate/checker/checker_test.cpp
   hls/compiler/compiler_test.cpp
   hls/debugger/debugger_test.cpp
   hls/library/library_test.cpp
