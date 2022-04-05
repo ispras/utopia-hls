@@ -30,13 +30,25 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # The clang-tidy options.
-set(FILTER_LEXER  {"name":"lexer.yy.cpp","lines":[[999999,999999]]})
-set(FILTER_PARSER {"name":"parser.tab.cpp","lines":[[999999,999999]]})
+set(FILTER_LEXER       {"name":"lexer.yy.cpp","lines":[[999999,999999]]})
+set(FILTER_PARSER      {"name":"parser.tab.cpp","lines":[[999999,999999]]})
+set(FILTER_PARSEUTILS  {"name":"ParseUtils.h","lines":[[999999,999999]]})
+set(FILTER_SOLVER_CC   {"name":"Solver.cc","lines":[[999999,999999]]})
+set(FILTER_SOLVER_H    {"name":"Solver.h","lines":[[999999,999999]]})
+set(FILTER_SOLVERTYPES {"name":"SolverTypes.h","lines":[[999999,999999]]})
+set(FILTER_ALG         {"name":"Alg.h","lines":[[999999,999999]]})
+set(FILTER_ALLOC       {"name":"Alloc.h","lines":[[999999,999999]]})
+set(FILTER_HEAP        {"name":"Heap.h","lines":[[999999,999999]]})
+set(FILTER_INTTYPES    {"name":"IntTypes.h","lines":[[999999,999999]]})
+set(FILTER_MAP         {"name":"Map.h","lines":[[999999,999999]]})
+set(FILTER_VEC         {"name":"Vec.h","lines":[[999999,999999]]})
+set(FILTER_XALLOC      {"name":"XAlloc.h","lines":[[999999,999999]]})
+set(FILTER_OPTIONS     {"name":"Options.h","lines":[[999999,999999]]})
 
 set(CMAKE_CXX_CLANG_TIDY
   clang-tidy;
   -header-filter=.;
-  -line-filter=[${FILTER_LEXER},${FILTER_PARSER},{"name":".h"},{"name":".cpp"}];
+  -line-filter=[${FILTER_LEXER},${FILTER_PARSER},${FILTER_PARSEUTILS},${FILTER_SOLVER_CC},${FILTER_SOLVER_H},${FILTER_SOLVERTYPES},${FILTER_ALG},${FILTER_ALLOC},${FILTER_HEAP},${FILTER_INTTYPES},${FILTER_MAP},${FILTER_VEC},${FILTER_XALLOC},${FILTER_OPTIONS},{"name":".h"},{"name":".cpp"}];
   -checks=llvm-*,-llvm-header-guard;) # -warnings-as-errors;
 
 # The compilation options.
