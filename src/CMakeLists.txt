@@ -76,6 +76,7 @@ add_library(${MAIN_LIBRARY}
   # Manually-written sources.
   gate/encoder/encoder.cpp
   gate/checker/checker.cpp
+  gate/symexec/symexec.cpp
   gate/model/gate.cpp
   gate/model/gsymbol.cpp
   gate/model/netlist.cpp
