@@ -24,7 +24,7 @@ int compileSimpleHilTest(const std::string &inputFilePath,
                          const std::string &outputVerilogName,
                          const std::string &outputDirName) {
   auto compiler = std::make_unique<Compiler>(*parse(inputFilePath));
-  auto circuit = compiler->constructCircuit();
+  auto circuit = compiler->constructCircuit("main");
   compiler->printFiles(outputFirrtlName, outputVerilogName, outputDirName);
   compiler->printRndVlogTest(outputDirName + "testbench.v", 10);
   return 0;

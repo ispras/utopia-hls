@@ -74,8 +74,7 @@ void Module::addBody(const std::string &body) {
   this->body = body;
 }
 
-ExternalModule::ExternalModule(const model::NodeType* nodetype) : Module() {
-  moduleName = nodetype->name;
+ExternalModule::ExternalModule(const model::NodeType* nodetype) : Module(nodetype->name) {
   addInput(Port("clock", true, Type("clock", 1, false, 1)));
   addInput(Port("reset", true, Type("reset", 1, false, 1)));
   for (const auto *input : nodetype->inputs) {
@@ -97,9 +96,9 @@ ExternalModule::ExternalModule(const model::NodeType* nodetype) : Module() {
   addBody(element->ir);
 }
 
-FirrtlModule::FirrtlModule(const eda::hls::model::Model &model) : Module() {
-  const auto* graph = model.main();
-  moduleName = graph->name;
+FirrtlModule::FirrtlModule(const eda::hls::model::Model &model, const std::string &topModuleName) : Module(topModuleName) {
+  const auto* graph = model.findGraph(topModuleName);
+  //moduleName = graph->name;
   //Inputs & Outputs
   addInput(Port("clock", true, Type("clock", 1, false, 1)));
   addInput(Port("reset", true, Type("reset", 1, false, 1)));
@@ -206,7 +205,7 @@ void FirrtlModule::addInstance(const Instance &inputInstance) {
   }
 }*/
 
-Circuit::Circuit(std::string moduleName) : name(moduleName) {}
+Circuit::Circuit(const std::string &moduleName) : name(moduleName) {}
 
 void Circuit::addFirModule(const FirrtlModule &firModule) {
   firModules.insert({firModule.moduleName, firModule});
@@ -240,7 +239,7 @@ Module* Circuit::findModule(const std::string &name) const {
 }
 
 Module* Circuit::findMain() const {
-  return findModule("main");
+  return findModule(name);
 }
 
 void Compiler::printInstances(const FirrtlModule &firmodule,
@@ -456,12 +455,12 @@ void Compiler::convertToSV(const std::string& inputFirrtlName) const {
 void Compiler::printFiles(const std::string& outputFirrtlName,
                           const std::string& outputVerilogName,
                           const std::string& outputDirectoryName) const {
+  std::filesystem::create_directory(outputDirectoryName);
   std::ofstream outputFile;
   outputFile.open(outputDirectoryName + outputFirrtlName);
   printFirrtl(outputFile);
   outputFile.close();
   convertToSV(outputDirectoryName + outputFirrtlName);
-  std::filesystem::create_directory(outputDirectoryName);
   std::filesystem::rename("main.sv", (outputDirectoryName +
                                       std::string("main.sv")).c_str());
   outputFile.open(outputDirectoryName + outputVerilogName);
@@ -469,12 +468,14 @@ void Compiler::printFiles(const std::string& outputFirrtlName,
   outputFile.close();
 }
 
-std::shared_ptr<Circuit> Compiler::constructCircuit() {
-  circuit = std::make_shared<Circuit>(std::string(model->main()->name));
+std::shared_ptr<Circuit> Compiler::constructCircuit(const std::string& topModuleName) {
+  circuit = std::make_shared<Circuit>(topModuleName);
+
   for (const auto *nodetype : model->nodetypes) {
     circuit->addExternalModule(nodetype);
   }
-  circuit->addFirModule(*model);
+  circuit->addFirModule(FirrtlModule(*model, topModuleName));
+
   return circuit;
 }
 
@@ -503,6 +504,7 @@ void Compiler::printRndVlogTest(const std::string& tstPath, const int tstCnt) {
                           localTime->tm_sec);
 
   const Module *main = circuit->findMain();
+
   dict->SetValue("MODULE_NAME", main->moduleName);
 
   std::vector<std::string> bndNames;

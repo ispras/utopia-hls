@@ -91,7 +91,7 @@ struct Module {
   std::vector<Port> outputs;
   std::string body;
 
-  Module() = default;
+  Module(const std::string &name) : moduleName(name) {};
 
   void addBody(const std::string &body);
   void addInput(const Port &inputPort);
@@ -99,7 +99,7 @@ struct Module {
 };
 
 struct FirrtlModule final : Module {
-  FirrtlModule(const Model &model);
+  FirrtlModule(const Model &model, const std::string &topModuleName);
   //void addWire(const Wire &inputWire);
   void addInstance(const Instance &inputInstance);
 };
@@ -113,7 +113,7 @@ struct Circuit final {
   std::map<std::string, FirrtlModule> firModules;
   std::map<std::string, ExternalModule> extModules;
 
-  Circuit(std::string moduleName);
+  Circuit(const std::string &moduleName);
 
   void addFirModule(const FirrtlModule &firModule);
   void addExternalModule(const ExternalModule &externalModule);
@@ -121,7 +121,6 @@ struct Circuit final {
   ExternalModule* findExtModule(const std::string &name) const;
   Module* findModule(const std::string &name) const;
   Module* findMain() const;
-
 };
 
 struct Compiler final {
@@ -138,7 +137,7 @@ struct Compiler final {
 
   Compiler(const Model &model);
 
-  std::shared_ptr<Circuit> constructCircuit();
+  std::shared_ptr<Circuit> constructCircuit(const std::string& topModuleName);
 
   void printBody(const Module &module, std::ostream &out) const;
   void printEmptyLine(std::ostream &out) const;
