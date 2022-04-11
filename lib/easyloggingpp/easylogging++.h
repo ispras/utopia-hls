@@ -1526,7 +1526,7 @@ class RegistryWithPred : public AbstractRegistry<T_Ptr, std::vector<T_Ptr*>> {
   }
 
  private:
-  virtual void deepCopy(const AbstractRegistry<T_Ptr, std::vector<T_Ptr*>>& sr) {
+  virtual void deepCopy(const AbstractRegistry<T_Ptr, std::vector<T_Ptr*>>& sr) override {
     for (const_iterator it = sr.list().begin(); it != sr.list().end(); ++it) {
       registerNew(new T_Ptr(**it));
     }
@@ -1614,7 +1614,7 @@ class LogFormat : public Loggable {
     return base::utils::hasFlag(flag, m_flags);
   }
 
-  virtual void log(el::base::type::ostream_t& os) const {
+  virtual void log(el::base::type::ostream_t& os) const override {
     os << m_format;
   }
 
@@ -1707,7 +1707,7 @@ class Configuration : public Loggable {
     m_value = value;
   }
 
-  virtual void log(el::base::type::ostream_t& os) const;
+  virtual void log(el::base::type::ostream_t& os) const override;
 
   /// @brief Used to find configuration from configuration (pointers) repository. Avoid using it.
   class Predicate {
@@ -2183,7 +2183,7 @@ class LogDispatchData {
 };
 class LogDispatchCallback : public Callback<LogDispatchData> {
  protected:
-  virtual void handle(const LogDispatchData* data);
+  virtual void handle(const LogDispatchData* data) override;
   base::threading::Mutex& fileHandle(const LogDispatchData* data);
  private:
   friend class base::LogDispatcher;
@@ -2225,7 +2225,7 @@ class Logger : public base::threading::ThreadSafe, public Loggable {
     base::utils::safeDelete(m_typedConfigurations);
   }
 
-  virtual inline void log(el::base::type::ostream_t& os) const {
+  virtual inline void log(el::base::type::ostream_t& os) const override {
     os << m_id.c_str();
   }
 
@@ -2729,7 +2729,7 @@ extern ELPP_EXPORT base::type::StoragePointer elStorage;
 #define ELPP el::base::elStorage
 class DefaultLogDispatchCallback : public LogDispatchCallback {
  protected:
-  void handle(const LogDispatchData* data);
+  void handle(const LogDispatchData* data) override;
  private:
   const LogDispatchData* m_data;
   void dispatch(base::type::string_t&& logLine);
@@ -2768,7 +2768,7 @@ class AsyncDispatchWorker : public base::IWorker, public base::threading::Thread
 namespace base {
 class DefaultLogBuilder : public LogBuilder {
  public:
-  base::type::string_t build(const LogMessage* logMessage, bool appendNewLine) const;
+  base::type::string_t build(const LogMessage* logMessage, bool appendNewLine) const override;
 };
 /// @brief Dispatches log messages
 class LogDispatcher : base::NoCopy {
