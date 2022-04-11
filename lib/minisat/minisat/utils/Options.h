@@ -134,7 +134,7 @@ class DoubleOption : public Option
     operator      double&  (void)       { return value; }
     DoubleOption& operator=(double x)   { value = x; return *this; }
 
-    virtual bool parse(const char* str){
+    virtual bool parse(const char* str) override {
         const char* span = str; 
 
         if (!match(span, "-") || !match(span, name) || !match(span, "="))
@@ -158,7 +158,7 @@ class DoubleOption : public Option
         return true;
     }
 
-    virtual void help (bool verbose = false){
+    virtual void help (bool verbose = false) override {
         fprintf(stderr, "  -%-12s = %-8s %c%4.2g .. %4.2g%c (default: %g)\n", 
                 name, type_name, 
                 range.begin_inclusive ? '[' : '(', 
@@ -192,7 +192,7 @@ class IntOption : public Option
     operator   int32_t&  (void)       { return value; }
     IntOption& operator= (int32_t x)  { value = x; return *this; }
 
-    virtual bool parse(const char* str){
+    virtual bool parse(const char* str) override {
         const char* span = str; 
 
         if (!match(span, "-") || !match(span, name) || !match(span, "="))
@@ -215,7 +215,7 @@ class IntOption : public Option
         return true;
     }
 
-    virtual void help (bool verbose = false){
+    virtual void help (bool verbose = false) override {
         fprintf(stderr, "  -%-12s = %-8s [", name, type_name);
         if (range.begin == INT32_MIN)
             fprintf(stderr, "imin");
@@ -254,7 +254,7 @@ class Int64Option : public Option
     operator     int64_t&  (void)       { return value; }
     Int64Option& operator= (int64_t x)  { value = x; return *this; }
 
-    virtual bool parse(const char* str){
+    virtual bool parse(const char* str) override {
         const char* span = str; 
 
         if (!match(span, "-") || !match(span, name) || !match(span, "="))
@@ -277,7 +277,7 @@ class Int64Option : public Option
         return true;
     }
 
-    virtual void help (bool verbose = false){
+    virtual void help (bool verbose = false) override {
         fprintf(stderr, "  -%-12s = %-8s [", name, type_name);
         if (range.begin == INT64_MIN)
             fprintf(stderr, "imin");
@@ -314,7 +314,7 @@ class StringOption : public Option
     operator      const char*& (void)           { return value; }
     StringOption& operator=    (const char* x)  { value = x; return *this; }
 
-    virtual bool parse(const char* str){
+    virtual bool parse(const char* str) override {
         const char* span = str; 
 
         if (!match(span, "-") || !match(span, name) || !match(span, "="))
@@ -324,7 +324,7 @@ class StringOption : public Option
         return true;
     }
 
-    virtual void help (bool verbose = false){
+    virtual void help (bool verbose = false) override {
         fprintf(stderr, "  -%-10s = %8s\n", name, type_name);
         if (verbose){
             fprintf(stderr, "\n        %s\n", description);
@@ -350,7 +350,7 @@ class BoolOption : public Option
     operator    bool&    (void)       { return value; }
     BoolOption& operator=(bool b)     { value = b; return *this; }
 
-    virtual bool parse(const char* str){
+    virtual bool parse(const char* str) override {
         const char* span = str; 
         
         if (match(span, "-")){
@@ -364,7 +364,7 @@ class BoolOption : public Option
         return false;
     }
 
-    virtual void help (bool verbose = false){
+    virtual void help (bool verbose = false) override {
 
         fprintf(stderr, "  -%s, -no-%s", name, name);
 

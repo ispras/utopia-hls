@@ -72,7 +72,7 @@ class SimpSolver : public Solver {
 
     // Memory managment:
     //
-    virtual void garbageCollect();
+    virtual void garbageCollect() override;
 
 
     // Generate a (possibly simplified) DIMACS file:
