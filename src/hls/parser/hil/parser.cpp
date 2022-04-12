@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -30,6 +30,15 @@ std::shared_ptr<eda::hls::model::Model> parse(const std::string &filename) {
   }
 
   return Builder::get().create();
+}
+
+std::shared_ptr<mlir::hil::Model> parseToMlir(const std::string &filename) {
+
+  std::shared_ptr<Model> hilModel = parse(filename);
+  mlir::hil::Model mlirModel =
+      mlir::model::MLIRModule::load_from_model(*hilModel.get()).get_root();
+
+  return std::unique_ptr<mlir::hil::Model>(&mlirModel);
 }
 
 } // namespace eda::hls::parser::hil
