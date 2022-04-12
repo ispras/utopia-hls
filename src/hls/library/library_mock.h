@@ -376,19 +376,24 @@ inline void MetaElementMock::estimate(
     const Parameters &params, Indicators &indicators) const {
   unsigned inputCount = 0;
   unsigned latencySum = 0;
+  unsigned widthSum = 0;
 
   for (const auto &port : ports) {
+    widthSum+=port.width;
     if (port.direction == Port::IN)
       inputCount++;
     else
       latencySum += port.latency;
   }
 
-  double F = params.value("f");
-  double Fmax = 1000000.0;
+  unsigned S = params.value("stages");
+  double Areg = 1.0;
+  double Apipe = S * widthSum * Areg;
+  double Fmax = 300.0;
+  double F = Fmax * (1 - std::exp(0.5 - S));
   double C = inputCount * latencySum;
   double N = (C == 0 ? 0 : C * std::log((Fmax / (Fmax - F)) * ((C - 1) / C)));
-  double A = C * std::sqrt(N);
+  double A = C * std::sqrt(N) + Apipe;
   double P = A;
 
   indicators.frequency  = static_cast<unsigned>(F);
@@ -402,6 +407,7 @@ inline std::shared_ptr<MetaElement> MetaElementMock::create(
     const std::string &name) {
   Parameters params("");
   params.add(Parameter("f", Constraint(1, 1000), 100));
+  params.add(Parameter("stages", Constraint(0, 10000), 10));
 
   // Populate ports for different library elements
   Ports ports;
@@ -435,6 +441,7 @@ inline std::shared_ptr<MetaElement> MetaElementMock::create(
     const NodeType &nodetype) {
   Parameters params("");
   params.add(Parameter("f", Constraint(1, 1000), 100));
+  params.add(Parameter("stages", Constraint(0, 10000), 10));
 
   // Copy ports from model
   Ports ports;
@@ -484,19 +491,24 @@ struct PreLibraryElement {
   static void indicatorsTest(const Parameters &params, const Ports& ports, Indicators &indicators) {
     unsigned inputCount = 0;
     unsigned latencySum = 0;
+    unsigned widthSum = 0;
 
     for (const auto &port : ports) {
+      widthSum+=port.width;
       if (port.direction == Port::IN)
         inputCount++;
       else
         latencySum += port.latency;
     }
 
-    double F = params.value("f");
-    double Fmax = 1000000.0;
+    unsigned S = params.value("stages");
+    double Areg = 1.0;
+    double Apipe = S * widthSum * Areg;
+    double Fmax = 300.0;
+    double F = Fmax * (1 - std::exp(0.5 - S));
     double C = inputCount * latencySum;
     double N = (C == 0 ? 0 : C * std::log((Fmax / (Fmax - F)) * ((C - 1) / C)));
-    double A = C * std::sqrt(N);
+    double A = C * std::sqrt(N) + Apipe;
     double P = A;
 
     indicators.frequency  = static_cast<unsigned>(F);
@@ -524,6 +536,7 @@ static struct PreLibraryElements {
   PreLibraryElements() {
     Parameters parameters("");
     parameters.add(Parameter("f", Constraint(1, 1000), 100));
+    parameters.add(Parameter("stages", Constraint(0, 10000), 10));
 
     Port porta("a", Port::IN, 0, 4), portb("b", Port::IN, 0, 4);
     Port portc("c", Port::OUT, 1, 4);

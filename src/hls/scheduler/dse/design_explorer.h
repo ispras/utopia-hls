@@ -48,6 +48,7 @@ public:
         Constraint constr(1000, 500000);
         tempParams = new Parameters(node->name, metaElement->params);
         tempParams->add(Parameter("f", constr, constr.max)); // FIXME
+        tempParams->add(Parameter("stages", Constraint(0, 10000), 10));  // FIXME
       }
 
       metaElement->estimate(
