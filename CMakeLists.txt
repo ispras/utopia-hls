@@ -29,6 +29,16 @@ else()
   message(STATUS "CT_DIR env var is not set.")
 endif()
 
+# Use custom build of CTemplate if CT_DIR env var is specified
+if(DEFINED ENV{XERCES_DIR})
+  message(STATUS "XERCES_DIR env var is set.")
+  set(XERCES_DIR $ENV{XERCES_DIR})
+  link_directories(${XERCES_DIR}/lib)
+  set(CMAKE_CXX_FLAGS "-I${XERCES_DIR}/include ${CMAKE_CXX_FLAGS}")
+else()
+  message(STATUS "XERCES_DIR env var is not set.")
+endif()
+
 include_directories(lib/easyloggingpp)
 include_directories(lib/minisat)
 

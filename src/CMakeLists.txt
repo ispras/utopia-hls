@@ -8,6 +8,7 @@ project(Utopia VERSION 0.0)
 # The project executable and dependencies.
 set(MAIN_TARGET umain)
 set(Z3_LIBRARY z3)
+set(XERCES_LIBRARY xerces-c)
 set(LPSOLVE55_LIBRARY lpsolve55)
 set(DL_LIBRARY dl)
 set(COLAMD_LIBRARY colamd)
@@ -135,6 +136,7 @@ target_link_libraries(${MAIN_LIBRARY}
   ${DL_LIBRARY}
   ${COLAMD_LIBRARY}
   ${Z3_LIBRARY}
+  ${XERCES_LIBRARY}
   ${STDCXXFS_LIBRARY}
   ${CTEMPLATE_LIBRARY}
   ${MINISAT_LIBRARY}
