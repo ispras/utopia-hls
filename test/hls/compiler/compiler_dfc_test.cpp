@@ -169,28 +169,19 @@ DFC_KERNEL(IDCT) {
   }
 };
 
-void dfcIdctTest() {
+void dfcIdctCompilerTest() {
   dfc::params args;
   IDCT kernel(args);
 
   std::shared_ptr<eda::hls::model::Model> model =
     eda::hls::parser::dfc::Builder::get().create("IDCT");
-//  std::cout << *model << std::endl;
 
-//  std::ofstream output("dfc_idct_test.dot");
-//  eda::hls::model::printDot(output, *model);
-//  output.close();
-
-std::cout << "1\n";
   auto compiler = std::make_unique<eda::hls::compiler::Compiler>(*model);
-std::cout << "2\n";
   auto circuit = compiler->constructCircuit("IDCT");
-std::cout << "3\n";
   compiler->printFiles("outputFirrtlIdct.mlir", "outputVerilogIdct.v", "./test/data/dfc/idct/");
-std::cout << "4\n";
   compiler->printRndVlogTest("./test/data/dfc/idct/testbench.v", 10);
 }
 
-TEST(DfcTest, DfcIdctTest) {
-  dfcIdctTest();
+TEST(DfcTest, DfcIdctCompilerTest) {
+  dfcIdctCompilerTest();
 }
