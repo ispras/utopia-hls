@@ -20,36 +20,36 @@ bool testMiniSat() {
   Minisat::Solver solver;
 
   // Create variables.
-  auto A = solver.newVar();
-  auto B = solver.newVar();
-  auto C = solver.newVar();
+  auto x = solver.newVar();
+  auto y = solver.newVar();
+  auto z = solver.newVar();
 
   // Create the clauses.
-  solver.addClause( mkLit(A),  mkLit(B),  mkLit(C));
-  solver.addClause(~mkLit(A),  mkLit(B),  mkLit(C));
-  solver.addClause( mkLit(A), ~mkLit(B),  mkLit(C));
-  solver.addClause( mkLit(A),  mkLit(B), ~mkLit(C));
+  solver.addClause( mkLit(x),  mkLit(y),  mkLit(z));
+  solver.addClause(~mkLit(x),  mkLit(y),  mkLit(z));
+  solver.addClause( mkLit(x), ~mkLit(y),  mkLit(z));
+  solver.addClause( mkLit(x),  mkLit(y), ~mkLit(z));
 
   // Check for solution and retrieve model if found.
-  auto sat = solver.solve();
+  auto verdict = solver.solve();
 
-  if (sat) {
+  if (verdict) {
     std::cout << "SAT\n"
               << "Model found:\n";
-    std::cout << "A := " 
-              << (solver.modelValue(A) == l_True) 
+    std::cout << "x = " 
+              << (solver.modelValue(x) == l_True) 
               << '\n';
-    std::cout << "B := " 
-              << (solver.modelValue(B) == l_True)
+    std::cout << "y = " 
+              << (solver.modelValue(y) == l_True)
               << '\n';
-    std::cout << "C := " 
-              << (solver.modelValue(C) == l_True)
+    std::cout << "z = " 
+              << (solver.modelValue(z) == l_True)
               << '\n';
   } else {
     std::cout << "UNSAT\n";
   }
 
-  return sat;
+  return verdict;
 }
 
 TEST(MiniSatTest, MiniSatSimpleTest) {
