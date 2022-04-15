@@ -7,115 +7,115 @@
 	<ipxact:components>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="add" version="1.0"/>
-			<ipxact:name>./add/1.0/add.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/add/1.0/add.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="C128" version="1.0"/>
-			<ipxact:name>./C128/1.0/C128.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/C128/1.0/C128.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="C181" version="1.0"/>
-			<ipxact:name>./C181/1.0/C181.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/C181/1.0/C181.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="C4" version="1.0"/>
-			<ipxact:name>./C4/1.0/C4.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/C4/1.0/C4.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="C8192" version="1.0"/>
-			<ipxact:name>./C8192/1.0/C8192.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/C8192/1.0/C8192.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="clip" version="1.0"/>
-			<ipxact:name>./clip/1.0/clip.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/clip/1.0/clip.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="dup_2" version="1.0"/>
-			<ipxact:name>./dup_2/1.0/dup_2.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/dup_2/1.0/dup_2.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="in" version="1.0"/>
-			<ipxact:name>./in/1.0/in.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/in/1.0/in.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="mul" version="1.0"/>
-			<ipxact:name>./mul/1.0/mul.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/mul/1.0/mul.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="out" version="1.0"/>
-			<ipxact:name>./out/1.0/out.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/out/1.0/out.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="shl_11" version="1.0"/>
-			<ipxact:name>./shl_11/1.0/shl_11.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/shl_11/1.0/shl_11.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="shl_8" version="1.0"/>
-			<ipxact:name>./shl_8/1.0/shl_8.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/shl_8/1.0/shl_8.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="shr_14" version="1.0"/>
-			<ipxact:name>./shr_14/1.0/shr_14.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/shr_14/1.0/shr_14.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="shr_3" version="1.0"/>
-			<ipxact:name>./shr_3/1.0/shr_3.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/shr_3/1.0/shr_3.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="shr_8" version="1.0"/>
-			<ipxact:name>./shr_8/1.0/shr_8.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/shr_8/1.0/shr_8.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="sub" version="1.0"/>
-			<ipxact:name>./sub/1.0/sub.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/sub/1.0/sub.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="W1" version="1.0"/>
-			<ipxact:name>./W1/1.0/W1.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/W1/1.0/W1.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="W1_add_W7" version="1.0"/>
-			<ipxact:name>./W1_add_W7/1.0/W1_add_W7.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/W1_add_W7/1.0/W1_add_W7.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="W1_sub_W7" version="1.0"/>
-			<ipxact:name>./W1_sub_W7/1.0/W1_sub_W7.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/W1_sub_W7/1.0/W1_sub_W7.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="W2" version="1.0"/>
-			<ipxact:name>./W2/1.0/W2.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/W2/1.0/W2.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="W2_add_W6" version="1.0"/>
-			<ipxact:name>./W2_add_W6/1.0/W2_add_W6.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/W2_add_W6/1.0/W2_add_W6.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="W2_sub_W6" version="1.0"/>
-			<ipxact:name>./W2_sub_W6/1.0/W2_sub_W6.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/W2_sub_W6/1.0/W2_sub_W6.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="W3" version="1.0"/>
-			<ipxact:name>./W3/1.0/W3.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/W3/1.0/W3.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="W3_add_W5" version="1.0"/>
-			<ipxact:name>./W3_add_W5/1.0/W3_add_W5.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/W3_add_W5/1.0/W3_add_W5.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="W3_sub_W5" version="1.0"/>
-			<ipxact:name>./W3_sub_W5/1.0/W3_sub_W5.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/W3_sub_W5/1.0/W3_sub_W5.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="W5" version="1.0"/>
-			<ipxact:name>./W5/1.0/W5.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/W5/1.0/W5.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="W6" version="1.0"/>
-			<ipxact:name>./W6/1.0/W6.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/W6/1.0/W6.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="W7" version="1.0"/>
-			<ipxact:name>./W7/1.0/W7.1.0.xml</ipxact:name>
+			<ipxact:name>./src/hls/library/IP-XACT/ispras/ip.hw/W7/1.0/W7.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 	</ipxact:components>
 	<ipxact:vendorExtensions>
