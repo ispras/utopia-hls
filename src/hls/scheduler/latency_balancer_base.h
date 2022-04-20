@@ -2,11 +2,11 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 /// \file
-/// This file contains the declaration of the LatencyBalancer class, that 
+/// This file contains the declaration of the LatencyBalancerBase class, that 
 /// is the base class for all schedulers.
 ///
 /// \author <a href="mailto:lebedev@ispras.ru">Mikhail Lebedev</a>
@@ -23,27 +23,10 @@ using namespace eda::hls::model;
 
 namespace eda::hls::scheduler {
 
-enum BalanceMode {
-  /// Balance the flows, if possible
-  FlowSimple,
-  
-  /// Balance the flows with blockings evaluation
-  FlowBlocking,
-  
-  /// Calculate the schedule using linear programming
-  LatencyLP,
-  
-  /// Calculate the ASAP schedule
-  LatencyASAP,
-  
-  /// Calculate the ALAP schedule
-  LatencyALAP
-};
-
-class LatencyBalancer {
+class LatencyBalancerBase {
 public:
-  LatencyBalancer() : graphTime(0) {}
-  virtual ~LatencyBalancer() {}
+  LatencyBalancerBase() : graphTime(0) {}
+  virtual ~LatencyBalancerBase() {}
 
   /// Schedules the specified model.
   virtual void balance(Model &model) = 0; 

@@ -96,10 +96,11 @@ add_library(${MAIN_LIBRARY}
   hls/xmlparser/xmlparser.cpp
   hls/scheduler/dse/design_explorer.h
   hls/scheduler/dijkstra.cpp
+  hls/scheduler/flow_solver.cpp
+  hls/scheduler/latency_solver.cpp
   hls/scheduler/lp_helper.cpp
   hls/scheduler/param_optimizer.cpp
-  hls/scheduler/scheduler.cpp
-  hls/scheduler/solver.cpp
+  hls/scheduler/latency_balancer_base.h
   hls/scheduler/simulated_annealing.cpp
   rtl/compiler/compiler.cpp
   rtl/library/flibrary.cpp

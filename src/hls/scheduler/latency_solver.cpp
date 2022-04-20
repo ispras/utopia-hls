@@ -2,50 +2,39 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
-#include "hls/scheduler/solver.h"
+#include "hls/scheduler/latency_solver.h"
 
 #include <cassert>
 #include <iostream>
-#include <memory>
 
 namespace eda::hls::scheduler {
 
-std::shared_ptr<double[]> makeCoeffs(const std::vector<std::string> &);
-float sumFlows(const std::vector<Port*> &);
-
-LpSolver::~LpSolver() { 
+LatencyLpSolver::~LatencyLpSolver() { 
   deleteBuffers();
   helper.reset(); 
 }
 
-void LpSolver::deleteBuffers() {
+void LatencyLpSolver::deleteBuffers() {
   for (const auto *buf : buffers) {
     delete buf;
   }
 }
 
-void LpSolver::reset() {
+void LatencyLpSolver::reset() {
   deleteBuffers();
   buffers = std::vector<Buffer*>();
   sinks = std::vector<std::string>();
 }
 
-void LpSolver::balance(Model &model, BalanceMode mode, Verbosity verbosity) {
+void LatencyLpSolver::balance(Model &model, Verbosity verbosity) {
   const Graph *graph = model.main();
   helper.setVerbosity(verbosity);
 
-  // Generate a problem to solve
-  switch (mode) {
-  case LatencyLP:
-    balanceLatency(graph);
-    break;
-  default:
-    balanceFlows(mode, graph);
-  }
+  balanceLatency(graph);
 
   // Solve
   helper.printProblem();
@@ -53,11 +42,10 @@ void LpSolver::balance(Model &model, BalanceMode mode, Verbosity verbosity) {
   helper.printStatus();
   //helper.printResults();
 
-  if (mode == LatencyLP) {
-    insertBuffers(model);
-    collectGraphTime();
-    std::cout << "Max time: " << graphTime << std::endl;
-  }
+  insertBuffers(model);
+  collectGraphTime();
+  std::cout << "Max time: " << graphTime << std::endl;
+
   lastStatus = helper.getStatus();
 
   // Reset solver for next problem
@@ -65,7 +53,7 @@ void LpSolver::balance(Model &model, BalanceMode mode, Verbosity verbosity) {
   reset();
 }
 
-void LpSolver::insertBuffers(Model &model) {
+void LatencyLpSolver::insertBuffers(Model &model) {
   std::vector<double> latencies = helper.getResults();
   unsigned bufsInserted = 0;
   for (const auto *buf : buffers) {
@@ -81,7 +69,7 @@ void LpSolver::insertBuffers(Model &model) {
   std::cout << "Total buffers inserted: " << bufsInserted << std::endl;
 }
 
-void LpSolver::collectGraphTime() {
+void LatencyLpSolver::collectGraphTime() {
   std::vector<SolverVariable*> sinkVars = helper.getVariables(sinks);
   std::vector<double> latencies = helper.getResults();
   unsigned maxTime = 0;
@@ -94,7 +82,7 @@ void LpSolver::collectGraphTime() {
   graphTime = maxTime;
 }
 
-void LpSolver::balanceLatency(const Graph *graph) { 
+void LatencyLpSolver::balanceLatency(const Graph *graph) { 
 
   for (const Node *node : graph->nodes) {
     std::string varName = TimePrefix + node->name;
@@ -126,7 +114,7 @@ void LpSolver::balanceLatency(const Graph *graph) {
   helper.setMin();
 }
 
-void LpSolver::synchronizeInput(const std::string &varName) {
+void LatencyLpSolver::synchronizeInput(const std::string &varName) {
   std::vector<std::string> name{varName};
   std::vector<double> value{1.0};
 
@@ -134,7 +122,7 @@ void LpSolver::synchronizeInput(const std::string &varName) {
   helper.addConstraint(name, value, OperationType::Equal, 0);
 }
 
-void LpSolver::genLatencyConstraint(const std::string &dstName, 
+void LatencyLpSolver::genLatencyConstraint(const std::string &dstName, 
     const std::string &srcName, unsigned srcLatency) {
   std::vector<std::string> names{TimePrefix + dstName, TimePrefix + srcName};
   std::vector<double> values{1.0, -1.0};
@@ -144,7 +132,7 @@ void LpSolver::genLatencyConstraint(const std::string &dstName,
       srcLatency);
 }
 
-void LpSolver::genDeltaConstraint(const std::string &dstName, 
+void LatencyLpSolver::genDeltaConstraint(const std::string &dstName, 
     const std::string &srcName, std::vector<std::string> &deltas) {
   std::vector<double> values{1.0, -1.0, 1.0};
   const std::string deltaName = DeltaPrefix + dstName + "_" + srcName;
@@ -157,7 +145,7 @@ void LpSolver::genDeltaConstraint(const std::string &dstName,
   helper.addConstraint(constrNames, values, OperationType::Equal, 0);
 }
 
-void LpSolver::genBufferConstraint(const std::string &dstName, 
+void LatencyLpSolver::genBufferConstraint(const std::string &dstName, 
     const std::string &srcName, unsigned srcLatency, Chan *channel) {
   std::vector<double> values{1.0, -1.0, 1.0};
   const std::string bufName = BufferPrefix + dstName + "_" + srcName;
@@ -169,78 +157,6 @@ void LpSolver::genBufferConstraint(const std::string &dstName,
   // buf_next_prev = t_next - (t_prev + prev_latency)
   helper.addConstraint(constrNames, values, OperationType::Equal, 
       -1.0 * srcLatency);
-}
-
-void LpSolver::balanceFlows(BalanceMode mode, const Graph *graph) {
-  
-  for (const auto *node : graph->nodes) {
-    checkFlows(node);
-    std::string nodeName = node->name;
-    helper.addVariable(nodeName, node);
-    genNodeConstraints(nodeName);
-    if (node->isSink()) {
-      sinks.push_back(node->name);
-    }   
-  }
-
-  // Add constraints for channels
-  if (mode == FlowSimple) {
-    // flow_src*coeff_src == flow_dst*coeff_dst
-    genFlowConstraints(graph, OperationType::Equal);
-  }
-
-  if (mode == FlowBlocking) {
-    // flow_src*coeff_src >= flow_dst*coeff_dst
-    genFlowConstraints(graph, OperationType::GreaterOrEqual);
-  }
-
-  // Maximize sink flow
-  helper.setObjective(sinks, makeCoeffs(sinks).get());
-  helper.setMax();
-}
-
-std::shared_ptr<double[]> makeCoeffs(const std::vector<std::string> &sinks) {
-  std::shared_ptr<double[]> sinkCoeffs(new double[sinks.size()]);
-    for (unsigned int i = 0; i < sinks.size(); i++) {
-      sinkCoeffs[i] = 1.0;
-    }
-  return sinkCoeffs;
-}
-
-void LpSolver::genNodeConstraints(const std::string &nodeName) {
-  std::vector<std::string> names{nodeName};
-  std::vector<double> valOne{1.0};
-
-  // Add 'coeff >= 0.01'
-  helper.addConstraint(names, valOne, OperationType::GreaterOrEqual, 0.01);
-  // Add 'coeff <= 1'
-  helper.addConstraint(names, valOne, OperationType::LessOrEqual, 1);
-}
-
-void LpSolver::genFlowConstraints(const Graph *graph, OperationType type) {
-  for (const auto* channel : graph->chans) {
-    const Binding src = channel->source;
-    const Binding dst = channel->target;
-    std::vector<std::string> names{src.node->name, dst.node->name};
-    std::vector<double> values{src.port->flow, -1.0 * dst.port->flow};
-
-    helper.addConstraint(names, values, type,0);
-  }
-}
-
-void LpSolver::checkFlows(const Node *node) {
-  if (node->isMerge() || node->isSplit()) {
-    assert((sumFlows(node->type.inputs) == sumFlows(node->type.outputs))
-      && ("Input & output flows for " + node->name + " do not match!").c_str());
-  }
-}
-
-float sumFlows(const std::vector<Port*> &ports) {
-  float sum = 0;
-  for (const auto *port : ports) {
-    sum += port->flow;
-  }
-  return sum;
 }
 
 }  // namespace eda::hls::scheduler

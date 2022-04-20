@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 /// \file
@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "hls/scheduler/scheduler.h"
+#include "hls/scheduler/latency_balancer_base.h"
 #include "util/singleton.h"
 
 #include <deque>
@@ -27,19 +27,27 @@ using namespace eda::util;
 
 namespace eda::hls::scheduler {
 
-class DijkstraBalancer final : public LatencyBalancer, 
+enum LatencyBalanceMode {
+  /// Calculate the ASAP schedule
+  ASAP,
+  
+  /// Calculate the ALAP schedule
+  ALAP
+};
+
+class DijkstraBalancer final : public LatencyBalancerBase, 
     public Singleton<DijkstraBalancer> {
 public:
   friend Singleton<DijkstraBalancer>;
   ~DijkstraBalancer() {}
   void balance(Model &model) override {
-    balance(model, BalanceMode::LatencyASAP);
+    balance(model, LatencyBalanceMode::ASAP);
   }
   
-  void balance(Model &model, BalanceMode mode);
+  void balance(Model &model, LatencyBalanceMode mode);
 
 private:
-  DijkstraBalancer() : mode(BalanceMode::LatencyASAP) {}
+  DijkstraBalancer() : mode(LatencyBalanceMode::ASAP) {}
   void reset();
   void init(const Graph *graph);
 
@@ -71,7 +79,7 @@ private:
 
   std::deque<const Chan*> toVisit;
   std::map<const Node*, unsigned> nodeMap;
-  BalanceMode mode;
+  LatencyBalanceMode mode;
   std::vector<const Node*> terminalNodes;
 };
 

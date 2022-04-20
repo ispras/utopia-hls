@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -64,14 +64,14 @@ void DijkstraBalancer::visitSinks(const Graph *graph) {
 }
 
 const Node* DijkstraBalancer::getNext(const Chan *chan) {
-  return mode == BalanceMode::LatencyASAP ? chan->target.node :
-    mode == BalanceMode::LatencyALAP ? chan->source.node : nullptr;
+  return mode == LatencyBalanceMode::ASAP ? chan->target.node :
+    mode == LatencyBalanceMode::ALAP ? chan->source.node : nullptr;
 }
 
 void DijkstraBalancer::addConnections(std::vector<Chan*> &connections, 
     const Node *next) {
-  if (mode == BalanceMode::LatencyASAP) connections = next->outputs;
-  if (mode == BalanceMode::LatencyALAP) connections = next->inputs;
+  if (mode == LatencyBalanceMode::ASAP) connections = next->outputs;
+  if (mode == LatencyBalanceMode::ALAP) connections = next->inputs;
   // Add neighbours to the queue
   toVisit.insert(toVisit.end(), connections.begin(), connections.end());
   // Collect sinks or sources
@@ -80,16 +80,16 @@ void DijkstraBalancer::addConnections(std::vector<Chan*> &connections,
   }
 }
 
-void DijkstraBalancer::balance(Model &model, BalanceMode balanceMode) {
+void DijkstraBalancer::balance(Model &model, LatencyBalanceMode balanceMode) {
   mode = balanceMode;
   const Graph *graph = model.main();
   init(graph);
 
-  if (mode == BalanceMode::LatencyASAP) {
+  if (mode == LatencyBalanceMode::ASAP) {
     visitSources(graph);
   }
 
-  if (mode == BalanceMode::LatencyALAP) {
+  if (mode == LatencyBalanceMode::ALAP) {
     visitSinks(graph);
   }
 
@@ -118,10 +118,10 @@ void DijkstraBalancer::insertBuffers(Model &model) {
       const Node *predNode = pred->source.node;
       int delta = 0;
       // Compute delta between neighbouring nodes
-      if (mode == BalanceMode::LatencyASAP) {
+      if (mode == LatencyBalanceMode::ASAP) {
         delta = curTime - (nodeMap[predNode] + pred->source.port->latency);
       }
-      if (mode == BalanceMode::LatencyALAP) {
+      if (mode == LatencyBalanceMode::ALAP) {
         delta = (nodeMap[predNode] - pred->source.port->latency) - curTime;
       }
       assert(delta >= 0 && ("Delta for channel " + pred->name + " < 0").c_str());

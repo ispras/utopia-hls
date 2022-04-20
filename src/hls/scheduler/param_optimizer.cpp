@@ -10,7 +10,7 @@
 #include "hls/model/model.h"
 #include "hls/scheduler/dse/design_explorer.h"
 #include "hls/scheduler/param_optimizer.h"
-#include "hls/scheduler/solver.h"
+#include "hls/scheduler/latency_solver.h"
 
 #include <cassert>
 #include <iostream>
@@ -146,8 +146,8 @@ void ParametersOptimizer::estimate(Model& model,
   // Update the values of the parameters.
   updateFrequency(model, params, frequency);
   // Balance flows and align times.
-  LpSolver::get().balance(model);
-  indicators.latency = LpSolver::get().getGraphLatency();
+  LatencyLpSolver::get().balance(model);
+  indicators.latency = LatencyLpSolver::get().getGraphLatency();
   // Estimate overall design indicators
   dse::DesignExplorer::get().estimateIndicators(model, params, indicators);
   

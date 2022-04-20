@@ -2,12 +2,12 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 /// \file
-/// This file contains the declaration of the LpSolver class  and its
-/// supplement structures, that can schedule or balance the flows in the 
+/// This file contains the declaration of the LatencyLpSolver class  and its
+/// supplement structures, that can schedule or balance latencies in the 
 /// dataflow graph using linear programming.
 ///
 /// \author <a href="mailto:lebedev@ispras.ru">Mikhail Lebedev</a>
@@ -15,9 +15,11 @@
 
 #pragma once
 
+#include "hls/scheduler/latency_balancer_base.h"
 #include "hls/scheduler/lp_helper.h"
-#include "hls/scheduler/scheduler.h"
 #include "util/singleton.h"
+
+#include <memory>
 
 using namespace eda::hls::model;
 using namespace eda::util;
@@ -33,24 +35,24 @@ struct Buffer final {
   unsigned position;
 };
 
-class LpSolver final : public LatencyBalancer, public Singleton<LpSolver> {
+class LatencyLpSolver final : public LatencyBalancerBase, public Singleton<LatencyLpSolver> {
 
 public:
 
-  friend Singleton<LpSolver>;
+  friend Singleton<LatencyLpSolver>;
 
-  ~LpSolver();
+  ~LatencyLpSolver();
 
-  void balance(Model &model, BalanceMode mode, Verbosity verbosity);
+  void balance(Model &model, Verbosity verbosity);
 
   void balance(Model &model) override { 
-    balance(model, BalanceMode::LatencyLP, Verbosity::Full); 
+    balance(model, Verbosity::Full); 
   }
 
   int getStatus() { return lastStatus; }
 
 private:
-  LpSolver() : helper(LpSolverHelper::get()), lastStatus(helper.getStatus()) {}
+  LatencyLpSolver() : helper(LpSolverHelper::get()), lastStatus(helper.getStatus()) {}
   void deleteBuffers();
   void reset();
 
@@ -75,18 +77,14 @@ private:
   /// Generates the constraint for input.
   void synchronizeInput(const std::string &varName);
 
-  /// Checks the sum input & output flows of a split/merge node to be equal.
-  void checkFlows(const Node *node);
+  inline std::shared_ptr<double[]> makeCoeffs(const std::vector<std::string> &sinks) {
+    std::shared_ptr<double[]> sinkCoeffs(new double[sinks.size()]);
+      for (unsigned int i = 0; i < sinks.size(); i++) {
+        sinkCoeffs[i] = 1.0;
+      }
+    return sinkCoeffs;
+  }
 
-  /// Balances the flows of the graph.
-  void balanceFlows(BalanceMode mode, const Graph *graph);
-
-  /// Generates the constraints for node's flow.
-  void genNodeConstraints(const std::string &nodeName);
-
-  /// Generates the constraints for inter-node flows.
-  void genFlowConstraints(const Graph *graph, OperationType type);
-  
   const std::string TimePrefix = "t_";
   const std::string FlowPrefix = "f_";
   const std::string DeltaPrefix = "delta_";

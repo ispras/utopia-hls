@@ -11,7 +11,6 @@
 #include "hls/library/library.h"
 #include "hls/library/library_mock.h"
 #include "hls/scheduler/dijkstra.h"
-#include "hls/scheduler/scheduler.h"
 
 #include <ctemplate/template.h>
 

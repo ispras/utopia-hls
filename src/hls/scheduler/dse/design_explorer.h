@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2022 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -10,7 +10,6 @@
 
 #include "hls/library/library.h"
 #include "hls/model/model.h"
-#include "hls/scheduler/solver.h"
 #include "util/singleton.h"
 
 using namespace eda::hls::library;
