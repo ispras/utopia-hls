@@ -15,6 +15,7 @@
 #include <cassert>
 #include <fstream>
 #include <iostream>
+#include <random>
 #include <string>
 
 namespace eda::hls::scheduler {
@@ -69,24 +70,24 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
 
   std::function<void(std::vector<float>&, const std::vector<float>&, float)>
     step_fun = [&](std::vector<float>& x, const std::vector<float>& prev, float temp) -> void {
+      std::random_device rand_dev{};
+      std::mt19937 gen{rand_dev()};
+       std::normal_distribution<> distr{0, 1};
+
       for(int i = 0; i < x.size(); i++) {
         auto norm = normalize(prev[i], min_value, max_value);
-        auto diff = exp((-0.5 * prev[i] * prev[i])) / (std::sqrt(M_PI * 2));
-        x[i] = prev[i] + diff;
+        auto diff = abs(distr(gen));
+        x[i] = norm + diff;
       }
     };
 
   std::function<float(const std::vector<float>&)> target_function = [&](const std::vector<float>& parameters) -> float {
-    ostrm << "Current parameters before norm: " << std::endl;
-    ostrm << parameters[0] << " " << parameters[1] << std::endl;
     std::vector<float> denormalized_parameters;
     for(const auto& param : parameters) {
       denormalized_parameters.push_back(denormalize(param, min_value, max_value));
     }
     count_params(model, params, indicators, denormalized_parameters[0], defaultParams);
     model.undo();
-    ostrm << "Current parameters: " << std::endl;
-    ostrm << denormalized_parameters[0] << " " << denormalized_parameters[1] << std::endl;
     return indicators.frequency;
   };
 
@@ -94,7 +95,6 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
       limitation_function = [&](const std::vector<float>& parameters) -> float {
         float tmp = parameters[0];
         tmp = denormalize(tmp, min_value, max_value);
-        ostrm << "Counting area for freq: " << tmp << std::endl;
         count_params(model, params, indicators, tmp, defaultParams);
         model.undo();
         ostrm << "Area: " << indicators.area << std::endl;
@@ -109,6 +109,9 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
                                                                       limitation_function, step_fun, temp_fun);
   test.optimize(optimized_values);
 
+  auto res_freq = target_function(optimized_values);
+  auto limitation = limitation_function(optimized_values);
+
   ostrm << std::endl << "After optimization" << std::endl;
   ostrm << "Frequency: " << indicators.frequency << std::endl;
   ostrm << "Throughput: " << indicators.throughput << std::endl;
@@ -116,39 +119,10 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   ostrm << "Power: " << indicators.power << std::endl;
   ostrm << "Area: " << indicators.area << std::endl;
 
+  ostrm << "Target function: " << res_freq << std::endl;
+  ostrm << "Limitation: " << limitation << std::endl;
+
   ostrm.close();
-  /*int y1, y2;
-  int x2 = cur_f;
-  y2 = indicators.area;
-  int x1 = criteria.frequency.max - (criteria.frequency.max - criteria.frequency.min) / 10;
-  count_params(model, params, indicators, x1, defaultParams);
-  y1 = indicators.area;
-  float k = float(y1 - y2) / float(x1 - x2);
-  float b = float(y1 - x1 * k);
-  cur_f = (criteria.area.max - b) / k;
-  count_params(model, params, indicators, cur_f, defaultParams);
-  int sign;
-  if(indicators.area > criteria.area.max) {
-    sign = -1;
-  } else {
-    sign = 1;
-  }
-  int grid = (criteria.frequency.max - criteria.frequency.min) / 100;
-
-  // Optimization loop.
-  const unsigned N = 5;
-  for (unsigned i = 0; i < N; i++) {
-
-    cur_f += sign * grid;
-    count_params(model, params, indicators, cur_f, defaultParams);
-    // Check the constraints.
-    if (criteria.check(indicators)) {
-      break;
-    }
-    // Reset to the initial model state.
-    model.undo();
-  }*/
-
   return params;
 }
 
