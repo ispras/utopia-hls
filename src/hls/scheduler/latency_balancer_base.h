@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 /// \file
-/// This file contains the declaration of the LatencyBalancerBase class, that 
+/// This file contains the declaration of the LatencyBalancerBase class, that
 /// is the base class for all schedulers.
 ///
 /// \author <a href="mailto:lebedev@ispras.ru">Mikhail Lebedev</a>
@@ -29,14 +29,14 @@ public:
   virtual ~LatencyBalancerBase() {}
 
   /// Schedules the specified model.
-  virtual void balance(Model &model) = 0; 
+  virtual void balance(eda::hls::model::Model &model) = 0;
 
   /// Returns the maximum latency of the main graph.
   unsigned getGraphLatency() { return graphTime; }
 
 protected:
   /// Inserts the balancing buffers into the model.
-  virtual void insertBuffers(Model &model) = 0;
+  virtual void insertBuffers(eda::hls::model::Model &model) = 0;
 
   /// Computes the maximum latency of the main graph.
   virtual void collectGraphTime() = 0;

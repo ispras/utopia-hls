@@ -157,8 +157,8 @@ public:
     auto context = nodetypes_op.getContext();
     // Add nodetype
     auto in_attr =
-        InputArgAttr::get(context, chan_type.str(), new double{1.0}, "in");
-    auto out_attr = OutputArgAttr::get(context, chan_type.str(),
+        InputPortAttr::get(context, chan_type.str(), new double{1.0}, "in");
+    auto out_attr = OutputPortAttr::get(context, chan_type.str(),
                                        new double{1.0}, latency_, "out", "0");
     std::array<Attribute, 1> in_attrs{in_attr};
     std::array<Attribute, 1> out_attrs{out_attr};

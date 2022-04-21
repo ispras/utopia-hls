@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -151,7 +151,7 @@ class Library final : public Singleton<Library> {
 public:
   Library() {}
 
-  std::shared_ptr<MetaElement> find(const NodeType &nodetype);
+  std::shared_ptr<MetaElement> find(const eda::hls::model::NodeType &nodetype);
   std::shared_ptr<MetaElement> find(const std::string &name) const;
 
   void add(const std::shared_ptr<MetaElement> &metaElement) {

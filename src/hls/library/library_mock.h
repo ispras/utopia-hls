@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -31,7 +31,7 @@ struct MetaElementMock final : public MetaElement {
       const Parameters &params, Indicators &indicators) const override;
 
   static std::shared_ptr<MetaElement> create(const std::string &name);
-  static std::shared_ptr<MetaElement> create(const NodeType &nodetype);
+  static std::shared_ptr<MetaElement> create(const eda::hls::model::NodeType &nodetype);
 };
 
 inline std::unique_ptr<Element> MetaElementMock::construct(
@@ -440,7 +440,7 @@ inline void MetaElementMock::estimate(
 }*/
 
 inline std::shared_ptr<MetaElement> MetaElementMock::create(
-    const NodeType &nodetype) {
+    const eda::hls::model::NodeType &nodetype) {
 
   Parameters params("");
   //params.add(Parameter("f", Constraint(1, 1000), 100));

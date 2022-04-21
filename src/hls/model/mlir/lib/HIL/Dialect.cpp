@@ -71,14 +71,14 @@ void HILDialect::printAttribute(Attribute attr,
 }
 */
 
-void mlir::hil::InputArgAttr::print(mlir::AsmPrinter &printer) const {
+void mlir::hil::InputPortAttr::print(mlir::AsmPrinter &printer) const {
   printer << "<\"" <<
       getTypeName() <<
       "\"<" << getFlow()
       << ">" << " " << '"' << getName() << '"' << ">";
 }
 
-mlir::Attribute mlir::hil::InputArgAttr::parse(mlir::AsmParser &parser,
+mlir::Attribute mlir::hil::InputPortAttr::parse(mlir::AsmParser &parser,
                                                mlir::Type type) {
   if (parser.parseLess())
       return {};
@@ -100,13 +100,13 @@ mlir::Attribute mlir::hil::InputArgAttr::parse(mlir::AsmParser &parser,
     return get(parser.getContext(), typeName, flow, name);
 }
 
-void mlir::hil::OutputArgAttr::print(mlir::AsmPrinter &printer) const {
+void mlir::hil::OutputPortAttr::print(mlir::AsmPrinter &printer) const {
   printer << "<\"" << getTypeName() << "\"<" << getFlow()
       << ">" << " " << getLatency() << " " << '"' << getName()
       << '"' << (getValue().empty() ? "" : " = \"" + getValue() + "\"") << ">";
 }
 
-mlir::Attribute mlir::hil::OutputArgAttr::parse(mlir::AsmParser &parser,
+mlir::Attribute mlir::hil::OutputPortAttr::parse(mlir::AsmParser &parser,
                                                 mlir::Type type) {
   if (parser.parseLess())
       return {};

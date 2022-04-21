@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -524,8 +524,8 @@ std::shared_ptr<Circuit> Compiler::constructCircuit(const std::string& topModule
   return circuit;
 }
 
-Compiler::Compiler(const Model &model) :
-  model(std::make_shared<Model>(model)) {}
+Compiler::Compiler(const eda::hls::model::Model &model) :
+  model(std::make_shared<eda::hls::model::Model>(model)) {}
 
 void Compiler::printRndVlogTest(const std::string& tstPath, const int tstCnt) {
 

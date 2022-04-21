@@ -8,14 +8,16 @@
 
 #pragma once
 
+#include "HIL/Dialect.h"
+#include "HIL/Ops.h"
 #include "hls/model/model.h"
 
-#include "z3++.h"
+#include <z3++.h>
 
 #include <list>
 #include <memory>
 
-using namespace eda::hls::model;
+using namespace mlir::hil;
 
 namespace eda::hls::debugger {
 
@@ -30,13 +32,13 @@ public:
   }
 
   // Checks if models are equivalent.
-  bool equivalent(const Model &left, const Model &right) const;
+  bool equivalent(mlir::hil::Model &left, mlir::hil::Model &right) const;
 
   /// Returns source nodes for the graph.
-  std::vector<Node*> getSources(const Graph &graph) const;
+  std::vector<mlir::hil::Node*> getSources(mlir::hil::Graph &graph) const;
 
   /// Returns sink nodes for the graph.
-  std::vector<Node*> getSinks(const Graph &graph) const;
+  std::vector<mlir::hil::Node*> getSinks(mlir::hil::Graph &graph) const;
 
 private:
   EqChecker() {}
@@ -46,45 +48,53 @@ private:
   /* Methods that implement equivalence checking steps. */
 
   /// Checks if each of graph collections contain the main one.
-  bool match(const std::vector<Graph*> &left,
-      const std::vector<Graph*> &right,
-      std::pair<Graph*, Graph*> &matched) const;
+  bool match(const std::vector<mlir::hil::Graph*> &left,
+      const std::vector<mlir::hil::Graph*> &right,
+      std::pair<mlir::hil::Graph*, mlir::hil::Graph*> &matched) const;
 
  /// Checks if collections contain nodes with same names.
-  bool match(const std::vector<Node*> &left,
-      const std::vector<Node*> &right,
-      std::list<std::pair<Node*, Node*>> &matched) const;
+  bool match(const std::vector<mlir::hil::Node*> &left,
+      const std::vector<mlir::hil::Node*> &right,
+      std::list<std::pair<mlir::hil::Node*, mlir::hil::Node*>> &matched) const;
 
   /* Methods for model-to-solver interaction. */
 
   /// Creates formal expressions for the specified graph.
-  void createExprs(const Graph &graph, z3::context &ctx,
+  void createExprs(mlir::hil::Graph &graph, z3::context &ctx,
       z3::expr_vector &nodes) const;
 
   /// Creates constant expression from the binding.
-  z3::expr toConst(const Binding &bnd, z3::context &ctx) const;
+  z3::expr toConst(mlir::hil::Chan &ch, mlir::StringAttr bndName,
+      z3::context &ctx) const;
 
   /// Creates constant expression from the node.
-  z3::expr toConst(const Node &node, z3::context &ctx) const;
+  z3::expr toConst(mlir::hil::Node &node, z3::context &ctx) const;
 
   /// Creates input function call for the node-chan pair.
-  z3::expr toInFunc(const Node &node, const Chan &ch, z3::context &ctx) const;
+  z3::expr toInFunc(mlir::hil::Node &node, mlir::hil::Chan &ch,
+    z3::context &ctx) const;
 
   /// Calculates sort of the node.
-  z3::sort getSort(const Node &node, z3::context &ctx) const;
+  z3::sort getSort(mlir::hil::Node &node, z3::context &ctx) const;
 
-  /// Calculates sort of the port.
-  z3::sort getSort(const Port &port, z3::context &ctx) const;
+  /// Calculates sort of the named port.
+  z3::sort getSort(mlir::StringAttr name, z3::context &ctx) const;
 
   /// Returns sorts of the node's inputs.
-  z3::sort_vector getInSorts(const Node &node, z3::context &ctx) const;
+  z3::sort_vector getInSorts(mlir::hil::Node &node, z3::context &ctx) const;
 
   /// Returns arguments for function call that is constructed from the node.
-  z3::expr_vector getFuncArgs(const Node &node, z3::context &ctx) const;
+  z3::expr_vector getFuncArgs(mlir::hil::Node &node, z3::context &ctx) const;
 
   /* Utility methods to operate with model. */
 
   /// Returns parent model's name for the node.
-  std::string getModelName(const Node &node) const;
+  std::string getModelName(mlir::hil::Node &node) const;
+
+  /// Returns parent model's name for the channel.
+  std::string getModelName(mlir::hil::Chan &ch) const;
+
+  /// Returns name of the function that will be built from the node.
+  std::string getFuncName(mlir::hil::Node &node) const;
 };
 } // namespace eda::hls::debugger

@@ -46,6 +46,7 @@ MLIRModule MLIRModule::load_from_mlir_file(const std::string &filename) {
 MLIRModule MLIRModule::load_from_model(const eda::hls::model::Model &m) {
   std::stringstream buf;
   dump_model_mlir(m, buf);
+  std::cout << buf.str() << std::endl;
   return load_from_mlir(buf.str());
 }
 
@@ -101,12 +102,12 @@ MLIRBuilder<T>::build_model_from_mlir(MLIRModule &mlir_model,
   return builder.create();
 }
 
-template <> void MLIRBuilder<mlir::hil::InputArgAttr>::build() {
+template <> void MLIRBuilder<mlir::hil::InputPortAttr>::build() {
   builder_.addPort(node_.getName(), node_.getTypeName(),
                    std::to_string(*node_.getFlow()), "0");
 }
 
-template <> void MLIRBuilder<mlir::hil::OutputArgAttr>::build() {
+template <> void MLIRBuilder<mlir::hil::OutputPortAttr>::build() {
   builder_.addPort(node_.getName(), node_.getTypeName(),
                    std::to_string(*node_.getFlow()),
                    std::to_string(node_.getLatency()), node_.getValue());
@@ -117,14 +118,14 @@ template <> void MLIRBuilder<mlir::hil::NodeType>::build() {
   // Build inputs
   for (auto op : node_.commandArguments()) {
     auto in_port_op =
-        op.cast<mlir::Attribute>().cast<mlir::hil::InputArgAttr>();
+        op.cast<mlir::Attribute>().cast<mlir::hil::InputPortAttr>();
     MLIRBuilder::get(in_port_op, builder_).build();
   }
   // Build outputs
   builder_.startOutputs();
   for (auto op : node_.commandResults()) {
     auto out_port_op =
-        op.cast<mlir::Attribute>().cast<mlir::hil::OutputArgAttr>();
+        op.cast<mlir::Attribute>().cast<mlir::hil::OutputPortAttr>();
     MLIRBuilder::get(out_port_op, builder_).build();
   }
   builder_.endNodetype();

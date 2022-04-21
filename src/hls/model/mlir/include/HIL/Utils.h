@@ -8,7 +8,9 @@
 
 #pragma once
 
+#include "HIL/Ops.h"
 #include "mlir/Support/LLVM.h"
+
 #include <optional>
 #include <vector>
 
@@ -39,3 +41,19 @@ template <typename T, typename Container>
 std::optional<T> find_elem_by_type(Container&& c) {
   return find_elem_by_type<T>(c.begin(), c.end());
 }
+
+/* Utility methods for MLIR-based IR */
+
+namespace mlir::hil {
+  Graph* getGraph(Model &model, const std::string &name);
+  std::vector<Chan*> getInputs(Node &node);
+  std::vector<Chan*> getOutputs(Node &node);
+  std::vector<Chan*> getChans(Graph &graph);
+  std::vector<Node*> getNodes(Graph &graph);
+  bool isDelay(Node &node);
+  bool isKernel(Node &node);
+  bool isMerge(Node &node);
+  bool isSink(Node &node);
+  bool isSource(Node &node);
+  bool isSplit(Node &node);
+} // namespace mlir::hil

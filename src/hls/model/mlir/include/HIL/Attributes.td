@@ -11,13 +11,13 @@
 
 include "Dialect.td"
 
-def InputArgAttr : HIL_Attr<"InputArg"> {
+def InputPortAttr : HIL_Attr<"InputPort"> {
   let mnemonic = "input";
 
-  let summary = "Input argument";
+  let summary = "Input port argument";
 
   let description = [{
-    Input arg type
+    Input port arg type
   }];
 
   let parameters = (ins
@@ -28,13 +28,13 @@ def InputArgAttr : HIL_Attr<"InputArg"> {
   let hasCustomAssemblyFormat = 1;
 }
 
-def OutputArgAttr : HIL_Attr<"OutputArg"> {
+def OutputPortAttr : HIL_Attr<"OutputPort"> {
   let mnemonic = "output";
 
-  let summary = "Output argument";
+  let summary = "Output port argument";
 
   let description = [{
-    Output arg type
+    Output port arg type
   }];
 
   let parameters = (ins

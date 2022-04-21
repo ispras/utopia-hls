@@ -76,8 +76,8 @@ def HIL_NodeType : HIL_Op<"nodetype", [HasParent<"NodeTypes">]> {
 
   let arguments = (ins
     StrAttr:$name,
-    TypedArrayAttrBase<InputArgAttr, "input args">:$commandArguments,
-    TypedArrayAttrBase<OutputArgAttr, "output args">:$commandResults);
+    TypedArrayAttrBase<InputPortAttr, "input ports">:$commandArguments,
+    TypedArrayAttrBase<OutputPortAttr, "output ports">:$commandResults);
   let assemblyFormat = [{
     $name $commandArguments `=``>` $commandResults attr-dict
   }];

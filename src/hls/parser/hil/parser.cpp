@@ -34,9 +34,9 @@ std::shared_ptr<eda::hls::model::Model> parse(const std::string &filename) {
 
 std::shared_ptr<mlir::hil::Model> parseToMlir(const std::string &filename) {
 
-  std::shared_ptr<Model> hilModel = parse(filename);
-  mlir::hil::Model mlirModel =
-      mlir::model::MLIRModule::load_from_model(*hilModel.get()).get_root();
+  std::shared_ptr<eda::hls::model::Model> hilModel = parse(filename);
+  mlir::model::MLIRModule mlirModule = mlir::model::MLIRModule::load_from_model(*hilModel.get());
+  mlir::hil::Model mlirModel = mlirModule.get_root();
 
   return std::unique_ptr<mlir::hil::Model>(&mlirModel);
 }
