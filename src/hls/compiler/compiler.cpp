@@ -516,6 +516,7 @@ std::shared_ptr<Circuit> Compiler::constructCircuit(const std::string& topModule
   circuit = std::make_shared<Circuit>(topModuleName);
 
   for (const auto *nodetype : model->nodetypes) {
+    std::cout << nodetype->name << std::endl;
     circuit->addExternalModule(nodetype);
   }
   circuit->addFirModule(FirrtlModule(*model, topModuleName));

@@ -29,7 +29,7 @@ else()
   message(STATUS "CT_DIR env var is not set.")
 endif()
 
-# Use custom build of CTemplate if CT_DIR env var is specified
+# Use custom build of Xerces-C++ XML Parser if XERCES_DIR env var is specified
 if(DEFINED ENV{XERCES_DIR})
   message(STATUS "XERCES_DIR env var is set.")
   set(XERCES_DIR $ENV{XERCES_DIR})

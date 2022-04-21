@@ -8,12 +8,14 @@
 
 #pragma once
 
+#include "hls/library/ipxact_parser.h"
 #include "hls/library/library.h"
 #include "util/assert.h"
 
 #include <cmath>
 
 using namespace eda::hls::model;
+using namespace eda::hls::library;
 
 namespace eda::hls::library {
 
@@ -403,7 +405,7 @@ inline void MetaElementMock::estimate(
   indicators.area       = static_cast<unsigned>(A);
 }
 
-inline std::shared_ptr<MetaElement> MetaElementMock::create(
+/*inline std::shared_ptr<MetaElement> MetaElementMock::create(
     const std::string &name) {
   Parameters params("");
   params.add(Parameter("f", Constraint(1, 1000), 100));
@@ -414,10 +416,10 @@ inline std::shared_ptr<MetaElement> MetaElementMock::create(
   ports.push_back(Port("clock", Port::IN, 0, 1));
   ports.push_back(Port("reset", Port::IN, 0, 1));
 
-  /*if (name == "merge") {
+  if (name == "merge") {
     ports.push_back(Port("in1", Port::IN, 0, 1));
     ports.push_back(Port("in2", Port::IN, 0, 1));
-    ports.push_back(Port("out", Port::OUT, 1, 1));
+    ports.push_back(Port("outcreate", Port::OUT, 1, 1));
   } else if (name == "split") {
     ports.push_back(Port("in", Port::IN, 0, 1));
     ports.push_back(Port("out1", Port::OUT, 1, 1));
@@ -425,7 +427,7 @@ inline std::shared_ptr<MetaElement> MetaElementMock::create(
   } else if (name == "delay") {
     ports.push_back(Port("in", Port::IN, 0, 1));
     ports.push_back(Port("out", Port::OUT, 1, 1));
-  } else*/ if (name == "add1" || name == "sub1") {
+  } else if (name == "add1" || name == "sub1") {
     ports.push_back(Port("a", Port::IN, 0, 4));
     ports.push_back(Port("b", Port::IN, 0, 4));
     ports.push_back(Port("d", Port::OUT, 2, 1));
@@ -435,26 +437,28 @@ inline std::shared_ptr<MetaElement> MetaElementMock::create(
   }
 
   return std::shared_ptr<MetaElement>(new MetaElementMock(name, params, ports));
-}
+}*/
 
 inline std::shared_ptr<MetaElement> MetaElementMock::create(
     const NodeType &nodetype) {
+
   Parameters params("");
-  params.add(Parameter("f", Constraint(1, 1000), 100));
-  params.add(Parameter("stages", Constraint(0, 10000), 10));
+  //params.add(Parameter("f", Constraint(1, 1000), 100));
+  //params.add(Parameter("stages", Constraint(0, 10000), 10));
 
   // Copy ports from model
   Ports ports;
-  for (const auto *input: nodetype.inputs) {
-    ports.push_back(Port(input->name, Port::IN, input->latency, 16 /*arg->length*/));//TODO
+
+  /*for (const auto *input: nodetype.inputs) {
+    ports.push_back(Port(input->name, Port::IN, input->latency, 16));//TODO
   }
   for (const auto *output: nodetype.outputs) {
-    ports.push_back(Port(output->name, Port::OUT, output->latency, 16 /*arg->length*/));//TODO
+    ports.push_back(Port(output->name, Port::OUT, output->latency, 16));//TODO
   }
 
   // Add clk and rst ports: these ports are absent in the lists above.
   ports.push_back(Port("clock", Port::IN, 0, 1));
-  ports.push_back(Port("reset", Port::IN, 0, 1));
+  ports.push_back(Port("reset", Port::IN, 0, 1));*/
 
   std::string lowerCaseName = nodetype.name;
   unsigned i = 0;
@@ -462,8 +466,14 @@ inline std::shared_ptr<MetaElement> MetaElementMock::create(
     lowerCaseName[i] = tolower(lowerCaseName[i]);
     i++;
   }
-
-  return std::shared_ptr<MetaElement>(new MetaElementMock(lowerCaseName, params, ports));
+  /*std::cout << "MetaElementMock::create:" << std::endl;
+  for (const auto &[key, value] : XMLParser::get().comp_fnames) {
+    std::cout << key << std::endl << value << std::endl;
+  }*/
+  IPXACTParser::get().parseComponent(lowerCaseName, params, ports);
+  return std::shared_ptr<MetaElement>(new MetaElementMock(lowerCaseName,
+                                                          params,
+                                                          ports));
 }
 
 // MetaElement:
@@ -554,11 +564,11 @@ static struct PreLibraryElements {
 
 static struct LibraryInitializer {
   LibraryInitializer() {
-    /*Library::get().add(MetaElementMock::create("merge"));
-    Library::get().add(MetaElementMock::create("split"));
-    Library::get().add(MetaElementMock::create("delay"));*/
-    Library::get().add(MetaElementMock::create("add1"));
-    Library::get().add(MetaElementMock::create("sub1"));
+    //Library::get().add(MetaElementMock::create("merge"));
+    //Library::get().add(MetaElementMock::create("split"));
+    //Library::get().add(MetaElementMock::create("delay"));
+    //Library::get().add(MetaElementMock::create("add1"));
+    //Library::get().add(MetaElementMock::create("sub1"));
   }
 } libraryInitializer;
 

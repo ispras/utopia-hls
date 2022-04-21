@@ -9,9 +9,10 @@
 #include "gtest/gtest.h"
 
 #include "hls/compiler/compiler.h"
+#include "hls/library/ipxact_parser.h"
 #include "hls/model/printer.h"
 #include "hls/parser/hil/parser.h"
-#include "hls/xmlparser/xmlparser.h"
+#include "hls/scheduler/dijkstra.h"
 
 #include <iostream>
 #include <fstream>
@@ -19,23 +20,27 @@
 
 using namespace eda::hls::compiler;
 using namespace eda::hls::parser::hil;
-using namespace eda::hls::xmlparser;
+using namespace eda::hls::library;
+using namespace eda::hls::scheduler;
 
-int compileSimpleHilTest(const std::string &inputFilePath,
+int compileSimpleHilTest(const std::string &inputLibraryPath,
+                         const std::string &inputFilePath,
                          const std::string &outputFirrtlName,
                          const std::string &outputVerilogName,
                          const std::string &outputDirName) {
-  auto compiler = std::make_unique<Compiler>(*parse(inputFilePath));
-  auto xmlparser = std::make_unique<XMLParser>("./src/hls/library/IP-XACT/ispras/ip.hw/library_catalog/1.0/library_catalog.1.0.xml");
-  xmlparser->parseIPXACT();
-  //auto circuit = compiler->constructCircuit("main");
-  //compiler->printFiles(outputFirrtlName, outputVerilogName, outputDirName);
-  //compiler->printRndVlogTest(outputDirName + "testbench.v", 10);
+  std::shared_ptr<Model> model = parse(inputFilePath);
+  IPXACTParser::get().parseCatalog(inputLibraryPath);
+  DijkstraBalancer::get().balance(*model);
+  auto compiler = std::make_unique<Compiler>(*model);
+  auto circuit = compiler->constructCircuit("main");
+  compiler->printFiles(outputFirrtlName, outputVerilogName, outputDirName);
+  compiler->printRndVlogTest(outputDirName + "testbench.v", 10);
   return 0;
 }
 
 TEST(CompilerTest, CompileTestIdctTest) {
-  EXPECT_EQ(compileSimpleHilTest("./test/data/hil/idct.hil",
+  EXPECT_EQ(compileSimpleHilTest("./test/data/ipx/ispras/ip.hw/catalog/1.0/catalog.1.0.xml",
+                                 "./test/data/hil/idct.hil",
                                  "outputFirrtlIdct.mlir",
                                  "outputVerilogIdct.v",
                                  "./test/data/hil/idct/"), 0);
