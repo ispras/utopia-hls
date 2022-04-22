@@ -499,7 +499,18 @@ void Compiler::convertToSV(const std::string& inputFirrtlName) const {
 void Compiler::printFiles(const std::string& outputFirrtlName,
                           const std::string& outputVerilogName,
                           const std::string& outputDirectoryName) const {
-  std::filesystem::create_directory(outputDirectoryName);
+  int start = 0;
+  int end = outputDirectoryName.find("/");
+  std::string dir = "";
+  while (end != -1) {
+	dir = dir + outputDirectoryName.substr(start, end - start) + "/";
+	std::cout << dir << std::endl;
+	if (!std::filesystem::exists(dir)) {
+	  std::filesystem::create_directory(dir);
+	}
+    start = end + 1;
+    end = outputDirectoryName.find("/", start);
+  }
   std::ofstream outputFile;
   outputFile.open(outputDirectoryName + outputFirrtlName);
   printFirrtl(outputFile);
