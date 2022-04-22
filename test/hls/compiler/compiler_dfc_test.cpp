@@ -6,19 +6,17 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "hls/compiler/compiler.h"
+#include "hls/library/ipxact_parser.h"
 #include "hls/model/model.h"
 #include "hls/model/printer.h"
 #include "hls/parser/dfc/dfc.h"
 #include "hls/parser/dfc/internal/builder.h"
-
-#include "hls/compiler/compiler.h"
-//#include "hls/parser/hil/parser.h"
+#include "hls/scheduler/dijkstra.h"
 
 #include "gtest/gtest.h"
 
 #include <array>
-//#include <fstream>
-//#include <iostream>
 
 DFC_KERNEL(IDCT) {
   static const int W1 = 2841; // 2048*sqrt(2)*cos(1*pi/16)
@@ -169,19 +167,29 @@ DFC_KERNEL(IDCT) {
   }
 };
 
-void dfcIdctCompilerTest() {
+int dfcIdctCompilerTest(const std::string &inputLibraryPath,
+                                   const std::string &outputFirrtlName,
+                                   const std::string &outputVerilogName,
+                                   const std::string &outputDirName) {
   dfc::params args;
   IDCT kernel(args);
 
   std::shared_ptr<eda::hls::model::Model> model =
     eda::hls::parser::dfc::Builder::get().create("IDCT");
+	
+  eda::hls::library::IPXACTParser::get().parseCatalog(inputLibraryPath);
+  eda::hls::scheduler::DijkstraBalancer::get().balance(*model);
 
   auto compiler = std::make_unique<eda::hls::compiler::Compiler>(*model);
   auto circuit = compiler->constructCircuit("IDCT");
-  compiler->printFiles("outputFirrtlIdct.mlir", "outputVerilogIdct.v", "./test/data/dfc/idct/");
-  compiler->printRndVlogTest("./test/data/dfc/idct/testbench.v", 10);
+  compiler->printFiles(outputFirrtlName, outputVerilogName, outputDirName);
+  compiler->printRndVlogTest(outputDirName + "testbench.v", 10);
+  return 0;
 }
 
 TEST(DfcTest, DfcIdctCompilerTest) {
-  dfcIdctCompilerTest();
+  EXPECT_EQ(dfcIdctCompilerTest("./test/data/ipx/ispras/ip.hw/catalog/1.0/catalog.1.0.xml",
+                                                     "outputFirrtlIdct.mlir",
+                                                     "outputVerilogIdct.v",
+                                                     "./test/data/dfc/idct/"), 0);
 }
