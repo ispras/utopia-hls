@@ -29,6 +29,9 @@ MLIRModule MLIRModule::load_from_mlir(const std::string &s) {
   context->getOrLoadDialect<mlir::hil::HILDialect>();
   context->getOrLoadDialect<mlir::arith::ArithmeticDialect>();
   auto module = mlir::parseSourceString<mlir::ModuleOp>(s, context.get());
+  // TODO: rm debug print
+  mlir::ModuleOp module_op = module.get();
+  std::cout << module_op.getName().getValue().str() << std::endl;
   return {std::move(context), std::move(module)};
 }
 
@@ -46,6 +49,7 @@ MLIRModule MLIRModule::load_from_mlir_file(const std::string &filename) {
 MLIRModule MLIRModule::load_from_model(const eda::hls::model::Model &m) {
   std::stringstream buf;
   dump_model_mlir(m, buf);
+  // TODO: rm debug print
   std::cout << buf.str() << std::endl;
   return load_from_mlir(buf.str());
 }
