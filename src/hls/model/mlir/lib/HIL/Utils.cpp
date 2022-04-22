@@ -11,9 +11,13 @@
 #include "llvm/Support/Casting.h"
 #include "mlir/IR/BuiltinAttributes.h"
 
+#include <iostream>
+
 namespace mlir::hil {
 
   Graph* getGraph(Model &model, const std::string &name) {
+    std::cout << "Utils.cpp" << std::endl;
+    std::cout << model.name().str() << std::endl;
     auto &model_ops = model.getBody()->getOperations();
     std::vector<Graph> graphs =
         find_elems_by_type<Graph>(model_ops.begin(), model_ops.end());
@@ -115,7 +119,7 @@ namespace mlir::hil {
     return node.nodeTypeName() == "sink";
   }
 
-    bool isSource(mlir::hil::Node &node) {
+  bool isSource(mlir::hil::Node &node) {
     return node.nodeTypeName() == "source";
   }
 

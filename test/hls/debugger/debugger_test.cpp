@@ -22,6 +22,10 @@ bool eqCheckTest(const std::string &fileM, const std::string &fileM2) {
   std::shared_ptr<mlir::hil::Model> modelM2 = parseToMlir(fileM2);
   EqChecker checker = EqChecker::get();
 
+  std::cout << "debugger_test.cpp" << std::endl;
+  std::string modelMName = modelM.get()->name().str();
+  std::cout << modelMName << std::endl;
+
   return checker.equivalent(*modelM.get(), *modelM2.get());
 }
 

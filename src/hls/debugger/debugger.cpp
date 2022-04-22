@@ -10,6 +10,8 @@
 #include "HIL/Utils.h"
 #include "hls/debugger/debugger.h"
 
+#include <iostream>
+
 namespace eda::hls::debugger {
 
 std::unique_ptr<EqChecker> EqChecker::instance = nullptr;
@@ -19,6 +21,8 @@ bool EqChecker::equivalent(mlir::hil::Model &left,
 
   z3::context ctx;
   z3::expr_vector nodes(ctx);
+  std::cout << left.name().str() << std::endl;
+  std::cout << right.name().str() << std::endl;
 
   mlir::hil::Graph *lGraph = mlir::hil::getGraph(left, "main");
   mlir::hil::Graph *rGraph = mlir::hil::getGraph(right, "main");
