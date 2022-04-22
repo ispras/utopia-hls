@@ -7,6 +7,7 @@ project(UtopiaTest VERSION 0.0)
 set(TEST_TARGET utest)
 
 set(CMAKE_CXX_STANDARD 17)
+add_compile_options(-g3 -Wall -Wignored-qualifiers -DYYERROR_VERBOSE)
 
 # Check if the 'gtest' target has been already imported (e.g., by LLVM).
 if(NOT TARGET gtest)
