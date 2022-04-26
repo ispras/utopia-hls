@@ -32,13 +32,10 @@ std::shared_ptr<eda::hls::model::Model> parse(const std::string &filename) {
   return Builder::get().create();
 }
 
-std::shared_ptr<mlir::hil::Model> parseToMlir(const std::string &filename) {
+mlir::model::MLIRModule parseToMlir(const std::string &filename) {
 
-  std::shared_ptr<Model> hilModel = parse(filename);
-  mlir::hil::Model mlirModel =
-      mlir::model::MLIRModule::load_from_model(*hilModel.get()).get_root();
+  std::shared_ptr<eda::hls::model::Model> hilModel = parse(filename);
 
-  return std::unique_ptr<mlir::hil::Model>(&mlirModel);
+  return mlir::model::MLIRModule::load_from_model(*hilModel.get());
 }
-
 } // namespace eda::hls::parser::hil
