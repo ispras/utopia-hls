@@ -18,15 +18,22 @@ using namespace mlir::hil;
 
 bool eqCheckTest(const std::string &fileM, const std::string &fileM2) {
 
-  std::shared_ptr<mlir::hil::Model> modelM = parseToMlir(fileM);
-  std::shared_ptr<mlir::hil::Model> modelM2 = parseToMlir(fileM2);
-  EqChecker checker = EqChecker::get();
+  mlir::model::MLIRModule modelM = parseToMlir(fileM);
+  mlir::hil::Model model = modelM.get_root();
+  mlir::model::MLIRModule modelM2 = parseToMlir(fileM2);
+  mlir::hil::Model model2 = modelM2.get_root();
 
-  std::cout << "debugger_test.cpp" << std::endl;
-  std::string modelMName = modelM.get()->name().str();
+  std::string modelMName = model.name().str();
   std::cout << modelMName << std::endl;
 
-  return checker.equivalent(*modelM.get(), *modelM2.get());
+  std::string modelM2Name = model2.name().str();
+  std::cout << modelM2Name << std::endl;
+
+  EqChecker checker = EqChecker::get();
+
+  bool result = checker.equivalent(model, model2);
+
+  return result;
 }
 
 /*TEST(DebuggerTest, SolveKernel) {

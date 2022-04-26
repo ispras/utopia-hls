@@ -34,12 +34,6 @@ public:
   // Checks if models are equivalent.
   bool equivalent(mlir::hil::Model &left, mlir::hil::Model &right) const;
 
-  /// Returns source nodes for the graph.
-  std::vector<mlir::hil::Node*> getSources(mlir::hil::Graph &graph) const;
-
-  /// Returns sink nodes for the graph.
-  std::vector<mlir::hil::Node*> getSinks(mlir::hil::Graph &graph) const;
-
 private:
   EqChecker() {}
 
@@ -48,14 +42,14 @@ private:
   /* Methods that implement equivalence checking steps. */
 
   /// Checks if each of graph collections contain the main one.
-  bool match(const std::vector<mlir::hil::Graph*> &left,
-      const std::vector<mlir::hil::Graph*> &right,
-      std::pair<mlir::hil::Graph*, mlir::hil::Graph*> &matched) const;
+  bool match(const std::vector<mlir::hil::Graph> &left,
+      const std::vector<mlir::hil::Graph> &right,
+      std::pair<mlir::hil::Graph, mlir::hil::Graph> &matched) const;
 
  /// Checks if collections contain nodes with same names.
-  bool match(const std::vector<mlir::hil::Node*> &left,
-      const std::vector<mlir::hil::Node*> &right,
-      std::list<std::pair<mlir::hil::Node*, mlir::hil::Node*>> &matched) const;
+  bool match(const std::vector<mlir::hil::Node> &left,
+      const std::vector<mlir::hil::Node> &right,
+      std::list<std::pair<mlir::hil::Node, mlir::hil::Node>> &matched) const;
 
   /* Methods for model-to-solver interaction. */
 

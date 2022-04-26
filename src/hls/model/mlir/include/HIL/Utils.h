@@ -45,11 +45,18 @@ std::optional<T> find_elem_by_type(Container&& c) {
 /* Utility methods for MLIR-based IR */
 
 namespace mlir::hil {
-  Graph* getGraph(Model &model, const std::string &name);
-  std::vector<Chan*> getInputs(Node &node);
-  std::vector<Chan*> getOutputs(Node &node);
-  std::vector<Chan*> getChans(Graph &graph);
-  std::vector<Node*> getNodes(Graph &graph);
+  std::optional<Graph> getGraph(Model &model, const std::string &name);
+  std::vector<Chan> getInputs(Node &node);
+  std::vector<Chan> getOutputs(Node &node);
+
+  /// Returns source nodes for the graph.
+  std::vector<Node> getSources(Graph &graph);
+
+  /// Returns sink nodes for the graph.
+  std::vector<Node> getSinks(Graph &graph);
+
+  std::vector<Chan> getChans(Graph &graph);
+  std::vector<Node> getNodes(Graph &graph);
   bool isDelay(Node &node);
   bool isKernel(Node &node);
   bool isMerge(Node &node);
