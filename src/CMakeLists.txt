@@ -102,6 +102,9 @@ add_library(${MAIN_LIBRARY}
   hls/scheduler/param_optimizer.cpp
   hls/scheduler/latency_balancer_base.h
   hls/scheduler/simulated_annealing.cpp
+  hls/scheduler/optimizers/abstract_optimizer.cpp
+  hls/scheduler/optimizers/simple_optimizer.cpp
+  hls/scheduler/optimizers/simulated_annealing_optimizer.cpp
   rtl/compiler/compiler.cpp
   rtl/library/flibrary.cpp
   rtl/model/event.cpp
