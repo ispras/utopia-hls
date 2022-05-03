@@ -26,6 +26,8 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     const Criteria &criteria,
     Model &model,
     Indicators &indicators) const {
+  srand(42);
+  
   std::map<std::string, Parameters> params;
 
   // Get the main dataflow graph.
