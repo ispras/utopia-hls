@@ -1,0 +1,25 @@
+digraph M {
+  subgraph main {
+    n1 [label=source, color=black];
+    n2 [label=split, color=black];
+    n3 [label=kernel1, color=black];
+    n4 [label=kernel2, color=black];
+    n5 [label=merge, color=black];
+    n6 [label=sink, color=black];
+    delay_Y_1_6 [label=delay_Y_1, color=red];
+    delay_X_2_7 [label=delay_X_2, color=red];
+    delay_Z_2_8 [label=delay_Z_2, color=red];
+
+    n2 -> n3;
+    n2 -> delay_X_2_7;
+    n1 -> n2;
+    n1 -> delay_Y_1_6;
+    n3 -> delay_Z_2_8;
+    n4 -> n5;
+    n5 -> n6;
+    n3 -> n4;
+    delay_Y_1_6 -> n3;
+    delay_X_2_7 -> n4;
+    delay_Z_2_8 -> n5;
+  }
+}

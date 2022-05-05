@@ -79,8 +79,8 @@ add_library(${MAIN_LIBRARY}
   gate/checker/checker.cpp
   gate/symexec/symexec.cpp
   gate/model/gate.cpp
+  gate/model/gnet.cpp
   gate/model/gsymbol.cpp
-  gate/model/netlist.cpp
   gate/model/signal.cpp
   hls/compiler/compiler.cpp
   hls/debugger/debugger.cpp
