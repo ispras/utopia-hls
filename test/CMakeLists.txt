@@ -26,7 +26,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 enable_testing()
 
 add_executable(${TEST_TARGET}
-  gate/checker/checker_test.cpp
+  gate/debugger/checker_test.cpp
   gate/model/gnet_test.cpp
   hls/compiler/compiler_hil_test.cpp
   hls/compiler/compiler_dfc_test.cpp

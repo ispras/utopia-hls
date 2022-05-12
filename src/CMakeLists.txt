@@ -75,9 +75,9 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 add_library(${MAIN_LIBRARY}
 
   # Manually-written sources.
-  gate/encoder/encoder.cpp
-  gate/checker/checker.cpp
-  gate/symexec/symexec.cpp
+  gate/debugger/encoder.cpp
+  gate/debugger/checker.cpp
+  gate/debugger/symexec.cpp
   gate/model/gate.cpp
   gate/model/gnet.cpp
   gate/model/gsymbol.cpp
