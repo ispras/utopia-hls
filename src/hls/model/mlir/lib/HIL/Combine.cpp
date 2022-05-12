@@ -179,13 +179,13 @@ public:
     // Split the channel with the node
     rewriter.setInsertionPointToEnd(chans_op.getBody());
     rewriter.create<Chan>(chans_op.getLoc(), chan_op.typeName(), new_chan_name,
-                          StringAttr{}.get(context, btw_name), node_to);
+                          StringAttr{}.get(context, btw_name), node_to.getNodeName());
     rewriter.replaceOpWithNewOp<Chan>(chan_op, chan_op.typeName(),
-                                      chan_op.varName(), node_from,
+                                      chan_op.varName(), node_from.getNodeName(),
                                       StringAttr{}.get(context, btw_name));
     // Rename target node's input channel
     nodes_op.walk([&](Node op) {
-      if (op.name() == node_to.getValue()) {
+      if (op.name() == node_to.getNodeName()) {
         auto &&args = op.commandArguments();
         std::vector<Attribute> in_chans{args.begin(), args.end()};
         for (auto &in_chan_name : in_chans) {

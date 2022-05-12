@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -106,16 +106,16 @@ bool EqChecker::equivalent(mlir::hil::Model &left,
   solver.add(nodes);
 
   // TODO: debug print
-  //std::cout << "SMT-LIBv2 formula:" << std::endl;
-  //std::cout << solver.to_smt2() << std::endl;
+  std::cout << "SMT-LIBv2 formula:" << std::endl;
+  std::cout << solver.to_smt2() << std::endl;
 
   z3::check_result result = solver.check();
   switch (result) {
     case z3::sat:
       std::cout << "Models are NOT equivalent" << std::endl;
       // TODO: debug print
-      //std::cout << "Model is:" << std::endl;
-      //std::cout << solver.get_model().to_string() << std::endl;
+      std::cout << "Model is:" << std::endl;
+      std::cout << solver.get_model().to_string() << std::endl;
       return true;
     case z3::unsat:
       std::cout << "Models are equivalent" << std::endl;
@@ -203,8 +203,8 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
 
   for (auto &channel : gChannels) {
 
-    z3::expr src = toConst(channel, channel.nodeFromAttrName(), ctx);
-    z3::expr tgt = toConst(channel, channel.nodeToAttrName(), ctx);
+    z3::expr src = toConst(channel, channel.nodeFromAttr(), ctx);
+    z3::expr tgt = toConst(channel, channel.nodeToAttr(), ctx);
 
     const z3::expr chanExpr = src == tgt;
     nodes.push_back(chanExpr);
@@ -225,8 +225,8 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
       Chan input = getInputs(node)[0];
       Chan output = getOutputs(node)[0];
 
-      const z3::expr in = toConst(input, input.nodeToAttrName(), ctx);
-      const z3::expr out = toConst(output, output.nodeFromAttrName(), ctx);
+      const z3::expr in = toConst(input, input.nodeToAttr(), ctx);
+      const z3::expr out = toConst(output, output.nodeFromAttr(), ctx);
 
       const z3::expr delayExpr = in == out;
 
@@ -255,8 +255,7 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
 
         // create equation
         const z3::expr kernelEq =
-            kernel(kernelArgs) ==
-                toConst(nodeOut, nodeOut.nodeFromAttrName(), ctx);
+            kernel(kernelArgs) == toConst(nodeOut, nodeOut.nodeFromAttr(), ctx);
 
         nodes.push_back(kernelEq);
       }
@@ -265,8 +264,7 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
       // merge node has the only output
       Chan nodeOut = getOutputs(node)[0];
 
-      const z3::expr outConst =
-          toConst(nodeOut, nodeOut.nodeFromAttrName(), ctx);
+      const z3::expr outConst = toConst(nodeOut, nodeOut.nodeFromAttr(), ctx);
       z3::expr_vector mergeVec(ctx);
 
       std::vector<Chan> nodeInputs = getInputs(node);
@@ -275,7 +273,7 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
       for (auto &nodeInput : nodeInputs) {
 
         const z3::expr inConst =
-            toConst(nodeInput, nodeInput.nodeToAttrName(), ctx);
+            toConst(nodeInput, nodeInput.nodeToAttr(), ctx);
 
         mergeVec.push_back(outConst == inConst);
       }
@@ -289,8 +287,7 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
       assert (inputs.size() == 1);
       Chan nodeInput = inputs[0];
 
-      const z3::expr inConst =
-          toConst(nodeInput, nodeInput.nodeToAttrName(), ctx);
+      const z3::expr inConst = toConst(nodeInput, nodeInput.nodeToAttr(), ctx);
       z3::expr_vector splitVec(ctx);
 
       std::vector< Chan> nodeOutputs = getOutputs(node);
@@ -298,8 +295,7 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
       // create equation for every output of node
       for (auto &nodeOut : nodeOutputs) {
 
-        const z3::expr outConst =
-            toConst(nodeOut, nodeOut.nodeFromAttrName(), ctx);
+        const z3::expr outConst = toConst(nodeOut, nodeOut.nodeFromAttr(), ctx);
         const z3::expr outEq = inConst == outConst;
         splitVec.push_back(outEq);
       }
@@ -389,7 +385,7 @@ z3::expr_vector EqChecker::getFuncArgs(Node &node, z3::context &ctx) const {
   z3::expr_vector args(ctx);
 
   for (size_t i = 0; i < inputs.size(); i++) {
-    mlir::StringAttr portName = inputs[i].nodeToAttrName();
+    mlir::StringAttr portName = inputs[i].nodeToAttr();
     args.push_back(toConst(inputs[i], portName, ctx));
   }
 

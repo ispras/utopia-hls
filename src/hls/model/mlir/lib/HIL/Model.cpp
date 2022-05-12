@@ -112,6 +112,18 @@ template <> void MLIRBuilder<mlir::hil::OutputPortAttr>::build() {
                    std::to_string(node_.getLatency()), node_.getValue());
 }
 
+template <> void MLIRBuilder<mlir::hil::InputBndAttr>::build() {
+  builder_.addPort(node_.getNodeName(), node_.getPort().getTypeName(),
+                   std::to_string(*node_.getPort().getFlow()), "0");
+}
+
+template <> void MLIRBuilder<mlir::hil::OutputBndAttr>::build() {
+  builder_.addPort(node_.getNodeName(), node_.getPort().getTypeName(),
+                   std::to_string(*node_.getPort().getFlow()),
+                   std::to_string(node_.getPort().getLatency()),
+                   node_.getPort().getValue());
+}
+
 template <> void MLIRBuilder<mlir::hil::NodeType>::build() {
   builder_.startNodetype(node_.name().str());
   // Build inputs

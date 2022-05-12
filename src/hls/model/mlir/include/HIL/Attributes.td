@@ -12,9 +12,9 @@
 include "Dialect.td"
 
 def InputPortAttr : HIL_Attr<"InputPort"> {
-  let mnemonic = "input";
+  let mnemonic = "input-port";
 
-  let summary = "Input port argument";
+  let summary = "Input port";
 
   let description = [{
     Input port arg type
@@ -29,9 +29,9 @@ def InputPortAttr : HIL_Attr<"InputPort"> {
 }
 
 def OutputPortAttr : HIL_Attr<"OutputPort"> {
-  let mnemonic = "output";
+  let mnemonic = "output-port";
 
-  let summary = "Output port argument";
+  let summary = "Output port";
 
   let description = [{
     Output port arg type
@@ -43,6 +43,40 @@ def OutputPortAttr : HIL_Attr<"OutputPort"> {
     "unsigned":$latency,
     "std::string":$name,
     "std::string":$value);
+
+  let hasCustomAssemblyFormat = 1;
+}
+
+def InputBndAttr : HIL_Attr<"InputBnd"> {
+
+  let mnemonic = "input-binding";
+
+  let summary = "Input port binding";
+
+  let description = [{
+    Input binding attr type
+  }];
+
+  let parameters = (ins
+    "std::string":$nodeName,
+    InputPortAttr:$port);
+
+  let hasCustomAssemblyFormat = 1;
+}
+
+def OutputBndAttr : HIL_Attr<"OutputBnd"> {
+
+  let mnemonic = "output-binding";
+
+  let summary = "Output port binding";
+
+  let description = [{
+    Output binding attr type
+  }];
+
+  let parameters = (ins
+    "std::string":$nodeName,
+    OutputPortAttr:$port);
 
   let hasCustomAssemblyFormat = 1;
 }
