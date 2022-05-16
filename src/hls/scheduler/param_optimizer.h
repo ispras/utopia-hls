@@ -76,8 +76,6 @@ private:
 
   void updateFrequency(Model& model, std::map<std::string, Parameters>& params,
     const unsigned frequency) const;
-  void count_params(Model& model, std::map<std::string, Parameters>& params,
-                    Indicators& indicators, unsigned frequency, Parameters& defaultParams) const;
 
   double normalize(double value, double min, double max) const;
   double denormalize(double value, double min, double max) const;

@@ -1,42 +1,40 @@
 #include "hls/scheduler/optimizers/simple_optimizer.h"
 
 namespace eda::hls::scheduler::optimizers {
-    simple_optimizer::simple_optimizer()
-     : abstract_optimizer() {}
+  simple_optimizer::simple_optimizer(std::function<float(const std::vector<float>&)> tar_fun) 
+  : target_function(tar_fun) {}
 
-     void simple_optimizer::optimize(std::vector<float>& param) {
-           /*int y1, y2;
-  int x2 = cur_f;
-  y2 = indicators.area;
-  int x1 = criteria.frequency.max - (criteria.frequency.max - criteria.frequency.min) / 10;
-  count_params(model, params, indicators, x1, defaultParams);
-  y1 = indicators.area;
+void simple_optimizer::optimize(std::vector<float>& params) {
+  int y1, y2;
+  int x2 = params[0];
+  y2 = target_function(params);
+  int x1 = max_freq - (max_freq - min_freq) / 10;
+  target_function(params);
+  y1 = cur_area;
   float k = float(y1 - y2) / float(x1 - x2);
   float b = float(y1 - x1 * k);
-  cur_f = (criteria.area.max - b) / k;
-  count_params(model, params, indicators, cur_f, defaultParams);
+  params[0] = (limitation - b) / k;
+  target_function(params);
   int sign;
-  if(indicators.area > criteria.area.max) {
+  if(cur_area > limitation) {
     sign = -1;
   } else {
     sign = 1;
   }
-  int grid = (criteria.frequency.max - criteria.frequency.min) / 100;
+  int grid = (max_freq - min_freq) / 100;
 
   // Optimization loop.
   const unsigned N = 5;
   for (unsigned i = 0; i < N; i++) {
 
-    cur_f += sign * grid;
-    count_params(model, params, indicators, cur_f, defaultParams);
+    params[0] += sign * grid;
+    cur_area = target_function(params);
     // Check the constraints.
-    if (criteria.check(indicators)) {
+    if (cur_area < limitation) {
       break;
     }
-    // Reset to the initial model state.
-    model.undo();
-  }*/
+  }
 
-     }
+}
 
 } // namespace eda::hls::scheduler::optimizers

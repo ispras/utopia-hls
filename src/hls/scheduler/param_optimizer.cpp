@@ -11,7 +11,6 @@
 #include "hls/scheduler/dse/design_explorer.h"
 #include "hls/scheduler/param_optimizer.h"
 #include "hls/scheduler/latency_solver.h"
-#include "hls/scheduler/solver.h"
 #include "hls/scheduler/optimizers/simulated_annealing_optimizer.h"
 
 #include <cassert>
@@ -41,7 +40,6 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   auto min_value = criteria.frequency.min;
   auto max_value = criteria.frequency.max;
 
-  std::ofstream ostrm("real.txt");
   std::vector<float> optimized_values;
   optimized_values.push_back(normalize(10000, min_value, max_value));
   for (const auto *node : graph->nodes) {
@@ -90,7 +88,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     for(const auto& param : parameters) {
       denormalized_parameters.push_back(denormalize(param, min_value, max_value));
     }
-    count_params(model, params, indicators, denormalized_parameters[0], defaultParams);
+    estimate(model, params, indicators, denormalized_parameters[0]);
     model.undo();
     return indicators.frequency;
   };
@@ -99,9 +97,8 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
       limitation_function = [&](const std::vector<float>& parameters) -> float {
         float tmp = parameters[0];
         tmp = denormalize(tmp, min_value, max_value);
-        count_params(model, params, indicators, tmp, defaultParams);
+        estimate(model, params, indicators, tmp);
         model.undo();
-        ostrm << "Area: " << indicators.area << std::endl;
         return indicators.area;
       };
 
@@ -115,6 +112,8 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
 
   auto res_freq = target_function(optimized_values);
   auto limitation = limitation_function(optimized_values);
+
+  std::ofstream ostrm("real.txt");
 
   ostrm << std::endl << "After optimization" << std::endl;
   ostrm << "Frequency: " << indicators.frequency << std::endl;
