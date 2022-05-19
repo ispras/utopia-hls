@@ -201,10 +201,10 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
   // create equations for channels
   std::vector<mlir::hil::Chan> gChannels = getChans(graph);
 
-  for (auto &channel : gChannels) {
+  for (auto &ch : gChannels) {
 
-    z3::expr src = toConst(channel, channel.nodeFromAttr(), ctx);
-    z3::expr tgt = toConst(channel, channel.nodeToAttr(), ctx);
+    z3::expr src = toConst(ch, ch.nodeFromAttr().getPort().getName(), ctx);
+    z3::expr tgt = toConst(ch, ch.nodeToAttr().getPort().getName(), ctx);
 
     const z3::expr chanExpr = src == tgt;
     nodes.push_back(chanExpr);
@@ -223,10 +223,12 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
 
       // treat delay node as in-to-out channel
       Chan input = getInputs(node)[0];
+      std::string inputPortName = input.nodeToAttr().getPort().getName();
       Chan output = getOutputs(node)[0];
+      std::string outputPortName = output.nodeFromAttr().getPort().getName();
 
-      const z3::expr in = toConst(input, input.nodeToAttr(), ctx);
-      const z3::expr out = toConst(output, output.nodeFromAttr(), ctx);
+      const z3::expr in = toConst(input, inputPortName, ctx);
+      const z3::expr out = toConst(output, outputPortName, ctx);
 
       const z3::expr delayExpr = in == out;
 
@@ -243,7 +245,7 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
 
         // input/output sorts for kernel function
         const z3::sort_vector sorts = getInSorts(node, ctx);
-        const z3::sort fSort = getSort(nodeOut.nodeFromAttrName(), ctx);
+        const z3::sort fSort = getSort(nodeOut.nodeFromAttrName().str(), ctx);
 
         // kernel function name
         //const char *kerName = node.nodeTypeName().str().c_str();
@@ -254,8 +256,9 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
         const z3::expr_vector kernelArgs = getFuncArgs(node, ctx);
 
         // create equation
+        std::string nodePortName = nodeOut.nodeFromAttr().getPort().getName();
         const z3::expr kernelEq =
-            kernel(kernelArgs) == toConst(nodeOut, nodeOut.nodeFromAttr(), ctx);
+            kernel(kernelArgs) == toConst(nodeOut, nodePortName, ctx);
 
         nodes.push_back(kernelEq);
       }
@@ -263,8 +266,9 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
 
       // merge node has the only output
       Chan nodeOut = getOutputs(node)[0];
+      std::string fromPortName = nodeOut.nodeFromAttr().getPort().getName();
 
-      const z3::expr outConst = toConst(nodeOut, nodeOut.nodeFromAttr(), ctx);
+      const z3::expr outConst = toConst(nodeOut, fromPortName, ctx);
       z3::expr_vector mergeVec(ctx);
 
       std::vector<Chan> nodeInputs = getInputs(node);
@@ -272,8 +276,8 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
       // create equation for every input of node
       for (auto &nodeInput : nodeInputs) {
 
-        const z3::expr inConst =
-            toConst(nodeInput, nodeInput.nodeToAttr(), ctx);
+        std::string toPortName = nodeInput.nodeToAttr().getPort().getName();
+        const z3::expr inConst = toConst(nodeInput, toPortName, ctx);
 
         mergeVec.push_back(outConst == inConst);
       }
@@ -286,8 +290,9 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
       auto inputs = getInputs(node);
       assert (inputs.size() == 1);
       Chan nodeInput = inputs[0];
+      std::string toPortName = nodeInput.nodeToAttr().getPort().getName();
 
-      const z3::expr inConst = toConst(nodeInput, nodeInput.nodeToAttr(), ctx);
+      const z3::expr inConst = toConst(nodeInput, toPortName, ctx);
       z3::expr_vector splitVec(ctx);
 
       std::vector< Chan> nodeOutputs = getOutputs(node);
@@ -295,7 +300,8 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
       // create equation for every output of node
       for (auto &nodeOut : nodeOutputs) {
 
-        const z3::expr outConst = toConst(nodeOut, nodeOut.nodeFromAttr(), ctx);
+        std::string fromPort = nodeOut.nodeFromAttr().getPort().getName();
+        const z3::expr outConst = toConst(nodeOut, fromPort, ctx);
         const z3::expr outEq = inConst == outConst;
         splitVec.push_back(outEq);
       }
@@ -328,17 +334,17 @@ z3::sort EqChecker::getSort(mlir::hil::Node &node, z3::context &ctx) const {
   return ctx.uninterpreted_sort(node.nodeTypeNameAttrName().str().c_str());
 }
 
-z3::sort EqChecker::getSort(mlir::StringAttr name, z3::context &ctx) const {
-  return ctx.uninterpreted_sort(name.str().c_str());
+z3::sort EqChecker::getSort(std::string name, z3::context &ctx) const {
+  return ctx.uninterpreted_sort(name.c_str());
 }
 
-z3::expr EqChecker::toConst(mlir::hil::Chan &ch, mlir::StringAttr name,
+z3::expr EqChecker::toConst(mlir::hil::Chan &ch, std::string name,
     z3::context &ctx) const {
 
   const z3::sort fInSort = getSort(name, ctx);
   const std::string modelName = getModelName(ch);
   const std::string nodeName = ch.varName().str();
-  const std::string constName = modelName + "_" + nodeName + "_" + name.str();
+  const std::string constName = modelName + "_" + nodeName + "_" + name;
 
   return ctx.constant(constName.c_str(), fInSort);
 }
@@ -358,7 +364,7 @@ z3::expr EqChecker::toInFunc(Node &node, Chan &ch, z3::context &ctx) const {
   const std::string nodeName = node.name().str();
   const std::string chName = ch.varName().str();
   const std::string funcName = modelName + "_" + nodeName + "_" + chName;
-  const z3::sort fSort = getSort(ch.nodeFromAttrName(), ctx);
+  const z3::sort fSort = getSort(ch.nodeFromAttrName().str(), ctx);
   z3::sort_vector sorts(ctx);
   const z3::func_decl func = function(funcName.c_str(), sorts, fSort);
   const z3::expr_vector fArgs = z3::expr_vector(ctx);
@@ -373,7 +379,7 @@ z3::sort_vector EqChecker::getInSorts(mlir::hil::Node &node,
 
   for (size_t i = 0; i < inputs.size(); i++) {
     mlir::StringAttr targetPortName = inputs[i].nodeToAttrName();
-    sorts.push_back(getSort(targetPortName, ctx));
+    sorts.push_back(getSort(targetPortName.str(), ctx));
   }
   return sorts;
 }
@@ -385,7 +391,7 @@ z3::expr_vector EqChecker::getFuncArgs(Node &node, z3::context &ctx) const {
   z3::expr_vector args(ctx);
 
   for (size_t i = 0; i < inputs.size(); i++) {
-    mlir::StringAttr portName = inputs[i].nodeToAttr();
+    std::string portName = inputs[i].nodeToAttr().getPort().getName();
     args.push_back(toConst(inputs[i], portName, ctx));
   }
 
