@@ -100,8 +100,10 @@ public:
       rewriter.setInsertionPoint(&chans_block_op);
       rewriter.replaceOpWithNewOp<Chan>(
           &chans_block_op, chan_op.typeName(), chan_op.varName(),
-          StringAttr{}.get(context, node_from.value()),
-          StringAttr{}.get(context, node_to.value()));
+          InputBndAttr{}.get(context, node_from.value(),
+              chan_op.nodeFromAttr().getPort()),
+          OutputBndAttr{}.get(context, node_to.value(),
+              chan_op.nodeToAttr().getPort()));
     }
     return success();
   }
@@ -137,7 +139,9 @@ public:
 
     auto chan_type = chan_op.typeName();
     auto node_from = chan_op.nodeFromAttr();
+    auto node_from_name = node_from.getNodeName();
     auto node_to = chan_op.nodeToAttr();
+    auto node_to_name = node_to.getNodeName();
 
     auto btw_type_name =
         "delay_" + chan_type.str() + "_" + std::to_string(latency_);
@@ -179,13 +183,17 @@ public:
     // Split the channel with the node
     rewriter.setInsertionPointToEnd(chans_op.getBody());
     rewriter.create<Chan>(chans_op.getLoc(), chan_op.typeName(), new_chan_name,
-                          StringAttr{}.get(context, btw_name), node_to.getNodeName());
+        InputBndAttr{}.get(context, btw_name, in_attr),
+        OutputBndAttr{}.get(context, node_to_name,
+            chan_op.nodeToAttr().getPort()));
     rewriter.replaceOpWithNewOp<Chan>(chan_op, chan_op.typeName(),
-                                      chan_op.varName(), node_from.getNodeName(),
-                                      StringAttr{}.get(context, btw_name));
+        chan_op.varName(),
+        InputBndAttr{}.get(context, node_from_name,
+            chan_op.nodeFromAttr().getPort()),
+        OutputBndAttr{}.get(context, btw_name, out_attr));
     // Rename target node's input channel
     nodes_op.walk([&](Node op) {
-      if (op.name() == node_to.getNodeName()) {
+      if (op.name() == node_to_name) {
         auto &&args = op.commandArguments();
         std::vector<Attribute> in_chans{args.begin(), args.end()};
         for (auto &in_chan_name : in_chans) {
