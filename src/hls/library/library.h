@@ -140,10 +140,11 @@ struct MetaElement {
 };
 
 class Library final : public Singleton<Library> {
-public:
-  Library() {}
+  friend class Singleton<Library>;
 
-  void initialize();
+public:
+  void initialize(const std::string &config);
+  void finalize();
 
   /// Searches for a meta-element for the given node type.
   std::shared_ptr<MetaElement> find(const NodeType &nodetype);
@@ -151,11 +152,14 @@ public:
   std::shared_ptr<MetaElement> find(const std::string &name);
 
   void add(const std::shared_ptr<MetaElement> &metaElement) {
-    library.push_back(metaElement);
+    cache.push_back(metaElement);
   }
 
 private:
-  std::vector<std::shared_ptr<MetaElement>> library;
+  Library() {}
+
+  /// Cached meta-elements.
+  std::vector<std::shared_ptr<MetaElement>> cache;
 };
 
 } // namespace eda::hls::library

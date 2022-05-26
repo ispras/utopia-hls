@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "hls/library/ipxact_parser.h"
 #include "hls/library/library.h"
 #include "util/assert.h"
 
@@ -29,8 +28,6 @@ struct MetaElementMock final : public MetaElement {
       const Parameters &params) const override;
   virtual void estimate(
       const Parameters &params, Indicators &indicators) const override;
-
-  static std::shared_ptr<MetaElement> create(const std::string &name);
 };
 
 inline std::unique_ptr<Element> MetaElementMock::construct(
@@ -402,17 +399,6 @@ inline void MetaElementMock::estimate(
   indicators.latency    = static_cast<unsigned>(N);
   indicators.power      = static_cast<unsigned>(P);
   indicators.area       = static_cast<unsigned>(A);
-}
-
-inline std::shared_ptr<MetaElement> MetaElementMock::create(
-    const std::string &name) {
-
-  Parameters params;
-  std::vector<Port> ports;
-
-  IPXACTParser::get().parseComponent(name, params, ports);
-  auto metaElement = new MetaElementMock(name, params, ports);
-  return std::shared_ptr<MetaElement>(metaElement);
 }
 
 // MetaElement:

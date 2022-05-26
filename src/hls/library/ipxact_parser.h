@@ -24,12 +24,20 @@ using namespace std;
 
 namespace eda::hls::library {
 
-struct IPXACTParser final : public Singleton<IPXACTParser> {
-  std::map<std::string, std::string> comp_fnames;
+class IPXACTParser final : public Singleton<IPXACTParser> {
+  friend Singleton<IPXACTParser>;
+
+public:
+  void initialize();
+  void finalize();
+
   void parseCatalog(const std::string &catalog_fname);
-  void parseComponent(const std::string &name,
-                      library::Parameters &params,
-                      std::vector<Port> &ports);
+  std::shared_ptr<MetaElement> parseComponent(const std::string &name);
+
+private:
+  IPXACTParser() {}
+
+  std::map<std::string, std::string> comp_fnames;
 };
 
 } // namespace eda::hls::library
