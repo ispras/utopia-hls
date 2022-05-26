@@ -18,18 +18,6 @@
 using namespace eda::hls::library;
 using namespace eda::hls::parser::hil;
 
-int printVerilogTest(const std::string &filename) {
-  auto nodetypes = parse(filename)->nodetypes;
-
-  std::cout << "--- Verilog RTL-model for " << filename << " ---" << std::endl;
-  for (const auto *nodetype: nodetypes) {
-    auto printer = std::make_unique<VerilogNodeTypePrinter>(*nodetype);
-    printer->print(std::cout);
-  }
-
-  return 0;
-}
-
 int callLibraryElementTest(const std::string &name) {
   Parameters params(name);
   auto metaElement = Library::get().find(name);
@@ -37,14 +25,6 @@ int callLibraryElementTest(const std::string &name) {
   std::cout << element->ir << std::endl;
 
   return 0;
-}
-
-TEST(LibraryTest, PrintTestHilTest) {
-  EXPECT_EQ(printVerilogTest("test/data/hil/test.hil"), 0);
-}
-
-TEST(LibraryTest, PrintIDCTHilTest) {
-  EXPECT_EQ(printVerilogTest("test/data/hil/idct.hil"), 0);
 }
 
 TEST(LibraryTest, PrintAddTest) {

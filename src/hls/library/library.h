@@ -162,26 +162,4 @@ private:
   std::vector<std::shared_ptr<MetaElement>> library;
 };
 
-class VerilogNodeTypePrinter final {
-public:
-  VerilogNodeTypePrinter(const eda::hls::model::NodeType &type):
-    type(type) {}
-  void print(std::ostream &out) const;
-
-private:
-  const eda::hls::model::NodeType &type;
-};
-
-class VerilogGraphPrinter final {
-public:
-  VerilogGraphPrinter(const eda::hls::model::Graph &graph):
-    graph(graph) {}
-
-  void print(std::ostream &out) const;
-
-private:
-  const std::string chanSourceToString(const eda::hls::model::Chan &chan) const;
-  const eda::hls::model::Graph &graph;
-};
-
 } // namespace eda::hls::library
