@@ -12,7 +12,7 @@ using namespace std;
 
 namespace eda::hls::library {
 
-void IPXACTParser::parseCatalog(const std::string& catalog_fname) {
+void IPXACTParser::parseCatalog(const std::string &catalog_fname) {
   //Initialization.
   //std::cout << "parseCatalog" << std::endl;
   XMLPlatformUtils::Initialize();
@@ -56,7 +56,7 @@ void IPXACTParser::parseCatalog(const std::string& catalog_fname) {
 
 void IPXACTParser::parseComponent(const std::string &name,
                                   library::Parameters &params,
-                                  library::Ports &ports) {
+                                  std::vector<Port> &ports) {
   //Initialization.
   //std::cout << "parseComponent" << std::endl;
   XMLPlatformUtils::Initialize();
@@ -170,4 +170,5 @@ void IPXACTParser::parseComponent(const std::string &name,
   XMLPlatformUtils::Terminate();
   return;
 }
+
 } // namespace eda::hls::library

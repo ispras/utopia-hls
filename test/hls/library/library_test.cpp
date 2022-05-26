@@ -19,7 +19,7 @@ using namespace eda::hls::library;
 using namespace eda::hls::parser::hil;
 
 int callLibraryElementTest(const std::string &name) {
-  Parameters params(name);
+  Parameters params;
   auto metaElement = Library::get().find(name);
   auto element = metaElement->construct(params);
   std::cout << element->ir << std::endl;

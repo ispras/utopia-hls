@@ -22,7 +22,7 @@ namespace eda::hls::library {
 struct MetaElementMock final : public MetaElement {
   MetaElementMock(const std::string &name,
                   const Parameters &params,
-                  const Ports &ports):
+                  const std::vector<Port> &ports):
       MetaElement(name, params, ports) {}
 
   virtual std::unique_ptr<Element> construct(
@@ -31,7 +31,6 @@ struct MetaElementMock final : public MetaElement {
       const Parameters &params, Indicators &indicators) const override;
 
   static std::shared_ptr<MetaElement> create(const std::string &name);
-  static std::shared_ptr<MetaElement> create(const NodeType &nodetype);
 };
 
 inline std::unique_ptr<Element> MetaElementMock::construct(
@@ -405,75 +404,15 @@ inline void MetaElementMock::estimate(
   indicators.area       = static_cast<unsigned>(A);
 }
 
-/*inline std::shared_ptr<MetaElement> MetaElementMock::create(
-    const std::string &name) {
-  Parameters params("");
-  params.add(Parameter("f", Constraint(1, 1000), 100));
-  params.add(Parameter("stages", Constraint(0, 10000), 10));
-
-  // Populate ports for different library elements
-  Ports ports;
-  ports.push_back(Port("clock", Port::IN, 0, 1));
-  ports.push_back(Port("reset", Port::IN, 0, 1));
-
-  if (name == "merge") {
-    ports.push_back(Port("in1", Port::IN, 0, 1));
-    ports.push_back(Port("in2", Port::IN, 0, 1));
-    ports.push_back(Port("outcreate", Port::OUT, 1, 1));
-  } else if (name == "split") {
-    ports.push_back(Port("in", Port::IN, 0, 1));
-    ports.push_back(Port("out1", Port::OUT, 1, 1));
-    ports.push_back(Port("out2", Port::OUT, 1, 1));
-  } else if (name == "delay") {
-    ports.push_back(Port("in", Port::IN, 0, 1));
-    ports.push_back(Port("out", Port::OUT, 1, 1));
-  } else if (name == "add1" || name == "sub1") {
-    ports.push_back(Port("a", Port::IN, 0, 4));
-    ports.push_back(Port("b", Port::IN, 0, 4));
-    ports.push_back(Port("d", Port::OUT, 2, 1));
-    ports.push_back(Port("c", Port::OUT, 2, 4));
-  } else {
-    uassert(false, "Call createMetaElement by NodeType for element " << name);
-  }
-
-  return std::shared_ptr<MetaElement>(new MetaElementMock(name, params, ports));
-}*/
-
 inline std::shared_ptr<MetaElement> MetaElementMock::create(
-    const NodeType &nodetype) {
+    const std::string &name) {
 
-  Parameters params("");
-  //params.add(Parameter("f", Constraint(1, 1000), 100));
-  //params.add(Parameter("stages", Constraint(0, 10000), 10));
+  Parameters params;
+  std::vector<Port> ports;
 
-  // Copy ports from model
-  Ports ports;
-
-  /*for (const auto *input: nodetype.inputs) {
-    ports.push_back(Port(input->name, Port::IN, input->latency, 16));//TODO
-  }
-  for (const auto *output: nodetype.outputs) {
-    ports.push_back(Port(output->name, Port::OUT, output->latency, 16));//TODO
-  }
-
-  // Add clk and rst ports: these ports are absent in the lists above.
-  ports.push_back(Port("clock", Port::IN, 0, 1));
-  ports.push_back(Port("reset", Port::IN, 0, 1));*/
-
-  std::string lowerCaseName = nodetype.name;
-  unsigned i = 0;
-  while (lowerCaseName[i]) {
-    lowerCaseName[i] = tolower(lowerCaseName[i]);
-    i++;
-  }
-  /*std::cout << "MetaElementMock::create:" << std::endl;
-  for (const auto &[key, value] : XMLParser::get().comp_fnames) {
-    std::cout << key << std::endl << value << std::endl;
-  }*/
-  IPXACTParser::get().parseComponent(lowerCaseName, params, ports);
-  return std::shared_ptr<MetaElement>(new MetaElementMock(lowerCaseName,
-                                                          params,
-                                                          ports));
+  IPXACTParser::get().parseComponent(name, params, ports);
+  auto metaElement = new MetaElementMock(name, params, ports);
+  return std::shared_ptr<MetaElement>(metaElement);
 }
 
 // MetaElement:
@@ -486,19 +425,19 @@ inline std::shared_ptr<MetaElement> MetaElementMock::create(
 struct PreLibraryElement {
   const std::string name;
   const Parameters parameters;
-  const Ports ports;
+  const std::vector<Port> ports;
   Indicators indicators;
-  void (*getIndicators)(const Parameters&, const Ports&, Indicators&);
+  void (*getIndicators)(const Parameters&, const std::vector<Port>&, Indicators&);
   std::string generator;
   std::string fileName;
 
   PreLibraryElement(const std::string &name, const Parameters &parameters,
-    const Ports &ports, void (*getIndicators)(const Parameters&, const Ports&, Indicators&)) :
+    const std::vector<Port> &ports, void (*getIndicators)(const Parameters&, const std::vector<Port>&, Indicators&)) :
     name(name), parameters(parameters), ports(ports), getIndicators(getIndicators) {
     getIndicators(parameters, ports, indicators);
   };
 
-  static void indicatorsTest(const Parameters &params, const Ports& ports, Indicators &indicators) {
+  static void indicatorsTest(const Parameters &params, const std::vector<Port>& ports, Indicators &indicators) {
     unsigned inputCount = 0;
     unsigned latencySum = 0;
     unsigned widthSum = 0;
@@ -530,13 +469,13 @@ struct PreLibraryElement {
 };
 
 static struct PreLibraryElements {
-  static PreLibraryElement getAdd(Parameters &params, Ports &ports) {
+  static PreLibraryElement getAdd(Parameters &params, std::vector<Port> &ports) {
     PreLibraryElement element("add", params, ports, PreLibraryElement::indicatorsTest);
     element.generator = std::string("example: flopoco -opt $P1 $OUT");
     element.fileName  = std::string("verilog/add.v");
     return element;
   }
-  static PreLibraryElement getSub(Parameters &params, Ports &ports) {
+  static PreLibraryElement getSub(Parameters &params, std::vector<Port> &ports) {
     PreLibraryElement element("sub", params, ports, PreLibraryElement::indicatorsTest);
     element.generator = std::string("example: flopoco -opt $P1 $OUT");
     element.fileName  = std::string("verilog/sub.v");
@@ -544,13 +483,13 @@ static struct PreLibraryElements {
   }
 
   PreLibraryElements() {
-    Parameters parameters("");
+    Parameters parameters;
     parameters.add(Parameter("f", Constraint(1, 1000), 100));
     parameters.add(Parameter("stages", Constraint(0, 10000), 10));
 
     Port porta("a", Port::IN, 0, 4), portb("b", Port::IN, 0, 4);
     Port portc("c", Port::OUT, 1, 4);
-    Ports ports;
+    std::vector<Port> ports;
     ports.push_back(porta);
     ports.push_back(portb);
     ports.push_back(portc);

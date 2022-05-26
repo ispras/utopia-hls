@@ -64,13 +64,8 @@ struct Parameter final {
 };
 
 struct Parameters final {
-  explicit Parameters(const std::string &elementName):
-    elementName(elementName) {}
-
+  Parameters() = default;
   Parameters(const Parameters &) = default;
-
-  Parameters(const std::string &elementName, const Parameters &params):
-    elementName(elementName), params(params.params) {}
 
   Parameter get(const std::string &name) const {
     auto i = params.find(name);
@@ -94,7 +89,6 @@ struct Parameters final {
     i->second.value = value;
   }
 
-  const std::string elementName;
   std::map<std::string, Parameter> params;
 };
 
@@ -114,14 +108,12 @@ struct Port {
   const unsigned width;
 };
 
-typedef std::vector<Port> Ports; // FIXME
-
 /// Description of a constructed element (module).
 struct Element final {
-  explicit Element(const Ports &ports): ports(ports) {}
+  explicit Element(const std::vector<Port> &ports): ports(ports) {}
 
   // TODO add mutual relation between spec ports and impl ports
-  const Ports ports;
+  const std::vector<Port> ports;
 
   // TODO there should be different IRs: MLIR FIRRTL or Verilog|VHDL described in FIRRTL
   std::string ir;
@@ -131,7 +123,7 @@ struct Element final {
 struct MetaElement {
   MetaElement(const std::string &name,
               const Parameters &params,
-              const Ports &ports):
+              const std::vector<Port> &ports):
       name(name), params(params), ports(ports) {}
 
   /// Constructs an element for the given set of parameters.
@@ -144,15 +136,19 @@ struct MetaElement {
 
   const std::string name;
   const Parameters params;
-  const Ports ports;
+  const std::vector<Port> ports;
 };
 
 class Library final : public Singleton<Library> {
 public:
   Library() {}
 
+  void initialize();
+
+  /// Searches for a meta-element for the given node type.
   std::shared_ptr<MetaElement> find(const NodeType &nodetype);
-  std::shared_ptr<MetaElement> find(const std::string &name) const;
+  /// Searches for a meta-element for the given name.
+  std::shared_ptr<MetaElement> find(const std::string &name);
 
   void add(const std::shared_ptr<MetaElement> &metaElement) {
     library.push_back(metaElement);
