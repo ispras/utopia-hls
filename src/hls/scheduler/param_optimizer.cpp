@@ -34,7 +34,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   assert(graph != nullptr && "Main graph is not found");
 
   // Collect the parameters for all nodes.
-  Parameters defaultParams("<default>");
+  Parameters defaultParams;
   defaultParams.add(Parameter("f", criteria.frequency, criteria.frequency.max));
 
   auto min_value = criteria.frequency.min;
@@ -44,7 +44,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   optimized_values.push_back(normalize(10000, min_value, max_value));
   for (const auto *node : graph->nodes) {
     auto metaElement = Library::get().find(node->type);
-    Parameters nodeParams(node->name, metaElement->params);
+    Parameters nodeParams(metaElement->params);
     for(const auto& iter : metaElement->params.params) {
       optimized_values.push_back(normalize(iter.second.value, min_value, max_value));
     }

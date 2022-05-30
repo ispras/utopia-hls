@@ -5,24 +5,38 @@
 // Copyright 2022 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+
 #include "hls/library/ipxact_parser.h"
+#include "hls/library/library_mock.h"
+
+#include <cassert>
+#include <vector>
 
 using namespace xercesc;
 using namespace std;
 
 namespace eda::hls::library {
 
-void IPXACTParser::parseCatalog(const std::string& catalog_fname) {
+void IPXACTParser::initialize() {
+  XMLPlatformUtils::Initialize();
+}
+
+void IPXACTParser::finalize() {
+  XMLPlatformUtils::Terminate();
+}
+
+void IPXACTParser::parseCatalog(const std::string &catalog_fname) {
+  assert(comp_fnames.empty());
+
   //Initialization.
   //std::cout << "parseCatalog" << std::endl;
-  XMLPlatformUtils::Initialize();
   //XMLCh tempStr[100];
   //XMLString::transcode("LS", tempStr, 99);
   DOMImplementation *impl = DOMImplementationRegistry::getDOMImplementation(
     XMLString::transcode("LS"));
-  DOMLSParser* parser = ((DOMImplementationLS*)impl)->createLSParser(
-    DOMImplementationLS::MODE_SYNCHRONOUS, 0);
-  xercesc::DOMDocument *doc = 0;
+  DOMLSParser *parser = dynamic_cast<DOMImplementationLS*>(impl)->
+    createLSParser(DOMImplementationLS::MODE_SYNCHRONOUS, 0);
+  xercesc::DOMDocument *doc = nullptr;
   doc = parser->parseURI(catalog_fname.c_str());
   XMLCh *ipxactFile_tag = XMLString::transcode("ipxact:ipxactFile");
   XMLCh *vlnv_tag = XMLString::transcode("ipxact:vlnv");
@@ -31,12 +45,12 @@ void IPXACTParser::parseCatalog(const std::string& catalog_fname) {
   size_t ipxactFile_size = doc->getElementsByTagName(
     ipxactFile_tag)->getLength();
   for (size_t i = 0; i < ipxactFile_size; i++) {
-    const DOMElement* ipxactFile = (const DOMElement*)(
+    const DOMElement *ipxactFile = (const DOMElement*)(
       doc->getElementsByTagName(ipxactFile_tag)->item(i));
-    const auto* vlnv = ipxactFile->getElementsByTagName(vlnv_tag)->item(0);
+    const auto *vlnv = ipxactFile->getElementsByTagName(vlnv_tag)->item(0);
     std::string key = std::string(XMLString::transcode(
       vlnv->getAttributes()->getNamedItem(name_attr)->getNodeValue()));
-    const auto* name = ipxactFile->getElementsByTagName(name_tag)->item(0);
+    const auto *name = ipxactFile->getElementsByTagName(name_tag)->item(0);
     std::string value = std::string(XMLString::transcode(
       name->getFirstChild()->getNodeValue()));
     comp_fnames.insert({key, value});
@@ -50,23 +64,21 @@ void IPXACTParser::parseCatalog(const std::string& catalog_fname) {
   delete name_tag;
   delete name_attr;
   parser->release();
-  XMLPlatformUtils::Terminate();
-  return;
 }
 
-void IPXACTParser::parseComponent(const std::string &name,
-                                  library::Parameters &params,
-                                  library::Ports &ports) {
+std::shared_ptr<MetaElement> IPXACTParser::parseComponent(const std::string &name) {
+  Parameters params;
+  std::vector<Port> ports;
+
   //Initialization.
   //std::cout << "parseComponent" << std::endl;
-  XMLPlatformUtils::Initialize();
   //XMLCh tempStr[100];
   //XMLString::transcode("LS", tempStr, 99);
   DOMImplementation *impl = DOMImplementationRegistry::getDOMImplementation(
     XMLString::transcode("LS"));
-  DOMLSParser* parser = ((DOMImplementationLS*)impl)->createLSParser(
+  DOMLSParser *parser = ((DOMImplementationLS*)impl)->createLSParser(
     DOMImplementationLS::MODE_SYNCHRONOUS, 0);
-  xercesc::DOMDocument *doc = 0;
+  xercesc::DOMDocument *doc = nullptr;
   //std::cout << name << std::endl;
   //std::cout << comp_fnames[name] << std::endl;
   doc = parser->parseURI(comp_fnames[name].c_str());
@@ -87,18 +99,18 @@ void IPXACTParser::parseComponent(const std::string &name,
   //IP-XACT tags parsing.
   size_t port_count = doc->getElementsByTagName(port_tag)->getLength();
   for (size_t i = 0; i < port_count; i++) {
-    const DOMElement* port = (const DOMElement*)(
+    const DOMElement *port = (const DOMElement*)(
       doc->getElementsByTagName(port_tag)->item(i));
-    const auto* name = port->getElementsByTagName(name_tag)->item(0);
+    const auto *name = port->getElementsByTagName(name_tag)->item(0);
     std::string name_str = std::string(XMLString::transcode(
       name->getFirstChild()->getNodeValue()));
-    const auto* direction = port->getElementsByTagName(
+    const auto *direction = port->getElementsByTagName(
       direction_tag)->item(0);
     std::string direction_str = std::string(XMLString::transcode(
       direction->getFirstChild()->getNodeValue()));
-    const auto* left = port->getElementsByTagName(left_tag)->item(0);
+    const auto *left = port->getElementsByTagName(left_tag)->item(0);
     int left_int = 0;
-    if (left != NULL) {
+    if (left != nullptr) {
       left_int = std::stoi(XMLString::transcode(
         left->getFirstChild()->getNodeValue()));
     }
@@ -134,18 +146,18 @@ void IPXACTParser::parseComponent(const std::string &name,
   size_t parameter_count = doc->getElementsByTagName(
     parameter_tag_v)->getLength();
   for (size_t i = 0; i < parameter_count; i++) {
-    const DOMElement* parameter = (const DOMElement*)(
+    const DOMElement *parameter = (const DOMElement*)(
       doc->getElementsByTagName(parameter_tag_v)->item(i));
-    const auto* name = parameter->getElementsByTagName(name_tag_v)->item(0);
+    const auto *name = parameter->getElementsByTagName(name_tag_v)->item(0);
     std::string name_str = std::string(XMLString::transcode(
       name->getFirstChild()->getNodeValue()));
-    const auto* value = parameter->getElementsByTagName(value_tag_v)->item(0);
+    const auto *value = parameter->getElementsByTagName(value_tag_v)->item(0);
     int value_int = std::stoi(XMLString::transcode(
       value->getFirstChild()->getNodeValue()));
-    const auto* left = parameter->getElementsByTagName(left_tag_v)->item(0);
+    const auto *left = parameter->getElementsByTagName(left_tag_v)->item(0);
     int left_int = std::stoi(XMLString::transcode(
       left->getFirstChild()->getNodeValue()));
-    const auto* right = parameter->getElementsByTagName(right_tag_v)->item(0);
+    const auto *right = parameter->getElementsByTagName(right_tag_v)->item(0);
     int right_int = std::stoi(XMLString::transcode(
       right->getFirstChild()->getNodeValue()));
     //Creating Parameter.
@@ -167,7 +179,8 @@ void IPXACTParser::parseComponent(const std::string &name,
   delete left_tag_v;
   delete right_tag_v;
   parser->release();
-  XMLPlatformUtils::Terminate();
-  return;
+
+  return std::shared_ptr<MetaElement>(new MetaElementMock(name, params, ports));
 }
+
 } // namespace eda::hls::library
