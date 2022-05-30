@@ -8,10 +8,10 @@
 
 #include "hls/library/library.h"
 #include "hls/model/model.h"
-#include "hls/scheduler/dse/design_explorer.h"
-#include "hls/scheduler/param_optimizer.h"
 #include "hls/scheduler/latency_solver.h"
 #include "hls/scheduler/optimizers/simulated_annealing_optimizer.h"
+#include "hls/scheduler/param_optimizer.h"
+#include "hls/scheduler/dse/design_explorer.h"
 
 #include <cassert>
 #include <fstream>
@@ -60,7 +60,6 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   }
 
   cur_f = criteria.frequency.max;
-  int x2 = cur_f;
   estimate(model, params, indicators, cur_f);
   if (criteria.check(indicators)) { // the maximum frequency is the solution
       return params;
@@ -76,7 +75,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
       std::mt19937 gen{rand_dev()};
        std::normal_distribution<> distr{0, 1};
 
-      for(int i = 0; i < x.size(); i++) {
+      for(std::size_t i = 0; i < x.size(); i++) {
         auto norm = normalize(prev[i], min_value, max_value);
         auto diff = abs(distr(gen));
         x[i] = norm + diff;

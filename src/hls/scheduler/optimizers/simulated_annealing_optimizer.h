@@ -6,7 +6,7 @@
 
 namespace eda::hls::scheduler::optimizers {
 
-    class simulated_annealing_optimizer {
+    class simulated_annealing_optimizer : public eda::hls::scheduler::optimizers::abstract_optimizer {
       public:
         simulated_annealing_optimizer(float init_temp, float fin_temp, float lim,
                         std::function<float(const std::vector<float>&)> tar_fun,
@@ -15,7 +15,7 @@ namespace eda::hls::scheduler::optimizers {
                         std::function<float(int, float)> temp_fun);
         simulated_annealing_optimizer(const simulated_annealing_optimizer& optimizer) = default;
         
-        void optimize(std::vector<float>& param);
+        void optimize(std::vector<float>& param) override;
       private:
         float get_probabiliy(const float& prev_f, const float& cur_f, const float& cur_lim, const float& temp, const std::vector<float>& params);
 
