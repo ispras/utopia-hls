@@ -31,13 +31,16 @@ public:
   void initialize();
   void finalize();
 
-  void parseCatalog(const std::string &catalog_fname);
+  void parseCatalog(const std::string &libPath, const std::string &catalogPath);
   std::shared_ptr<MetaElement> parseComponent(const std::string &name);
 
 private:
   IPXACTParser() {}
 
   std::map<std::string, std::string> comp_fnames;
+
+  std::string libPath;
+
 };
 
 } // namespace eda::hls::library

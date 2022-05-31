@@ -18,7 +18,7 @@
 	</ipxact:model>
 		<ipxact:componentGenerators>	
 			<ipxact:componentGenerator> 
-				<ipxact:generatorExe>./generator</ipxact:generatorExe>
+				<ipxact:generatorExe>./src/hls/generator/generator</ipxact:generatorExe>
 			</ipxact:componentGenerator>
 		</ipxact:componentGenerators>
 	<ipxact:description>A simple multiplication function.</ipxact:description>

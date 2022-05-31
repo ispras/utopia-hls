@@ -65,7 +65,7 @@
 		<ipxact:fileSet>
 			<ipxact:name>base</ipxact:name>
 			<ipxact:file>
-				<ipxact:name>clip.v</ipxact:name>
+				<ipxact:name>clip/1.0/clip.v</ipxact:name>
 				<ipxact:fileType>verilogSource</ipxact:fileType>
 				<ipxact:vendorExtensions>
 					<kactus2:hash>2a1720e45147f3b0ccfeb3dfd433585740e26f2d</kactus2:hash>

@@ -127,7 +127,7 @@ DFC_KERNEL(IDCT) {
     x8 = W3*(x6+x7) + 4;
     x6 = (x8-(W3-W5)*x6)>>3;
     x7 = (x8-(W3+W5)*x7)>>3;
-    
+
     /* second stage */
     x8 = x0 + x1;
     x0 -= x1;
@@ -138,7 +138,7 @@ DFC_KERNEL(IDCT) {
     x4 -= x6;
     x6 = x5 + x7;
     x5 -= x7;
-    
+
     /* third stage */
     x7 = x8 + x3;
     x8 -= x3;
@@ -146,7 +146,7 @@ DFC_KERNEL(IDCT) {
     x0 -= x2;
     x2 = (181*(x4+x5)+128)>>8;
     x4 = (181*(x4-x5)+128)>>8;
-    
+
     /* fourth stage */
     blk[8*0+i] = iclp((x7+x1)>>14);
     blk[8*1+i] = iclp((x3+x2)>>14);
@@ -168,6 +168,7 @@ DFC_KERNEL(IDCT) {
 };
 
 int dfcIdctCompilerTest(const std::string &inputLibraryPath,
+                        const std::string &catalogPath,
                         const std::string &outputFirrtlName,
                         const std::string &outputVerilogName,
                         const std::string &outputDirName) {
@@ -177,7 +178,7 @@ int dfcIdctCompilerTest(const std::string &inputLibraryPath,
   std::shared_ptr<eda::hls::model::Model> model =
     eda::hls::parser::dfc::Builder::get().create("IDCT");
 
-  eda::hls::library::Library::get().initialize(inputLibraryPath);
+  eda::hls::library::Library::get().initialize(inputLibraryPath, catalogPath);
 
   eda::hls::scheduler::DijkstraBalancer::get().balance(*model);
 
@@ -187,12 +188,13 @@ int dfcIdctCompilerTest(const std::string &inputLibraryPath,
   compiler->printRndVlogTest(outputDirName + "testbench.v", 10);
 
   eda::hls::library::Library::get().finalize();
-  
+
   return 0;
 }
 
 TEST(DfcTest, DfcIdctCompilerTest) {
-  EXPECT_EQ(dfcIdctCompilerTest("./test/data/ipx/ispras/ip.hw/catalog/1.0/catalog.1.0.xml",
+  EXPECT_EQ(dfcIdctCompilerTest("./test/data/ipx/ispras/ip.hw",
+                                "catalog/1.0/catalog.1.0.xml",
                                 "outputFirrtlIdct.mlir",
                                 "outputVerilogIdct.v",
                                 "./test/data/dfc/idct/"), 0);

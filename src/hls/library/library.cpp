@@ -12,12 +12,20 @@
 #include "util/assert.h"
 
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <memory>
+#include <stdlib.h>
+#include <string.h>
 
 namespace eda::hls::library {
 
-void Library::initialize(const std::string &config) {
+void Library::initialize(const std::string &libPath,
+                         const std::string &catalogPath) {
   IPXACTParser::get().initialize();
-  IPXACTParser::get().parseCatalog(config);
+  IPXACTParser::get().parseCatalog(libPath, catalogPath);
 }
 
 void Library::finalize() {
@@ -41,6 +49,18 @@ std::shared_ptr<MetaElement> Library::find(const std::string &name) {
   }
 
   return *i;
+}
+
+void MetaElement::callGen() const {
+  //FIXME
+  if (hasGen) {
+  system((genPath + " " +
+          "/home/grigorovia/utopia" + " " +
+          "mul" + " " +
+          "32").c_str());
+  } else {
+    std::cout << "Component is not a generator!" << std::endl;
+  }
 }
 
 } // namespace eda::hls::library

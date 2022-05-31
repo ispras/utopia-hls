@@ -97,15 +97,27 @@ struct Port {
   enum Direction { IN, OUT, INOUT };
 
   Port(const std::string &name, const Direction &direction,
-       unsigned latency, unsigned width):
-    name(name), direction(direction), latency(latency), width(width) {}
-  Port(const Port &port): name(port.name), direction(port.direction),
-    latency(port.latency), width(port.width) {}
+       unsigned latency, unsigned width, bool isParam, char param):
+    name(name),
+    direction(direction),
+    latency(latency),
+    width(width),
+    isParam(isParam),
+    param(param) {}
+  Port(const Port &port):
+    name(port.name),
+    direction(port.direction),
+    latency(port.latency),
+    width(port.width),
+    isParam(port.isParam),
+    param(port.param) {}
 
   const std::string name;
   const Direction direction;
   const unsigned latency;
   const unsigned width;
+  const bool isParam;
+  const char param;
 };
 
 /// Description of a constructed element (module).
@@ -123,8 +135,11 @@ struct Element final {
 struct MetaElement {
   MetaElement(const std::string &name,
               const Parameters &params,
-              const std::vector<Port> &ports):
-      name(name), params(params), ports(ports) {}
+              const std::vector<Port> &ports,
+              const bool hasGen,
+              const std::string &genPath,
+              const std::string &comPath):
+      name(name), params(params), ports(ports), hasGen(hasGen), genPath(genPath), comPath(comPath) {}
 
   /// Constructs an element for the given set of parameters.
   virtual std::unique_ptr<Element> construct(
@@ -134,16 +149,23 @@ struct MetaElement {
   virtual void estimate(
       const Parameters &params, Indicators &indicators) const = 0;
 
+  void callGen() const;
+
   const std::string name;
   const Parameters params;
   const std::vector<Port> ports;
+
+  const bool hasGen;
+  const std::string genPath;
+  std::string comPath;
+  /*const std::map<std::string, std::string> genParams;*/
 };
 
 class Library final : public Singleton<Library> {
   friend class Singleton<Library>;
 
 public:
-  void initialize(const std::string &config);
+  void initialize(const std::string &libPath, const std::string &catalogPath);
   void finalize();
 
   /// Searches for a meta-element for the given node type.
