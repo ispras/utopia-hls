@@ -55,7 +55,7 @@ void MetaElement::callGen() const {
   //FIXME
   if (hasGen) {
   system((genPath + " " +
-          "/home/grigorovia/utopia" + " " +
+          "." + " " +
           "mul" + " " +
           "32").c_str());
   } else {

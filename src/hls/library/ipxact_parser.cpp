@@ -228,7 +228,7 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(const std::string &nam
       genPath_str = std::string(XMLString::transcode(
         genPath->getFirstChild()->getNodeValue()));
     }
-    comPath = "/home/grigorovia/utopia/mul.v";
+    comPath = "./mul.v";
   } else {
     hasGen = false;
     genPath_str = "";
