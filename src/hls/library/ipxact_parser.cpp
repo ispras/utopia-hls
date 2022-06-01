@@ -17,6 +17,27 @@ using namespace std;
 
 namespace eda::hls::library {
 
+std::string toLower(std::string s) {
+    std::transform(s.begin(), s.end(), s.begin(),
+                   [](unsigned char c){ return std::tolower(c); }
+                  );
+    return s;
+}
+
+bool isLetter(char c) {
+  if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
+    return true;
+  }
+  return false;
+}
+
+bool isDigit(char c) {
+  if (c >= '0' && c <= '9') {
+    return true;
+  }
+  return false;
+}
+
 void IPXACTParser::initialize() {
   XMLPlatformUtils::Initialize();
 }
@@ -25,9 +46,10 @@ void IPXACTParser::finalize() {
   XMLPlatformUtils::Terminate();
 }
 
-void IPXACTParser::parseCatalog(const std::string &catalog_fname) {
+void IPXACTParser::parseCatalog(const std::string &libPath,
+                                const std::string &catalogPath) {
   assert(comp_fnames.empty());
-
+  this->libPath = libPath;
   //Initialization.
   //std::cout << "parseCatalog" << std::endl;
   //XMLCh tempStr[100];
@@ -37,7 +59,7 @@ void IPXACTParser::parseCatalog(const std::string &catalog_fname) {
   DOMLSParser *parser = dynamic_cast<DOMImplementationLS*>(impl)->
     createLSParser(DOMImplementationLS::MODE_SYNCHRONOUS, 0);
   xercesc::DOMDocument *doc = nullptr;
-  doc = parser->parseURI(catalog_fname.c_str());
+  doc = parser->parseURI((this->libPath + "/" + catalogPath).c_str());
   XMLCh *ipxactFile_tag = XMLString::transcode("ipxact:ipxactFile");
   XMLCh *vlnv_tag = XMLString::transcode("ipxact:vlnv");
   XMLCh *name_tag = XMLString::transcode("ipxact:name");
@@ -55,9 +77,9 @@ void IPXACTParser::parseCatalog(const std::string &catalog_fname) {
       name->getFirstChild()->getNodeValue()));
     comp_fnames.insert({key, value});
   }
-  /*for (const auto &[key, value] : comp_fnames) {
+  for (const auto &[key, value] : comp_fnames) {
     std::cout << key << std::endl << value << std::endl;
-  }*/
+  }
   //Termination.
   delete ipxactFile_tag;
   delete vlnv_tag;
@@ -71,7 +93,7 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(const std::string &nam
   std::vector<Port> ports;
 
   //Initialization.
-  //std::cout << "parseComponent" << std::endl;
+  std::cout << "parseComponent:" << name << std::endl;
   //XMLCh tempStr[100];
   //XMLString::transcode("LS", tempStr, 99);
   DOMImplementation *impl = DOMImplementationRegistry::getDOMImplementation(
@@ -80,8 +102,8 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(const std::string &nam
     DOMImplementationLS::MODE_SYNCHRONOUS, 0);
   xercesc::DOMDocument *doc = nullptr;
   //std::cout << name << std::endl;
-  //std::cout << comp_fnames[name] << std::endl;
-  doc = parser->parseURI(comp_fnames[name].c_str());
+  std::cout << comp_fnames[toLower(name)] << std::endl;
+  doc = parser->parseURI(comp_fnames[toLower(name)].c_str());
   //IP-XACT tags.
   XMLCh *port_tag = XMLString::transcode("ipxact:port");
   XMLCh *name_tag = XMLString::transcode("ipxact:name");
@@ -96,6 +118,13 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(const std::string &nam
   XMLCh *value_tag_v = XMLString::transcode("kactus2:value");
   XMLCh *left_tag_v = XMLString::transcode("kactus2:left");
   XMLCh *right_tag_v = XMLString::transcode("kactus2:right");
+  //For component generators.
+  XMLCh *componentGenerators_tag = XMLString::transcode("ipxact:componentGenerators");
+  XMLCh *generatorExe_tag = XMLString::transcode("ipxact:generatorExe");
+  //For static compomonents.
+  XMLCh *fileSet_tag = XMLString::transcode("ipxact:fileSet");
+  XMLCh *file_tag = XMLString::transcode("ipxact:file");
+
   //IP-XACT tags parsing.
   size_t port_count = doc->getElementsByTagName(port_tag)->getLength();
   for (size_t i = 0; i < port_count; i++) {
@@ -109,37 +138,60 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(const std::string &nam
     std::string direction_str = std::string(XMLString::transcode(
       direction->getFirstChild()->getNodeValue()));
     const auto *left = port->getElementsByTagName(left_tag)->item(0);
-    int left_int = 0;
+    int left_int = -1;
+    std::string value;
+    bool isParam = false;
+    char param = ' ';
     if (left != nullptr) {
-      left_int = std::stoi(XMLString::transcode(
-        left->getFirstChild()->getNodeValue()));
+      value = XMLString::transcode(left->getFirstChild()->getNodeValue());
+      std::string value = XMLString::transcode(left->getFirstChild()->getNodeValue());
+      //If value is a parameter.
+      if (value.size() == 1) {
+        if (isLetter(value.c_str()[0])) {
+          isParam = true;
+          param = value.c_str()[0];
+        } else {
+          std::cout << "Error in IP-XACT specification!" << std::endl;
+          return nullptr;
+        }
+      } else {
+        for (size_t j = 0; j < value.size(); j++) {
+          if (!isDigit(value.c_str()[j])) {
+            std::cout << "Error in IP-XACT specification!" << std::endl;
+            return nullptr;
+          }
+        }
+      }
+      if (!isParam) {
+        left_int = std::stoi(XMLString::transcode(
+          left->getFirstChild()->getNodeValue()));
+      }
     }
-    //May be needed in future.
-    /*const auto* right = port->getElementsByTagName()->item(0);
-    std::string right = std::string(XMLString::transcode(
-        right->getFirstChild()->getNodeValue()));*/
     //Creating Port.
     if (direction_str == "in") {
       /*std::cout << "in " << name_str;
-      if (left != NULL) {
+      if (left != nullptr) {
         std::cout << " [" << left_int << ":" << "0" << "]";
       }
       std::cout << std::endl;*/
       ports.push_back(library::Port(name_str,
                                     library::Port::IN,
                                     0,
-                                    left_int + 1));
+                                    left_int + 1,
+                                    isParam,
+                                    param));
     }
     if (direction_str == "out") {
       /*std::cout << "out " << name_str;
-      if (left != NULL) {
+      if (left != nullptr) {
         std::cout << " [" << left_int << ":" << "0" << "]";
-      }
-      std::cout << std::endl;*/
+      }*/
       ports.push_back(library::Port(name_str,
                                     library::Port::OUT,
                                     0,
-                                    left_int + 1));
+                                    left_int + 1,
+                                    isParam,
+                                    param));
     }
   }
   //Vendor extensions tags parsing.
@@ -165,6 +217,27 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(const std::string &nam
                                   library::Constraint(left_int, right_int),
                                   value_int));
   }
+  bool hasGen;
+  std::string genPath_str;
+  std::string comPath;
+  size_t generator_count = doc->getElementsByTagName(componentGenerators_tag)->getLength();
+  if (generator_count != 0) {
+    hasGen = true;
+    const auto *genPath = doc->getElementsByTagName(generatorExe_tag)->item(0);
+    if (genPath != nullptr) {
+      genPath_str = std::string(XMLString::transcode(
+        genPath->getFirstChild()->getNodeValue()));
+    }
+    comPath = "./mul.v";
+  } else {
+    hasGen = false;
+    genPath_str = "";
+    const DOMElement *file = (const DOMElement*)(doc->getElementsByTagName(file_tag)->item(0));
+    const auto *name = file->getElementsByTagName(name_tag)->item(0);
+    std::string name_str = std::string(XMLString::transcode(
+      name->getFirstChild()->getNodeValue()));
+    comPath = libPath + "/" + name_str;
+  }
   //Termination.
   delete port_tag;
   delete name_tag;
@@ -178,9 +251,17 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(const std::string &nam
   delete value_tag_v;
   delete left_tag_v;
   delete right_tag_v;
+  delete componentGenerators_tag;
+  delete generatorExe_tag;
+
   parser->release();
 
-  return std::shared_ptr<MetaElement>(new MetaElementMock(name, params, ports));
+  return std::shared_ptr<MetaElement>(new MetaElementMock(name,
+                                                          params,
+                                                          ports,
+                                                          hasGen,
+                                                          genPath_str,
+                                                          comPath));//FIXME
 }
 
 } // namespace eda::hls::library

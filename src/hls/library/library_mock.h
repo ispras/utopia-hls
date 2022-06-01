@@ -21,14 +21,20 @@ namespace eda::hls::library {
 struct MetaElementMock final : public MetaElement {
   MetaElementMock(const std::string &name,
                   const Parameters &params,
-                  const std::vector<Port> &ports):
-      MetaElement(name, params, ports) {}
+                  const std::vector<Port> &ports,
+                  const bool hasGen,
+                  const std::string &genPath,
+                  const std::string &comPath
+                /*const std::map<std::string, std::string> &genParams*/):
+      MetaElement(name, params, ports, hasGen, genPath, comPath) {}
 
   virtual std::unique_ptr<Element> construct(
       const Parameters &params) const override;
   virtual void estimate(
       const Parameters &params, Indicators &indicators) const override;
 };
+
+
 
 inline std::unique_ptr<Element> MetaElementMock::construct(
     const Parameters &params) const {

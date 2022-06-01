@@ -24,12 +24,13 @@ using namespace eda::hls::library;
 using namespace eda::hls::scheduler;
 
 int compilerHilTest(const std::string &inputLibraryPath,
+                    const std::string &relativeCompPath,
                     const std::string &inputFilePath,
                     const std::string &outputFirrtlName,
                     const std::string &outputVerilogName,
                     const std::string &outputDirName) {
   std::shared_ptr<Model> model = parse(inputFilePath);
-  Library::get().initialize(inputLibraryPath);
+  Library::get().initialize(inputLibraryPath, relativeCompPath);
   DijkstraBalancer::get().balance(*model);
   auto compiler = std::make_unique<Compiler>(*model);
   auto circuit = compiler->constructCircuit("main");
@@ -40,7 +41,8 @@ int compilerHilTest(const std::string &inputLibraryPath,
 }
 
 TEST(CompilerTest, CompilerTestIdctTest) {
-  EXPECT_EQ(compilerHilTest("./test/data/ipx/ispras/ip.hw/catalog/1.0/catalog.1.0.xml",
+  EXPECT_EQ(compilerHilTest("./test/data/ipx/ispras/ip.hw",
+                            "catalog/1.0/catalog.1.0.xml",
                             "./test/data/hil/idct.hil",
                             "outputFirrtlIdct.mlir",
                             "outputVerilogIdct.v",

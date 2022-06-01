@@ -29,6 +29,13 @@ using namespace eda::hls::scheduler;
 
 namespace eda::hls::compiler {
 
+std::string toLower(std::string s) {
+    std::transform(s.begin(), s.end(), s.begin(),
+                   [](unsigned char c){ return std::tolower(c); }
+                  );
+    return s;
+}
+
 const std::string chanSourceToString(const eda::hls::model::Chan &chan) {
   return chan.source.node->name + "_" + chan.source.port->name;
 }
@@ -69,10 +76,6 @@ void Module::addOutput(const Port &outputPort) {
   wires.push_back(inputWire);
 }*/
 
-void Module::addBody(const std::string &body) {
-  this->body = body;
-}
-
 ExternalModule::ExternalModule(const model::NodeType* nodetype) : Module(nodetype->name) {
   addInput(Port("clock", true, Type("clock", 1, false, 1)));
   addInput(Port("reset", true, Type("reset", 1, false, 1)));
@@ -91,11 +94,23 @@ ExternalModule::ExternalModule(const model::NodeType* nodetype) : Module(nodetyp
                                                1)));
   }
   auto meta = Library::get().find(*nodetype);
-  auto element = meta->construct(meta->params);
-  addBody(element->ir);
+  //If component is a generator.
+  if (meta->hasGen) {
+    meta->callGen();//callGen will get comPath
+    addPath(meta->comPath);
+  } else {
+    addPath(meta->comPath);
+  }
+  //auto element = meta->construct(meta->params);
+  //addBody(element->ir);
 }
 
-FirrtlModule::FirrtlModule(const eda::hls::model::Model &model, const std::string &topModuleName) : Module(topModuleName) {
+void Module::addPath(const std::string &path) {
+  this->path = path;
+}
+
+FirrtlModule::FirrtlModule(const eda::hls::model::Model &model,
+                           const std::string &topModuleName) : Module(topModuleName) {
   const auto* graph = model.findGraph(topModuleName);
   //moduleName = graph->name;
   //Inputs & Outputs
@@ -184,7 +199,7 @@ FirrtlModule::FirrtlModule(const eda::hls::model::Model &model, const std::strin
                                                       1));
       instances.back().addModuleOutput(outputPort);
     }
-    addBody("");
+    addPath("");
   }
 }
 
@@ -207,11 +222,11 @@ void FirrtlModule::addInstance(const Instance &inputInstance) {
 Circuit::Circuit(const std::string &moduleName) : name(moduleName) {}
 
 void Circuit::addFirModule(const FirrtlModule &firModule) {
-  firModules.insert({firModule.moduleName, firModule});
+  firModules.insert({firModule.name, firModule});
 }
 
 void Circuit::addExternalModule(const ExternalModule &externalModule) {
-  extModules.insert({externalModule.moduleName, externalModule});
+  extModules.insert({externalModule.name, externalModule});
 }
 
 FirrtlModule* Circuit::findFirModule(const std::string &name) const {
@@ -344,7 +359,7 @@ void Compiler::printConnections(const FirrtlModule &firmodule,
 void Compiler::printDeclaration(const FirrtlModule &firmodule,
                                 std::ostream &out) const {
   out << Compiler::indent << Compiler::opPrefix << "module @" <<
-      firmodule.moduleName << " (\n";
+      firmodule.name << " (\n";
   for (const auto &input : firmodule.inputs) {
     out << Compiler::indent << Compiler::indent <<  "in " <<
         Compiler::varPrefix << input.name << " : " << Compiler::typePrefix <<
@@ -381,14 +396,13 @@ void Compiler::printFirrtlModule(const FirrtlModule &firmodule,
   printEmptyLine(out);
   printInstances(firmodule, out);
   printConnections(firmodule, out);
-  printBody(firmodule, out);
   printEpilogue(firmodule, out);
   printEmptyLine(out);
 }
 
 void Compiler::printDeclaration(const ExternalModule &extmodule,
                                 std::ostream &out) const {
-  out << "module " << extmodule.moduleName << "(\n";
+  out << "module " << extmodule.name << "(\n";
   bool hasComma = false;
   std::string buf;
   for (const auto &input : extmodule.inputs) {
@@ -420,22 +434,14 @@ void Compiler::printDeclaration(const ExternalModule &extmodule,
 
 void Compiler::printEpilogue(const ExternalModule &extmodule,
                              std::ostream &out) const {
-  out << "endmodule " << "//" << extmodule.moduleName;
-  printEmptyLine(out);
-}
-
-void Compiler::printVerilogModule(const ExternalModule &extmodule,
-                                  std::ostream &out) const {
-  printDeclaration(extmodule, out);
-  printBody(extmodule, out);
-  printEpilogue(extmodule, out);
+  out << "endmodule " << "//" << extmodule.name;
   printEmptyLine(out);
 }
 
 void Compiler::printFirrtlDeclaration(const ExternalModule &extmodule,
                                       std::ostream &out) const {
   out << Compiler::indent << Compiler::opPrefix << "extmodule @" <<
-  extmodule.moduleName << "(";
+  extmodule.name << "(";
   bool hasComma = false;
   std::string buf;
   for (const auto &input : extmodule.inputs) {
@@ -464,8 +470,12 @@ void Compiler::printFirrtlDeclaration(const ExternalModule &extmodule,
   out << ")\n";
 }
 
-void Compiler::printBody(const Module &module, std::ostream &out) const {
-  out << module.body;
+void Compiler::moveVerilogModule(const std::string &outputDirectoryName,
+                                 const ExternalModule &extModule,
+                                 std::ostream &out) const {
+  //std::cout << extModule.path << std::endl;
+  //std::cout << outputDirectoryName << toLower(extModule.name) << ".v" << std::endl;
+  std::filesystem::copy(toLower(extModule.path), (outputDirectoryName + toLower(extModule.name) + ".v"), std::filesystem::copy_options::overwrite_existing); //FIXME
 }
 
 void Compiler::printEmptyLine(std::ostream &out) const {
@@ -484,9 +494,10 @@ void Compiler::printFirrtl(std::ostream &out) const {
   out << "}";
 }
 
-void Compiler::printVerilog(std::ostream &out) const {
+void Compiler::moveVerilogLibrary(const std::string &outputDirectoryName,
+                                  std::ostream &out) const {
   for (const auto &pair : circuit->extModules) {
-    printVerilogModule(pair.second, out);
+    moveVerilogModule(outputDirectoryName, pair.second, out);
   }
 }
 
@@ -519,7 +530,7 @@ void Compiler::printFiles(const std::string& outputFirrtlName,
   std::filesystem::rename("main.sv", (outputDirectoryName +
                                       std::string("main.sv")).c_str());
   outputFile.open(outputDirectoryName + outputVerilogName);
-  printVerilog(outputFile);
+  moveVerilogLibrary(outputDirectoryName, outputFile);
   outputFile.close();
 }
 
@@ -561,7 +572,7 @@ void Compiler::printRndVlogTest(const std::string& tstPath, const int tstCnt) {
 
   const Module *main = circuit->findMain();
 
-  dict->SetValue("MODULE_NAME", main->moduleName);
+  dict->SetValue("MODULE_NAME", main->name);
 
   std::vector<std::string> bndNames;
   // set registers for device inputs

@@ -84,16 +84,16 @@ struct Instance final {
 };
 
 struct Module {
-  std::string moduleName;
+  std::string name;
   std::vector<Wire> wires;
   std::vector<Instance> instances;
   std::vector<Port> inputs;
   std::vector<Port> outputs;
-  std::string body;
+  std::string path;
 
-  Module(const std::string &name) : moduleName(name) {};
+  Module(const std::string &name) : name(name) {};
 
-  void addBody(const std::string &body);
+  void addPath(const std::string &path);
   void addInput(const Port &inputPort);
   void addOutput(const Port &outputPort);
 };
@@ -155,12 +155,14 @@ struct Compiler final {
   void printFirrtlDeclaration(const ExternalModule &extmodule,
                               std::ostream &out) const;
   void printEpilogue(const ExternalModule &extmodule, std::ostream &out) const;
-  void printVerilogModule(const ExternalModule &extmodule,
-                          std::ostream &out) const;
+  void moveVerilogLibrary(const std::string &outputDirectoryName,
+                                    std::ostream &out) const;
+  void moveVerilogModule(const std::string &outputDirectoryName,
+                         const ExternalModule &extModule,
+                         std::ostream &out) const;
 
   void convertToSV(const std::string& inputFirrtlName) const;
   void printFirrtl(std::ostream &out) const;
-  void printVerilog(std::ostream &out) const;
   void printFiles(const std::string &outputFirrtlName,
                   const std::string &outputVerilogName,
                   const std::string &outputDirectoryName) const;

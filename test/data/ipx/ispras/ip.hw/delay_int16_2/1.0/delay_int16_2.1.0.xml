@@ -65,7 +65,7 @@
 		<ipxact:fileSet>
 			<ipxact:name>base</ipxact:name>
 			<ipxact:file>
-				<ipxact:name>delay_int16_2.v</ipxact:name>
+				<ipxact:name>delay_int16_2/1.0/delay_int16_2.v</ipxact:name>
 				<ipxact:fileType>verilogSource</ipxact:fileType>
 				<ipxact:vendorExtensions>
 					<kactus2:hash>e5ecc758b69e156671a3cd032e8b4e25e1392263</kactus2:hash>
