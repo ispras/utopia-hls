@@ -29,7 +29,7 @@ public:
     return *instance;
   }
 
-  // Checks if models are equivalent.
+  /// Checks if models are equivalent.
   bool equivalent(const Model &left, const Model &right) const;
 
   /// Returns source nodes for the graph.
@@ -43,7 +43,7 @@ private:
 
   static std::unique_ptr<EqChecker> instance;
 
-  /* Methods that implement equivalence checking steps. */
+  /* Methods that implement equivalence checking siub-tasks. */
 
   /// Checks if each of graph collections contain the main one.
   bool match(const std::vector<Graph*> &left,
@@ -57,7 +57,7 @@ private:
 
   /* Methods for model-to-solver interaction. */
 
-  /// Creates formal expressions for the specified graph.
+  /// Creates formulae (expressions) for the specified graph.
   void createExprs(const Graph &graph, z3::context &ctx,
       z3::expr_vector &nodes) const;
 

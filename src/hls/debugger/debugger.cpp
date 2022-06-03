@@ -75,7 +75,7 @@ bool EqChecker::equivalent(const Model &left, const Model &right) const {
     const Node *fOut = outPair.first;
     const Node *sOut = outPair.second;
 
-    // funciton names
+    // function names
     const char *fName = fOut->type.name.c_str();
     const char *sName = sOut->type.name.c_str();
 
