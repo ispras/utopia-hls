@@ -142,13 +142,13 @@ template <PortType> struct Port {
 using InputPort = Port<PortType::Input>;
 using OutputPort = Port<PortType::Output>;
 
-template <> void ModelDumper<Port<PortType::Input>>::dump() {
+template <> void ModelDumper<InputPort>::dump() {
   const auto &port = node_.model_port;
   os_ << "#hil.input<" << quoted(port.type) << curly_braced(port.flow) << ' '
       << quoted(port.name) << ">";
 }
 
-template <> void ModelDumper<Port<PortType::Output>>::dump() {
+template <> void ModelDumper<OutputPort>::dump() {
   const auto &port = node_.model_port;
   os_ << "#hil.output<" << quoted(port.type) << curly_braced(port.flow) << ' '
       << port.latency << ' ' << quoted(port.name);

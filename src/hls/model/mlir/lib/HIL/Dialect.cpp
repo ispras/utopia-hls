@@ -140,9 +140,7 @@ mlir::Attribute mlir::hil::OutputPortAttr::parse(mlir::AsmParser &parser,
 }
 
 void mlir::hil::InputBndAttr::print(mlir::AsmPrinter &printer) const {
-  printer << "<\"" <<
-      getNodeName() <<
-      "\"<";
+  printer << "<\"" << getNodeName() << "\"<";
   getPort().print(printer);
   printer << ">" << ">";
 }
@@ -167,9 +165,7 @@ mlir::Attribute mlir::hil::InputBndAttr::parse(mlir::AsmParser &parser,
 }
 
 void mlir::hil::OutputBndAttr::print(mlir::AsmPrinter &printer) const {
-  printer << "<\"" <<
-      getNodeName() <<
-      "\"<";
+  printer << "<\"" << getNodeName() << "\"<";
   getPort().print(printer);
   printer << ">" << ">";
 }

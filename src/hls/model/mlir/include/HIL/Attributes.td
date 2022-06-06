@@ -12,7 +12,7 @@
 include "Dialect.td"
 
 def InputPortAttr : HIL_Attr<"InputPort"> {
-  let mnemonic = "input-port";
+  let mnemonic = "inport";
 
   let summary = "Input port";
 
@@ -29,7 +29,7 @@ def InputPortAttr : HIL_Attr<"InputPort"> {
 }
 
 def OutputPortAttr : HIL_Attr<"OutputPort"> {
-  let mnemonic = "output-port";
+  let mnemonic = "outport";
 
   let summary = "Output port";
 
@@ -49,7 +49,7 @@ def OutputPortAttr : HIL_Attr<"OutputPort"> {
 
 def InputBndAttr : HIL_Attr<"InputBnd"> {
 
-  let mnemonic = "input-binding";
+  let mnemonic = "inbind";
 
   let summary = "Input port binding";
 
@@ -66,7 +66,7 @@ def InputBndAttr : HIL_Attr<"InputBnd"> {
 
 def OutputBndAttr : HIL_Attr<"OutputBnd"> {
 
-  let mnemonic = "output-binding";
+  let mnemonic = "outbind";
 
   let summary = "Output port binding";
 
