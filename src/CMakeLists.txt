@@ -86,6 +86,7 @@ add_library(${MAIN_LIBRARY}
   hls/debugger/debugger.cpp
   hls/library/ipxact_parser.cpp
   hls/library/library.cpp
+  hls/mapper/config/hwconfig.cpp
   hls/model/model.cpp
   hls/model/transform.cpp
   hls/model/printer.cpp
