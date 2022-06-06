@@ -20,6 +20,19 @@
 
 using namespace eda::utils;
 
+namespace eda::hls::library {
+
+struct MetaElement;
+
+} // namespace eda::hls::library
+
+namespace eda::hls::mapper {
+
+struct ChanInd;
+struct NodeInd;
+
+} // namespace eda::hls::mapper
+
 namespace eda::hls::model {
 
 struct Graph;
@@ -278,7 +291,7 @@ struct NodeType final {
   std::vector<Port*> inputs;
   std::vector<Port*> outputs;
 
-  // Reference to the parent.
+  /// Reference to the parent.
   Model &model;
 };
 
@@ -313,8 +326,11 @@ struct Chan final {
   Binding source;
   Binding target;
 
-  // Reference to the parent.
+  /// Reference to the parent.
   Graph &graph;
+
+  /// Indicators.
+  mapper::ChanInd *ind = nullptr;
 };
 
 //===----------------------------------------------------------------------===//
@@ -359,8 +375,13 @@ struct Node final {
   std::vector<Chan*> inputs;
   std::vector<Chan*> outputs;
 
-  // Reference to the parent.
+  /// Reference to the parent.
   Graph &graph;
+
+  /// Mapping.
+  library::MetaElement *map = nullptr;
+  /// Indicators.
+  mapper::NodeInd *ind = nullptr;
 };
 
 //===----------------------------------------------------------------------===//

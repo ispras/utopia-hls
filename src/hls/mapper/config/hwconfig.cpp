@@ -6,8 +6,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#pragma once
-
 #include <hls/mapper/config/hwconfig.h>
 
 #include <string>

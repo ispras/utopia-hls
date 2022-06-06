@@ -90,6 +90,7 @@ add_library(${MAIN_LIBRARY}
   hls/library/ipxact_parser.cpp
   hls/library/library.cpp
   hls/mapper/config/hwconfig.cpp
+  hls/mapper/mapper.cpp
   hls/model/model.cpp
   hls/model/transform.cpp
   hls/model/printer.cpp
