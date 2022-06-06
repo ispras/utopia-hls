@@ -12,9 +12,9 @@
 #include "util/singleton.h"
 
 #include <cassert>
-#include <iostream>
 #include <map>
 #include <memory>
+#include <string>
 
 using namespace eda::util;
 using namespace eda::hls::model;
@@ -52,7 +52,8 @@ struct Constraint final {
 };
 
 struct Parameter final {
-  Parameter(const std::string &name, const Constraint &constraint,
+  Parameter(const std::string &name,
+            const Constraint &constraint,
             unsigned value):
     name(name), constraint(constraint), value(value) {}
 
@@ -122,6 +123,7 @@ struct Port {
 
 /// Description of a constructed element (module).
 struct Element final {
+  // TODO: Code, Path, etc.
   explicit Element(const std::vector<Port> &ports): ports(ports) {}
 
   // TODO add mutual relation between spec ports and impl ports
@@ -129,36 +131,27 @@ struct Element final {
 
   // TODO there should be different IRs: MLIR FIRRTL or Verilog|VHDL described in FIRRTL
   std::string ir;
+
+  // TODO path
+  std::string path;
 };
 
 /// Description of a parameterized constructor of elements.
 struct MetaElement {
   MetaElement(const std::string &name,
               const Parameters &params,
-              const std::vector<Port> &ports,
-              const bool hasGen,
-              const std::string &genPath,
-              const std::string &comPath):
-      name(name), params(params), ports(ports), hasGen(hasGen), genPath(genPath), comPath(comPath) {}
-
-  /// Constructs an element for the given set of parameters.
-  virtual std::unique_ptr<Element> construct(
-      const Parameters &params) const = 0;
+              const std::vector<Port> &ports):
+      name(name), params(params), ports(ports) {}
 
   /// Estimates the indicators the given set of parameters.
-  virtual void estimate(
-      const Parameters &params, Indicators &indicators) const = 0;
+  virtual void estimate(const Parameters &params,
+                        Indicators &indicators) const = 0;
 
-  void callGen() const;
+  virtual std::unique_ptr<Element> construct(const Parameters &params) const = 0;
 
   const std::string name;
   const Parameters params;
   const std::vector<Port> ports;
-
-  const bool hasGen;
-  const std::string genPath;
-  std::string comPath;
-  /*const std::map<std::string, std::string> genParams;*/
 };
 
 class Library final : public Singleton<Library> {
@@ -170,8 +163,9 @@ public:
 
   /// Searches for a meta-element for the given node type.
   std::shared_ptr<MetaElement> find(const NodeType &nodetype);
+  std::shared_ptr<MetaElement> create(const NodeType &nodetype);
   /// Searches for a meta-element for the given name.
-  std::shared_ptr<MetaElement> find(const std::string &name);
+  //std::shared_ptr<MetaElement> find(const std::string &name);
 
   void add(const std::shared_ptr<MetaElement> &metaElement) {
     cache.push_back(metaElement);

@@ -6,9 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "hls/library/internal/element_internal.h"
 #include "hls/library/ipxact_parser.h"
 #include "hls/library/library.h"
-#include "hls/library/library_mock.h"
 #include "util/assert.h"
 
 #include <algorithm>
@@ -17,15 +17,13 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
-#include <stdlib.h>
-#include <string.h>
 
 namespace eda::hls::library {
 
-void Library::initialize(const std::string &libPath,
+void Library::initialize(const std::string &libraryPath,
                          const std::string &catalogPath) {
   IPXACTParser::get().initialize();
-  IPXACTParser::get().parseCatalog(libPath, catalogPath);
+  IPXACTParser::get().parseCatalog(libraryPath, catalogPath);
 }
 
 void Library::finalize() {
@@ -33,34 +31,56 @@ void Library::finalize() {
 }
 
 std::shared_ptr<MetaElement> Library::find(const NodeType &nodetype) {
-  return find(nodetype.name);
-}
+  const auto name = nodetype.name;
 
-std::shared_ptr<MetaElement> Library::find(const std::string &name) {
   const auto i = std::find_if(cache.begin(), cache.end(),
     [&name](const std::shared_ptr<MetaElement> &metaElement) {
       return metaElement->name == name;
     });
 
-  if (i == cache.end()) {
+  if (i != cache.end()) {
+    return *i;
+  }
+
+  if (IPXACTParser::get().hasComponent(name)) {
     auto metaElement = IPXACTParser::get().parseComponent(name);
     cache.push_back(metaElement);
     return metaElement;
   }
-
-  return *i;
+  auto metaElement = create(nodetype);
+  return metaElement;
 }
 
-void MetaElement::callGen() const {
-  //FIXME
-  if (hasGen) {
-  system((genPath + " " +
-          "." + " " +
-          "mul" + " " +
-          "32").c_str());
-  } else {
-    std::cout << "Component is not a generator!" << std::endl;
+
+std::shared_ptr<MetaElement> Library::create(const NodeType &nodetype) {
+  std::string name = nodetype.name;
+  //If there is no such component in the library then it has to be an internal component.
+  Parameters params;
+  params.add(Parameter("f", Constraint(1, 1000), 100));
+  params.add(Parameter("stages", Constraint(0, 10000), 10));
+
+  std::vector<Port> ports;
+
+  for (const auto *input: nodetype.inputs) {
+    ports.push_back(Port(input->name, Port::IN, input->latency, 16, false, ' '));//TODO
   }
+  for (const auto *output: nodetype.outputs) {
+    ports.push_back(Port(output->name, Port::OUT, output->latency, 16, false, ' '));//TODO
+  }
+
+  // Add clk and rst ports: these ports are absent in the lists above.
+  ports.push_back(Port("clock", Port::IN, 0, 1, false, ' '));
+  ports.push_back(Port("reset", Port::IN, 0, 1, false, ' '));
+
+  std::string lowerCaseName = name;
+  unsigned i = 0;
+  while (lowerCaseName[i]) {
+    lowerCaseName[i] = tolower(lowerCaseName[i]);
+    i++;
+  }
+  return std::shared_ptr<MetaElement>(new ElementInternal(lowerCaseName,
+                                                          params,
+                                                          ports));
 }
 
 } // namespace eda::hls::library

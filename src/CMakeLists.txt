@@ -84,6 +84,9 @@ add_library(${MAIN_LIBRARY}
   gate/model/signal.cpp
   hls/compiler/compiler.cpp
   hls/debugger/debugger.cpp
+  hls/library/element_generator.cpp
+  hls/library/element_core.cpp
+  hls/library/internal/element_internal.cpp
   hls/library/ipxact_parser.cpp
   hls/library/library.cpp
   hls/mapper/config/hwconfig.cpp

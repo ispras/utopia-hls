@@ -26,7 +26,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     Model &model,
     Indicators &indicators) const {
   srand(42);
-  
+
   std::map<std::string, Parameters> params;
 
   // Get the main dataflow graph.
@@ -129,8 +129,8 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   return params;
 }
 
-void ParametersOptimizer::updateFrequency(Model& model, 
-    std::map<std::string, Parameters>& params, 
+void ParametersOptimizer::updateFrequency(Model& model,
+    std::map<std::string, Parameters>& params,
     const unsigned frequency) const {
   Graph *graph = model.main();
   for (const auto *node : graph->nodes) {
@@ -153,7 +153,7 @@ void ParametersOptimizer::estimate(Model& model,
   indicators.latency = LatencyLpSolver::get().getGraphLatency();
   // Estimate overall design indicators
   dse::DesignExplorer::get().estimateIndicators(model, params, indicators);
-  
+
 }
 
 double ParametersOptimizer::normalize(double value, double min, double max) const {

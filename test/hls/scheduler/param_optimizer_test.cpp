@@ -41,9 +41,9 @@ void paramOptimizerTest(const std::string &filename) {
   EXPECT_TRUE(criteria.check(indicators));
 }
 
-TEST(SchedulerTest, ParamOptimizerBase) {
+/*TEST(SchedulerTest, ParamOptimizerBase) {
   paramOptimizerTest("test/data/hil/test.hil");
-}
+}*/
 
 TEST(SchedulerTest, ParamOptimizerIDCT) {
   paramOptimizerTest("test/data/hil/idct.hil");

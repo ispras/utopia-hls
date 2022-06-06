@@ -7,20 +7,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/compiler/compiler.h"
-#include "hls/debugger/debugger.h"
-#include "hls/library/library.h"
-#include "hls/library/library_mock.h"
-#include "hls/scheduler/dijkstra.h"
-
-#include <ctemplate/template.h>
-
-#include <filesystem>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <memory>
-#include <stdlib.h>
-#include <string.h>
 
 using namespace eda::hls::debugger;
 using namespace eda::hls::library;
@@ -76,7 +62,7 @@ void Module::addOutput(const Port &outputPort) {
   wires.push_back(inputWire);
 }*/
 
-ExternalModule::ExternalModule(const model::NodeType* nodetype) : Module(nodetype->name) {
+ExternalModule::ExternalModule(const model::NodeType *nodetype) : Module(nodetype->name) {
   addInput(Port("clock", true, Type("clock", 1, false, 1)));
   addInput(Port("reset", true, Type("reset", 1, false, 1)));
   for (const auto *input : nodetype->inputs) {
@@ -93,20 +79,18 @@ ExternalModule::ExternalModule(const model::NodeType* nodetype) : Module(nodetyp
                                                false,
                                                1)));
   }
-  auto meta = Library::get().find(*nodetype);
-  //If component is a generator.
-  if (meta->hasGen) {
-    meta->callGen();//callGen will get comPath
-    addPath(meta->comPath);
-  } else {
-    addPath(meta->comPath);
-  }
-  //auto element = meta->construct(meta->params);
-  //addBody(element->ir);
+  auto metaElement = Library::get().find(*nodetype);
+  auto element = metaElement->construct(metaElement->params);
+  addBody(element->ir);
+  addPath(element->path);
 }
 
 void Module::addPath(const std::string &path) {
   this->path = path;
+}
+
+void Module::addBody(const std::string &body) {
+  this->body = body;
 }
 
 FirrtlModule::FirrtlModule(const eda::hls::model::Model &model,
@@ -471,15 +455,25 @@ void Compiler::printFirrtlDeclaration(const ExternalModule &extmodule,
 }
 
 void Compiler::moveVerilogModule(const std::string &outputDirectoryName,
-                                 const ExternalModule &extModule,
-                                 std::ostream &out) const {
-  //std::cout << extModule.path << std::endl;
-  //std::cout << outputDirectoryName << toLower(extModule.name) << ".v" << std::endl;
+                                 const ExternalModule &extModule) const {
   std::filesystem::copy(toLower(extModule.path), (outputDirectoryName + toLower(extModule.name) + ".v"), std::filesystem::copy_options::overwrite_existing); //FIXME
+}
+
+void Compiler::printVerilogModule(const std::string &outputDirectoryName,
+                                  const ExternalModule &extmodule,
+                                  std::ostream &out) const {
+  printDeclaration(extmodule, out);
+  printBody(extmodule, out);
+  printEpilogue(extmodule, out);
+  printEmptyLine(out);
 }
 
 void Compiler::printEmptyLine(std::ostream &out) const {
   out << "\n";
+}
+
+void Compiler::printBody(const Module &module, std::ostream &out) const {
+  out << module.body;
 }
 
 void Compiler::printFirrtl(std::ostream &out) const {
@@ -497,7 +491,15 @@ void Compiler::printFirrtl(std::ostream &out) const {
 void Compiler::moveVerilogLibrary(const std::string &outputDirectoryName,
                                   std::ostream &out) const {
   for (const auto &pair : circuit->extModules) {
-    moveVerilogModule(outputDirectoryName, pair.second, out);
+    if (pair.second.body == "") {
+      moveVerilogModule(outputDirectoryName, pair.second);
+    } else {
+      /*std::cout << "****************************";
+      std::cout << "Internal module" << std::endl;
+      std::cout << "****************************";*/
+      printVerilogModule(outputDirectoryName, pair.second, out);
+      //moveVerilogModule(outputDirectoryName, pair.second);
+    }
   }
 }
 

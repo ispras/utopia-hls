@@ -49,9 +49,11 @@ TEST(CompilerTest, CompilerTestIdctTest) {
                             "./test/data/hil/idct/"), 0);
 }
 
-/*TEST(CompilerTest, CompileTestHilTest) {
-  EXPECT_EQ(compileSimpleHilTest("./test/data/hil/test.hil",
-                                 "outputFirrtlTest.mlir",
-                                 "outputVerilogTest.v",
-                                 "./test/data/hil/test/"), 0);
-}*/
+TEST(CompilerTest, CompilerTestHilTest) {
+  EXPECT_EQ(compilerHilTest("./test/data/ipx/ispras/ip.hw",
+                            "catalog/1.0/catalog.1.0.xml",
+                            "./test/data/hil/test.hil",
+                            "outputFirrtlTest.mlir",
+                            "outputVerilogTest.v",
+                            "./test/data/hil/test/"), 0);
+}

@@ -29,9 +29,9 @@ add_executable(${TEST_TARGET}
   gate/debugger/checker_test.cpp
   gate/model/gnet_test.cpp
   hls/compiler/compiler_hil_test.cpp
-  hls/compiler/compiler_dfc_test.cpp
+  #hls/compiler/compiler_dfc_test.cpp
   hls/debugger/debugger_test.cpp
-  hls/library/library_test.cpp
+  #hls/library/library_test.cpp
   hls/model/mlir/transform_test.cpp
   hls/parser/dfc/dfc_dot_test.cpp
   hls/parser/dfc/dfc_idct_test.cpp
