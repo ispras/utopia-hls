@@ -33,6 +33,10 @@ public:
   /// Estimates the indicators of the node and the output channels.
   void apply(model::Node &node, const Parameters &params);
 
+  /// Estimates the indicators of the model as a whole.
+  void estimate(const model::Model &model, Library &library,
+    const std::map<std::string, Parameters> &params, Indicators &indicators) const;
+
 private:
   Mapper() {}
 };

@@ -99,7 +99,6 @@ add_library(${MAIN_LIBRARY}
   hls/parser/dfc/internal/builder.cpp
   hls/parser/hil/builder.cpp
   hls/parser/hil/parser.cpp
-  hls/scheduler/dse/design_explorer.h
   hls/scheduler/dijkstra.cpp
   hls/scheduler/flow_solver.cpp
   hls/scheduler/latency_solver.cpp

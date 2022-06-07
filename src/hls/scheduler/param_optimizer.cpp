@@ -8,7 +8,7 @@
 
 #include "hls/library/library.h"
 #include "hls/model/model.h"
-#include "hls/scheduler/dse/design_explorer.h"
+#include "hls/mapper/mapper.h"
 #include "hls/scheduler/param_optimizer.h"
 #include "hls/scheduler/latency_solver.h"
 #include "hls/scheduler/optimizers/simulated_annealing_optimizer.h"
@@ -152,7 +152,7 @@ void ParametersOptimizer::estimate(Model& model,
   LatencyLpSolver::get().balance(model);
   indicators.latency = LatencyLpSolver::get().getGraphLatency();
   // Estimate overall design indicators
-  dse::DesignExplorer::get().estimateIndicators(model, params, indicators);
+  mapper::Mapper::get().estimate(model, library::Library::get(), params, indicators);
 
 }
 
