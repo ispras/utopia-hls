@@ -43,8 +43,8 @@ struct NodeInd {
   unsigned latency;
   /// Combinational delay (ns): maximum over all output channels (see below).
   unsigned delay;
-  /// Output channels indicators.
-  std::map<std::string, ChanInd> chans;
+  /// Outputs indicators.
+  std::map<std::string, ChanInd> outputs;
 };
 
 using GraphInd = NodeInd;
