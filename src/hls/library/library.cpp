@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "hls/library/internal/element_internal.h"
+#include "hls/library/element_internal.h"
 #include "hls/library/ipxact_parser.h"
 #include "hls/library/library.h"
 #include "util/assert.h"

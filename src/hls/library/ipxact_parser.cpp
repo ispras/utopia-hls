@@ -87,7 +87,8 @@ bool IPXACTParser::hasComponent(const std::string &name) {
   return comp_fnames.count(toLower(name)) > 0 ? true : false;
 }
 
-std::shared_ptr<MetaElement> IPXACTParser::parseComponent(const std::string &name) {
+std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
+    const std::string &name) {
   Parameters params;
   std::vector<Port> ports;
   /*for (const auto &[key, value] : comp_fnames) {
@@ -142,7 +143,8 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(const std::string &nam
     char param = ' ';
     if (left != nullptr) {
       value = XMLString::transcode(left->getFirstChild()->getNodeValue());
-      std::string value = XMLString::transcode(left->getFirstChild()->getNodeValue());
+      std::string value = XMLString::transcode(
+        left->getFirstChild()->getNodeValue());
       //If value is a parameter.
       if (value.size() == 1) {
         if (isLetter(value.c_str()[0])) {
@@ -216,22 +218,30 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(const std::string &nam
                                   value_int));
   }
   std::string type;
-  std::string genPath_str;
+  std::string genPath;
   std::string comPath;
-  size_t generator_count = doc->getElementsByTagName(componentGenerators_tag)->getLength();
+  size_t generator_count = doc->getElementsByTagName(
+    componentGenerators_tag)->getLength();
   std::shared_ptr<MetaElement> metaElement;
   if (generator_count != 0) {
-    const auto *genPath = doc->getElementsByTagName(generatorExe_tag)->item(0);
-    genPath_str = std::string(XMLString::transcode(
-      genPath->getFirstChild()->getNodeValue()));
-    metaElement = std::shared_ptr<MetaElement>(new ElementGenerator(name, params, ports, genPath_str));
+    const auto *genExe = doc->getElementsByTagName(generatorExe_tag)->item(0);
+    genPath = std::string(XMLString::transcode(
+      genExe->getFirstChild()->getNodeValue()));
+    metaElement = std::shared_ptr<MetaElement>(new ElementGenerator(name,
+                                                                    params,
+                                                                    ports,
+                                                                    genPath));
   } else {
-    const DOMElement *file = (const DOMElement*)(doc->getElementsByTagName(file_tag)->item(0));
+    const DOMElement *file = (const DOMElement*)(doc->getElementsByTagName(
+      file_tag)->item(0));
     const auto *name = file->getElementsByTagName(name_tag)->item(0);
     std::string name_str = std::string(XMLString::transcode(
       name->getFirstChild()->getNodeValue()));
     comPath = libraryPath + "/" + name_str;
-    metaElement = std::shared_ptr<MetaElement>(new ElementCore(name_str, params, ports, comPath));
+    metaElement = std::shared_ptr<MetaElement>(new ElementCore(name_str,
+                                                               params,
+                                                               ports,
+                                                               comPath));
   }
   //Termination.
   delete port_tag;

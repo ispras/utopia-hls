@@ -142,7 +142,8 @@ class Library final : public Singleton<Library> {
   friend class Singleton<Library>;
 
 public:
-  void initialize(const std::string &libPath, const std::string &catalogPath);
+  void initialize(const std::string &libraryPath,
+                  const std::string &catalogPath);
   void finalize();
 
   /// Searches for a meta-element for the given node type.

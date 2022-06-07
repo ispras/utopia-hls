@@ -14,6 +14,9 @@ namespace eda::hls::library {
 
 std::unique_ptr<Element> ElementGenerator::construct(
     const Parameters &params) const {
+  /*std::cout << "***********************************************" << std::endl;
+  std::cout << genPath << std::endl;
+  std::cout << "***********************************************" << std::endl;*/
   system((genPath + " " +
           "." + " " +
           "mul" + " " +
