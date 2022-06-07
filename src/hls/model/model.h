@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 
+#include "hls/model/indicators.h"
 #include "util/string.h"
 
 using namespace eda::utils;
@@ -25,13 +26,6 @@ namespace eda::hls::library {
 struct MetaElement;
 
 } // namespace eda::hls::library
-
-namespace eda::hls::mapper {
-
-struct ChanInd;
-struct NodeInd;
-
-} // namespace eda::hls::mapper
 
 namespace eda::hls::model {
 
@@ -330,7 +324,7 @@ struct Chan final {
   Graph &graph;
 
   /// Indicators.
-  mapper::ChanInd *ind = nullptr;
+  ChanInd ind;
 };
 
 //===----------------------------------------------------------------------===//
@@ -377,11 +371,10 @@ struct Node final {
 
   /// Reference to the parent.
   Graph &graph;
-
   /// Mapping.
-  library::MetaElement *map = nullptr;
+  std::shared_ptr<library::MetaElement> map;
   /// Indicators.
-  mapper::NodeInd *ind = nullptr;
+  NodeInd ind;
 };
 
 //===----------------------------------------------------------------------===//
@@ -426,8 +419,10 @@ struct Graph final {
   std::vector<Chan*> chans;
   std::vector<Node*> nodes;
 
-  // Reference to the parent.
+  /// Reference to the parent.
   Model &model;
+  /// Indicators.
+  GraphInd ind;
 };
 
 //===----------------------------------------------------------------------===//
@@ -472,6 +467,9 @@ struct Model final {
   std::vector<Graph*> graphs;
 
   std::vector<Transform*> transforms;
+
+  /// Indicators.
+  ModelInd ind;
 };
 
 //===----------------------------------------------------------------------===//

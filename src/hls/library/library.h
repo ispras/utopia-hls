@@ -16,26 +16,10 @@
 #include <memory>
 #include <string>
 
-using namespace eda::util;
 using namespace eda::hls::model;
+using namespace eda::util;
 
 namespace eda::hls::library {
-
-enum Indicator {
-  Frequency,
-  Throughput,
-  Latency,
-  Power,
-  Area
-};
-
-struct Indicators final {
-  unsigned frequency;
-  unsigned throughput;
-  unsigned latency;
-  unsigned power;
-  unsigned area;
-};
 
 struct Constraint final {
   Constraint(unsigned min, unsigned max):

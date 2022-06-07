@@ -376,10 +376,10 @@ void ElementInternal::estimate(
   double A = C * std::sqrt(N) + Apipe;
   double P = A;
 
-  indicators.frequency  = static_cast<unsigned>(F);
-  indicators.throughput = static_cast<unsigned>(F);
-  indicators.latency    = static_cast<unsigned>(N);
-  indicators.power      = static_cast<unsigned>(P);
-  indicators.area       = static_cast<unsigned>(A);
+  indicators.freq    = static_cast<unsigned>(F);
+  indicators.perf    = static_cast<unsigned>(F);
+  indicators.latency = static_cast<unsigned>(N);
+  indicators.power   = static_cast<unsigned>(P);
+  indicators.area    = static_cast<unsigned>(A);
 }
 } // namespace eda::hls::library

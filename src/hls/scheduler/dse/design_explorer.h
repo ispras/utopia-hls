@@ -30,7 +30,7 @@ public:
     const unsigned maxFrequency = 1000000;
     
     // Estimate the integral indicators.
-    indicators.frequency = maxFrequency;
+    indicators.freq = maxFrequency;
     indicators.power = 0;
     indicators.area = 0;
 
@@ -60,11 +60,11 @@ public:
       indicators.area += nodeIndicators.area;
 
       // Set the minimal frequency rate
-      if (nodeIndicators.frequency < indicators.frequency) {
-        indicators.frequency = nodeIndicators.frequency;
+      if (nodeIndicators.freq < indicators.freq) {
+        indicators.freq = nodeIndicators.freq;
       }
     }
-    indicators.throughput = indicators.frequency;
+    indicators.perf = indicators.freq;
   }
 };
 

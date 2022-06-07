@@ -12,39 +12,26 @@
 #include "hls/model/model.h"
 #include "util/singleton.h"
 
+#include <map>
+#include <string>
+
 using namespace eda::hls::model;
 using namespace eda::hls::library;
 
 namespace eda::hls::mapper {
-
-/// Node indicators.
-struct NodeInd {
-  /// Frequency (Hz).
-  unsigned freq;
-  /// Power (mW).
-  unsigned power;
-  /// Area (cells).
-  unsigned area;
-};
-
-/// Chan indicators.
-struct ChanInd {
-  /// Latency (ticks).
-  unsigned latency;
-  /// Combinational delay (ns).
-  unsigned delay;
-};
 
 class Mapper final : public Singleton<Mapper> {
   friend class Singleton<Mapper>;
 
 public:
   /// Maps the model nodes to the library meta-elements.
-  void map(Model &model, const Library &library);
+  void map(Model &model, Library &library);
+  /// Maps the given node to the library meta-element.
+  void map(Node &node, Library &library);
   /// Maps the given node to the given meta-element.
-  void map(Node &node, const MetaElement &metaElement);
+  void map(Node &node, const std::shared_ptr<MetaElement> &metaElement);
 
-  /// Estimates the node and chan indicators.
+  /// Estimates the indicators of the node and the output channels.
   void apply(Node &node, const Parameters &params);
 
 private:
