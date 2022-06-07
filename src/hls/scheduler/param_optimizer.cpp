@@ -90,7 +90,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     }
     estimate(model, params, indicators, denormalized_parameters[0]);
     model.undo();
-    return indicators.freq;
+    return indicators.freq();
   };
 
   std::function<float(const std::vector<float>&)>
@@ -116,8 +116,8 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   std::ofstream ostrm("real.txt");
 
   ostrm << std::endl << "After optimization" << std::endl;
-  ostrm << "Freq: " << indicators.freq << std::endl;
-  ostrm << "Perf: " << indicators.perf << std::endl;
+  ostrm << "Freq: " << indicators.freq() << std::endl;
+  ostrm << "Perf: " << indicators.perf() << std::endl;
   ostrm << "Latency: " << indicators.latency << std::endl;
   ostrm << "Power: " << indicators.power << std::endl;
   ostrm << "Area: " << indicators.area << std::endl;
@@ -152,8 +152,7 @@ void ParametersOptimizer::estimate(Model& model,
   LatencyLpSolver::get().balance(model);
   indicators.latency = LatencyLpSolver::get().getGraphLatency();
   // Estimate overall design indicators
-  mapper::Mapper::get().estimate(model, library::Library::get(), params, indicators);
-
+  mapper::Mapper::get().estimate(model /* FIXME:, library::Library::get(), params, indicators*/);
 }
 
 double ParametersOptimizer::normalize(double value, double min, double max) const {

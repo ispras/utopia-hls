@@ -46,8 +46,8 @@ struct Criteria final {
 
   /// Checks the constraints.
   bool check(const Indicators &indicators) const {
-    return freq.check(indicators.freq)
-        && perf.check(indicators.perf)
+    return freq.check(indicators.freq())
+        && perf.check(indicators.perf())
         && latency.check(indicators.latency)
         && power.check(indicators.power)
         && area.check(indicators.area);

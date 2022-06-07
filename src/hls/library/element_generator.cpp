@@ -51,12 +51,23 @@ void ElementGenerator::estimate(
   double N = (C == 0 ? 0 : C * std::log((Fmax / (Fmax - F)) * ((C - 1) / C)));
   double A = C * std::sqrt(N) + Apipe;
   double P = A;
+  double D = 1000000000.0/Fmax;
 
-  indicators.freq    = static_cast<unsigned>(F);
-  indicators.perf    = static_cast<unsigned>(F);
   indicators.latency = static_cast<unsigned>(N);
   indicators.power   = static_cast<unsigned>(P);
   indicators.area    = static_cast<unsigned>(A);
+  indicators.delay   = static_cast<unsigned>(D);
+
+  ChanInd chanInd;
+  chanInd.latency = indicators.latency;
+  chanInd.delay   = indicators.delay;
+
+  indicators.outputs.clear();
+  for (const auto &port : ports) {
+    if (port.direction != Port::IN) {
+      indicators.outputs.insert({ port.name, chanInd });
+    }
+  }
 }
 
 } // namespace eda::hls::library

@@ -9,6 +9,10 @@
 #include "hls/mapper/mapper.h"
 
 #include <cassert>
+#include <limits>
+#include <stack>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace eda::hls::mapper {
 
@@ -54,48 +58,78 @@ void Mapper::apply(model::Node &node, const Parameters &params) {
   }
 }
 
-void Mapper::estimate(const model::Model &model, Library &library,
-    const std::map<std::string, Parameters> &params, Indicators &indicators) const {
+void Mapper::estimate(model::Graph &graph) {
+  graph.ind.power   = 0;
+  graph.ind.area    = 0;
+  graph.ind.latency = 0;
+  graph.ind.delay   = 0;
+  graph.ind.outputs.clear();
 
-  Graph *graph = model.main();
-  const unsigned maxFrequency = 1000000;
+  std::stack<std::pair<const Node*, std::size_t>> stack;
+  std::unordered_set<const Node*> visited;
+  std::unordered_map<const Node*, unsigned> dist;
 
-  // Estimate the integral indicators.
-  indicators.freq = maxFrequency;
-  indicators.power = 0;
-  indicators.area = 0;
+  for (auto *node : graph.nodes) {
+    graph.ind.power += node->ind.power;
+    graph.ind.area  += node->ind.area;
 
-  for (const auto *node : graph->nodes) {
-    auto metaElement = library.find(node->type);
-    assert(metaElement && "MetaElement is not found");
-    auto nodeParams = params.find(node->name);
+    // FIXME:
+    graph.ind.delay = std::max(graph.ind.delay, node->ind.delay);
 
-    Indicators nodeIndicators;
-
-    Parameters *tempParams = nullptr;
-    if (nodeParams == params.end()) {
-      // FIXME
-      Constraint constr(1000, 500000);
-      tempParams = new Parameters(metaElement->params);
-      tempParams->add(Parameter("f", constr, constr.max)); // FIXME
-      tempParams->add(Parameter("stages", Constraint(0, 10000), 10));  // FIXME
-    }
-
-    metaElement->estimate(
-      nodeParams == params.end()
-        ? *tempParams         // For inserted nodes
-        : nodeParams->second, // For existing nodes
-      nodeIndicators);
-
-    indicators.power += nodeIndicators.power;
-    indicators.area += nodeIndicators.area;
-
-    // Set the minimal frequency rate
-    if (nodeIndicators.freq < indicators.freq) {
-      indicators.freq = nodeIndicators.freq;
+    if (node->isSource()) {
+      stack.push({ node, 0 });
+      visited.insert(node);
     }
   }
-  indicators.perf = indicators.freq;
+
+  // Traverse the nodes in topological order (DFS).
+  while (!stack.empty()) {
+    auto &[node, i] = stack.top();
+
+    // Visit the node.
+    if (i == 0) {
+      for (auto *output : node->outputs) {
+        const auto *next = output->target.node;
+
+        // Update the distance (relax the edge).
+        auto &Dold = dist[next];
+        auto  Dnew = dist[node] + output->ind.latency;
+        Dold = std::max(Dold, Dnew);
+
+        // Update the integral latency.
+        graph.ind.latency = std::max(graph.ind.latency, Dnew);
+      }
+    }
+
+    // Schedule the next node (implicit topological sort).
+    bool hasMoved = false;
+
+    while (i < node->outputs.size()) {
+      const auto *output = node->outputs[i++];
+      const auto *next = output->target.node;
+
+      if (visited.find(next) == visited.end()) {
+        stack.push({ next, 0 });
+        visited.insert(next);
+        hasMoved = true;
+        break;
+      }
+    }
+
+    if (!hasMoved) {
+      stack.pop();
+    }
+  }
+}
+
+void Mapper::estimate(model::Model &model) {
+  for (auto *graph : model.graphs) {
+    estimate(*graph);
+
+    if (graph->isMain()) {
+      model.ind = graph->ind;
+    }
+  }
 }
 
 } // namespace eda::hls::mapper
