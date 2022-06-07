@@ -24,29 +24,30 @@ namespace eda::hls::scheduler {
 
 struct Criteria final {
   Criteria(Indicator objective,
-           const Constraint &frequency,
-           const Constraint &throughput,
+           const Constraint &freq,
+           const Constraint &perf,
            const Constraint &latency,
            const Constraint &power,
            const Constraint &area):
     objective(objective),
-    frequency(frequency),
-    throughput(throughput),
+    freq(freq),
+    perf(perf),
     latency(latency),
     power(power),
     area(area) {}
 
   const Indicator objective;
-  const Constraint frequency;
-  const Constraint throughput;
+
+  const Constraint freq;
+  const Constraint perf;
   const Constraint latency;
   const Constraint power;
   const Constraint area;
 
   /// Checks the constraints.
   bool check(const Indicators &indicators) const {
-    return frequency.check(indicators.frequency)
-        && throughput.check(indicators.throughput)
+    return freq.check(indicators.freq)
+        && perf.check(indicators.perf)
         && latency.check(indicators.latency)
         && power.check(indicators.power)
         && area.check(indicators.area);

@@ -1,42 +1,5 @@
-//===----------------------------------------------------------------------===//
-//
-// Part of the Utopia EDA Project, under the Apache License v2.0
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
-//
-//===----------------------------------------------------------------------===//
-
-#pragma once
-
-#include "hls/library/library.h"
-#include "util/assert.h"
-
-#include <cmath>
-
-using namespace eda::hls::model;
-using namespace eda::hls::library;
-
 namespace eda::hls::library {
-
-struct MetaElementMock final : public MetaElement {
-  MetaElementMock(const std::string &name,
-                  const Parameters &params,
-                  const std::vector<Port> &ports,
-                  const bool hasGen,
-                  const std::string &genPath,
-                  const std::string &comPath
-                /*const std::map<std::string, std::string> &genParams*/):
-      MetaElement(name, params, ports, hasGen, genPath, comPath) {}
-
-  virtual std::unique_ptr<Element> construct(
-      const Parameters &params) const override;
-  virtual void estimate(
-      const Parameters &params, Indicators &indicators) const override;
-};
-
-
-
-inline std::unique_ptr<Element> MetaElementMock::construct(
+  inline std::unique_ptr<Element> Internal::construct(
     const Parameters &params) const {
   std::unique_ptr<Element> element = std::make_unique<Element>(ports);
   std::string inputs, outputs, ifaceWires, regs, fsm, assigns;
@@ -406,5 +369,4 @@ inline void MetaElementMock::estimate(
   indicators.power      = static_cast<unsigned>(P);
   indicators.area       = static_cast<unsigned>(A);
 }
-
 } // namespace eda::hls::library

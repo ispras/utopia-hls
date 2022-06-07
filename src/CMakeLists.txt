@@ -84,8 +84,13 @@ add_library(${MAIN_LIBRARY}
   gate/model/signal.cpp
   hls/compiler/compiler.cpp
   hls/debugger/debugger.cpp
+  hls/library/element_generator.cpp
+  hls/library/element_core.cpp
+  hls/library/element_internal.cpp
   hls/library/ipxact_parser.cpp
   hls/library/library.cpp
+  hls/mapper/config/hwconfig.cpp
+  hls/mapper/mapper.cpp
   hls/model/model.cpp
   hls/model/transform.cpp
   hls/model/printer.cpp
@@ -94,7 +99,6 @@ add_library(${MAIN_LIBRARY}
   hls/parser/dfc/internal/builder.cpp
   hls/parser/hil/builder.cpp
   hls/parser/hil/parser.cpp
-  hls/scheduler/dse/design_explorer.h
   hls/scheduler/dijkstra.cpp
   hls/scheduler/flow_solver.cpp
   hls/scheduler/latency_solver.cpp

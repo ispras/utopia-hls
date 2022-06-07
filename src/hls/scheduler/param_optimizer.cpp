@@ -7,11 +7,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/library/library.h"
+#include "hls/mapper/mapper.h"
 #include "hls/model/model.h"
-#include "hls/scheduler/latency_solver.h"
-#include "hls/scheduler/optimizers/simulated_annealing_optimizer.h"
 #include "hls/scheduler/param_optimizer.h"
+#include "hls/scheduler/latency_solver.h"
 #include "hls/scheduler/dse/design_explorer.h"
+#include "hls/scheduler/optimizers/simulated_annealing_optimizer.h"
 
 #include <cassert>
 #include <fstream>
@@ -37,10 +38,10 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   // Collect the parameters for all nodes.
   ostrm << "Collect default params" << std::endl;
   Parameters defaultParams;
-  defaultParams.add(Parameter("f", criteria.frequency, criteria.frequency.max));
+  defaultParams.add(Parameter("f", criteria.freq, criteria.freq.max));
 
-  auto min_value = criteria.frequency.min;
-  auto max_value = criteria.frequency.max;
+  auto min_value = criteria.freq.min;
+  auto max_value = criteria.freq.max;
 
   std::vector<float> optimized_values;
   optimized_values.push_back(normalize(10000, min_value, max_value));
@@ -54,7 +55,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   }
 
   // Check if the task is solvable
-  int cur_f = criteria.frequency.min;
+  int cur_f = criteria.freq.min;
   estimate(model, params, indicators, cur_f);
   model.undo();
   if (!criteria.check(indicators)) { // even if the frequency is minimal the params don't match constratints
@@ -91,7 +92,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     }
     estimate(model, params, indicators, denormalized_parameters[0]);
     model.undo();
-    return indicators.frequency;
+    return indicators.freq;
   };
 
   std::function<float(const std::vector<float>&)>
@@ -115,8 +116,8 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   auto limitation = limitation_function(optimized_values);
 
   ostrm << std::endl << "After optimization" << std::endl;
-  ostrm << "Frequency: " << indicators.frequency << std::endl;
-  ostrm << "Throughput: " << indicators.throughput << std::endl;
+  ostrm << "Freq: " << indicators.freq << std::endl;
+  ostrm << "Perf: " << indicators.perf << std::endl;
   ostrm << "Latency: " << indicators.latency << std::endl;
   ostrm << "Power: " << indicators.power << std::endl;
   ostrm << "Area: " << indicators.area << std::endl;
@@ -128,31 +129,31 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   return params;
 }
 
-void ParametersOptimizer::updateFrequency(Model& model, 
-    std::map<std::string, Parameters>& params, 
-    const unsigned frequency) const {
+void ParametersOptimizer::updateFrequency(Model& model,
+    std::map<std::string, Parameters>& params,
+    const unsigned freq) const {
   Graph *graph = model.main();
   for (const auto *node : graph->nodes) {
     auto nodeParams = params.find(node->name);
     if (nodeParams == params.end()) {
       continue;
     }
-    nodeParams->second.set("f", frequency);
+    nodeParams->second.set("f", freq);
   }
 }
 
 
 void ParametersOptimizer::estimate(Model& model,
     std::map<std::string, Parameters>& params,
-    Indicators& indicators, unsigned frequency) const {
+    Indicators& indicators, unsigned freq) const {
   // Update the values of the parameters.
-  updateFrequency(model, params, frequency);
+  updateFrequency(model, params, freq);
   // Balance flows and align times.
   LatencyLpSolver::get().balance(model);
   indicators.latency = LatencyLpSolver::get().getGraphLatency();
   // Estimate overall design indicators
-  dse::DesignExplorer::get().estimateIndicators(model, params, indicators);
-  
+  mapper::Mapper::get().estimate(model, library::Library::get(), params, indicators);
+
 }
 
 double ParametersOptimizer::normalize(double value, double min, double max) const {

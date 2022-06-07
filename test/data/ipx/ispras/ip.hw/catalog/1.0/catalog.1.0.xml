@@ -117,22 +117,6 @@
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="w7" version="1.0"/>
 			<ipxact:name>./test/data/ipx/ispras/ip.hw/w7/1.0/w7.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
-		<ipxact:ipxactFile>
-			<ipxact:vlnv vendor="ispras" library="ip.hw" name="delay_int16_1" version="1.0"/>
-			<ipxact:name>./test/data/ipx/ispras/ip.hw/delay_int16_1/1.0/delay_int16_1.1.0.xml</ipxact:name>
-		</ipxact:ipxactFile>
-		<ipxact:ipxactFile>
-			<ipxact:vlnv vendor="ispras" library="ip.hw" name="delay_int16_2" version="1.0"/>
-			<ipxact:name>./test/data/ipx/ispras/ip.hw/delay_int16_2/1.0/delay_int16_2.1.0.xml</ipxact:name>
-		</ipxact:ipxactFile>
-		<ipxact:ipxactFile>
-			<ipxact:vlnv vendor="ispras" library="ip.hw" name="delay_int16_4" version="1.0"/>
-			<ipxact:name>./test/data/ipx/ispras/ip.hw/delay_int16_4/1.0/delay_int16_4.1.0.xml</ipxact:name>
-		</ipxact:ipxactFile>
-		<ipxact:ipxactFile>
-			<ipxact:vlnv vendor="ispras" library="ip.hw" name="delay_int16_6" version="1.0"/>
-			<ipxact:name>./test/data/ipx/ispras/ip.hw/delay_int16_6/1.0/delay_int16_6.1.0.xml</ipxact:name>
-		</ipxact:ipxactFile>
 	</ipxact:components>
 	<ipxact:vendorExtensions>
 		<kactus2:version>3,9,0,0</kactus2:version>

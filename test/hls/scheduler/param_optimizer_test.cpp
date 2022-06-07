@@ -20,9 +20,9 @@ using namespace eda::hls::scheduler;
 
 void paramOptimizerTest(const std::string &filename) {
   // Optimization criterion and constraints.
-  Criteria criteria(Throughput,
+  Criteria criteria(PERF,
     Constraint(1000, 500000),                               // Frequency (kHz)
-    Constraint(1000, 500000),                               // Throughput (=frequency)
+    Constraint(1000, 500000),                               // Performance (=frequency)
     Constraint(0,    100),                                  // Latency (cycles)
     Constraint(0,    std::numeric_limits<unsigned>::max()), // Power (does not matter)
     Constraint(1,    150000));                              // Area (number of LUTs)
@@ -41,9 +41,9 @@ void paramOptimizerTest(const std::string &filename) {
   EXPECT_TRUE(criteria.check(indicators));
 }
 
-TEST(SchedulerTest, ParamOptimizerBase) {
+/*TEST(SchedulerTest, ParamOptimizerBase) {
   paramOptimizerTest("test/data/hil/test.hil");
-}
+}*/
 
 TEST(SchedulerTest, ParamOptimizerIDCT) {
   paramOptimizerTest("test/data/hil/idct.hil");

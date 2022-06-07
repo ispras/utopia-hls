@@ -8,9 +8,23 @@
 
 #pragma once
 
-#include "hls/model/model.h"
+#include "hls/compiler/compiler.h"
+#include "hls/debugger/debugger.h"
 
+#include "hls/library/library.h"
+
+#include "hls/model/model.h"
+#include "hls/scheduler/dijkstra.h"
+
+#include <ctemplate/template.h>
+
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
+#include <memory>
+#include <stdlib.h>
+#include <string.h>
 
 using namespace eda::hls::model;
 
@@ -90,10 +104,12 @@ struct Module {
   std::vector<Port> inputs;
   std::vector<Port> outputs;
   std::string path;
+  std::string body;
 
   Module(const std::string &name) : name(name) {};
 
   void addPath(const std::string &path);
+  void addBody(const std::string &body);
   void addInput(const Port &inputPort);
   void addOutput(const Port &outputPort);
 };
@@ -158,8 +174,10 @@ struct Compiler final {
   void moveVerilogLibrary(const std::string &outputDirectoryName,
                                     std::ostream &out) const;
   void moveVerilogModule(const std::string &outputDirectoryName,
-                         const ExternalModule &extModule,
-                         std::ostream &out) const;
+                         const ExternalModule &extModule) const;
+  void printVerilogModule(const std::string &outputDirectoryName,
+                          const ExternalModule &extmodule,
+                          std::ostream &out) const;
 
   void convertToSV(const std::string& inputFirrtlName) const;
   void printFirrtl(std::ostream &out) const;
