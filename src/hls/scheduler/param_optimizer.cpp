@@ -26,7 +26,8 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     Model &model,
     Indicators &indicators) const {
   srand(42);
-  
+  std::ofstream ostrm("real.txt");
+
   std::map<std::string, Parameters> params;
 
   // Get the main dataflow graph.
@@ -34,6 +35,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   assert(graph != nullptr && "Main graph is not found");
 
   // Collect the parameters for all nodes.
+  ostrm << "Collect default params" << std::endl;
   Parameters defaultParams;
   defaultParams.add(Parameter("f", criteria.frequency, criteria.frequency.max));
 
@@ -111,8 +113,6 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
 
   auto res_freq = target_function(optimized_values);
   auto limitation = limitation_function(optimized_values);
-
-  std::ofstream ostrm("real.txt");
 
   ostrm << std::endl << "After optimization" << std::endl;
   ostrm << "Frequency: " << indicators.frequency << std::endl;
