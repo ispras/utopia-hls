@@ -42,7 +42,7 @@ void ElementGenerator::estimate(
       latencySum += port.latency;
   }
 
-  unsigned S = params.value("stages");
+  unsigned S = params.getValue("stages");
   double Areg = 1.0;
   double Apipe = S * widthSum * Areg;
   double Fmax = 300.0;

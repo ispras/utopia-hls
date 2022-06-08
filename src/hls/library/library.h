@@ -21,62 +21,6 @@ using namespace eda::util;
 
 namespace eda::hls::library {
 
-struct Constraint final {
-  Constraint(unsigned min, unsigned max):
-    min(min), max(max) {}
-
-  Constraint(const Constraint &) = default;
-
-  bool check(unsigned value) const {
-    return min <= value && value <= max;
-  }
-
-  const unsigned min;
-  const unsigned max;
-};
-
-struct Parameter final {
-  Parameter(const std::string &name,
-            const Constraint &constraint,
-            unsigned value):
-    name(name), constraint(constraint), value(value) {}
-
-  Parameter(const Parameter &) = default;
-
-  const std::string name;
-  const Constraint constraint;
-  unsigned value;
-};
-
-struct Parameters final {
-  Parameters() = default;
-  Parameters(const Parameters &) = default;
-
-  Parameter get(const std::string &name) const {
-    auto i = params.find(name);
-    assert(i != params.end() && "Parameter is not found");
-    return i->second;
-  }
-
-  void add(const Parameter &param) {
-    params.insert({ param.name, param });
-  }
-
-  unsigned value(const std::string &name) const {
-    auto i = params.find(name);
-    assert(i != params.end() && "Parameter is not found");
-    return i->second.value;
-  }
-
-  void set(const std::string &name, unsigned value) {
-    auto i = params.find(name);
-    assert(i != params.end() && "Parameter is not found");
-    i->second.value = value;
-  }
-
-  std::map<std::string, Parameter> params;
-};
-
 /// RTL port with name, direction, and width.
 struct Port {
   enum Direction { IN, OUT, INOUT };

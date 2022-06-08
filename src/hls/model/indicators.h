@@ -24,9 +24,9 @@ enum Indicator {
 /// Channel indicators.
 struct ChanInd {
   /// Latency (ticks).
-  unsigned latency;
+  unsigned ticks = 0;
   /// Combinational delay (ps).
-  unsigned delay;
+  unsigned delay = 0;
 };
 
 /// Node indicators.
@@ -37,13 +37,13 @@ struct NodeInd {
   unsigned perf() const { return freq(); }
 
   /// Power (mW).
-  unsigned power;
+  unsigned power = 0;
   /// Area (cells).
-  unsigned area;
+  unsigned area = 0;
   /// Latency (ticks): maximum over all output channels (see below).
-  unsigned latency;
+  unsigned ticks = 0;
   /// Combinational delay (ps): maximum over all output channels (see below).
-  unsigned delay;
+  unsigned delay = 0;
   /// Outputs indicators.
   std::map<std::string, ChanInd> outputs;
 };

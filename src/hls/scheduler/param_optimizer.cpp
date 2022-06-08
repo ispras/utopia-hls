@@ -35,31 +35,31 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
 
   // Collect the parameters for all nodes.
   Parameters defaultParams;
-  defaultParams.add(Parameter("f", criteria.freq, criteria.freq.max));
+  defaultParams.add(Parameter("f", criteria.freq, criteria.freq.getMax()));
 
-  auto min_value = criteria.freq.min;
-  auto max_value = criteria.freq.max;
+  auto min_value = criteria.freq.getMin();
+  auto max_value = criteria.freq.getMax();
 
   std::vector<float> optimized_values;
   optimized_values.push_back(normalize(10000, min_value, max_value));
   for (const auto *node : graph->nodes) {
     auto metaElement = Library::get().find(node->type);
     Parameters nodeParams(metaElement->params);
-    for(const auto& iter : metaElement->params.params) {
-      optimized_values.push_back(normalize(iter.second.value, min_value, max_value));
+    for(const auto& iter : metaElement->params.getAll()) {
+      optimized_values.push_back(normalize(iter.second.getValue(), min_value, max_value));
     }
     params.insert({ node->name, nodeParams });
   }
 
   // Check if the task is solvable
-  int cur_f = criteria.freq.min;
+  int cur_f = criteria.freq.getMin();
   estimate(model, params, indicators, cur_f);
   model.undo();
   if (!criteria.check(indicators)) { // even if the frequency is minimal the params don't match constratints
       return params;
   }
 
-  cur_f = criteria.freq.max;
+  cur_f = criteria.freq.getMax();
   int x2 = cur_f;
   estimate(model, params, indicators, cur_f);
   if (criteria.check(indicators)) { // the maximum frequency is the solution
@@ -138,7 +138,7 @@ void ParametersOptimizer::updateFrequency(Model& model,
     if (nodeParams == params.end()) {
       continue;
     }
-    nodeParams->second.set("f", freq);
+    nodeParams->second.setValue("f", freq);
   }
 }
 

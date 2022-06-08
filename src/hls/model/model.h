@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "hls/model/indicators.h"
+#include "hls/model/parameters.h"
 #include "util/string.h"
 
 using namespace eda::utils;
@@ -373,6 +374,8 @@ struct Node final {
   Graph &graph;
   /// Mapping.
   std::shared_ptr<library::MetaElement> map;
+  /// Parameters.
+  Parameters params;
   /// Indicators.
   NodeInd ind;
 };

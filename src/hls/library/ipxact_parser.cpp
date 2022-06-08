@@ -213,9 +213,9 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
     int right_int = std::stoi(XMLString::transcode(
       right->getFirstChild()->getNodeValue()));
     //Creating Parameter.
-    params.add(library::Parameter(name_str,
-                                  library::Constraint(left_int, right_int),
-                                  value_int));
+    params.add(model::Parameter(name_str,
+                                model::Constraint(left_int, right_int),
+                                value_int));
   }
   std::string type;
   std::string genPath;

@@ -35,8 +35,11 @@ void Mapper::map(model::Node &node, const std::shared_ptr<MetaElement> &metaElem
   node.map = metaElement;
 }
 
-void Mapper::apply(model::Node &node, const Parameters &params) {
+void Mapper::apply(model::Node &node, const model::Parameters &params) {
   assert(node.map && "Node is unmapped");
+
+  // Store the parameters.
+  node.params = params;
 
   // Estimate the node indicators.
   node.map->estimate(params, node.ind);

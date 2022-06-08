@@ -31,7 +31,7 @@ public:
   void map(model::Node &node, const std::shared_ptr<MetaElement> &metaElement);
 
   /// Applies the given parameters to the given node.
-  void apply(model::Node &node, const Parameters &params);
+  void apply(model::Node &node, const model::Parameters &params);
 
   /// Estimates the model indicators.
   void estimate(model::Graph &graph);
