@@ -19,19 +19,17 @@ public:
   Constraint(unsigned min, unsigned max):
     min(min), max(max) {}
 
+  Constraint():
+    min(0), max(std::numeric_limits<unsigned>::max()) {}
+
   Constraint(const Constraint &) = default;
 
   bool check(unsigned value) const {
     return min <= value && value <= max;
   }
 
-  unsigned getMin() const {
-    return min;
-  }
-
-  unsigned getMax() const {
-    return max;
-  }
+  unsigned getMin() const { return min; }
+  unsigned getMax() const { return max; }
 
 private:
   const unsigned min;
@@ -45,9 +43,14 @@ public:
             unsigned value):
     name(name), constraint(constraint), value(value), known(true) {}
 
-  Parameter(const std::string &name,
-            const Constraint &constraint):
+  Parameter(const std::string &name, const Constraint &constraint):
     name(name), constraint(constraint), value(-1u), known(false) {}
+
+  Parameter(const std::string &name, unsigned value):
+    name(name), constraint(), value(value), known(true) {}
+
+  Parameter(const std::string &name):
+    name(name), constraint(), value(-1u), known(false) {}
 
   Parameter(const Parameter &) = default;
 
