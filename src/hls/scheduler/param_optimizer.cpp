@@ -9,10 +9,9 @@
 #include "hls/library/library.h"
 #include "hls/mapper/mapper.h"
 #include "hls/model/model.h"
-#include "hls/mapper/mapper.h"
-#include "hls/scheduler/param_optimizer.h"
 #include "hls/scheduler/latency_solver.h"
 #include "hls/scheduler/optimizers/simulated_annealing_optimizer.h"
+#include "hls/scheduler/param_optimizer.h"
 
 #include <cassert>
 #include <fstream>
