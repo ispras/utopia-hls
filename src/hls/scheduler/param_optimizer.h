@@ -10,6 +10,7 @@
 
 #include "hls/library/library.h"
 #include "hls/model/model.h"
+#include "hls/model/parameters.h"
 #include "hls/scheduler/optimizers/abstract_optimizer.h"
 #include "util/singleton.h"
 
@@ -74,10 +75,6 @@ private:
 
   void estimate(Model& model, std::map<std::string, Parameters>& params,
                     Indicators& indicators, unsigned frequency) const;
-
-  void updateFrequency(Model& model, std::map<std::string, Parameters>& params,
-    const unsigned frequency) const;
-
   double normalize(double value, double min, double max) const;
   double denormalize(double value, double min, double max) const;
 

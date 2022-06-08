@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/library/library.h"
+#include "hls/mapper/mapper.h"
 #include "hls/model/model.h"
 #include "hls/mapper/mapper.h"
 #include "hls/scheduler/param_optimizer.h"
@@ -129,30 +130,27 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   return params;
 }
 
-void ParametersOptimizer::updateFrequency(Model& model,
+void ParametersOptimizer::estimate(Model& model,
     std::map<std::string, Parameters>& params,
-    const unsigned freq) const {
+    Indicators& indicators, unsigned freq) const {
+  
+  // Update the values of the parameters & apply to nodes.
   Graph *graph = model.main();
-  for (const auto *node : graph->nodes) {
+  for (auto *node : graph->nodes) {
     auto nodeParams = params.find(node->name);
     if (nodeParams == params.end()) {
       continue;
     }
     nodeParams->second.setValue("f", freq);
+    mapper::Mapper::get().apply(*node, nodeParams->second);
   }
-}
-
-
-void ParametersOptimizer::estimate(Model& model,
-    std::map<std::string, Parameters>& params,
-    Indicators& indicators, unsigned freq) const {
-  // Update the values of the parameters.
-  updateFrequency(model, params, freq);
+  
   // Balance flows and align times.
   LatencyLpSolver::get().balance(model);
-  indicators.ticks = LatencyLpSolver::get().getGraphLatency();
+  
   // Estimate overall design indicators
-  mapper::Mapper::get().estimate(model /* FIXME:, library::Library::get(), params, indicators*/);
+  mapper::Mapper::get().estimate(model);
+  indicators = model.ind;
 }
 
 double ParametersOptimizer::normalize(double value, double min, double max) const {
