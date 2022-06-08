@@ -6,9 +6,9 @@
 namespace eda::hls::library {
 
 struct Delay final : public ElementInternal {
-  static constexpr std::string name  = "delay";
-  static constexpr std::string width = "WIDTH";
-  static constexpr std::string depth = "DEPTH";
+  static constexpr const char *name  = "delay";
+  static constexpr const char *width = "WIDTH";
+  static constexpr const char *depth = "DEPTH";
 
   static Parameters getParams() {
     Parameters params;

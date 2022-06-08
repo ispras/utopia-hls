@@ -10,6 +10,8 @@
 #include <cassert>
 #include <unordered_map>
 
+#include "hls/library/internal/delay.h"
+#include "hls/mapper/mapper.h"
 #include "hls/model/model.h"
 #include "hls/model/transform.h"
 
@@ -134,6 +136,15 @@ void Model::insertDelay(Chan &chan, unsigned latency) {
   transforms.push_back(transform);
 
   transform->apply();
+
+  // Map the inserted delay node to the corresponding MetaElement
+  Node *delay = transform->newNodes.back();
+  assert(delay && "Inserted delay node not found");
+  mapper::Mapper::get().map(*delay, Library::get());
+  
+  // Apply latency to the node
+  delay->map->params.get(Delay::depth).setValue(latency);
+  mapper::Mapper::get().apply(*delay, delay->map->params);
 }
 
 //===----------------------------------------------------------------------===//
