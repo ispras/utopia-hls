@@ -137,14 +137,20 @@ void Model::insertDelay(Chan &chan, unsigned latency) {
 
   transform->apply();
 
-  // Map the inserted delay node to the corresponding MetaElement
-  Node *delay = transform->newNodes.back();
-  assert(delay && "Inserted delay node not found");
-  mapper::Mapper::get().map(*delay, Library::get());
-  
-  // Apply latency to the node
-  delay->map->params.get(Delay::depth).setValue(latency);
-  mapper::Mapper::get().apply(*delay, delay->map->params);
+  // Get the inserted delay node.
+  auto *delay = transform->newNodes.back();
+  assert(delay && "Inserted delay node is not found");
+
+  // Map the node to the corresponding meta-element.
+  mapper::Mapper::get().map(*delay, library::Library::get());
+  assert(delay->map && "Node is unmapped");
+
+  // Set the latency parameter.
+  Parameters params(delay->map->params);
+  params.setValue(Delay::depth, latency);
+
+  // Apply the parameters to the node.
+  mapper::Mapper::get().apply(*delay, params);
 }
 
 //===----------------------------------------------------------------------===//
