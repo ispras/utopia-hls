@@ -94,6 +94,10 @@ public:
     return params;
   }
 
+  bool contains(const std::string &name) const {
+    return params.find(name) != params.end();
+  }
+
   Parameter get(const std::string &name) const {
     const auto &param = find(name);
     return param;
