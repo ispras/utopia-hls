@@ -26,13 +26,13 @@ struct Criteria final {
   Criteria(Indicator objective,
            const Constraint &freq,
            const Constraint &perf,
-           const Constraint &latency,
+           const Constraint &ticks,
            const Constraint &power,
            const Constraint &area):
     objective(objective),
     freq(freq),
     perf(perf),
-    latency(latency),
+    ticks(ticks),
     power(power),
     area(area) {}
 
@@ -40,7 +40,7 @@ struct Criteria final {
 
   const Constraint freq;
   const Constraint perf;
-  const Constraint latency;
+  const Constraint ticks;
   const Constraint power;
   const Constraint area;
 
@@ -48,7 +48,7 @@ struct Criteria final {
   bool check(const Indicators &indicators) const {
     return freq.check(indicators.freq())
         && perf.check(indicators.perf())
-        && latency.check(indicators.latency)
+        && ticks.check(indicators.ticks)
         && power.check(indicators.power)
         && area.check(indicators.area);
   }

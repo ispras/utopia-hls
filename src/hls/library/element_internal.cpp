@@ -377,14 +377,14 @@ void ElementInternal::estimate(
   double P = A;
   double D = 1000000000.0/Fmax;
 
-  indicators.latency = static_cast<unsigned>(N);
-  indicators.power   = static_cast<unsigned>(P);
-  indicators.area    = static_cast<unsigned>(A);
-  indicators.delay   = static_cast<unsigned>(D);
+  indicators.ticks = static_cast<unsigned>(N);
+  indicators.power = static_cast<unsigned>(P);
+  indicators.area  = static_cast<unsigned>(A);
+  indicators.delay = static_cast<unsigned>(D);
 
   ChanInd chanInd;
-  chanInd.latency = indicators.latency;
-  chanInd.delay   = indicators.delay;
+  chanInd.ticks = indicators.ticks;
+  chanInd.delay = indicators.delay;
 
   indicators.outputs.clear();
   for (const auto &port : ports) {

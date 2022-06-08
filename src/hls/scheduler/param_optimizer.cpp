@@ -118,7 +118,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   ostrm << std::endl << "After optimization" << std::endl;
   ostrm << "Freq: " << indicators.freq() << std::endl;
   ostrm << "Perf: " << indicators.perf() << std::endl;
-  ostrm << "Latency: " << indicators.latency << std::endl;
+  ostrm << "Ticks: " << indicators.ticks << std::endl;
   ostrm << "Power: " << indicators.power << std::endl;
   ostrm << "Area: " << indicators.area << std::endl;
 
@@ -150,7 +150,7 @@ void ParametersOptimizer::estimate(Model& model,
   updateFrequency(model, params, freq);
   // Balance flows and align times.
   LatencyLpSolver::get().balance(model);
-  indicators.latency = LatencyLpSolver::get().getGraphLatency();
+  indicators.ticks = LatencyLpSolver::get().getGraphLatency();
   // Estimate overall design indicators
   mapper::Mapper::get().estimate(model /* FIXME:, library::Library::get(), params, indicators*/);
 }

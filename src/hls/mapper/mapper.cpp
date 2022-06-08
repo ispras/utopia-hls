@@ -42,7 +42,7 @@ void Mapper::apply(model::Node &node, const Parameters &params) {
   node.map->estimate(params, node.ind);
 
   // Set the outputs indicators and derive some node indicators.
-  node.ind.latency = node.ind.delay = 0;
+  node.ind.ticks = node.ind.delay = 0;
 
   for (auto *output : node.outputs) {
     const auto *port = output->source.port;
@@ -53,29 +53,33 @@ void Mapper::apply(model::Node &node, const Parameters &params) {
 
     output->ind = i->second;
 
-    node.ind.latency = std::max(node.ind.latency, output->ind.latency);
+    node.ind.ticks = std::max(node.ind.ticks, output->ind.ticks);
     node.ind.delay = std::max(node.ind.delay, output->ind.delay);
   }
 }
 
 void Mapper::estimate(model::Graph &graph) {
-  graph.ind.power   = 0;
-  graph.ind.area    = 0;
-  graph.ind.latency = 0;
-  graph.ind.delay   = 0;
+  using V = const Node*;
+  using E = std::size_t;
+  using D = ChanInd;
+
+  std::stack<std::pair<V, E>> stack;
+  std::unordered_set<V> visited;
+  std::unordered_map<V, D> distance;
+
+  graph.ind.power = 0;
+  graph.ind.area  = 0;
+  graph.ind.ticks = 0;
+  graph.ind.delay = 0;
   graph.ind.outputs.clear();
 
-  std::stack<std::pair<const Node*, std::size_t>> stack;
-  std::unordered_set<const Node*> visited;
-  std::unordered_map<const Node*, unsigned> dist;
-
-  for (auto *node : graph.nodes) {
+  // Iterate over all nodes of the graph.
+  for (const auto *node : graph.nodes) {
+    // Update the additive characteristics.
     graph.ind.power += node->ind.power;
     graph.ind.area  += node->ind.area;
 
-    // FIXME:
-    graph.ind.delay = std::max(graph.ind.delay, node->ind.delay);
-
+    // Collect the source nodes for the DFS traveral.
     if (node->isSource()) {
       stack.push({ node, 0 });
       visited.insert(node);
@@ -84,30 +88,40 @@ void Mapper::estimate(model::Graph &graph) {
 
   // Traverse the nodes in topological order (DFS).
   while (!stack.empty()) {
-    auto &[node, i] = stack.top();
+    auto &[node, edge] = stack.top();
 
-    // Visit the node.
-    if (i == 0) {
-      for (auto *output : node->outputs) {
+    // Visit the node once (when added to the stack).
+    if (edge == 0) {
+      // Relax all outgoing edges.
+      for (const auto *output : node->outputs) {
         const auto *next = output->target.node;
 
-        // Update the distance (relax the edge).
-        auto &Dold = dist[next];
-        auto  Dnew = dist[node] + output->ind.latency;
-        Dold = std::max(Dold, Dnew);
+        // Update the distance (indicators) of the adjacent node.
+        auto &distNode = distance[node];
+        auto &distNext = distance[next];
 
-        // Update the integral latency.
-        graph.ind.latency = std::max(graph.ind.latency, Dnew);
+        const auto newTicks = distNode.ticks + output->ind.ticks;
+        const auto newDelay = (output->ind.ticks > 0)
+          ? /* New path */   output->ind.delay
+          : distNode.delay + output->ind.delay;
+
+        distNext.ticks = std::max(distNext.ticks, newTicks);
+        distNext.delay = std::max(distNext.delay, newDelay);
+
+        // Update the integral latency and combinational delay.
+        graph.ind.ticks = std::max(graph.ind.ticks, newTicks);
+        graph.ind.delay = std::max(graph.ind.delay, newDelay);
       }
     }
 
     // Schedule the next node (implicit topological sort).
     bool hasMoved = false;
 
-    while (i < node->outputs.size()) {
-      const auto *output = node->outputs[i++];
+    while (edge < node->outputs.size()) {
+      const auto *output = node->outputs[edge++];
       const auto *next = output->target.node;
 
+      // The next node is unvisited.
       if (visited.find(next) == visited.end()) {
         stack.push({ next, 0 });
         visited.insert(next);
@@ -116,6 +130,7 @@ void Mapper::estimate(model::Graph &graph) {
       }
     }
 
+    // All successors of the node has been traversed.
     if (!hasMoved) {
       stack.pop();
     }
