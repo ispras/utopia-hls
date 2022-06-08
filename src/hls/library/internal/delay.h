@@ -7,22 +7,10 @@ namespace eda::hls::library {
 
 struct Delay final : public ElementInternal {
   static constexpr const char *name  = "delay";
-  static constexpr const char *width = "WIDTH";
-  static constexpr const char *depth = "DEPTH";
+  static constexpr const char *width = "width";
+  static constexpr const char *depth = "stages";
 
-  static Parameters getParams() {
-    Parameters params;
-    params.add(Parameter(width));
-    params.add(Parameter(depth));
-    return params;
-  }
-
-  static std::vector<Port>& getPorts() {
-    std::vector<Port> ports;
-    return ports;
-  }
-
-  Delay(): ElementInternal(name, getParams(), getPorts()) {}
+  Delay(): ElementInternal(name, {}, {}) {}
 };
 
 } // namespace eda::hls::library

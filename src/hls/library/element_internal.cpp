@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/library/element_internal.h"
+#include "hls/library/internal/delay.h"
 
 #include <cmath>
 
@@ -19,6 +20,9 @@ std::unique_ptr<Element> ElementInternal::construct(
   unsigned pos = 0, inputLength = 0, outputLength = 0;
   std::string outputType;
   bool quickProcess = true;
+
+  const auto latency = params.contains(Delay::depth)
+   ? params.getValue(Delay::depth) : 1u;
 
   if (name == "merge" || name == "split" || name == "delay") {
     outputType = std::string("reg ");
@@ -102,7 +106,7 @@ std::unique_ptr<Element> ElementInternal::construct(
       uassert(outputLength != 0, "All the outputs have zero width!");
       assigns += std::string("assign ") + port.name +
                  " = state_" +
-                 (port.latency == 0 ? "0" : std::to_string(port.latency - 1)) +
+                 (latency == 0 ? "0" : std::to_string(latency - 1)) +
                  "[" + std::to_string((pos + port.width - 1) % outputLength) +
                  ":" + std::to_string(pos % outputLength) + "];\n";
       pos += port.width;
@@ -328,7 +332,7 @@ std::unique_ptr<Element> ElementInternal::construct(
   // Extract latency and construct a cascade of assignments.
   // Indicators indicators;
   // estimate(params, indicators);
-  unsigned latency = 3; // indicators.latency; FIXME
+  // indicators.latency; FIXME
 
   for (unsigned i = 1; (i < latency) && !fsmNotCreated; i++) {
     regs += std::string("reg [") + std::to_string(inputLength - 1) + ":0] state_" + std::to_string(i) + ";\n";
@@ -358,12 +362,18 @@ void ElementInternal::estimate(
   unsigned latencySum = 0;
   unsigned widthSum = 0;
 
+  const auto latency = params.contains(Delay::depth)
+   ? params.getValue(Delay::depth) : 1u;
+
+  const auto width = params.contains(Delay::width)
+   ? params.getValue(Delay::width) : 1u;
+
   for (const auto &port : ports) {
-    widthSum+=port.width;
+    widthSum += width;
     if (port.direction == Port::IN)
       inputCount++;
     else
-      latencySum += port.latency;
+      latencySum += latency;
   }
 
   unsigned S = params.getValue("stages");
@@ -375,7 +385,7 @@ void ElementInternal::estimate(
   double N = (C == 0 ? 0 : C * std::log((Fmax / (Fmax - F)) * ((C - 1) / C)));
   double A = C * std::sqrt(N) + Apipe;
   double P = A;
-  double D = 1000000000.0/Fmax;
+  double D = 1000000000.0 / Fmax;
 
   indicators.ticks = static_cast<unsigned>(N);
   indicators.power = static_cast<unsigned>(P);

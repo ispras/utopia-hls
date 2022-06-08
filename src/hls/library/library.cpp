@@ -58,19 +58,33 @@ std::shared_ptr<MetaElement> Library::create(const NodeType &nodetype) {
   Parameters params;
   params.add(Parameter("f", Constraint(1, 1000), 100));
   params.add(Parameter("stages", Constraint(0, 10000), 10));
-
   std::vector<Port> ports;
 
+  ports.push_back(Port("clock",
+                       Port::IN,
+                       1,
+                       model::Parameter(std::string("width"), 1)));
+
+  ports.push_back(Port("reset",
+                       Port::IN,
+                       1,
+                       model::Parameter(std::string("width"), 1)));
+
   for (const auto *input: nodetype.inputs) {
-    ports.push_back(Port(input->name, Port::IN, input->latency, 16, false, ' '));//TODO
+    ports.push_back(Port(input->name,
+                         Port::IN,
+                         1,
+                         model::Parameter(std::string("width"), 16)));
   }
-  for (const auto *output: nodetype.outputs) {
-    ports.push_back(Port(output->name, Port::OUT, output->latency, 16, false, ' '));//TODO
+
+  for (const auto *input: nodetype.outputs) {
+    ports.push_back(Port(input->name,
+                         Port::OUT,
+                         1,
+                         model::Parameter(std::string("width"), 16)));
   }
 
   // Add clk and rst ports: these ports are absent in the lists above.
-  ports.push_back(Port("clock", Port::IN, 0, 1, false, ' '));
-  ports.push_back(Port("reset", Port::IN, 0, 1, false, ' '));
 
   std::string lowerCaseName = name;
   unsigned i = 0;

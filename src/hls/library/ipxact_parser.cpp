@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 #include "ipxact_parser.h"
+#include "hls/model/parameters.h"
 
 using namespace xercesc;
 using namespace std;
@@ -72,9 +73,9 @@ void IPXACTParser::parseCatalog(const std::string &libraryPath,
       name->getFirstChild()->getNodeValue()));
     comp_fnames.insert({key, value});
   }
-  for (const auto &[key, value] : comp_fnames) {
+  /*for (const auto &[key, value] : comp_fnames) {
     std::cout << key << std::endl << value << std::endl;
-  }
+  }*/
   //Termination.
   delete ipxactFile_tag;
   delete vlnv_tag;
@@ -100,8 +101,8 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
   DOMLSParser *parser = ((DOMImplementationLS*)impl)->createLSParser(
     DOMImplementationLS::MODE_SYNCHRONOUS, 0);
   xercesc::DOMDocument *doc = nullptr;
-  //std::cout << name << std::endl;
-  //std::cout << comp_fnames[toLower(name)] << std::endl;
+  std::cout << name << std::endl;
+  std::cout << comp_fnames[toLower(name)] << std::endl;
   doc = parser->parseURI(comp_fnames[toLower(name)].c_str());
   //IP-XACT tags.
   XMLCh *port_tag = XMLString::transcode("ipxact:port");
@@ -140,58 +141,40 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
     int left_int = -1;
     std::string value;
     bool isParam = false;
-    char param = ' ';
+    std::string param;
     if (left != nullptr) {
       value = XMLString::transcode(left->getFirstChild()->getNodeValue());
       std::string value = XMLString::transcode(
         left->getFirstChild()->getNodeValue());
       //If value is a parameter.
-      if (value.size() == 1) {
-        if (isLetter(value.c_str()[0])) {
+      //TODO: Regular expressions.
+      if (isLetter(value.c_str()[0])) {
           isParam = true;
-          param = value.c_str()[0];
-        } else {
-          std::cout << "Error in IP-XACT specification!" << std::endl;
-          return nullptr;
-        }
+          param = value;
       } else {
-        for (size_t j = 0; j < value.size(); j++) {
-          if (!isDigit(value.c_str()[j])) {
-            std::cout << "Error in IP-XACT specification!" << std::endl;
-            return nullptr;
-          }
-        }
-      }
-      if (!isParam) {
         left_int = std::stoi(XMLString::transcode(
           left->getFirstChild()->getNodeValue()));
       }
     }
     //Creating Port.
     if (direction_str == "in") {
-      /*std::cout << "in " << name_str;
-      if (left != nullptr) {
-        std::cout << " [" << left_int << ":" << "0" << "]";
+        /*std::cout << "in " << name_str;
+        if (left != nullptr) {
+          std::cout << " [" << left_int << ":" << "0" << "]";
+        }
+        std::cout << std::endl;*/
+      if (isParam) {
+        ports.push_back(library::Port(name_str,
+                                      direction_str == "in" ? library::Port::IN : library::Port::OUT,
+                                      left_int + 1,
+                                      model::Parameter(std::string(param))));
+      } else {
+        ports.push_back(library::Port(name_str,
+                                      direction_str == "in" ? library::Port::IN : library::Port::OUT,
+                                      left_int + 1,
+                                      model::Parameter(std::string("WIDTH"),
+                                                       left_int + 1)));
       }
-      std::cout << std::endl;*/
-      ports.push_back(library::Port(name_str,
-                                    library::Port::IN,
-                                    0,
-                                    left_int + 1,
-                                    isParam,
-                                    param));
-    }
-    if (direction_str == "out") {
-      /*std::cout << "out " << name_str;
-      if (left != nullptr) {
-        std::cout << " [" << left_int << ":" << "0" << "]";
-      }*/
-      ports.push_back(library::Port(name_str,
-                                    library::Port::OUT,
-                                    0,
-                                    left_int + 1,
-                                    isParam,
-                                    param));
     }
   }
   //Vendor extensions tags parsing.

@@ -25,28 +25,26 @@ namespace eda::hls::library {
 struct Port {
   enum Direction { IN, OUT, INOUT };
 
-  Port(const std::string &name, const Direction &direction,
-       unsigned latency, unsigned width, bool isParam, char param):
+  Port(const std::string &name,
+       const Direction &direction,
+       const unsigned width,
+       const Parameter param):
     name(name),
     direction(direction),
-    latency(latency),
     width(width),
-    isParam(isParam),
     param(param) {}
   Port(const Port &port):
     name(port.name),
     direction(port.direction),
-    latency(port.latency),
     width(port.width),
-    isParam(port.isParam),
     param(port.param) {}
 
   const std::string name;
   const Direction direction;
-  const unsigned latency;
   const unsigned width;
-  const bool isParam;
-  const char param;
+  const Parameter param;
+
+
 };
 
 /// Description of a constructed element (module).

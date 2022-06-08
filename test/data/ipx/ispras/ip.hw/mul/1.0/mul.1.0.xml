@@ -15,6 +15,56 @@
 				</ipxact:fileSetRef>
 			</ipxact:componentInstantiation>
 		</ipxact:instantiations>
+		<ipxact:ports>
+			<ipxact:port>
+				<ipxact:name>x</ipxact:name>
+				<ipxact:wire>
+					<ipxact:direction>in</ipxact:direction>
+					<ipxact:vectors>
+						<ipxact:vector>
+							<ipxact:left>N</ipxact:left>
+							<ipxact:right>0</ipxact:right>
+						</ipxact:vector>
+					</ipxact:vectors>
+				</ipxact:wire>
+			</ipxact:port>
+			<ipxact:port>
+				<ipxact:name>y</ipxact:name>
+				<ipxact:wire>
+					<ipxact:direction>in</ipxact:direction>
+					<ipxact:vectors>
+						<ipxact:vector>
+							<ipxact:left>N</ipxact:left>
+							<ipxact:right>0</ipxact:right>
+						</ipxact:vector>
+					</ipxact:vectors>
+				</ipxact:wire>
+			</ipxact:port>
+			<ipxact:port>
+				<ipxact:name>z</ipxact:name>
+				<ipxact:wire>
+					<ipxact:direction>out</ipxact:direction>
+					<ipxact:vectors>
+						<ipxact:vector>
+							<ipxact:left>M</ipxact:left>
+							<ipxact:right>0</ipxact:right>
+						</ipxact:vector>
+					</ipxact:vectors>
+				</ipxact:wire>
+			</ipxact:port>
+			<ipxact:port>
+				<ipxact:name>clock</ipxact:name>
+				<ipxact:wire>
+					<ipxact:direction>in</ipxact:direction>
+				</ipxact:wire>
+			</ipxact:port>
+			<ipxact:port>
+				<ipxact:name>reset</ipxact:name>
+				<ipxact:wire>
+					<ipxact:direction>in</ipxact:direction>
+				</ipxact:wire>
+			</ipxact:port>
+		</ipxact:ports>
 	</ipxact:model>
 		<ipxact:componentGenerators>	
 			<ipxact:componentGenerator> 
