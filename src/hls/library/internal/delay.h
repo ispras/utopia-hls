@@ -1,30 +1,28 @@
-#include "hls/library/ipxact_parser.h"
+#include "hls/library/element_internal.h"
 #include "hls/library/library.h"
-#include "hls/library/library_mock.h"
-#include "util/assert.h"
 
-#include <algorithm>
-#include <filesystem>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
 #include <memory>
-#include <stdlib.h>
-#include <string.h>
 
 namespace eda::hls::library {
 
-struct Internal : public MetaElement {
-  Internal(const std::string &name,
-           const Parameters &params,
-           const std::vector<Port> &ports)
-  MetaElementMock(name(name),
-                  params(params),
-                  ports(ports)) {}
-  std::unique_ptr<Element> construct(
-        const Parameters &params) const override;
-  virtual void estimate(
-      const Parameters &params, Indicators &indicators) const override;
+struct Delay final : public ElementInternal {
+  static constexpr std::string name  = "delay";
+  static constexpr std::string width = "WIDTH";
+  static constexpr std::string depth = "DEPTH";
+
+  static Parameters getParams() {
+    Parameters params;
+    params.add(Parameter(width));
+    params.add(Parameter(depth));
+    return params;
+  }
+
+  static std::vector<Port>& getPorts() {
+    std::vector<Port> ports;
+    return ports;
+  }
+
+  Delay(): ElementInternal(name, getParams(), getPorts()) {}
 };
 
 } // namespace eda::hls::library
