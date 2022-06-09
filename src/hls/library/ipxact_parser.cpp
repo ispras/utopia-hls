@@ -157,7 +157,6 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
       }
     }
     //Creating Port.
-    if (direction_str == "in") {
         /*std::cout << "in " << name_str;
         if (left != nullptr) {
           std::cout << " [" << left_int << ":" << "0" << "]";
@@ -175,7 +174,6 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
                                       model::Parameter(std::string("WIDTH"),
                                                        left_int + 1)));
       }
-    }
   }
   //Vendor extensions tags parsing.
   size_t parameter_count = doc->getElementsByTagName(
