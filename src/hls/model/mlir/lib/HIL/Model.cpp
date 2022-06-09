@@ -150,7 +150,11 @@ template <> void MLIRBuilder<mlir::hil::NodeTypes>::build() {
 }
 
 template <> void MLIRBuilder<mlir::hil::Chan>::build() {
-  builder_.addChan(node_.typeName().str(), node_.varName().str());
+  auto nodeFrom = node_.nodeFrom().getValue();
+  auto nodeTo = node_.nodeTo().getValue();
+  auto typeName = node_.typeName().str();
+  auto varName = node_.varName().str();
+  builder_.addChan(typeName, varName, nodeFrom, nodeTo);
 }
 
 template <> void MLIRBuilder<mlir::hil::Chans>::build() {

@@ -15,17 +15,19 @@
 #include <unordered_map>
 #include <vector>
 
+#include "HIL/Ops.h"
 #include "hls/model/model.h"
 #include "util/assert.h"
 #include "util/singleton.h"
 
 using namespace eda::hls::model;
 using namespace eda::util;
+using namespace mlir::hil::detail;
 
 namespace eda::hls::parser::hil {
 
 /**
- * \brief Helps to contruct the IR from source code.
+ * \brief Helps to construct the IR from source code.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class Builder final : public Singleton<Builder> {
@@ -102,7 +104,11 @@ public:
     currentGraph = nullptr;
   }
 
-  void addChan(const std::string &type, const std::string &name) {
+  void addChan(const std::string &type,
+      const std::string &name,
+      const InputBndAttr &nodeFrom,
+      const OutputBndAttr &nodeTo) {
+
     assert(currentGraph != nullptr && "Chan is outside a graph");
 
     auto *chan = new Chan(name, type, *currentGraph);
