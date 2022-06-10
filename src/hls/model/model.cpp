@@ -147,7 +147,7 @@ void Model::insertDelay(Chan &chan, unsigned latency) {
 
   // Set the latency parameter.
   Parameters params(delay->map->params);
-  params.setValue(Delay::depth, latency);
+  params.setValue(library::Delay::depth, latency);
 
   // Apply the parameters to the node.
   mapper::Mapper::get().apply(*delay, params);

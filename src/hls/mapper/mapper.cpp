@@ -19,7 +19,7 @@
 
 namespace eda::hls::mapper {
 
-void Mapper::map(model::Model &model, Library &library) {
+void Mapper::map(model::Model &model, library::Library &library) {
   for (auto *graph : model.graphs) {
     for (auto *node : graph->nodes) {
       map(*node, library);
@@ -27,13 +27,14 @@ void Mapper::map(model::Model &model, Library &library) {
   }
 }
 
-void Mapper::map(model::Node &node, Library &library) {
+void Mapper::map(model::Node &node, library::Library &library) {
   auto metaElement = library.find(node.type);
   assert(metaElement != nullptr);
   map(node, metaElement);
 }
 
-void Mapper::map(model::Node &node, const std::shared_ptr<MetaElement> &metaElement) {
+void Mapper::map(model::Node &node,
+                 const std::shared_ptr<library::MetaElement> &metaElement) {
   uassert_node(!node.map, node, "Node has been already mapped");
   node.map = metaElement;
 }
