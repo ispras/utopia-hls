@@ -43,7 +43,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   std::vector<float> optimized_values;
   optimized_values.push_back(normalize(10000, min_value, max_value));
   for (const auto *node : graph->nodes) {
-    auto metaElement = Library::get().find(node->type);
+    auto metaElement = library::Library::get().find(node->type);
     Parameters nodeParams(metaElement->params);
     for(const auto& iter : metaElement->params.getAll()) {
       optimized_values.push_back(normalize(iter.second.getValue(), min_value, max_value));

@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "hls/library/library.h"
 #include "hls/model/model.h"
 #include "hls/model/parameters.h"
 #include "hls/scheduler/optimizers/abstract_optimizer.h"
@@ -17,7 +16,6 @@
 #include <map>
 #include <string>
 
-using namespace eda::hls::library;
 using namespace eda::hls::model;
 using namespace eda::util;
 
