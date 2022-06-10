@@ -45,11 +45,6 @@ private:
 
   /* Methods that implement equivalence checking siub-tasks. */
 
-  /// Checks if each of graph collections contain the main one.
-  bool match(const std::vector<Graph*> &left,
-      const std::vector<Graph*> &right,
-      std::pair<Graph*, Graph*> &matched) const;
-
  /// Checks if collections contain nodes with same names.
   bool match(const std::vector<Node*> &left,
       const std::vector<Node*> &right,
