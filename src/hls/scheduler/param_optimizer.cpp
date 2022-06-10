@@ -9,10 +9,9 @@
 #include "hls/library/library.h"
 #include "hls/mapper/mapper.h"
 #include "hls/model/model.h"
-#include "hls/scheduler/param_optimizer.h"
 #include "hls/scheduler/latency_solver.h"
-#include "hls/scheduler/dse/design_explorer.h"
 #include "hls/scheduler/optimizers/simulated_annealing_optimizer.h"
+#include "hls/scheduler/param_optimizer.h"
 
 #include <cassert>
 #include <fstream>
@@ -36,7 +35,6 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   assert(graph != nullptr && "Main graph is not found");
 
   // Collect the parameters for all nodes.
-  ostrm << "Collect default params" << std::endl;
   Parameters defaultParams;
   defaultParams.add(Parameter("f", criteria.freq, criteria.freq.max));
 
@@ -62,7 +60,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
       return params;
   }
 
-  cur_f = criteria.frequency.max;
+  cur_f = criteria.freq.max;
   estimate(model, params, indicators, cur_f);
   if (criteria.check(indicators)) { // the maximum frequency is the solution
       return params;
