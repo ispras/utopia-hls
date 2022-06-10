@@ -75,17 +75,22 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 add_library(${MAIN_LIBRARY}
 
   # Manually-written sources.
-  gate/encoder/encoder.cpp
-  gate/checker/checker.cpp
-  gate/symexec/symexec.cpp
+  gate/debugger/encoder.cpp
+  gate/debugger/checker.cpp
+  gate/debugger/symexec.cpp
   gate/model/gate.cpp
+  gate/model/gnet.cpp
   gate/model/gsymbol.cpp
-  gate/model/netlist.cpp
   gate/model/signal.cpp
   hls/compiler/compiler.cpp
   hls/debugger/debugger.cpp
+  hls/library/element_generator.cpp
+  hls/library/element_core.cpp
+  hls/library/element_internal.cpp
   hls/library/ipxact_parser.cpp
   hls/library/library.cpp
+  hls/mapper/config/hwconfig.cpp
+  hls/mapper/mapper.cpp
   hls/model/model.cpp
   hls/model/transform.cpp
   hls/model/printer.cpp
@@ -94,14 +99,15 @@ add_library(${MAIN_LIBRARY}
   hls/parser/dfc/internal/builder.cpp
   hls/parser/hil/builder.cpp
   hls/parser/hil/parser.cpp
-  hls/scheduler/dse/design_explorer.h
   hls/scheduler/dijkstra.cpp
   hls/scheduler/flow_solver.cpp
   hls/scheduler/latency_solver.cpp
   hls/scheduler/lp_helper.cpp
   hls/scheduler/param_optimizer.cpp
   hls/scheduler/latency_balancer_base.h
-  hls/scheduler/simulated_annealing.cpp
+  hls/scheduler/optimizers/abstract_optimizer.cpp
+  hls/scheduler/optimizers/simple_optimizer.cpp
+  hls/scheduler/optimizers/simulated_annealing_optimizer.cpp
   rtl/compiler/compiler.cpp
   rtl/library/flibrary.cpp
   rtl/model/event.cpp

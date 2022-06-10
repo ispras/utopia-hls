@@ -65,7 +65,7 @@
 		<ipxact:fileSet>
 			<ipxact:name>base</ipxact:name>
 			<ipxact:file>
-				<ipxact:name>shr_14.v</ipxact:name>
+				<ipxact:name>shr_14/1.0/shr_14.v</ipxact:name>
 				<ipxact:fileType>verilogSource</ipxact:fileType>
 				<ipxact:vendorExtensions>
 					<kactus2:hash>7858fe7ef5f593743eb0a41bbbef3c1db122aec0</kactus2:hash>

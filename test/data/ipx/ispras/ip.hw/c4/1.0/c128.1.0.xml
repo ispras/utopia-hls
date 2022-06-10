@@ -2,7 +2,7 @@
 <ipxact:component xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ipxact="http://www.accellera.org/XMLSchema/IPXACT/1685-2014" xmlns:kactus2="http://kactus2.cs.tut.fi" xsi:schemaLocation="http://www.accellera.org/XMLSchema/IPXACT/1685-2014 http://www.accellera.org/XMLSchema/IPXACT/1685-2014/index.xsd">
 	<ipxact:vendor>ispras</ipxact:vendor>
 	<ipxact:library>ip.hw</ipxact:library>
-	<ipxact:name>delay_int16_4</ipxact:name>
+	<ipxact:name>c128</ipxact:name>
 	<ipxact:version>1.0</ipxact:version>
 	<ipxact:model>
 		<ipxact:views>
@@ -16,7 +16,7 @@
 			<ipxact:componentInstantiation>
 				<ipxact:name>verilog_implementation</ipxact:name>
 				<ipxact:language>Verilog</ipxact:language>
-				<ipxact:moduleName>delay_INT16_4</ipxact:moduleName>
+				<ipxact:moduleName>c128</ipxact:moduleName>
 				<ipxact:fileSetRef>
 					<ipxact:localName>base</ipxact:localName>
 				</ipxact:fileSetRef>
@@ -24,19 +24,7 @@
 		</ipxact:instantiations>
 		<ipxact:ports>
 			<ipxact:port>
-				<ipxact:name>in</ipxact:name>
-				<ipxact:wire>
-					<ipxact:direction>in</ipxact:direction>
-					<ipxact:vectors>
-						<ipxact:vector>
-							<ipxact:left>15</ipxact:left>
-							<ipxact:right>0</ipxact:right>
-						</ipxact:vector>
-					</ipxact:vectors>
-				</ipxact:wire>
-			</ipxact:port>
-			<ipxact:port>
-				<ipxact:name>out</ipxact:name>
+				<ipxact:name>value</ipxact:name>
 				<ipxact:wire>
 					<ipxact:direction>out</ipxact:direction>
 					<ipxact:vectors>
@@ -65,15 +53,15 @@
 		<ipxact:fileSet>
 			<ipxact:name>base</ipxact:name>
 			<ipxact:file>
-				<ipxact:name>delay_int16_4.v</ipxact:name>
+				<ipxact:name>c128/1.0/c128.v</ipxact:name>
 				<ipxact:fileType>verilogSource</ipxact:fileType>
 				<ipxact:vendorExtensions>
-					<kactus2:hash>b106d602ace8cf7082a365ba45520239fcda0076</kactus2:hash>
+					<kactus2:hash>b86ca66289b28cea4c9b58a23cae4c7b022402d7</kactus2:hash>
 				</ipxact:vendorExtensions>
 			</ipxact:file>
 		</ipxact:fileSet>
 	</ipxact:fileSets>
-	<ipxact:description>Delay.</ipxact:description>
+	<ipxact:description>c128.</ipxact:description>
 	<ipxact:vendorExtensions>
 		<kactus2:kts_attributes>
 			<kactus2:kts_productHier>Flat</kactus2:kts_productHier>

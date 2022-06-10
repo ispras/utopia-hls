@@ -6,6 +6,9 @@ project(UtopiaTest VERSION 0.0)
 
 set(TEST_TARGET utest)
 
+# Karatsuba multiplier needed for some tests.
+set(MULGEN_TARGET mulgen)
+
 set(CMAKE_CXX_STANDARD 17)
 add_compile_options(-g3 -Wall -Wignored-qualifiers -DYYERROR_VERBOSE)
 
@@ -27,12 +30,12 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 enable_testing()
 
 add_executable(${TEST_TARGET}
-  gate/checker/checker_test.cpp
-  gate/model/netlist_test.cpp
-  hls/compiler/compiler_test.cpp
-  hls/compiler/compiler_dfc_test.cpp
+  gate/debugger/checker_test.cpp
+  gate/model/gnet_test.cpp
+  hls/compiler/compiler_hil_test.cpp
+  #hls/compiler/compiler_dfc_test.cpp
   hls/debugger/debugger_test.cpp
-  hls/library/library_test.cpp
+  #hls/library/library_test.cpp
   hls/model/mlir/transform_test.cpp
   hls/parser/dfc/dfc_dot_test.cpp
   hls/parser/dfc/dfc_idct_test.cpp
@@ -42,6 +45,10 @@ add_executable(${TEST_TARGET}
   lib/minisat/minisat_test.cpp
   rtl/parser/ril/ril_test.cpp
   test_main.cpp
+)
+
+add_executable(${MULGEN_TARGET} 
+  hls/compiler/mulgen.cpp
 )
 
 target_link_libraries(${TEST_TARGET} PRIVATE gtest_main ${MAIN_LIBRARY})

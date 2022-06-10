@@ -53,7 +53,7 @@
 		<ipxact:fileSet>
 			<ipxact:name>base</ipxact:name>
 			<ipxact:file>
-				<ipxact:name>w3_sub_w5.v</ipxact:name>
+				<ipxact:name>w3_sub_w5/1.0/w3_sub_w5.v</ipxact:name>
 				<ipxact:fileType>verilogSource</ipxact:fileType>
 				<ipxact:vendorExtensions>
 					<kactus2:hash>7f3f45840fcd38b2775c24338cba7db4f555c35f</kactus2:hash>

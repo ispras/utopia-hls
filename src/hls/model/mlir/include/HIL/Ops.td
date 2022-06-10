@@ -76,8 +76,8 @@ def HIL_NodeType : HIL_Op<"nodetype", [HasParent<"NodeTypes">]> {
 
   let arguments = (ins
     StrAttr:$name,
-    TypedArrayAttrBase<InputPortAttr, "input ports">:$commandArguments,
-    TypedArrayAttrBase<OutputPortAttr, "output ports">:$commandResults);
+    TypedArrayAttrBase<PortAttr, "input ports">:$commandArguments,
+    TypedArrayAttrBase<PortAttr, "output ports">:$commandResults);
   let assemblyFormat = [{
     $name $commandArguments `=``>` $commandResults attr-dict
   }];
@@ -108,8 +108,8 @@ def HIL_Chan : HIL_Op<"chan", [HasParent<"Chans">]> {
   let arguments = (ins
     StrAttr:$typeName,
     StrAttr:$varName,
-    OptionalAttr<InputBndAttr>:$nodeFrom,
-    OptionalAttr<OutputBndAttr>:$nodeTo);
+    OptionalAttr<BindingAttr>:$nodeFrom,
+    OptionalAttr<BindingAttr>:$nodeTo);
   let assemblyFormat = [{
     $typeName $varName (`(` $nodeFrom^ `=``>` $nodeTo `)`)? attr-dict
   }];

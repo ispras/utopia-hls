@@ -101,23 +101,19 @@ MLIRBuilder<T>::build_model_from_mlir(MLIRModule &mlir_model,
   return builder.create();
 }
 
-template <> void MLIRBuilder<mlir::hil::InputPortAttr>::build() {
+template <> void MLIRBuilder<mlir::hil::PortAttr>::build() {
   builder_.addPort(node_.getName(), node_.getTypeName(),
-                   std::to_string(*node_.getFlow()), "0");
+                   std::to_string(node_.getFlow()),
+                   std::to_string(node_.getLatency()),
+                   std::to_string(node_.getValue()));
 }
 
-template <> void MLIRBuilder<mlir::hil::OutputPortAttr>::build() {
-  builder_.addPort(node_.getName(), node_.getTypeName(),
-                   std::to_string(*node_.getFlow()),
-                   std::to_string(node_.getLatency()), node_.getValue());
-}
-
-/*template <> void MLIRBuilder<mlir::hil::InputBndAttr>::build() {
+/*template <> void MLIRBuilder<mlir::hil::BindingAttr>::build() {
   builder_.addPort(node_.getNodeName(), node_.getPort().getTypeName(),
                    std::to_string(*node_.getPort().getFlow()), "0");
 }
 
-template <> void MLIRBuilder<mlir::hil::OutputBndAttr>::build() {
+template <> void MLIRBuilder<mlir::hil::BindingAttr>::build() {
   builder_.addPort(node_.getNodeName(), node_.getPort().getTypeName(),
                    std::to_string(*node_.getPort().getFlow()),
                    std::to_string(node_.getPort().getLatency()),
@@ -128,15 +124,13 @@ template <> void MLIRBuilder<mlir::hil::NodeType>::build() {
   builder_.startNodetype(node_.name().str());
   // Build inputs
   for (auto op : node_.commandArguments()) {
-    auto in_port_op =
-        op.cast<mlir::Attribute>().cast<mlir::hil::InputPortAttr>();
+    auto in_port_op = op.cast<mlir::Attribute>().cast<mlir::hil::PortAttr>();
     MLIRBuilder::get(in_port_op, builder_).build();
   }
   // Build outputs
   builder_.startOutputs();
   for (auto op : node_.commandResults()) {
-    auto out_port_op =
-        op.cast<mlir::Attribute>().cast<mlir::hil::OutputPortAttr>();
+    auto out_port_op = op.cast<mlir::Attribute>().cast<mlir::hil::PortAttr>();
     MLIRBuilder::get(out_port_op, builder_).build();
   }
   builder_.endNodetype();

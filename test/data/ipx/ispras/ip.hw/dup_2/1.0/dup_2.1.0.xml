@@ -77,7 +77,7 @@
 		<ipxact:fileSet>
 			<ipxact:name>base</ipxact:name>
 			<ipxact:file>
-				<ipxact:name>dup_2.v</ipxact:name>
+				<ipxact:name>dup_2/1.0/dup_2.v</ipxact:name>
 				<ipxact:fileType>verilogSource</ipxact:fileType>
 				<ipxact:vendorExtensions>
 					<kactus2:hash>4f526bcddff973bdef393f3046c0187b1b80030b</kactus2:hash>

@@ -10,6 +10,8 @@
 #include <cassert>
 #include <unordered_map>
 
+#include "hls/library/internal/delay.h"
+#include "hls/mapper/mapper.h"
 #include "hls/model/model.h"
 #include "hls/model/transform.h"
 
@@ -134,6 +136,21 @@ void Model::insertDelay(Chan &chan, unsigned latency) {
   transforms.push_back(transform);
 
   transform->apply();
+
+  // Get the inserted delay node.
+  auto *delay = transform->newNodes.back();
+  assert(delay && "Inserted delay node is not found");
+
+  // Map the node to the corresponding meta-element.
+  mapper::Mapper::get().map(*delay, library::Library::get());
+  assert(delay->map && "Node is unmapped");
+
+  // Set the latency parameter.
+  Parameters params(delay->map->params);
+  params.setValue(Delay::depth, latency);
+
+  // Apply the parameters to the node.
+  mapper::Mapper::get().apply(*delay, params);
 }
 
 //===----------------------------------------------------------------------===//
@@ -154,7 +171,7 @@ std::ostream& operator<<(std::ostream &out, const Port &port) {
 
 static std::ostream& operator<<(std::ostream &out, const std::vector<Port*> &ports) {
   bool comma = false;
-  for (const Port *port: ports) {
+  for (const auto *port: ports) {
     out << (comma ? ", " : "") << *port;
     comma = true;
   }
@@ -173,7 +190,7 @@ std::ostream& operator<<(std::ostream &out, const Chan &chan) {
 
 static std::ostream& operator<<(std::ostream &out, const std::vector<Chan*> &chans) {
   bool comma = false;
-  for (const Chan *chan: chans) {
+  for (const auto *chan: chans) {
     out << (comma ? ", " : "") << chan->name;
     comma = true;
   }
@@ -189,10 +206,10 @@ std::ostream& operator<<(std::ostream &out, const Node &node) {
 std::ostream& operator<<(std::ostream &out, const Graph &graph) {
   out << "  graph " << graph.name << " {" << std::endl;
 
-  for (const Chan *chan: graph.chans)
+  for (const auto *chan: graph.chans)
     out << "    " << *chan << std::endl;
 
-  for (const Node *node: graph.nodes)
+  for (const auto *node: graph.nodes)
     out << "    " << *node << std::endl;
 
   return out << "  }";
@@ -201,10 +218,10 @@ std::ostream& operator<<(std::ostream &out, const Graph &graph) {
 std::ostream& operator<<(std::ostream &out, const Model &model) {
   out << "model " << model.name << "{" << std::endl;
 
-  for (const NodeType *nodetype: model.nodetypes)
+  for (const auto *nodetype: model.nodetypes)
     out << *nodetype << std::endl;
 
-  for (const Graph *graph: model.graphs)
+  for (const auto *graph: model.graphs)
     out << *graph << std::endl;
 
   return out << "}" << std::endl;

@@ -53,7 +53,7 @@
 		<ipxact:fileSet>
 			<ipxact:name>base</ipxact:name>
 			<ipxact:file>
-				<ipxact:name>c128.v</ipxact:name>
+				<ipxact:name>c128/1.0/c128.v</ipxact:name>
 				<ipxact:fileType>verilogSource</ipxact:fileType>
 				<ipxact:vendorExtensions>
 					<kactus2:hash>b86ca66289b28cea4c9b58a23cae4c7b022402d7</kactus2:hash>

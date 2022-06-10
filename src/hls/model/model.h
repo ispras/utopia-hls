@@ -16,9 +16,17 @@
 #include <string>
 #include <vector>
 
+#include "hls/model/indicators.h"
+#include "hls/model/parameters.h"
 #include "util/string.h"
 
 using namespace eda::utils;
+
+namespace eda::hls::library {
+
+struct MetaElement;
+
+} // namespace eda::hls::library
 
 namespace eda::hls::model {
 
@@ -278,7 +286,7 @@ struct NodeType final {
   std::vector<Port*> inputs;
   std::vector<Port*> outputs;
 
-  // Reference to the parent.
+  /// Reference to the parent.
   Model &model;
 };
 
@@ -313,8 +321,11 @@ struct Chan final {
   Binding source;
   Binding target;
 
-  // Reference to the parent.
+  /// Reference to the parent.
   Graph &graph;
+
+  /// Indicators.
+  ChanInd ind;
 };
 
 //===----------------------------------------------------------------------===//
@@ -359,8 +370,14 @@ struct Node final {
   std::vector<Chan*> inputs;
   std::vector<Chan*> outputs;
 
-  // Reference to the parent.
+  /// Reference to the parent.
   Graph &graph;
+  /// Mapping.
+  std::shared_ptr<library::MetaElement> map;
+  /// Parameters.
+  Parameters params;
+  /// Indicators.
+  NodeInd ind;
 };
 
 //===----------------------------------------------------------------------===//
@@ -405,8 +422,10 @@ struct Graph final {
   std::vector<Chan*> chans;
   std::vector<Node*> nodes;
 
-  // Reference to the parent.
+  /// Reference to the parent.
   Model &model;
+  /// Indicators.
+  GraphInd ind;
 };
 
 //===----------------------------------------------------------------------===//
@@ -451,6 +470,9 @@ struct Model final {
   std::vector<Graph*> graphs;
 
   std::vector<Transform*> transforms;
+
+  /// Indicators.
+  ModelInd ind;
 };
 
 //===----------------------------------------------------------------------===//

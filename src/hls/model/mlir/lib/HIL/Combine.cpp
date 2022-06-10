@@ -100,9 +100,9 @@ public:
       rewriter.setInsertionPoint(&chans_block_op);
       rewriter.replaceOpWithNewOp<Chan>(
           &chans_block_op, chan_op.typeName(), chan_op.varName(),
-          InputBndAttr{}.get(context, node_from.value(),
+          BindingAttr{}.get(context, node_from.value(),
               chan_op.nodeFromAttr().getPort()),
-          OutputBndAttr{}.get(context, node_to.value(),
+          BindingAttr{}.get(context, node_to.value(),
               chan_op.nodeToAttr().getPort()));
     }
     return success();
@@ -160,10 +160,10 @@ public:
 
     auto context = nodetypes_op.getContext();
     // Add nodetype
-    auto in_attr =
-        InputPortAttr::get(context, chan_type.str(), new double{1.0}, "in");
-    auto out_attr = OutputPortAttr::get(context, chan_type.str(),
-                                       new double{1.0}, latency_, "out", "0");
+    auto in_attr = PortAttr::get(context, "in", chan_type.str(),
+        1.0, latency_, false, 0);
+    auto out_attr = PortAttr::get(context, "out", chan_type.str(),
+        1.0, latency_, false, 0);
     std::array<Attribute, 1> in_attrs{in_attr};
     std::array<Attribute, 1> out_attrs{out_attr};
     rewriter.setInsertionPointToEnd(nodetypes_op.getBody());
@@ -183,14 +183,14 @@ public:
     // Split the channel with the node
     rewriter.setInsertionPointToEnd(chans_op.getBody());
     rewriter.create<Chan>(chans_op.getLoc(), chan_op.typeName(), new_chan_name,
-        InputBndAttr{}.get(context, btw_name, in_attr),
-        OutputBndAttr{}.get(context, node_to_name,
+        BindingAttr{}.get(context, btw_name, in_attr),
+        BindingAttr{}.get(context, node_to_name,
             chan_op.nodeToAttr().getPort()));
     rewriter.replaceOpWithNewOp<Chan>(chan_op, chan_op.typeName(),
         chan_op.varName(),
-        InputBndAttr{}.get(context, node_from_name,
+        BindingAttr{}.get(context, node_from_name,
             chan_op.nodeFromAttr().getPort()),
-        OutputBndAttr{}.get(context, btw_name, out_attr));
+        BindingAttr{}.get(context, btw_name, out_attr));
     // Rename target node's input channel
     nodes_op.walk([&](Node op) {
       if (op.name() == node_to_name) {

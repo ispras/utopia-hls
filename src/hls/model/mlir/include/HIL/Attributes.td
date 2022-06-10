@@ -11,72 +11,37 @@
 
 include "Dialect.td"
 
-def InputPortAttr : HIL_Attr<"InputPort"> {
-  let mnemonic = "inport";
-
-  let summary = "Input port";
+def PortAttr : HIL_Attr<"Port"> {
+  let mnemonic = "port";
+  let summary = "Port attribute";
 
   let description = [{
-    Input port arg type
+    port arg type
   }];
 
   let parameters = (ins
-    "std::string":$typeName,
-    "double*":$flow,
-    "std::string":$name);
-
-  let hasCustomAssemblyFormat = 1;
-}
-
-def OutputPortAttr : HIL_Attr<"OutputPort"> {
-  let mnemonic = "outport";
-
-  let summary = "Output port";
-
-  let description = [{
-    Output port arg type
-  }];
-
-  let parameters = (ins
-    "std::string":$typeName,
-    "double*":$flow,
-    "unsigned":$latency,
     "std::string":$name,
-    "std::string":$value);
+    "std::string":$typeName,
+    "float":$flow,
+    "unsigned":$latency,
+    "bool":$isConst,
+    "unsigned":$value);
 
   let hasCustomAssemblyFormat = 1;
 }
 
-def InputBndAttr : HIL_Attr<"InputBnd"> {
+def BindingAttr : HIL_Attr<"Binding"> {
 
-  let mnemonic = "inbind";
-
-  let summary = "Input port binding";
+  let mnemonic = "binding";
+  let summary = "Binding attribute";
 
   let description = [{
-    Input binding attr type
+    binding attr type
   }];
 
   let parameters = (ins
     "std::string":$nodeName,
-    InputPortAttr:$port);
-
-  let hasCustomAssemblyFormat = 1;
-}
-
-def OutputBndAttr : HIL_Attr<"OutputBnd"> {
-
-  let mnemonic = "outbind";
-
-  let summary = "Output port binding";
-
-  let description = [{
-    Output binding attr type
-  }];
-
-  let parameters = (ins
-    "std::string":$nodeName,
-    OutputPortAttr:$port);
+    PortAttr:$port);
 
   let hasCustomAssemblyFormat = 1;
 }
