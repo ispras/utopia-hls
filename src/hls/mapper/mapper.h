@@ -15,8 +15,6 @@
 #include <map>
 #include <string>
 
-using namespace eda::hls::library;
-
 namespace eda::hls::mapper {
 
 class Mapper final : public Singleton<Mapper> {
@@ -24,20 +22,23 @@ class Mapper final : public Singleton<Mapper> {
 
 public:
   /// Maps the model nodes to the library meta-elements.
-  void map(model::Model &model, Library &library);
+  void map(model::Model &model, library::Library &library);
   /// Maps the given node to the library meta-element.
-  void map(model::Node &node, Library &library);
+  void map(model::Node &node, library::Library &library);
   /// Maps the given node to the given meta-element.
-  void map(model::Node &node, const std::shared_ptr<MetaElement> &metaElement);
+  void map(model::Node &node,
+           const std::shared_ptr<library::MetaElement> &metaElement);
 
-  /// Estimates the indicators of the node and the output channels.
-  void apply(model::Node &node, const Parameters &params);
+  /// Applies the given parameters to the given node.
+  void apply(model::Node &node, const model::Parameters &params);
 
-  /// Estimates the indicators of the model as a whole.
-  void estimate(const model::Model &model, Library &library,
-    const std::map<std::string, Parameters> &params, Indicators &indicators) const;
+  /// Estimates the model indicators.
+  void estimate(model::Graph &graph);
+  /// Estimates the graph indicators.
+  void estimate(model::Model &model);
 
 private:
+
   Mapper() {}
 };
 

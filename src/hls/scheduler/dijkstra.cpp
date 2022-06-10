@@ -83,6 +83,7 @@ void DijkstraBalancer::addConnections(std::vector<Chan*> &connections,
 void DijkstraBalancer::balance(Model &model, LatencyBalanceMode balanceMode) {
   mode = balanceMode;
   const Graph *graph = model.main();
+  assert(graph && "Graph 'main' not found!");
   init(graph);
 
   if (mode == LatencyBalanceMode::ASAP) {

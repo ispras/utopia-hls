@@ -8,15 +8,14 @@
 
 #pragma once
 
-#include "hls/library/library.h"
 #include "hls/model/model.h"
+#include "hls/model/parameters.h"
 #include "hls/scheduler/optimizers/abstract_optimizer.h"
 #include "util/singleton.h"
 
 #include <map>
 #include <string>
 
-using namespace eda::hls::library;
 using namespace eda::hls::model;
 using namespace eda::util;
 
@@ -26,13 +25,13 @@ struct Criteria final {
   Criteria(Indicator objective,
            const Constraint &freq,
            const Constraint &perf,
-           const Constraint &latency,
+           const Constraint &ticks,
            const Constraint &power,
            const Constraint &area):
     objective(objective),
     freq(freq),
     perf(perf),
-    latency(latency),
+    ticks(ticks),
     power(power),
     area(area) {}
 
@@ -40,15 +39,15 @@ struct Criteria final {
 
   const Constraint freq;
   const Constraint perf;
-  const Constraint latency;
+  const Constraint ticks;
   const Constraint power;
   const Constraint area;
 
   /// Checks the constraints.
   bool check(const Indicators &indicators) const {
-    return freq.check(indicators.freq)
-        && perf.check(indicators.perf)
-        && latency.check(indicators.latency)
+    return freq.check(indicators.freq())
+        && perf.check(indicators.perf())
+        && ticks.check(indicators.ticks)
         && power.check(indicators.power)
         && area.check(indicators.area);
   }
@@ -74,10 +73,6 @@ private:
 
   void estimate(Model& model, std::map<std::string, Parameters>& params,
                     Indicators& indicators, unsigned frequency) const;
-
-  void updateFrequency(Model& model, std::map<std::string, Parameters>& params,
-    const unsigned frequency) const;
-
   double normalize(double value, double min, double max) const;
   double denormalize(double value, double min, double max) const;
 

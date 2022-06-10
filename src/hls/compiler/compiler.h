@@ -30,16 +30,6 @@ using namespace eda::hls::model;
 
 namespace eda::hls::compiler {
 
-struct Wire final {
-  std::string name;
-  Type type;
-
-  Wire(const std::string &name,
-       const Type &type) :
-    name(name),
-    type(type) {}
-};
-
 struct Type final {
   std::string name;
   std::size_t element_width;
@@ -99,7 +89,6 @@ struct Instance final {
 
 struct Module {
   std::string name;
-  std::vector<Wire> wires;
   std::vector<Instance> instances;
   std::vector<Port> inputs;
   std::vector<Port> outputs;
@@ -172,7 +161,7 @@ struct Compiler final {
                               std::ostream &out) const;
   void printEpilogue(const ExternalModule &extmodule, std::ostream &out) const;
   void moveVerilogLibrary(const std::string &outputDirectoryName,
-                                    std::ostream &out) const;
+                          std::ostream &out) const;
   void moveVerilogModule(const std::string &outputDirectoryName,
                          const ExternalModule &extModule) const;
   void printVerilogModule(const std::string &outputDirectoryName,
@@ -190,7 +179,7 @@ struct Compiler final {
    *
    * @param tstPath Path to testbench file to be created.
    * @param tstCnt Number of test stimuli at random sequence
-   * @return Nothing, but "*.v" testbench should be created.
+   * @return Nothing, but Verilog testbench should be created.
    */
   void printRndVlogTest(const std::string &tstPath, const int tstCnt);
 };

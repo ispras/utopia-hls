@@ -36,31 +36,31 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
 
   // Collect the parameters for all nodes.
   Parameters defaultParams;
-  defaultParams.add(Parameter("f", criteria.freq, criteria.freq.max));
+  defaultParams.add(Parameter("f", criteria.freq, criteria.freq.getMax()));
 
-  auto min_value = criteria.freq.min;
-  auto max_value = criteria.freq.max;
+  auto min_value = criteria.freq.getMin();
+  auto max_value = criteria.freq.getMax();
 
   std::vector<float> optimized_values;
   optimized_values.push_back(normalize(10000, min_value, max_value));
   for (const auto *node : graph->nodes) {
-    auto metaElement = Library::get().find(node->type);
+    auto metaElement = library::Library::get().find(node->type);
     Parameters nodeParams(metaElement->params);
-    for(const auto& iter : metaElement->params.params) {
-      optimized_values.push_back(normalize(iter.second.value, min_value, max_value));
+    for(const auto& iter : metaElement->params.getAll()) {
+      optimized_values.push_back(normalize(iter.second.getValue(), min_value, max_value));
     }
     params.insert({ node->name, nodeParams });
   }
 
   // Check if the task is solvable
-  int cur_f = criteria.freq.min;
+  int cur_f = criteria.freq.getMin();
   estimate(model, params, indicators, cur_f);
   model.undo();
   if (!criteria.check(indicators)) { // even if the frequency is minimal the params don't match constratints
       return params;
   }
 
-  cur_f = criteria.freq.max;
+  cur_f = criteria.freq.getMax();
   estimate(model, params, indicators, cur_f);
   if (criteria.check(indicators)) { // the maximum frequency is the solution
       return params;
@@ -90,7 +90,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     }
     estimate(model, params, indicators, denormalized_parameters[0]);
     model.undo();
-    return indicators.freq;
+    return indicators.freq();
   };
 
   std::function<float(const std::vector<float>&)>
@@ -114,9 +114,9 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   auto limitation = limitation_function(optimized_values);
 
   ostrm << std::endl << "After optimization" << std::endl;
-  ostrm << "Freq: " << indicators.freq << std::endl;
-  ostrm << "Perf: " << indicators.perf << std::endl;
-  ostrm << "Latency: " << indicators.latency << std::endl;
+  ostrm << "Freq: " << indicators.freq() << std::endl;
+  ostrm << "Perf: " << indicators.perf() << std::endl;
+  ostrm << "Ticks: " << indicators.ticks << std::endl;
   ostrm << "Power: " << indicators.power << std::endl;
   ostrm << "Area: " << indicators.area << std::endl;
 
@@ -127,31 +127,27 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   return params;
 }
 
-void ParametersOptimizer::updateFrequency(Model& model,
+void ParametersOptimizer::estimate(Model& model,
     std::map<std::string, Parameters>& params,
-    const unsigned freq) const {
+    Indicators& indicators, unsigned freq) const {
+  
+  // Update the values of the parameters & apply to nodes.
   Graph *graph = model.main();
-  for (const auto *node : graph->nodes) {
+  for (auto *node : graph->nodes) {
     auto nodeParams = params.find(node->name);
     if (nodeParams == params.end()) {
       continue;
     }
-    nodeParams->second.set("f", freq);
+    nodeParams->second.setValue("f", freq);
+    mapper::Mapper::get().apply(*node, nodeParams->second);
   }
-}
-
-
-void ParametersOptimizer::estimate(Model& model,
-    std::map<std::string, Parameters>& params,
-    Indicators& indicators, unsigned freq) const {
-  // Update the values of the parameters.
-  updateFrequency(model, params, freq);
+  
   // Balance flows and align times.
   LatencyLpSolver::get().balance(model);
-  indicators.latency = LatencyLpSolver::get().getGraphLatency();
+  
   // Estimate overall design indicators
-  mapper::Mapper::get().estimate(model, library::Library::get(), params, indicators);
-
+  mapper::Mapper::get().estimate(model);
+  indicators = model.ind;
 }
 
 double ParametersOptimizer::normalize(double value, double min, double max) const {

@@ -125,37 +125,6 @@ bool EqChecker::equivalent(const Model &left, const Model &right) const {
   return false;
 }
 
-bool EqChecker::match(const std::vector<Graph*> &left,
-    const std::vector<Graph*> &right,
-    std::pair<Graph*, Graph*> &matched) const {
-
-  size_t lSize = left.size();
-  size_t rSize = right.size();
-
-  for (size_t i = 0; i < lSize; i++) {
-
-    Graph *lGraph = left[i];
-
-    if (!lGraph->isMain()) {
-      continue;
-    }
-
-    for (size_t j = 0; j < rSize; j++) {
-
-      Graph *rGraph = right[j];
-
-      if (!rGraph->isMain()) {
-        continue;
-      }
-
-      matched.first = lGraph;
-      matched.second = rGraph;
-      return true;
-    }
-  }
-  return false;
-}
-
 bool EqChecker::match(const std::vector<Node*> &left,
     const std::vector<Node*> &right,
     std::list<std::pair<Node*, Node*>> &matched) const {

@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "hls/mapper/mapper.h"
 #include "hls/model/model.h"
 #include "hls/parser/hil/parser.h"
 #include "hls/scheduler/param_optimizer.h"
@@ -14,6 +15,8 @@
 
 #include <limits>
 
+using namespace eda::hls::library;
+using namespace eda::hls::mapper;
 using namespace eda::hls::model;
 using namespace eda::hls::parser::hil;
 using namespace eda::hls::scheduler;
@@ -29,6 +32,9 @@ void paramOptimizerTest(const std::string &filename) {
 
   // Model whose parameters need to be optimized.
   std::shared_ptr<Model> model = parse(filename);
+
+  // Map model nodes to meta elements.
+  Mapper::get().map(*model, Library::get());
 
   // Integral indicators of the optimized model (output).
   Indicators indicators;

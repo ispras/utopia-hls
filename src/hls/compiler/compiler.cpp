@@ -58,10 +58,6 @@ void Module::addOutput(const Port &outputPort) {
   outputs.push_back(outputPort);
 }
 
-/*void Module::addWire(const Wire &inputWire) {
-  wires.push_back(inputWire);
-}*/
-
 ExternalModule::ExternalModule(const model::NodeType *nodetype) : Module(nodetype->name) {
   addInput(Port("clock", true, Type("clock", 1, false, 1)));
   addInput(Port("reset", true, Type("reset", 1, false, 1)));
@@ -376,7 +372,6 @@ void Compiler::printFirrtlModule(const FirrtlModule &firmodule,
                                  std::ostream &out) const {
   printDeclaration(firmodule, out);
   printEmptyLine(out);
-  //printWires(firmodule, out);
   printEmptyLine(out);
   printInstances(firmodule, out);
   printConnections(firmodule, out);
