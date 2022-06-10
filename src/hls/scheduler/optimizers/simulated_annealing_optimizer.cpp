@@ -39,7 +39,6 @@ namespace eda::hls::scheduler::optimizers {
                 prev_f = cur_f;
             } else {
                 cur_param = param;
-                cur_f = prev_f;
             }
             i++;
             temperature = temp_function(i, temperature);
