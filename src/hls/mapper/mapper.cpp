@@ -146,11 +146,9 @@ void Mapper::estimate(model::Graph &graph) {
 void Mapper::estimate(model::Model &model) {
   for (auto *graph : model.graphs) {
     estimate(*graph);
-
-    if (graph->isMain()) {
-      model.ind = graph->ind;
-    }
   }
+
+  model.ind = model.main()->ind;
 }
 
 } // namespace eda::hls::mapper

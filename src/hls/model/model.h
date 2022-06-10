@@ -408,10 +408,6 @@ struct Graph final {
     return i != nodes.end() ? *i : nullptr;
   }
 
-  bool isMain() const {
-    return name == "main";
-  }
-
   void instantiate(
     const Graph &graph,
     const std::string &name,
@@ -457,7 +453,7 @@ struct Model final {
   }
 
   Graph* main() const {
-    return findGraph("main");
+    return graphs.size() == 1 ? *graphs.begin() : findGraph("main");
   }
 
   void save();
