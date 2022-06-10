@@ -75,7 +75,7 @@ mlir::Attribute mlir::hil::PortAttr::parse(mlir::AsmParser &parser,
   if (parser.parseGreater())
     return {};
   auto ctx = parser.getContext();
-  return get(ctx, name, typeName, *flow, *latency, *isConst, *value);
+  return get(ctx, name, typeName, flow, latency, isConst, value);
 }
 
 void mlir::hil::BindingAttr::print(mlir::AsmPrinter &printer) const {

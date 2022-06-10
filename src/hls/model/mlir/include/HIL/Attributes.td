@@ -22,10 +22,10 @@ def PortAttr : HIL_Attr<"Port"> {
   let parameters = (ins
     "std::string":$name,
     "std::string":$typeName,
-    "float":$flow,
-    "unsigned":$latency,
-    "bool":$isConst,
-    "unsigned":$value);
+    "double*":$flow,
+    "unsigned*":$latency,
+    "bool*":$isConst,
+    "unsigned*":$value);
 
   let hasCustomAssemblyFormat = 1;
 }

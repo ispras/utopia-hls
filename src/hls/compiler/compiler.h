@@ -104,7 +104,7 @@ struct Module {
 };
 
 struct FirrtlModule final : Module {
-  FirrtlModule(const Model &model, const std::string &topModuleName);
+  FirrtlModule(const model::Model &model, const std::string &topModuleName);
   //void addWire(const Wire &inputWire);
   void addInstance(const Instance &inputInstance);
 };
@@ -137,10 +137,10 @@ struct Compiler final {
   static constexpr const char* circt_options = " --lower-firrtl-to-hw \
                                                  --export-split-verilog";
 
-  const std::shared_ptr<Model> model;
+  const std::shared_ptr<model::Model> model;
   std::shared_ptr<Circuit> circuit;
 
-  Compiler(const Model &model);
+  Compiler(const model::Model &model);
 
   std::shared_ptr<Circuit> constructCircuit(const std::string& topModuleName);
 

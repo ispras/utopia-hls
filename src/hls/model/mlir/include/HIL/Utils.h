@@ -56,7 +56,7 @@ namespace mlir::hil {
   std::vector<Node> getSinks(Graph &graph);
 
   std::vector<Chan> getChans(Graph &graph);
-  std::vector<Node> getNodes(Graph &graph);
+  mlir::Block::OpListType& getNodes(Graph &graph);
   bool isDelay(Node &node);
   bool isKernel(Node &node);
   bool isMerge(Node &node);

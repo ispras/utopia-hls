@@ -29,7 +29,7 @@ int compilerHilTest(const std::string &inputLibraryPath,
                     const std::string &outputFirrtlName,
                     const std::string &outputVerilogName,
                     const std::string &outputDirName) {
-  std::shared_ptr<Model> model = parse(inputFilePath);
+  std::shared_ptr<eda::hls::model::Model> model = parse(inputFilePath);
   Library::get().initialize(inputLibraryPath, relativeCompPath);
   DijkstraBalancer::get().balance(*model);
   auto compiler = std::make_unique<Compiler>(*model);

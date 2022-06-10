@@ -74,10 +74,11 @@ namespace mlir::hil {
   std::vector<Node> getSources(mlir::hil::Graph &graph) {
 
   std::vector<Node> result;
-  std::vector<Node> graphNodes = getNodes(graph);
+  mlir::Block::OpListType &graphNodes = getNodes(graph);
 
-  for (auto &node : graphNodes) {
+  for (auto &gNode : graphNodes) {
 
+    auto node = cast<Node>(gNode);
     if (isSource(node)) {
       result.push_back(node);
     }
@@ -88,10 +89,11 @@ namespace mlir::hil {
 std::vector<Node> getSinks(mlir::hil::Graph &graph) {
 
   std::vector<Node> result;
-  std::vector<Node> graphNodes = getNodes(graph);
+  mlir::Block::OpListType &graphNodes = getNodes(graph);
 
-  for (auto &node : graphNodes) {
+  for (auto &gNode : graphNodes) {
 
+    auto node = cast<Node>(gNode);
     if (isSink(node)) {
       result.push_back(node);
     }
@@ -113,16 +115,10 @@ std::vector<Node> getSinks(mlir::hil::Graph &graph) {
     return result;
   }
 
-  std::vector<mlir::hil::Node> getNodes(mlir::hil::Graph &graph) {
+  mlir::Block::OpListType& getNodes(mlir::hil::Graph &graph) {
     auto &graph_ops = graph.getBody()->getOperations();
     auto nodes_op = find_elem_by_type<Nodes>(graph_ops).value();
-    std::vector<Node> result;
-
-    for (auto &nodes_block_op : nodes_op.getBody()->getOperations()) {
-      auto node = cast<Node>(nodes_block_op);
-      result.push_back(node);
-    }
-    return result;
+    return nodes_op.getBody()->getOperations();
   }
 
   bool isDelay(mlir::hil::Node &node) {
