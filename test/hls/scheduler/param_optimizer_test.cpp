@@ -51,6 +51,6 @@ void paramOptimizerTest(const std::string &filename) {
   paramOptimizerTest("test/data/hil/test.hil");
 }*/
 
-TEST(SchedulerTest, ParamOptimizerIDCT) {
+/*TEST(SchedulerTest, ParamOptimizerIDCT) {
   paramOptimizerTest("test/data/hil/idct.hil");
-}
+}*/
