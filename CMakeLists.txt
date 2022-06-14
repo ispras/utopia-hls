@@ -43,7 +43,7 @@ else()
 endif()
 
 include_directories(SYSTEM lib/easyloggingpp)
-include_directories(lib/minisat)
+include_directories(SYSTEM lib/minisat)
 
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/lib/minisat)
 
