@@ -129,37 +129,6 @@ bool EqChecker::equivalent(mlir::hil::Model &left,
   return false;
 }
 
-bool EqChecker::match(const std::vector<Graph> &left,
-    const std::vector<Graph> &right,
-    std::pair<Graph, Graph> &matched) const {
-
-  size_t lSize = left.size();
-  size_t rSize = right.size();
-
-  for (size_t i = 0; i < lSize; i++) {
-
-    Graph lGraph = left[i];
-
-    if (!(lGraph.name() == "main")) {
-      continue;
-    }
-
-    for (size_t j = 0; j < rSize; j++) {
-
-      Graph rGraph = right[j];
-
-      if (!(rGraph.name() == "main")) {
-        continue;
-      }
-
-      matched.first = lGraph;
-      matched.second = rGraph;
-      return true;
-    }
-  }
-  return false;
-}
-
 bool EqChecker::match(const std::vector<mlir::hil::Node> &left,
     const std::vector<mlir::hil::Node> &right,
     std::list<std::pair<mlir::hil::Node, mlir::hil::Node>> &matched) const {

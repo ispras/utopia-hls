@@ -39,12 +39,7 @@ private:
 
   static std::unique_ptr<EqChecker> instance;
 
-  /* Methods that implement equivalence checking siub-tasks. */
-
-  /// Checks if each of graph collections contain the main one.
-  bool match(const std::vector<mlir::hil::Graph> &left,
-      const std::vector<mlir::hil::Graph> &right,
-      std::pair<mlir::hil::Graph, mlir::hil::Graph> &matched) const;
+  /* Methods that implement equivalence checking sub-tasks. */
 
  /// Checks if collections contain nodes with same names.
   bool match(const std::vector<mlir::hil::Node> &left,

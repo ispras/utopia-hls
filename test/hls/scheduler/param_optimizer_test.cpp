@@ -15,10 +15,11 @@
 
 #include <limits>
 
+using namespace eda::hls::library;
+using namespace eda::hls::mapper;
 using namespace eda::hls::model;
 using namespace eda::hls::parser::hil;
 using namespace eda::hls::scheduler;
-using namespace eda::hls::mapper;
 
 void paramOptimizerTest(const std::string &filename) {
   // Optimization criterion and constraints.

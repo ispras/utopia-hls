@@ -100,7 +100,7 @@ FirrtlModule::FirrtlModule(const eda::hls::model::Model &model,
     if (node->isSource()) {
       for (const auto *output : node->outputs) {
         /*const FixedType* fixed = (const FixedType*)&(output->type);*/
-        Port outputPort (node->name + "_" + output->target.port->name, true,
+        Port outputPort (node->name + "_" + output->source.port->name, true,
                          Type("sint",
                               16,
                               false,
@@ -162,7 +162,7 @@ FirrtlModule::FirrtlModule(const eda::hls::model::Model &model,
                            false,
                            1));
       instances.back().addOutput(outputPort);
-      if (node->type.name != "sink") {
+      if (!output->target.node->isSink()) {
         Port connectsTo(output->target.node->name + "_" +
             output->target.port->name, true, Type("sint",
                                                   16,
@@ -249,9 +249,9 @@ void Compiler::printInstances(const FirrtlModule &firmodule,
     for (const auto &input : instance.inputs) {
       out << (hasComma ? ", " : "");
 	  buf.assign(input.name);
-	  std::replace( buf.begin(), buf.end(), ',', '_');
+	  /*std::replace( buf.begin(), buf.end(), ',', '_');
 	  std::replace( buf.begin(), buf.end(), '>', '_');
-	  std::replace( buf.begin(), buf.end(), '<', '_');
+	  std::replace( buf.begin(), buf.end(), '<', '_');*/
       out << Compiler::varPrefix << buf;
       hasComma = true;
     }
@@ -259,9 +259,9 @@ void Compiler::printInstances(const FirrtlModule &firmodule,
     for (const auto &output : instance.outputs) {
       out << (hasComma ? ", " : "");
 	  buf.assign(output.name);
-	  std::replace( buf.begin(), buf.end(), ',', '_');
+	  /*std::replace( buf.begin(), buf.end(), ',', '_');
 	  std::replace( buf.begin(), buf.end(), '>', '_');
-	  std::replace( buf.begin(), buf.end(), '<', '_');
+	  std::replace( buf.begin(), buf.end(), '<', '_');*/
       out << Compiler::varPrefix << buf;
       hasComma = true;
     }
@@ -274,9 +274,9 @@ void Compiler::printInstances(const FirrtlModule &firmodule,
     for (const auto &input : instance.moduleInputs) {
       out << (hasComma ? ", " : " ");
 	  buf.assign(input.name);
-	  std::replace( buf.begin(), buf.end(), ',', '_');
+	  /*std::replace( buf.begin(), buf.end(), ',', '_');
 	  std::replace( buf.begin(), buf.end(), '>', '_');
-	  std::replace( buf.begin(), buf.end(), '<', '_');
+	  std::replace( buf.begin(), buf.end(), '<', '_');*/
       out << "in " << buf << ": ";
       out << Compiler::typePrefix << input.type.name;
       out << "<" << input.type.element_width << ">";
@@ -286,9 +286,9 @@ void Compiler::printInstances(const FirrtlModule &firmodule,
     for (const auto &output : instance.moduleOutputs) {
       out << (hasComma ? ", " : " ");
 	  buf.assign(output.name);
-	  std::replace( buf.begin(), buf.end(), ',', '_');
+	  /*std::replace( buf.begin(), buf.end(), ',', '_');
 	  std::replace( buf.begin(), buf.end(), '>', '_');
-	  std::replace( buf.begin(), buf.end(), '<', '_');
+	  std::replace( buf.begin(), buf.end(), '<', '_');*/
       out << "out " << buf << ": ";
       out << Compiler::typePrefix << output.type.name;
       out << "<" << output.type.element_width << ">";
@@ -316,13 +316,13 @@ void Compiler::printConnections(const FirrtlModule &firmodule,
 	std::string buf2;
     for (const auto &pair : instance.bindings) {
 	  buf1.assign(pair.first.name);
-	  std::replace( buf1.begin(), buf1.end(), ',', '_');
+	  /*std::replace( buf1.begin(), buf1.end(), ',', '_');
 	  std::replace( buf1.begin(), buf1.end(), '>', '_');
-	  std::replace( buf1.begin(), buf1.end(), '<', '_');
+	  std::replace( buf1.begin(), buf1.end(), '<', '_');*/
 	  buf2.assign(pair.second.name);
-	  std::replace( buf2.begin(), buf2.end(), ',', '_');
+	  /*std::replace( buf2.begin(), buf2.end(), ',', '_');
 	  std::replace( buf2.begin(), buf2.end(), '>', '_');
-	  std::replace( buf2.begin(), buf2.end(), '<', '_');
+	  std::replace( buf2.begin(), buf2.end(), '<', '_');*/
       out << Compiler::indent << Compiler::indent << Compiler::opPrefix <<
           "connect " << Compiler::varPrefix << buf2 << ", "
           << Compiler::varPrefix << buf1;
@@ -387,9 +387,9 @@ void Compiler::printDeclaration(const ExternalModule &extmodule,
   for (const auto &input : extmodule.inputs) {
     out << (hasComma ? ",\n" : "\n");
 	buf.assign(input.name);
-	std::replace( buf.begin(), buf.end(), ',', '_');
+	/*std::replace( buf.begin(), buf.end(), ',', '_');
 	std::replace( buf.begin(), buf.end(), '>', '_');
-	std::replace( buf.begin(), buf.end(), '<', '_');
+	std::replace( buf.begin(), buf.end(), '<', '_');*/
     out << Compiler::indent << buf;
     /*if (input.type.element_width != 1) {
       out << "[" << input.type.element_width - 1 << ":" << 0 << "]";
@@ -399,9 +399,9 @@ void Compiler::printDeclaration(const ExternalModule &extmodule,
   for (const auto &output : extmodule.outputs) {
     out << (hasComma ? ",\n" : "\n");
 	buf.assign(output.name);
-	std::replace( buf.begin(), buf.end(), ',', '_');
+	/*std::replace( buf.begin(), buf.end(), ',', '_');
 	std::replace( buf.begin(), buf.end(), '>', '_');
-	std::replace( buf.begin(), buf.end(), '<', '_');
+	std::replace( buf.begin(), buf.end(), '<', '_');*/
     out << Compiler::indent << buf;
     /*if (output.type.element_width != 1) {
       out << "[" << output.type.element_width - 1 << ":" << 0 << "]";
@@ -425,9 +425,9 @@ void Compiler::printFirrtlDeclaration(const ExternalModule &extmodule,
   std::string buf;
   for (const auto &input : extmodule.inputs) {
 	buf.assign(input.name);
-	std::replace( buf.begin(), buf.end(), ',', '_');
+	/*std::replace( buf.begin(), buf.end(), ',', '_');
 	std::replace( buf.begin(), buf.end(), '>', '_');
-	std::replace( buf.begin(), buf.end(), '<', '_');
+	std::replace( buf.begin(), buf.end(), '<', '_');*/
     out << (hasComma ? ",\n" : "\n");
     out << Compiler::indent << Compiler::indent <<  "in " <<
         buf << " : " << Compiler::typePrefix << input.type.name;
@@ -438,9 +438,9 @@ void Compiler::printFirrtlDeclaration(const ExternalModule &extmodule,
   }
   for (const auto &output : extmodule.outputs) {
 	buf.assign(output.name);
-	std::replace( buf.begin(), buf.end(), ',', '_');
+	/*std::replace( buf.begin(), buf.end(), ',', '_');
 	std::replace( buf.begin(), buf.end(), '>', '_');
-	std::replace( buf.begin(), buf.end(), '<', '_');
+	std::replace( buf.begin(), buf.end(), '<', '_');*/
     out << (hasComma ? ",\n" : "\n");
     out << Compiler::indent << Compiler::indent <<  "out " <<  buf <<
         ": " << Compiler::typePrefix << output.type.name << "<" <<

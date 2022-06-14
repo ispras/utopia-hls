@@ -7,16 +7,19 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/mapper/mapper.h"
+#include "util/assert.h"
 
-#include <cassert>
 #include <limits>
 #include <stack>
 #include <unordered_map>
 #include <unordered_set>
 
+#define uassert_node(cond, node, mess) \
+  uassert(cond, mess << ": " << node.name << "[" << node.type.name << "]")
+
 namespace eda::hls::mapper {
 
-void Mapper::map(model::Model &model, Library &library) {
+void Mapper::map(model::Model &model, library::Library &library) {
   for (auto *graph : model.graphs) {
     for (auto *node : graph->nodes) {
       map(*node, library);
@@ -24,19 +27,20 @@ void Mapper::map(model::Model &model, Library &library) {
   }
 }
 
-void Mapper::map(model::Node &node, Library &library) {
+void Mapper::map(model::Node &node, library::Library &library) {
   auto metaElement = library.find(node.type);
   assert(metaElement != nullptr);
   map(node, metaElement);
 }
 
-void Mapper::map(model::Node &node, const std::shared_ptr<MetaElement> &metaElement) {
-  assert(!node.map && "Node has been already mapped");
+void Mapper::map(model::Node &node,
+                 const std::shared_ptr<library::MetaElement> &metaElement) {
+  uassert_node(!node.map, node, "Node has been already mapped");
   node.map = metaElement;
 }
 
 void Mapper::apply(model::Node &node, const model::Parameters &params) {
-  assert(node.map && "Node is unmapped");
+  uassert_node(node.map, node, "Node has not been mapped");
 
   // Store the parameters.
   node.params = params;
@@ -49,10 +53,10 @@ void Mapper::apply(model::Node &node, const model::Parameters &params) {
 
   for (auto *output : node.outputs) {
     const auto *port = output->source.port;
-    assert(port && "Channel is unlinked");
+    uassert_node(port, node, "Channel has not been linked");
 
     auto i = node.ind.outputs.find(port->name);
-    assert(i != node.ind.outputs.end() && "Unspecified output");
+    uassert_node(i != node.ind.outputs.end(), node, "Unspecified output");
 
     output->ind = i->second;
 
@@ -143,11 +147,9 @@ void Mapper::estimate(model::Graph &graph) {
 void Mapper::estimate(model::Model &model) {
   for (auto *graph : model.graphs) {
     estimate(*graph);
-
-    if (graph->isMain()) {
-      model.ind = graph->ind;
-    }
   }
+
+  model.ind = model.main()->ind;
 }
 
 } // namespace eda::hls::mapper

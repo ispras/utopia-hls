@@ -39,7 +39,6 @@ namespace eda::hls::scheduler::optimizers {
                 prev_f = cur_f;
             } else {
                 cur_param = param;
-                cur_f = prev_f;
             }
             i++;
             temperature = temp_function(i, temperature);
@@ -57,16 +56,6 @@ namespace eda::hls::scheduler::optimizers {
         ostrm << "Cur lim > lim: " << compar << std::endl;
         
         bool check_limits = true;
-        int i = 0;
-        /*for(const auto& param : params) {
-            i++;
-            if(param > 1.0 || param < -1.0) {
-                ostrm << "Found breaking: " << param << " " << i << std::endl;
-                check_limits = false;
-                break;
-            }
-        }
-        ostrm << "Check limits " << check_limits << std::endl;*/
         if((prev_f < cur_f) && (cur_lim <= limitation) && check_limits) {
             ostrm << "Need to transit" << std::endl << std::endl;
             ostrm.close();

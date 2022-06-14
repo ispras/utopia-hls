@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "hls/library/library.h"
 #include "hls/model/model.h"
 #include "hls/model/parameters.h"
 #include "hls/scheduler/optimizers/abstract_optimizer.h"
@@ -17,7 +16,6 @@
 #include <map>
 #include <string>
 
-using namespace eda::hls::library;
 using namespace eda::hls::model;
 using namespace eda::util;
 
@@ -61,7 +59,7 @@ class ParametersOptimizer final : public Singleton<ParametersOptimizer> {
 public:
   std::map<std::string, Parameters> optimize(
       const Criteria &criteria,
-      Model &model,
+      model::Model &model,
       Indicators &indicators
   ) const;
 
@@ -73,7 +71,7 @@ public:
 private:
   ParametersOptimizer() = default;
 
-  void estimate(Model& model, std::map<std::string, Parameters>& params,
+  void estimate(model::Model& model, std::map<std::string, Parameters>& params,
                     Indicators& indicators, unsigned frequency) const;
   double normalize(double value, double min, double max) const;
   double denormalize(double value, double min, double max) const;

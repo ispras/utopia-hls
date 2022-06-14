@@ -26,6 +26,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     Model &model,
     Indicators &indicators) const {
   srand(42);
+  std::ofstream ostrm("real.txt");
 
   std::map<std::string, Parameters> params;
 
@@ -43,7 +44,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   std::vector<float> optimized_values;
   optimized_values.push_back(normalize(10000, min_value, max_value));
   for (const auto *node : graph->nodes) {
-    auto metaElement = Library::get().find(node->type);
+    auto metaElement = library::Library::get().find(node->type);
     Parameters nodeParams(metaElement->params);
     for(const auto& iter : metaElement->params.getAll()) {
       optimized_values.push_back(normalize(iter.second.getValue(), min_value, max_value));
@@ -60,7 +61,6 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   }
 
   cur_f = criteria.freq.getMax();
-  int x2 = cur_f;
   estimate(model, params, indicators, cur_f);
   if (criteria.check(indicators)) { // the maximum frequency is the solution
       return params;
@@ -76,7 +76,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
       std::mt19937 gen{rand_dev()};
        std::normal_distribution<> distr{0, 1};
 
-      for(int i = 0; i < x.size(); i++) {
+      for(std::size_t i = 0; i < x.size(); i++) {
         auto norm = normalize(prev[i], min_value, max_value);
         auto diff = abs(distr(gen));
         x[i] = norm + diff;
@@ -112,8 +112,6 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
 
   auto res_freq = target_function(optimized_values);
   auto limitation = limitation_function(optimized_values);
-
-  std::ofstream ostrm("real.txt");
 
   ostrm << std::endl << "After optimization" << std::endl;
   ostrm << "Freq: " << indicators.freq() << std::endl;
