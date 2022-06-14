@@ -72,7 +72,8 @@ private:
   ParametersOptimizer() = default;
 
   void estimate(Model& model, std::map<std::string, Parameters>& params,
-                    Indicators& indicators, unsigned frequency) const;
+                    Indicators& indicators,
+                    const std::vector<float>& optimized_params) const;
   double normalize(double value, double min, double max) const;
   double denormalize(double value, double min, double max) const;
 

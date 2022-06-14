@@ -49,21 +49,12 @@ namespace eda::hls::scheduler::optimizers {
     float simulated_annealing_optimizer::get_probabiliy(const float& prev_f, const float& cur_f,
                                                         const float& cur_lim, const float& temp,
                                                         const std::vector<float>& params) {
-        auto compar = (cur_lim > limitation);
-        std::ofstream ostrm("probability.txt", std::ios_base::app);
-        ostrm << "Current limitation: " << cur_lim << std::endl;
-        ostrm << "Limitation: " << limitation << std::endl;
-        ostrm << "Cur lim > lim: " << compar << std::endl;
-        
         bool check_limits = true;
-        if((prev_f < cur_f) && (cur_lim <= limitation) && check_limits) {
-            ostrm << "Need to transit" << std::endl << std::endl;
-            ostrm.close();
+        if((prev_f > cur_f) && (cur_lim <= limitation) && check_limits) {
             return 1.0;
         }
         if((cur_lim > limitation) || !check_limits) {
-            ostrm << "Transition forbiden to transit" << std::endl << std::endl;
-            ostrm.close();
+
             return -1.0;
         }
         return exp((prev_f - cur_f) / temp);

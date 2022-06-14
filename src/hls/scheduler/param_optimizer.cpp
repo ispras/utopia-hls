@@ -29,7 +29,6 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   std::ofstream ostrm("real.txt");
 
   std::map<std::string, Parameters> params;
-
   // Get the main dataflow graph.
   Graph *graph = model.main();
   assert(graph != nullptr && "Main graph is not found");
@@ -37,34 +36,41 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   // Collect the parameters for all nodes.
   Parameters defaultParams;
   defaultParams.add(Parameter("f", criteria.freq, criteria.freq.getMax()));
+  defaultParams.add(Parameter("stages", criteria.ticks, criteria.ticks.getMax()));
 
   auto min_value = criteria.freq.getMin();
   auto max_value = criteria.freq.getMax();
 
-  std::vector<float> optimized_values;
-  optimized_values.push_back(normalize(10000, min_value, max_value));
+  auto min_value_st = criteria.ticks.getMin();
+  auto max_value_st = criteria.ticks.getMax();
+
+  ostrm << "Before loop" << std::endl;
+  std::vector<float> optimized_values;s
   for (const auto *node : graph->nodes) {
     auto metaElement = library::Library::get().find(node->type);
     Parameters nodeParams(metaElement->params);
     for(const auto& iter : metaElement->params.getAll()) {
-      optimized_values.push_back(normalize(iter.second.getValue(), min_value, max_value));
+      optimized_values.push_back(normalize(iter.second.getValue(), iter.second.getMin(), iter.second.getMax()));
     }
     params.insert({ node->name, nodeParams });
   }
+  ostrm << "After insert" << std::endl;
 
   // Check if the task is solvable
-  int cur_f = criteria.freq.getMin();
-  estimate(model, params, indicators, cur_f);
+  /*int cur_f = criteria.freq.getMin();
+  estimate(model, params, indicators, optimized_values);
   model.undo();
   if (!criteria.check(indicators)) { // even if the frequency is minimal the params don't match constratints
+      ostrm << "no solution" << std::endl;
       return params;
   }
 
   cur_f = criteria.freq.getMax();
-  estimate(model, params, indicators, cur_f);
+  estimate(model, params, indicators, optimized_values);
   if (criteria.check(indicators)) { // the maximum frequency is the solution
+      ostrm << "maximum fits" << std::endl;
       return params;
-  }
+  }*/
 
   std::function<float(int, float)> temp_fun = [](int i, float temp) -> float {
     return temp / log(i + 1);
@@ -85,19 +91,31 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
 
   std::function<float(const std::vector<float>&)> target_function = [&](const std::vector<float>& parameters) -> float {
     std::vector<float> denormalized_parameters;
+    std::size_t index = 0;
     for(const auto& param : parameters) {
-      denormalized_parameters.push_back(denormalize(param, min_value, max_value));
+      if(index % 2 == 0) {
+        denormalized_parameters.push_back(denormalize(param, min_value, max_value));
+      } else {
+        denormalized_parameters.push_back(denormalize(param, min_value_st, max_value_st));
+      }
     }
-    estimate(model, params, indicators, denormalized_parameters[0]);
+    estimate(model, params, indicators, denormalized_parameters);
     model.undo();
     return indicators.freq();
   };
 
   std::function<float(const std::vector<float>&)>
       limitation_function = [&](const std::vector<float>& parameters) -> float {
-        float tmp = parameters[0];
-        tmp = denormalize(tmp, min_value, max_value);
-        estimate(model, params, indicators, tmp);
+        std::vector<float> denormalized_parameters;
+        std::size_t index = 0;
+        for(const auto& param : parameters) {
+          if(index % 2 == 0) {
+            denormalized_parameters.push_back(denormalize(param, min_value, max_value));
+          } else {
+            denormalized_parameters.push_back(denormalize(param, min_value_st, max_value_st));
+          }
+        }
+        estimate(model, params, indicators, denormalized_parameters);
         model.undo();
         return indicators.area;
       };
@@ -129,18 +147,28 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
 
 void ParametersOptimizer::estimate(Model& model,
     std::map<std::string, Parameters>& params,
-    Indicators& indicators, unsigned freq) const {
-  
+    Indicators& indicators,
+    const std::vector<float>& optimized_params) const {
+  std::ofstream ostrm("estimation.txt");
   // Update the values of the parameters & apply to nodes.
   Graph *graph = model.main();
+  std::size_t index = 0;
   for (auto *node : graph->nodes) {
     auto nodeParams = params.find(node->name);
     if (nodeParams == params.end()) {
       continue;
     }
-    nodeParams->second.setValue("f", freq);
+    if (index % 2 == 0) {
+      ostrm << "Set frequency: " << optimized_params[index] << std::endl;
+      nodeParams->second.setValue("f", optimized_params[index]);
+    } else {
+      ostrm << "Set stages " << optimized_params[index] << std::endl;
+      nodeParams->second.setValue("stages", optimized_params[index]);
+    }
     mapper::Mapper::get().apply(*node, nodeParams->second);
+    index++;
   }
+  ostrm.close();
   
   // Balance flows and align times.
   LatencyLpSolver::get().balance(model);
