@@ -377,18 +377,18 @@ void ElementInternal::estimate(
       latencySum += latency;
   }
 
-  unsigned S = params.getValue("stages");
+  double S = params.getValue("stages");
   double Areg = 1.0;
   double Apipe = S * widthSum * Areg;
   double Fmax = 300.0;
-  double F = Fmax * (1 - std::exp(0.5 - S));
+  double F = Fmax * (1 - std::exp(-S/50.0));
   double C = inputCount * latencySum;
   double N = (C == 0 ? 0 : C * std::log((Fmax / (Fmax - F)) * ((C - 1) / C)));
   double A = C * std::sqrt(N) + Apipe;
   double P = A;
   double D = 1000000000.0 / Fmax;
 
-  indicators.ticks = static_cast<unsigned>(N);
+  indicators.ticks = static_cast<unsigned>(S);
   indicators.power = static_cast<unsigned>(P);
   indicators.area  = static_cast<unsigned>(A);
   indicators.delay = static_cast<unsigned>(D);

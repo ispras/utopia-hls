@@ -38,7 +38,7 @@ void ElementCore::estimate(
   double P = A;
   double D = 1000000000.0 / Fmax;
 
-  indicators.ticks = static_cast<unsigned>(N);
+  indicators.ticks = static_cast<unsigned>(S);
   indicators.power = static_cast<unsigned>(P);
   indicators.area  = static_cast<unsigned>(A);
   indicators.delay = static_cast<unsigned>(D);
