@@ -35,10 +35,10 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
 
   std::vector<float> optimized_values, min_values, max_values;
   for (const auto *node : graph->nodes) {
-    auto metaElement = library::Library::get().find(node->type); 
+    auto metaElement = node->map; 
     Parameters nodeParams(metaElement->params);
     for(const auto& iter : metaElement->params.getAll()) {
-      optimized_values.push_back(normalize(iter.second.getValue(), iter.second.getMin(), iter.second.getMax()));
+      optimized_values.push_back(0.5);
       min_values.push_back(iter.second.getMin());
       max_values.push_back(iter.second.getMax());
     }
@@ -53,12 +53,18 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     step_fun = [&](std::vector<float>& x, const std::vector<float>& prev, float temp) -> void {
       std::random_device rand_dev{};
       std::mt19937 gen{rand_dev()};
-      std::normal_distribution<> distr{0.5, 0.1};
+      std::normal_distribution<> distr{0, 0.2};
 
       for(std::size_t i = 0; i < x.size(); i++) {
         auto norm = normalize(prev[i], min_values[i], max_values[i]);
         auto diff = distr(gen);
         x[i] = norm + diff;
+        if(x[i] > 1) {
+          x[i] = 1;
+        }
+        if (x[i] < 0) {
+          x[i] = 0;
+        }
       }
     };
 
