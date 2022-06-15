@@ -41,7 +41,7 @@ private:
 
   /* Methods that implement equivalence checking sub-tasks. */
 
- /// Checks if collections contain nodes with same names.
+  /// Checks if collections contain nodes with same names.
   bool match(const std::vector<mlir::hil::Node> &left,
       const std::vector<mlir::hil::Node> &right,
       std::list<std::pair<mlir::hil::Node, mlir::hil::Node>> &matched) const;
@@ -52,11 +52,11 @@ private:
   void createExprs(mlir::hil::Graph &graph, z3::context &ctx,
       z3::expr_vector &nodes) const;
 
-  /// Creates constant expression from the binding.
+  /// Creates constant expression for the channel's binding.
   z3::expr toConst(mlir::hil::Chan &ch, std::string portName,
       z3::context &ctx) const;
 
-  /// Creates constant expression from the node.
+  /// Creates constant expression for the node.
   z3::expr toConst(mlir::hil::Node &node, z3::context &ctx) const;
 
   /// Creates input function call for the node-chan pair.
