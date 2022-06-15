@@ -12,11 +12,11 @@ namespace {
   float end = 1.0;
   float lim = 0.0;
 
-   std::function<float(const std::vector<float>&)> condition_stub = [](const std::vector<float>&) -> float {
+  auto condition_stub = [](const std::vector<float>&) -> float {
     return -1.0;
-   };
+  };
 
-  std::function<float(std::vector<float>)> ros_fun = [](std::vector<float> x) -> float  {
+  auto ros_fun = [](std::vector<float> x) -> float  {
     float result = 0.0;
     for(std::size_t i = 0; i < x.size() - 1; i++) {
       result += 100 * pow((x[i+1] - pow(x[i], 2)), 2) + pow((x[i] - 1), 2);
@@ -24,7 +24,7 @@ namespace {
     return result;
   };
 
-  std::function<float(std::vector<float>)> sphere_fun = [](std::vector<float> x) -> float  {
+  auto sphere_fun = [](std::vector<float> x) -> float  {
     float result = 0.0;
     for(std::size_t i = 0; i < x.size() - 1; i++) {
       result += pow(x[i], 2);
@@ -32,7 +32,7 @@ namespace {
     return result;
   };
 
-  std::function<float(std::vector<float>)> rastr_fun = [](std::vector<float> x) -> float  {
+  auto rastr_fun = [](std::vector<float> x) -> float  {
     float result = 10 * x.size();
     for(std::size_t i = 0; i < x.size() - 1; i++) {
       result += (pow(x[i], 2) - 10 * cos(2 * M_PI * x[i]));
@@ -40,24 +40,20 @@ namespace {
     return result;
   };
 
-  std::function<void(std::vector<float>&, const std::vector<float>&, float)> step_fun = 
-            [](std::vector<float>& x, const std::vector<float>& prev, float temp) -> void {
-                  srand(8);
-                  std::random_device rand_dev{};
-                  std::mt19937 gen{rand_dev()};
-                  std::normal_distribution<double> distr{0, 1};
+  auto step_fun = [](std::vector<float>& x, const std::vector<float>& prev, float temp, float init_temp) -> void {
+    srand(8);
+    std::random_device rand_dev{};
+    std::mt19937 gen{rand_dev()};
+    std::normal_distribution<double> distr{0, 1};
 
-                  auto step = distr(gen);
-
-                  for(std::size_t i = 0; i < x.size(); i++) {
-                    x[i] += step;
-                  }
-            };
-
-  std::function<float(int, float)> temp_fun = [](int i, float temp) -> float {
-    return temp / log(i + 1);
+    for(std::size_t i = 0; i < x.size(); i++) {
+      x[i] += (temp / init_temp) * distr(gen);
+    }
   };
 
+  auto temp_fun = [](int i, float temp) -> float {
+    return temp / log(i + 1);
+  };
 }
 
 TEST(SimulatedAnnealing, SphereFunct) {

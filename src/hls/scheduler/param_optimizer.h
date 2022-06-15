@@ -64,16 +64,18 @@ public:
   ) const;
 
   template <typename T>
-  void set_optimizer(const T& optimizer) {
+  void set_optimizer(const T &optimizer) {
     math_optimizer = std::make_shared<T>(optimizer);
   }
 
 private:
   ParametersOptimizer() = default;
 
-  void estimate(Model& model, std::map<std::string, Parameters>& params,
-                    Indicators& indicators,
-                    const std::vector<float>& optimized_params) const;
+  void estimate(Model &model,
+                std::map<std::string, Parameters> &params,
+                Indicators &indicators,
+                const std::vector<float> &optimized_params) const;
+
   double normalize(double value, double min, double max) const;
   double denormalize(double value, double min, double max) const;
 

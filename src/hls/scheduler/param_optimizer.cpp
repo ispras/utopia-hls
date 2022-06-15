@@ -30,68 +30,61 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   std::ofstream ostrm("real.txt");
 
   std::map<std::string, Parameters> params;
+
   // Get the main dataflow graph.
-  Graph *graph = model.main();
+  auto *graph = model.main();
   assert(graph != nullptr && "Main graph is not found");
 
   std::random_device rand_dev{};
-      std::mt19937 gen{rand_dev()};
-      std::normal_distribution<> distr{0.5, 0.1};
+  std::mt19937 gen{rand_dev()};
+  std::normal_distribution<> distr{0.5, 0.05};
 
   std::vector<float> optimized_values, min_values, max_values;
   for (const auto *node : graph->nodes) {
     auto metaElement = node->map; 
     Parameters nodeParams(metaElement->params);
     for(const auto& iter : metaElement->params.getAll()) {
-      float diff = std::clamp(distr(gen), 0.0, 1.0);
-      optimized_values.push_back(diff);
+      float value = std::clamp(distr(gen), 0.0, 1.0);
+      optimized_values.push_back(value);
       min_values.push_back(iter.second.getMin());
       max_values.push_back(iter.second.getMax());
     }
     params.insert({ node->name, nodeParams });
   }
 
-  std::function<float(int, float)> temp_fun = [](int i, float temp) -> float {
+  auto temp_fun = [](int i, float temp) -> float {
     return temp / log(i + 1);
   };
 
-  std::function<void(std::vector<float>&, const std::vector<float>&, float)>
-    step_fun = [&](std::vector<float>& x, const std::vector<float>& prev, float temp) -> void {
-      std::random_device rand_dev{};
-      std::mt19937 gen{rand_dev()};
-      std::normal_distribution<> distr{0, 0.2};
+  auto step_fun = [&](std::vector<float> &x, const std::vector<float> &prev, float temp, float init_temp) -> void {
+    std::random_device rand_dev{};
+    std::mt19937 gen{rand_dev()};
+    std::normal_distribution<> distr{0, 0.3};
 
-      for(std::size_t i = 0; i < x.size(); i++) {
-        auto norm = normalize(prev[i], min_values[i], max_values[i]);
-        auto diff = distr(gen);
-        x[i] = norm + diff;
-        if(x[i] > 1) {
-          x[i] = 1;
-        }
-        if (x[i] < 0) {
-          x[i] = 0;
-        }
-      }
-    };
+    for(std::size_t i = 0; i < x.size(); i++) {
+      auto norm = normalize(prev[i], min_values[i], max_values[i]);
+      auto diff = (temp / init_temp) * distr(gen);
+      x[i] = std::clamp(norm + diff, 0.0, 1.0);
+    }
+  };
 
-  std::function<float(const std::vector<float>&)> target_function = [&](const std::vector<float>& parameters) -> float {
+  auto target_function = [&](const std::vector<float> &parameters) -> float {
     std::vector<float> denormalized_parameters;
     std::size_t index = 0;
-    for(const auto& param : parameters) {
+    for(const auto &param : parameters) {
       denormalized_parameters.push_back(denormalize(param, min_values[index], max_values[index]));
       index++;
     }
 
     estimate(model, params, indicators, denormalized_parameters);
-    ostrm << "Model size: " << model.main()->nodes.size() << std::endl;
     model.undo();
+
     return indicators.freq();
   };
 
-  std::function<float(const std::vector<float>&)>
-      limitation_function = [&](const std::vector<float>& parameters) -> float {
-      return indicators.area;
-    };
+  auto limitation_function = [&](const std::vector<float> &parameters) -> float {
+    return indicators.area;
+  };
 
   float init_temp = 10000000000.0;
   float end_temp = 1.0;
@@ -124,13 +117,13 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   return params;
 }
 
-void ParametersOptimizer::estimate(Model& model,
-    std::map<std::string, Parameters>& params,
-    Indicators& indicators,
-    const std::vector<float>& optimized_params) const {
+void ParametersOptimizer::estimate(Model &model,
+    std::map<std::string, Parameters> &params,
+    Indicators &indicators,
+    const std::vector<float> &optimized_params) const {
   std::ofstream ostrm("estimation.txt", std::ios_base::app);
   // Update the values of the parameters & apply to nodes.
-  Graph *graph = model.main();
+  auto *graph = model.main();
   std::size_t index = 0;
   ostrm << "Setting values" << std::endl;
   for (auto *node : graph->nodes) {
@@ -138,9 +131,6 @@ void ParametersOptimizer::estimate(Model& model,
     if (nodeParams == params.end()) {
       continue;
     }
-    ostrm << "Optimized: " << optimized_params[index] << std::endl;
-    ostrm << "Min: " << nodeParams->second.get("stages").getMin() << std::endl;
-    ostrm << "Max: " << nodeParams->second.get("stages").getMin() << std::endl;
     nodeParams->second.setValue("stages", optimized_params[index]);
     mapper::Mapper::get().apply(*node, nodeParams->second);
     index++;
