@@ -321,7 +321,6 @@ std::unique_ptr<Element> ElementInternal::construct(
     element->ir = std::string("\n") + ifaceWires + outputs + ir;
     return element;
   }
-
   // Finish creating the first stage of pipeline.
   if (!fsmNotCreated) {
     fsm += std::string("};\n");

@@ -23,6 +23,7 @@ struct ElementGenerator final : public MetaElement {
                    const std::vector<Port> &ports,
                    const std::string &genPath) :
     MetaElement { name, params, ports }, genPath { genPath } {}
+  virtual ~ElementGenerator() = default;
   virtual void estimate(
       const Parameters &params, Indicators &indicators) const override;
   virtual std::unique_ptr<Element> construct(

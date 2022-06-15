@@ -30,18 +30,22 @@ int compilerHilTest(const std::string &inputLibraryPath,
                     const std::string &outputVerilogName,
                     const std::string &outputDirName) {
 
+
   std::shared_ptr<Model> model = parse(inputFilePath);
 
   Library::get().initialize(inputLibraryPath, relativeCompPath);
   DijkstraBalancer::get().balance(*model);
 
-  auto compiler = std::make_unique<Compiler>(*model);
-  auto circuit = compiler->constructCircuit("main");
-  compiler->printFiles(outputFirrtlName, outputVerilogName, outputDirName);
+  auto compiler = std::make_unique<Compiler>();
+  auto circuit = compiler->constructCircuit(*model, "main");
+  circuit->printFiles(outputFirrtlName, outputVerilogName, outputDirName);
 
   // generate random test of the specified length in ticks
   const int testLength = 10;
-  compiler->printRndVlogTest(outputDirName + "testbench.v", testLength);
+  circuit->printRndVlogTest(*model,
+                            outputDirName + "testbench.v",
+                            model->ind.ticks,
+                            testLength);
 
   Library::get().finalize();
   return 0;
