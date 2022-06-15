@@ -56,8 +56,7 @@ std::shared_ptr<MetaElement> Library::create(const NodeType &nodetype) {
   std::string name = nodetype.name;
   //If there is no such component in the library then it has to be an internal component.
   Parameters params;
-  params.add(Parameter("f", Constraint(1, 1000), 100));
-  params.add(Parameter("stages", Constraint(0, 10000), 10));
+  params.add(Parameter("stages", Constraint(1, 100), 10));
   std::vector<Port> ports;
 
   ports.push_back(Port("clock",

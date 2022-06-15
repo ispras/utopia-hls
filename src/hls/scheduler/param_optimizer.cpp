@@ -13,6 +13,7 @@
 #include "hls/scheduler/optimizers/simulated_annealing_optimizer.h"
 #include "hls/scheduler/param_optimizer.h"
 
+#include <algorithm>
 #include <cassert>
 #include <fstream>
 #include <iostream>
@@ -33,12 +34,17 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   Graph *graph = model.main();
   assert(graph != nullptr && "Main graph is not found");
 
+  std::random_device rand_dev{};
+      std::mt19937 gen{rand_dev()};
+      std::normal_distribution<> distr{0.5, 0.1};
+
   std::vector<float> optimized_values, min_values, max_values;
   for (const auto *node : graph->nodes) {
     auto metaElement = node->map; 
     Parameters nodeParams(metaElement->params);
     for(const auto& iter : metaElement->params.getAll()) {
-      optimized_values.push_back(0.5);
+      float diff = std::clamp(distr(gen), 0.0, 1.0);
+      optimized_values.push_back(diff);
       min_values.push_back(iter.second.getMin());
       max_values.push_back(iter.second.getMax());
     }
@@ -77,22 +83,15 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     }
 
     estimate(model, params, indicators, denormalized_parameters);
+    ostrm << "Model size: " << model.main()->nodes.size() << std::endl;
     model.undo();
     return indicators.freq();
   };
 
   std::function<float(const std::vector<float>&)>
       limitation_function = [&](const std::vector<float>& parameters) -> float {
-        std::vector<float> denormalized_parameters;
-        std::size_t index = 2;
-        for(const auto& param : parameters) {
-          denormalized_parameters.push_back(denormalize(param, min_values[index], max_values[index]));
-          index++;
-        }
-        estimate(model, params, indicators, denormalized_parameters);
-        model.undo();
-        return indicators.area;
-      };
+      return indicators.area;
+    };
 
   float init_temp = 10000000000.0;
   float end_temp = 1.0;
@@ -129,22 +128,20 @@ void ParametersOptimizer::estimate(Model& model,
     std::map<std::string, Parameters>& params,
     Indicators& indicators,
     const std::vector<float>& optimized_params) const {
-  std::ofstream ostrm("estimation.txt");
+  std::ofstream ostrm("estimation.txt", std::ios_base::app);
   // Update the values of the parameters & apply to nodes.
   Graph *graph = model.main();
   std::size_t index = 0;
+  ostrm << "Setting values" << std::endl;
   for (auto *node : graph->nodes) {
     auto nodeParams = params.find(node->name);
     if (nodeParams == params.end()) {
       continue;
     }
-    if (index % 2 == 0) {
-      ostrm << "Set frequency: " << optimized_params[index] << std::endl;
-      nodeParams->second.setValue("f", optimized_params[index]);
-    } else {
-      ostrm << "Set stages " << optimized_params[index] << std::endl;
-      nodeParams->second.setValue("stages", optimized_params[index]);
-    }
+    ostrm << "Optimized: " << optimized_params[index] << std::endl;
+    ostrm << "Min: " << nodeParams->second.get("stages").getMin() << std::endl;
+    ostrm << "Max: " << nodeParams->second.get("stages").getMin() << std::endl;
+    nodeParams->second.setValue("stages", optimized_params[index]);
     mapper::Mapper::get().apply(*node, nodeParams->second);
     index++;
   }

@@ -20,18 +20,20 @@ namespace eda::hls::scheduler::optimizers {
 
     void simulated_annealing_optimizer::optimize(std::vector<float>& param) {
         std::vector<float> cur_param = param;
-        float prev_f = target_function(param), cur_f, transition;
+        float prev_f = 0, cur_f, transition;
+        bool no_solution = true;
         
         std::ofstream ostrm("annealing.txt");
         int i = 1;
         while(temperature > final_temp && i < 10000) {
-            step_function(cur_param, param, temperature);
             cur_f = target_function(cur_param);
             auto cur_lim = condition_function(cur_param);
             transition = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
             auto proba = get_probabiliy(prev_f, cur_f, cur_lim, temperature, param);
             ostrm << "Transition: " << transition << std::endl;
             ostrm << "Probability: " << proba << std::endl;
+            ostrm << "Current frequency: " << cur_f << std::endl;
+            ostrm << "Current limitation: " << cur_lim << std::endl;
             ostrm << "Current params: " << cur_param[0] << " " << cur_param[1] << std::endl;
             ostrm << "Previous params: " << param[0] << " " << param[1] << std::endl << std::endl;
             if(transition < proba) {
@@ -41,6 +43,7 @@ namespace eda::hls::scheduler::optimizers {
                 cur_param = param;
             }
             i++;
+            step_function(cur_param, param, temperature);
             temperature = temp_function(i, temperature);
         }
         ostrm.close();
@@ -49,20 +52,19 @@ namespace eda::hls::scheduler::optimizers {
     float simulated_annealing_optimizer::get_probabiliy(const float& prev_f, const float& cur_f,
                                                         const float& cur_lim, const float& temp,
                                                         const std::vector<float>& params) {
-        bool check_limits = true;
+        /*bool check_limits = true;
         for(const auto& param : params) {
             if(param < 0 || param > 1) {
                 check_limits = false;
                 break;
             }
-        }
-        if((prev_f > cur_f) && (cur_lim <= limitation) && check_limits) {
-            return 1.0;
-        }
-        if((cur_lim > limitation) || !check_limits) {
-
+        }*/
+        if(cur_lim > limitation) {
             return -1.0;
         }
-        return exp((prev_f - cur_f) / temp);
+        if(prev_f < cur_f) {
+            return 1.0;
+        }
+        return exp((cur_f - prev_f) / temp);
     }
 } //namespace eda::hls::scheduler::optimizers
