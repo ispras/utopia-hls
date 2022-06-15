@@ -296,7 +296,8 @@ std::unique_ptr<Element> ElementInternal::construct(
       if (name == "clock" || name == "reset") {
         continue;
       }
-      else if (port.direction == Port::OUT || port.direction == Port::INOUT) {
+      if (!(name == "clock" || name == "reset") && 
+           (port.direction == Port::OUT || port.direction == Port::INOUT)) {
         outPortName = port.name;
         break;
       }
