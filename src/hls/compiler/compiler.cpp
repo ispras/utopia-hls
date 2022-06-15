@@ -403,10 +403,9 @@ void ExternalModule::printFirrtlDeclaration(std::ostream &out) const {
 void ExternalModule::moveVerilogModule(
     const std::string &outputDirName) const {
   std::string outputFileName = outputDirName + getFileNameFromPath(path);
-  std::cout << toLower(path) << std::endl;
-  /*std::filesystem::copy(toLower(path),
+  std::filesystem::copy(toLower(path),
                         outputFileName,
-                        std::filesystem::copy_options::overwrite_existing);*/
+                        std::filesystem::copy_options::overwrite_existing);
 }
 
 void ExternalModule::printVerilogModule(std::ostream &out) const {
