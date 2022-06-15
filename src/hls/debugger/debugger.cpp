@@ -335,7 +335,7 @@ z3::expr EqChecker::toInFunc(Node &node, Chan &ch, z3::context &ctx) const {
 }
 
 z3::sort_vector EqChecker::getInSorts(mlir::hil::Node &node,
-  z3::context &ctx) const {
+    z3::context &ctx) const {
 
   auto inputs = getInputs(node);
   z3::sort_vector sorts(ctx);
