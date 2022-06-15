@@ -102,7 +102,7 @@ void LatencyLpSolver::balanceLatency(const Graph *graph) {
   for (auto *channel : graph->chans) {
     const std::string dstName = channel->target.node->name;
     const std::string srcName = channel->source.node->name;
-    unsigned srcLatency = channel->source.port->latency;
+    unsigned srcLatency = channel->ind.ticks;
 
     genLatencyConstraint(dstName, srcName, srcLatency);
     genDeltaConstraint(dstName, srcName, deltas);

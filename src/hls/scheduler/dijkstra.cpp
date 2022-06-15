@@ -39,7 +39,7 @@ void DijkstraBalancer::visit(unsigned curTime,
     const std::vector<Chan*> &connections) {
   // Visit neighbours and update their times
   for (const auto *next : connections) {
-    visitChan(next, curTime + next->source.port->latency);
+    visitChan(next, curTime + next->ind.ticks);
   }
 }
 
@@ -48,7 +48,7 @@ void DijkstraBalancer::visitSources(const Graph *graph) {
     const Node *src = chan->source.node;
     if (src->isSource()) {
       toVisit.push_back(chan);
-      visitChan(chan, nodeMap[src] + chan->source.port->latency);
+      visitChan(chan, nodeMap[src] + chan->ind.ticks);
     }
   }
 }
@@ -58,7 +58,7 @@ void DijkstraBalancer::visitSinks(const Graph *graph) {
     const Node *targ = chan->target.node;
     if (targ->isSink()) {
       toVisit.push_back(chan);
-      visitChan(chan, nodeMap[targ] + chan->source.port->latency);
+      visitChan(chan, nodeMap[targ] + chan->ind.ticks);
     }
   }
 }
@@ -120,10 +120,10 @@ void DijkstraBalancer::insertBuffers(Model &model) {
       int delta = 0;
       // Compute delta between neighbouring nodes
       if (mode == LatencyBalanceMode::ASAP) {
-        delta = curTime - (nodeMap[predNode] + pred->source.port->latency);
+        delta = curTime - (nodeMap[predNode] + pred->ind.ticks);
       }
       if (mode == LatencyBalanceMode::ALAP) {
-        delta = (nodeMap[predNode] - pred->source.port->latency) - curTime;
+        delta = (nodeMap[predNode] - pred->ind.ticks) - curTime;
       }
       assert(delta >= 0 && ("Delta for channel " + pred->name + " < 0").c_str());
       if (delta > 0 && !predNode->isConst()) {
