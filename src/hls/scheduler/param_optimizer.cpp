@@ -33,44 +33,17 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   Graph *graph = model.main();
   assert(graph != nullptr && "Main graph is not found");
 
-  // Collect the parameters for all nodes.
-  Parameters defaultParams;
-  defaultParams.add(Parameter("f", criteria.freq, criteria.freq.getMax()));
-  defaultParams.add(Parameter("stages", criteria.ticks, criteria.ticks.getMax()));
-
-  auto min_value = criteria.freq.getMin();
-  auto max_value = criteria.freq.getMax();
-
-  auto min_value_st = criteria.ticks.getMin();
-  auto max_value_st = criteria.ticks.getMax();
-
-  ostrm << "Before loop" << std::endl;
-  std::vector<float> optimized_values;s
+  std::vector<float> optimized_values, min_values, max_values;
   for (const auto *node : graph->nodes) {
-    auto metaElement = library::Library::get().find(node->type);
+    auto metaElement = library::Library::get().find(node->type); 
     Parameters nodeParams(metaElement->params);
     for(const auto& iter : metaElement->params.getAll()) {
       optimized_values.push_back(normalize(iter.second.getValue(), iter.second.getMin(), iter.second.getMax()));
+      min_values.push_back(iter.second.getMin());
+      max_values.push_back(iter.second.getMax());
     }
     params.insert({ node->name, nodeParams });
   }
-  ostrm << "After insert" << std::endl;
-
-  // Check if the task is solvable
-  /*int cur_f = criteria.freq.getMin();
-  estimate(model, params, indicators, optimized_values);
-  model.undo();
-  if (!criteria.check(indicators)) { // even if the frequency is minimal the params don't match constratints
-      ostrm << "no solution" << std::endl;
-      return params;
-  }
-
-  cur_f = criteria.freq.getMax();
-  estimate(model, params, indicators, optimized_values);
-  if (criteria.check(indicators)) { // the maximum frequency is the solution
-      ostrm << "maximum fits" << std::endl;
-      return params;
-  }*/
 
   std::function<float(int, float)> temp_fun = [](int i, float temp) -> float {
     return temp / log(i + 1);
@@ -80,11 +53,11 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     step_fun = [&](std::vector<float>& x, const std::vector<float>& prev, float temp) -> void {
       std::random_device rand_dev{};
       std::mt19937 gen{rand_dev()};
-       std::normal_distribution<> distr{0, 1};
+      std::normal_distribution<> distr{0.5, 0.1};
 
       for(std::size_t i = 0; i < x.size(); i++) {
-        auto norm = normalize(prev[i], min_value, max_value);
-        auto diff = abs(distr(gen));
+        auto norm = normalize(prev[i], min_values[i], max_values[i]);
+        auto diff = distr(gen);
         x[i] = norm + diff;
       }
     };
@@ -93,12 +66,10 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     std::vector<float> denormalized_parameters;
     std::size_t index = 0;
     for(const auto& param : parameters) {
-      if(index % 2 == 0) {
-        denormalized_parameters.push_back(denormalize(param, min_value, max_value));
-      } else {
-        denormalized_parameters.push_back(denormalize(param, min_value_st, max_value_st));
-      }
+      denormalized_parameters.push_back(denormalize(param, min_values[index], max_values[index]));
+      index++;
     }
+
     estimate(model, params, indicators, denormalized_parameters);
     model.undo();
     return indicators.freq();
@@ -107,13 +78,10 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   std::function<float(const std::vector<float>&)>
       limitation_function = [&](const std::vector<float>& parameters) -> float {
         std::vector<float> denormalized_parameters;
-        std::size_t index = 0;
+        std::size_t index = 2;
         for(const auto& param : parameters) {
-          if(index % 2 == 0) {
-            denormalized_parameters.push_back(denormalize(param, min_value, max_value));
-          } else {
-            denormalized_parameters.push_back(denormalize(param, min_value_st, max_value_st));
-          }
+          denormalized_parameters.push_back(denormalize(param, min_values[index], max_values[index]));
+          index++;
         }
         estimate(model, params, indicators, denormalized_parameters);
         model.undo();
@@ -122,7 +90,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
 
   float init_temp = 10000000000.0;
   float end_temp = 1.0;
-  float limit = 10000;
+  float limit = criteria.area.getMax();
 
   eda::hls::scheduler::optimizers::simulated_annealing_optimizer test(init_temp, end_temp, limit, target_function,
                                                                       limitation_function, step_fun, temp_fun);
@@ -132,6 +100,12 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   auto limitation = limitation_function(optimized_values);
 
   ostrm << std::endl << "After optimization" << std::endl;
+  ostrm << "Parameters values" << std::endl;
+  for(auto val : optimized_values) {
+    ostrm << val << " ";
+  }
+  ostrm << std::endl;
+
   ostrm << "Freq: " << indicators.freq() << std::endl;
   ostrm << "Perf: " << indicators.perf() << std::endl;
   ostrm << "Ticks: " << indicators.ticks << std::endl;

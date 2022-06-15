@@ -50,6 +50,12 @@ namespace eda::hls::scheduler::optimizers {
                                                         const float& cur_lim, const float& temp,
                                                         const std::vector<float>& params) {
         bool check_limits = true;
+        for(const auto& param : params) {
+            if(param < 0 || param > 1) {
+                check_limits = false;
+                break;
+            }
+        }
         if((prev_f > cur_f) && (cur_lim <= limitation) && check_limits) {
             return 1.0;
         }

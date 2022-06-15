@@ -68,11 +68,11 @@ public:
   }
 
   unsigned getMax() const {
-    constraint.getMax();
+    return constraint.getMax();
   }
 
   unsigned getMin() const {
-    constraint.getMin();
+    return constraint.getMin();
   }
 
   void setValue(unsigned newValue) {
