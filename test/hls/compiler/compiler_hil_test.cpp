@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -29,13 +29,20 @@ int compilerHilTest(const std::string &inputLibraryPath,
                     const std::string &outputFirrtlName,
                     const std::string &outputVerilogName,
                     const std::string &outputDirName) {
+
   std::shared_ptr<Model> model = parse(inputFilePath);
+
   Library::get().initialize(inputLibraryPath, relativeCompPath);
   DijkstraBalancer::get().balance(*model);
+
   auto compiler = std::make_unique<Compiler>(*model);
   auto circuit = compiler->constructCircuit("main");
   compiler->printFiles(outputFirrtlName, outputVerilogName, outputDirName);
-  compiler->printRndVlogTest(outputDirName + "testbench.v", 10);
+
+  // generate random test of the specified length in ticks
+  const int testLength = 10;
+  compiler->printRndVlogTest(outputDirName + "testbench.v", testLength);
+
   Library::get().finalize();
   return 0;
 }
