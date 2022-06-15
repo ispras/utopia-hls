@@ -26,7 +26,6 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     const Criteria &criteria,
     Model &model,
     Indicators &indicators) const {
-  srand(42);
   std::ofstream ostrm("real.txt");
 
   std::map<std::string, Parameters> params;
@@ -37,6 +36,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
 
   std::random_device rand_dev{};
   std::mt19937 gen{rand_dev()};
+
   std::normal_distribution<> distr{0.5, 0.05};
 
   std::vector<float> optimized_values, min_values, max_values;
@@ -56,14 +56,15 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     return temp / log(i + 1);
   };
 
-  auto step_fun = [&](std::vector<float> &x, const std::vector<float> &prev, float temp, float init_temp) -> void {
-    std::random_device rand_dev{};
-    std::mt19937 gen{rand_dev()};
-    std::normal_distribution<> distr{0, 0.3};
+  auto step_fun = [&](std::vector<float> &x,
+                      const std::vector<float> &prev, // TODO: Why denormalized?
+                      float temp,
+                      float init_temp) -> void {
+    std::normal_distribution<> distr{0.0, 0.3 * (temp / init_temp)};
 
     for(std::size_t i = 0; i < x.size(); i++) {
       auto norm = normalize(prev[i], min_values[i], max_values[i]);
-      auto diff = (temp / init_temp) * distr(gen);
+      auto diff = distr(gen);
       x[i] = std::clamp(norm + diff, 0.0, 1.0);
     }
   };
@@ -86,7 +87,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     return indicators.area;
   };
 
-  float init_temp = 10000000000.0;
+  float init_temp = 10000000000.0; // TODO: Why this value?
   float end_temp = 1.0;
   float limit = criteria.area.getMax();
 
