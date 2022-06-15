@@ -208,28 +208,22 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
       std::vector<Chan> nodeOuts = getOutputs(node);
 
       // create equation for every output port of kernel node
-      for (auto &nodeOut : nodeOuts) {
-
-        //const Binding srcBnd = nodeOut->source;
+      for (auto &nOut : nodeOuts) {
 
         // input/output sorts for kernel function
         const z3::sort_vector sorts = getInSorts(node, ctx);
-        const z3::sort fSort = getSort(nodeOut.nodeFromAttrName().str(), ctx);
-
-        // kernel function name
-        //const char *kerName = node.nodeTypeName().str().c_str();
+        const z3::sort fSort = getSort(nOut.nodeFromAttrName().str(), ctx);
 
         // kernel function
-        const z3::func_decl kernel =
-            function(node.nodeTypeName().str().c_str(), sorts, fSort);
-        const z3::expr_vector kernelArgs = getFuncArgs(node, ctx);
+        const std::string fName = node.nodeTypeName().str();
+        const z3::func_decl kernel = function(fName.c_str(), sorts, fSort);
+        const z3::expr_vector kArgs = getFuncArgs(node, ctx);
 
         // create equation
-        std::string nodePortName = nodeOut.nodeFromAttr().getPort().getName();
-        const z3::expr kernelEq =
-            kernel(kernelArgs) == toConst(nodeOut, nodePortName, ctx);
+        std::string nPortName = nOut.nodeFromAttr().getPort().getName();
+        const z3::expr kernEq = kernel(kArgs) == toConst(nOut, nPortName, ctx);
 
-        nodes.push_back(kernelEq);
+        nodes.push_back(kernEq);
       }
     } else if (isMerge(node)) {
 
