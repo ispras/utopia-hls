@@ -7,7 +7,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/library/element_internal.h"
+#include "hls/library/internal/default.h"
 #include "hls/library/internal/delay.h"
+
 
 #include <cmath>
 
@@ -296,7 +298,7 @@ std::unique_ptr<Element> ElementInternal::construct(
       if (name == "clock" || name == "reset") {
         continue;
       }
-      if (!(name == "clock" || name == "reset") && 
+      if (!(name == "clock" || name == "reset") &&
            (port.direction == Port::OUT || port.direction == Port::INOUT)) {
         outPortName = port.name;
         break;
@@ -357,52 +359,45 @@ std::unique_ptr<Element> ElementInternal::construct(
   return element;
 }
 
-void ElementInternal::estimate(
-    const Parameters &params, Indicators &indicators) const {
-  unsigned inputCount = 0;
-  unsigned latencySum = 0;
-  unsigned widthSum = 0;
+std::vector<Port> ElementInternal::createPorts(const NodeType &nodetype) {
+  std::vector<Port> ports;
 
-  const auto latency = params.contains(Delay::depth)
-   ? params.getValue(Delay::depth) : 1u;
+  ports.push_back(Port("clock",
+                       Port::IN,
+                       1,
+                       model::Parameter(std::string("width"), 1)));
 
-  const auto width = params.contains(Delay::width)
-   ? params.getValue(Delay::width) : 1u;
+  ports.push_back(Port("reset",
+                       Port::IN,
+                       1,
+                       model::Parameter(std::string("width"), 1)));
 
-  for (const auto &port : ports) {
-    widthSum += width;
-    if (port.direction == Port::IN)
-      inputCount++;
-    else
-      latencySum += latency;
+  for (const auto *input: nodetype.inputs) {
+    ports.push_back(Port(input->name,
+                         Port::IN,
+                         1,
+                         model::Parameter(std::string("width"), 16)));
   }
 
-  double S = params.getValue("stages");
-  double Areg = 1.0;
-  double Apipe = S * widthSum * Areg;
-  double Fmax = 300.0;
-  double F = Fmax * (1 - std::exp(-S/50.0));
-  double C = inputCount * latencySum;
-  double N = (C == 0 ? 0 : C * std::log((Fmax / (Fmax - F)) * ((C - 1) / C)));
-  double A = C * std::sqrt(N) + Apipe;
-  double P = A;
-  double D = 1000000000.0 / Fmax;
-
-  indicators.ticks = static_cast<unsigned>(S);
-  indicators.power = static_cast<unsigned>(P);
-  indicators.area  = static_cast<unsigned>(A);
-  indicators.delay = static_cast<unsigned>(D);
-
-  ChanInd chanInd;
-  chanInd.ticks = indicators.ticks;
-  chanInd.delay = indicators.delay;
-
-  indicators.outputs.clear();
-  for (const auto &port : ports) {
-    if (port.direction != Port::IN) {
-      indicators.outputs.insert({ port.name, chanInd });
-    }
+  for (const auto *input: nodetype.outputs) {
+    ports.push_back(Port(input->name,
+                         Port::OUT,
+                         1,
+                         model::Parameter(std::string("width"), 16)));
   }
+  return ports;
+}
+
+std::shared_ptr<MetaElement> ElementInternal::create(const NodeType &nodetype) {
+  std::string name = nodetype.name;
+  //If there is no such component in the library then it has to be an internal component.
+  std::shared_ptr<MetaElement> metaElement;
+  if (nodetype.isDelay()) {
+    metaElement = Delay::create(nodetype);
+  } else {
+    metaElement = Default::create(nodetype);
+  }
+  return metaElement;
 }
 
 } // namespace eda::hls::library

@@ -47,53 +47,9 @@ std::shared_ptr<MetaElement> Library::find(const NodeType &nodetype) {
     cache.push_back(metaElement);
     return metaElement;
   }
-  auto metaElement = create(nodetype);
+  auto metaElement = ElementInternal::create(nodetype);
+  cache.push_back(metaElement);
   return metaElement;
-}
-
-
-std::shared_ptr<MetaElement> Library::create(const NodeType &nodetype) {
-  std::string name = nodetype.name;
-  //If there is no such component in the library then it has to be an internal component.
-  Parameters params;
-  params.add(Parameter("stages", Constraint(1, 100), 10));
-  std::vector<Port> ports;
-
-  ports.push_back(Port("clock",
-                       Port::IN,
-                       1,
-                       model::Parameter(std::string("width"), 1)));
-
-  ports.push_back(Port("reset",
-                       Port::IN,
-                       1,
-                       model::Parameter(std::string("width"), 1)));
-
-  for (const auto *input: nodetype.inputs) {
-    ports.push_back(Port(input->name,
-                         Port::IN,
-                         1,
-                         model::Parameter(std::string("width"), 16)));
-  }
-
-  for (const auto *input: nodetype.outputs) {
-    ports.push_back(Port(input->name,
-                         Port::OUT,
-                         1,
-                         model::Parameter(std::string("width"), 16)));
-  }
-
-  // Add clk and rst ports: these ports are absent in the lists above.
-
-  std::string lowerCaseName = name;
-  unsigned i = 0;
-  while (lowerCaseName[i]) {
-    lowerCaseName[i] = tolower(lowerCaseName[i]);
-    i++;
-  }
-  return std::shared_ptr<MetaElement>(new ElementInternal(lowerCaseName,
-                                                          params,
-                                                          ports));
 }
 
 } // namespace eda::hls::library

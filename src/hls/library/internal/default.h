@@ -16,16 +16,16 @@
 
 namespace eda::hls::library {
 
-struct Delay final : public ElementInternal {
+struct Default final : public ElementInternal {
   static constexpr const char *name  = "delay";
   static constexpr const char *width = "width";
   static constexpr const char *depth = "depth";
 
-  Delay(const std::string &name,
-        const Parameters &params,
-        const std::vector<Port> &ports) :
+  Default(const std::string &name,
+          const Parameters &params,
+          const std::vector<Port> &ports) :
   ElementInternal(name, params, ports) {}
-  virtual ~Delay() = default;
+  virtual ~Default() = default;
 
   virtual void estimate(
       const Parameters &params, Indicators &indicators) const override;

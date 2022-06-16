@@ -25,8 +25,9 @@ struct ElementInternal : public MetaElement {
   virtual ~ElementInternal() = default;
   virtual std::unique_ptr<Element> construct(
       const Parameters &params) const override;
-  virtual void estimate(
-      const Parameters &params, Indicators &indicators) const override;
+  static std::shared_ptr<MetaElement> create(const NodeType &nodetype);
+  protected:
+    static std::vector<Port> createPorts(const NodeType &nodetype);
 };
 
 } // namespace eda::hls::library

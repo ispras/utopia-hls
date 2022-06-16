@@ -31,7 +31,7 @@ void ElementCore::estimate(
   double Areg = 1.0;
   double Apipe = S * widthSum * Areg;
   double Fmax = 300.0;
-  double F = Fmax * (1 - std::exp(0.5 - S));
+  double F = Fmax * (1 - std::exp(-S/50.0));
   double C = widthSum;
   double N = (C == 0 ? 0 : C * std::log((Fmax / (Fmax - F)) * ((C - 1) / C)));
   double A = C * std::sqrt(N) + Apipe;

@@ -90,7 +90,6 @@ public:
 
   /// Searches for a meta-element for the given node type.
   std::shared_ptr<MetaElement> find(const NodeType &nodetype);
-  std::shared_ptr<MetaElement> create(const NodeType &nodetype);
   /// Searches for a meta-element for the given name.
   //std::shared_ptr<MetaElement> find(const std::string &name);
 

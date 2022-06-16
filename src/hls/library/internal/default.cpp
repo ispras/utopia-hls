@@ -6,30 +6,29 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "hls/library/element_generator.h"
+#include "hls/library/element_internal.h"
+#include "hls/library/internal/default.h"
 
 #include <cmath>
 
 namespace eda::hls::library {
 
-std::unique_ptr<Element> ElementGenerator::construct(
-    const Parameters &params) const {
-  system((genPath + " " +
-          "." + " " +
-          "mul" + " " +
-          "16").c_str());
-  std::unique_ptr<Element> element = std::make_unique<Element>(ports);
-  element->ir = "";
-  element->path = "./mul.v";
-  return element;
-}
-
-void ElementGenerator::estimate(
+void Default::estimate(
     const Parameters &params, Indicators &indicators) const {
+  unsigned inputCount = 0;
+  unsigned latencySum = 0;
   unsigned widthSum = 0;
 
+  const auto latency = params.getValue("stages");
+
+  const auto width = 1u;
+
   for (const auto &port : ports) {
-    widthSum+=port.width;
+    widthSum += width;
+    if (port.direction == Port::IN)
+      inputCount++;
+    else
+      latencySum += latency;
   }
 
   unsigned S = params.getValue("stages");
@@ -37,7 +36,7 @@ void ElementGenerator::estimate(
   double Apipe = S * widthSum * Areg;
   double Fmax = 300.0;
   double F = Fmax * (1 - std::exp(-S/50.0));
-  double C = widthSum;
+  double C = inputCount * latencySum;
   double N = (C == 0 ? 0 : C * std::log((Fmax / (Fmax - F)) * ((C - 1) / C)));
   double A = C * std::sqrt(N) + Apipe;
   double P = A;
@@ -59,5 +58,25 @@ void ElementGenerator::estimate(
     }
   }
 }
+
+std::shared_ptr<MetaElement> Default::create(const NodeType &nodetype) {
+  std::string name = nodetype.name;
+  //If there is no such component in the library then it has to be an internal component.
+    std::shared_ptr<MetaElement> metaElement;
+    auto ports = createPorts(nodetype);
+    std::string lowerCaseName = name;
+    unsigned i = 0;
+    while (lowerCaseName[i]) {
+      lowerCaseName[i] = tolower(lowerCaseName[i]);
+      i++;
+    }
+    Parameters params;
+    params.add(Parameter("stages", Constraint(1, 100), 10));
+
+    metaElement = std::shared_ptr<MetaElement>(new Default(lowerCaseName,
+                                                           params,
+                                                           ports));
+  return metaElement;
+};
 
 } // namespace eda::hls::library
