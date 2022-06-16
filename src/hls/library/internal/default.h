@@ -11,13 +11,9 @@
 #include "hls/library/element_internal.h"
 #include "hls/library/library.h"
 
-#include <cmath>
-#include <memory>
-
 namespace eda::hls::library {
 
 struct Default final : public ElementInternal {
-  static constexpr const char *name  = "default";
   static constexpr const char *stages = "stages";
 
   Default(const std::string &name,
