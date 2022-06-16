@@ -197,7 +197,7 @@ public:
    *
    * @param tstPath Path to testbench file to be created.
    * @param tstCnt Number of test stimuli at random sequence
-   * @return Nothing, but "*.v" testbench should be created.
+   * @return Nothing, but Verilog testbench should be created.
    */
   void printRndVlogTest(const model::Model &model,
                         const std::string &tstPath,
