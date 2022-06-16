@@ -18,7 +18,7 @@ namespace eda::hls::scheduler::optimizers {
 
     void simulated_annealing_optimizer::optimize(std::vector<float>& param) {
         std::vector<float> cur_param = param;
-        float prev_f = 0, cur_f, transition;
+        float prev_f = -1000000.0, cur_f, transition;
         
         std::ofstream ostrm("annealing.txt");
         int i = 1;
@@ -27,21 +27,23 @@ namespace eda::hls::scheduler::optimizers {
             auto cur_lim = condition_function(cur_param);
             transition = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
             auto proba = get_probability(prev_f, cur_f, cur_lim, temperature, param);
+            ostrm << "Temperature: " << temperature << std::endl;
             ostrm << "Transition: " << transition << std::endl;
             ostrm << "Probability: " << proba << std::endl;
-            ostrm << "Current frequency: " << cur_f << std::endl;
+            ostrm << "Best target: " << prev_f << std::endl;
+            ostrm << "Current target: " << cur_f << std::endl;
             ostrm << "Current limitation: " << cur_lim << std::endl;
             ostrm << "Current params: " << cur_param[0] << " " << cur_param[1] << std::endl;
             ostrm << "Previous params: " << param[0] << " " << param[1] << std::endl << std::endl;
             if(transition < proba) {
                 param = cur_param;
                 prev_f = cur_f;
-            } else {
-                cur_param = param;
-            }
+            } //else {
+                //cur_param = param;
+            //}
             i++;
             step_function(cur_param, param, temperature, init_temp);
-            temperature = temp_function(i, temperature);
+            temperature = temp_function(i, init_temp/*temperature*/);
         }
         ostrm.close();
     }
@@ -56,9 +58,9 @@ namespace eda::hls::scheduler::optimizers {
                 break;
             }
         }*/
-        if(cur_lim < limitation) {
-            return -1.0;
-        }
+//        if(cur_lim < limitation) {
+//            return -1.0;
+//        }
         if(prev_f < cur_f) {
             return 1.0;
         }

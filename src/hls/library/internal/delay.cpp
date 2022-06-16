@@ -33,7 +33,7 @@ void Delay::estimate(
   }
 
   double S = params.getValue(depth);
-  double Areg = 1.0;
+  double Areg = 16.0;
   double A = S * widthSum * Areg;
   double Fmax = 500000.0;
   double P = A;

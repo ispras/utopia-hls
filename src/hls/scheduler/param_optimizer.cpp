@@ -26,6 +26,10 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     const Criteria &criteria,
     Model &model,
     Indicators &indicators) const {
+  float init_temp = 100.0; // TODO: Why this value?
+  float end_temp = 1.5;
+  float limit = criteria.freq.getMin();
+
   std::ofstream ostrm("real.txt");
 
   std::map<std::string, Parameters> params;
@@ -37,7 +41,7 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   std::random_device rand_dev{};
   std::mt19937 gen{rand_dev()};
 
-  std::normal_distribution<> distr{0.5, 0.05};
+  std::normal_distribution<> distr{0.5, 0.25};
 
   std::vector<float> optimized_values, min_values, max_values;
   for (const auto *node : graph->nodes) {
@@ -53,19 +57,19 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   }
 
   auto temp_fun = [](int i, float temp) -> float {
-    return temp / log(i + 1);
+    return temp / i /*log(i + 1)*/;
   };
 
   auto step_fun = [&](std::vector<float> &x,
                       const std::vector<float> &prev, // TODO: Why denormalized?
                       float temp,
                       float init_temp) -> void {
-    std::normal_distribution<> distr{0.0, 0.3 * (temp / init_temp)};
+    std::normal_distribution<> distr{0.0, (temp / init_temp)};
 
     for(std::size_t i = 0; i < x.size(); i++) {
-      auto norm = normalize(prev[i], min_values[i], max_values[i]);
+      //auto norm = normalize(prev[i], min_values[i], max_values[i]);
       auto diff = distr(gen);
-      x[i] = std::clamp(norm + diff, 0.0, 1.0);
+      x[i] = std::clamp(prev[i] + diff, 0.0, 1.0);
     }
   };
 
@@ -80,16 +84,24 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     estimate(model, params, indicators, denormalized_parameters);
     model.undo();
 
-    return criteria.area.getMax() - indicators.area;
+    float a  = 10000.0 * ((float)criteria.area.getMax() - (float)indicators.area)/criteria.area.getMax();
+    //const auto f0 = criteria.freq.getMin();
+    //const auto f  = indicators.avgFreq();
+
+    //if (f < f0) {
+      //return static_cast<unsigned>(a / (1 + 0.01 * (f0 - f)));
+      // return a / std::log(2 + (f0 - f));
+    //}
+
+    //return a + 10 * (f - f0);
+    //return a;
+    return a;
   };
 
   auto limitation_function = [&](const std::vector<float> &parameters) -> float {
     return indicators.freq();
   };
 
-  float init_temp = 10000000000.0; // TODO: Why this value?
-  float end_temp = 1.0;
-  float limit = criteria.freq.getMin();
 
   eda::hls::scheduler::optimizers::simulated_annealing_optimizer test(init_temp, end_temp, limit, target_function,
                                                                       limitation_function, step_fun, temp_fun);

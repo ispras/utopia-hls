@@ -10,6 +10,7 @@
 #include "hls/library/internal/default.h"
 
 #include <cmath>
+#include <cstdlib>
 //#include <iostream>
 
 namespace eda::hls::library {
@@ -33,13 +34,15 @@ void Default::estimate(
   }
 
   double S = params.getValue(stages);
-  double Areg = 1.0;
-  double Apipe = S * widthSum * Areg;
+//  double Areg = 1.0;
+//  double Apipe = S * widthSum * Areg;
   double Fmax = 500000.0;
   double F = Fmax * (1 - std::exp(-S/20.0));
-  double C = inputCount * latencySum;
-  double N = (C == 0 ? 0 : C * std::log((Fmax / (Fmax - F)) * ((C - 1) / C)));
-  double A = C * std::sqrt(N) + Apipe;
+//  double C = inputCount * latencySum;
+//  double N = (C == 0 ? 0 : C * std::log((Fmax / (Fmax - F)) * ((C - 1) / C)));
+//  double A = C * std::sqrt(N) + Apipe;
+  double Sa = 100.0 * ((double)std::rand() / RAND_MAX) + 1;
+  double A = 100.0 * (1.0 - std::exp(-(S - Sa) * (S - Sa) / 4.0));
   double P = A;
   double D = 1000000000.0 / F;
 
