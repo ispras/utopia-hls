@@ -20,12 +20,12 @@ void Delay::estimate(
   unsigned latencySum = 0;
   unsigned widthSum = 0;
 
-  const auto latency = params.getValue(Delay::depth);
+  unsigned latency = params.getValue(depth);
 
-  const auto width = params.getValue(Delay::width);
+  unsigned width_value = params.getValue(width);
 
   for (const auto &port : ports) {
-    widthSum += width;
+    widthSum += width_value;
     if (port.direction == Port::IN)
       inputCount++;
     else
