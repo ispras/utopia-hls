@@ -10,6 +10,7 @@
 #include "hls/library/internal/default.h"
 
 #include <cmath>
+//#include <iostream>
 
 namespace eda::hls::library {
 
@@ -31,22 +32,26 @@ void Default::estimate(
       latencySum += latency;
   }
 
-  unsigned S = params.getValue(stages);
+  double S = params.getValue(stages);
   double Areg = 1.0;
   double Apipe = S * widthSum * Areg;
-  double Fmax = 300.0;
-  double F = Fmax * (1 - std::exp(-S/50.0));
+  double Fmax = 500000.0;
+  double F = Fmax * (1 - std::exp(-S/20.0));
   double C = inputCount * latencySum;
   double N = (C == 0 ? 0 : C * std::log((Fmax / (Fmax - F)) * ((C - 1) / C)));
   double A = C * std::sqrt(N) + Apipe;
   double P = A;
-  double D = 1000000000.0 / Fmax;
+  double D = 1000000000.0 / F;
 
   indicators.ticks = static_cast<unsigned>(S);
   indicators.power = static_cast<unsigned>(P);
   indicators.area  = static_cast<unsigned>(A);
   indicators.delay = static_cast<unsigned>(D);
-
+/*
+  std::cout << "Node: " << name << std::endl;
+  std::cout << "ticks: " << indicators.ticks << " delay: " << indicators.delay;
+  std::cout << " freq: " << F << std::endl;
+*/
   ChanInd chanInd;
   chanInd.ticks = indicators.ticks;
   chanInd.delay = indicators.delay;

@@ -37,10 +37,14 @@ void LatencyLpSolver::balance(Model &model, Verbosity verbosity) {
   balanceLatency(graph);
 
   // Solve
-  helper.printProblem();
+  if (verbosity > 3) {
+    helper.printProblem();
+  }
   helper.solve();
   helper.printStatus();
-  //helper.printResults();
+  if (verbosity > 4) {
+    helper.printResults();
+  }
 
   insertBuffers(model);
   collectGraphTime();

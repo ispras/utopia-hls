@@ -7,8 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/scheduler/dijkstra.h"
+#include "util/assert.h"
 
-#include <cassert>
 #include <iostream>
 
 namespace eda::hls::scheduler {
@@ -83,7 +83,7 @@ void DijkstraBalancer::addConnections(std::vector<Chan*> &connections,
 void DijkstraBalancer::balance(Model &model, LatencyBalanceMode balanceMode) {
   mode = balanceMode;
   const Graph *graph = model.main();
-  assert(graph && "Graph 'main' not found!");
+  uassert(graph, "Graph 'main' not found!\n");
   init(graph);
 
   if (mode == LatencyBalanceMode::ASAP) {
@@ -125,7 +125,7 @@ void DijkstraBalancer::insertBuffers(Model &model) {
       if (mode == LatencyBalanceMode::ALAP) {
         delta = (nodeMap[predNode] - pred->ind.ticks) - curTime;
       }
-      assert(delta >= 0 && ("Delta for channel " + pred->name + " < 0").c_str());
+      uassert(delta >= 0,  "Delta for channel " + pred->name + " < 0\n");
       if (delta > 0 && !predNode->isConst()) {
         model.insertDelay(*pred, delta);
         bufsInserted++;

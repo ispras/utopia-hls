@@ -80,16 +80,16 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     estimate(model, params, indicators, denormalized_parameters);
     model.undo();
 
-    return indicators.freq();
+    return criteria.area.getMax() - indicators.area;
   };
 
   auto limitation_function = [&](const std::vector<float> &parameters) -> float {
-    return indicators.area;
+    return indicators.freq();
   };
 
   float init_temp = 10000000000.0; // TODO: Why this value?
   float end_temp = 1.0;
-  float limit = criteria.area.getMax();
+  float limit = criteria.freq.getMin();
 
   eda::hls::scheduler::optimizers::simulated_annealing_optimizer test(init_temp, end_temp, limit, target_function,
                                                                       limitation_function, step_fun, temp_fun);

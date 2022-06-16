@@ -32,14 +32,10 @@ void Delay::estimate(
       latencySum += latency;
   }
 
-  unsigned S = params.getValue(depth);
+  double S = params.getValue(depth);
   double Areg = 1.0;
-  double Apipe = S * widthSum * Areg;
-  double Fmax = 300.0;
-  double F = Fmax * (1 - std::exp(-S/50.0));
-  double C = inputCount * latencySum;
-  double N = (C == 0 ? 0 : C * std::log((Fmax / (Fmax - F)) * ((C - 1) / C)));
-  double A = C * std::sqrt(N) + Apipe;
+  double A = S * widthSum * Areg;
+  double Fmax = 500000.0;
   double P = A;
   double D = 1000000000.0 / Fmax;
 

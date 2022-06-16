@@ -56,7 +56,7 @@ namespace eda::hls::scheduler::optimizers {
                 break;
             }
         }*/
-        if(cur_lim > limitation) {
+        if(cur_lim < limitation) {
             return -1.0;
         }
         if(prev_f < cur_f) {
