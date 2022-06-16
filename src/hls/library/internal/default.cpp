@@ -19,7 +19,7 @@ void Default::estimate(
   unsigned latencySum = 0;
   unsigned widthSum = 0;
 
-  const auto latency = params.getValue("stages");
+  const auto latency = params.getValue(stages);
 
   const auto width = 1u;
 
@@ -31,7 +31,7 @@ void Default::estimate(
       latencySum += latency;
   }
 
-  unsigned S = params.getValue("stages");
+  unsigned S = params.getValue(stages);
   double Areg = 1.0;
   double Apipe = S * widthSum * Areg;
   double Fmax = 300.0;
@@ -71,7 +71,7 @@ std::shared_ptr<MetaElement> Default::create(const NodeType &nodetype) {
       i++;
     }
     Parameters params;
-    params.add(Parameter("stages", Constraint(1, 100), 10));
+    params.add(Parameter(stages, Constraint(1, 100), 10));
 
     metaElement = std::shared_ptr<MetaElement>(new Default(lowerCaseName,
                                                            params,

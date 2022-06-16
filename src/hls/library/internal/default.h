@@ -17,9 +17,8 @@
 namespace eda::hls::library {
 
 struct Default final : public ElementInternal {
-  static constexpr const char *name  = "delay";
-  static constexpr const char *width = "width";
-  static constexpr const char *depth = "depth";
+  static constexpr const char *name  = "default";
+  static constexpr const char *stages = "stages";
 
   Default(const std::string &name,
           const Parameters &params,

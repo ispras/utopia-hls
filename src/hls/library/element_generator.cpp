@@ -26,27 +26,12 @@ std::unique_ptr<Element> ElementGenerator::construct(
 
 void ElementGenerator::estimate(
     const Parameters &params, Indicators &indicators) const {
-  unsigned widthSum = 0;
 
-  for (const auto &port : ports) {
-    widthSum+=port.width;
-  }
-
-  unsigned S = params.getValue("stages");
-  double Areg = 1.0;
-  double Apipe = S * widthSum * Areg;
-  double Fmax = 300.0;
-  double F = Fmax * (1 - std::exp(-S/50.0));
-  double C = widthSum;
-  double N = (C == 0 ? 0 : C * std::log((Fmax / (Fmax - F)) * ((C - 1) / C)));
-  double A = C * std::sqrt(N) + Apipe;
-  double P = A;
-  double D = 1000000000.0 / Fmax;
-
-  indicators.ticks = static_cast<unsigned>(S);
-  indicators.power = static_cast<unsigned>(P);
-  indicators.area  = static_cast<unsigned>(A);
-  indicators.delay = static_cast<unsigned>(D);
+  //TODO
+  indicators.ticks = 1;
+  indicators.power = 100;
+  indicators.area  = 100;
+  indicators.delay = 10;
 
   ChanInd chanInd;
   chanInd.ticks = indicators.ticks;

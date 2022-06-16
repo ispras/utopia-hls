@@ -20,11 +20,9 @@ void Delay::estimate(
   unsigned latencySum = 0;
   unsigned widthSum = 0;
 
-  const auto latency = params.contains(Delay::depth)
-   ? params.getValue(Delay::depth) : 1u;
+  const auto latency = params.getValue(Delay::depth);
 
-  const auto width = params.contains(Delay::width)
-   ? params.getValue(Delay::width) : 1u;
+  const auto width = params.getValue(Delay::width);
 
   for (const auto &port : ports) {
     widthSum += width;
@@ -34,7 +32,7 @@ void Delay::estimate(
       latencySum += latency;
   }
 
-  unsigned S = params.getValue("depth");
+  unsigned S = params.getValue(depth);
   double Areg = 1.0;
   double Apipe = S * widthSum * Areg;
   double Fmax = 300.0;
@@ -74,8 +72,8 @@ std::shared_ptr<MetaElement> Delay::create(const NodeType &nodetype) {
       i++;
     }
     Parameters params;
-    params.add(Parameter("depth", Constraint(1, std::numeric_limits<unsigned>::max()), 1));
-    params.add(Parameter("width", Constraint(1, std::numeric_limits<unsigned>::max()), 1));
+    params.add(Parameter(depth, Constraint(1, std::numeric_limits<unsigned>::max()), 1));
+    params.add(Parameter(width, Constraint(1, std::numeric_limits<unsigned>::max()), 1));
 
     metaElement = std::shared_ptr<MetaElement>(new Delay(lowerCaseName,
                                                          params,
