@@ -30,10 +30,6 @@
 			<ipxact:name>./test/data/ipx/ispras/ip.hw/clip/1.0/clip.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>
 		<ipxact:ipxactFile>
-			<ipxact:vlnv vendor="ispras" library="ip.hw" name="dup_2" version="1.0"/>
-			<ipxact:name>./test/data/ipx/ispras/ip.hw/dup_2/1.0/dup_2.1.0.xml</ipxact:name>
-		</ipxact:ipxactFile>
-		<ipxact:ipxactFile>
 			<ipxact:vlnv vendor="ispras" library="ip.hw" name="in" version="1.0"/>
 			<ipxact:name>./test/data/ipx/ispras/ip.hw/in/1.0/in.1.0.xml</ipxact:name>
 		</ipxact:ipxactFile>

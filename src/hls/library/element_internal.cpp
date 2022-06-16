@@ -115,7 +115,7 @@ std::unique_ptr<Element> ElementInternal::construct(
 
   if (!quickProcess && outputLength == 0) {
     element->ir = std::string("\n") + ifaceWires + inputs;
-    return element;
+    //return element;
   }
 
   std::string ir;
@@ -156,7 +156,7 @@ std::unique_ptr<Element> ElementInternal::construct(
     }
     ir += std::string("begin\n  state <= 0; end\nend\n");
     element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
-    return element;
+    //return element;
   }
   else if (name == "delay") {
     std::string inPort, outPort;
@@ -187,7 +187,7 @@ std::unique_ptr<Element> ElementInternal::construct(
           std::to_string(d - 1) + "; end\nend\n";
     regs += std::string("always @(posedge clock) begin\nif (!reset) begin\n  state <= 0; end\nelse");
     element->ir = std::string("\n") + ifaceWires + inputs + outputs + regs + ir;
-    return element;
+    //return element;
   }
   else if (name == "add" || name == "sub" || name == "mul") {
     std::vector<std::string> inPortNames;
@@ -224,7 +224,7 @@ std::unique_ptr<Element> ElementInternal::construct(
     }
     ir += ";\n";
     element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
-    return element;
+    //return element;
   }
   else if (name == "shl_11" || name == "shl_8" ||
            name == "shr_14" || name == "shr_8" || name == "shr_3" ||
@@ -264,7 +264,7 @@ std::unique_ptr<Element> ElementInternal::construct(
       ir += ";\n";
     }
     element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
-    return element;
+    //return element;
   }
   else if (name == "dup_2") {
     std::string inPortName;
@@ -284,7 +284,7 @@ std::unique_ptr<Element> ElementInternal::construct(
       ir += "assign " + outPortName + " = " + inPortName + ";\n";
     }
     element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
-    return element;
+    //return element;
   }
   else if (name == "c128" || name == "c181" || name == "c4" || name == "c8192" ||
            name == "w1"   || name == "w1_add_w7" || name == "w1_sub_w7" ||
@@ -296,7 +296,8 @@ std::unique_ptr<Element> ElementInternal::construct(
       if (name == "clock" || name == "reset") {
         continue;
       }
-      else if (port.direction == Port::OUT || port.direction == Port::INOUT) {
+      if (!(name == "clock" || name == "reset") && 
+           (port.direction == Port::OUT || port.direction == Port::INOUT)) {
         outPortName = port.name;
         break;
       }
@@ -319,40 +320,40 @@ std::unique_ptr<Element> ElementInternal::construct(
            name == "w6" ? "1108" :
            name == "w7" ? "565"  :  "0") + ";\n";
     element->ir = std::string("\n") + ifaceWires + outputs + ir;
-    return element;
-  }
-
-  // Finish creating the first stage of pipeline.
-  if (!fsmNotCreated) {
-    fsm += std::string("};\n");
+    //return element;
   } else {
-    regs += std::string("reg [") + std::to_string(pos - 1) + ":0] state_0;\n";
-  }
-
-  // Extract latency and construct a cascade of assignments.
-  // Indicators indicators;
-  // estimate(params, indicators);
-  // indicators.latency; FIXME
-
-  for (unsigned i = 1; (i < latency) && !fsmNotCreated; i++) {
-    regs += std::string("reg [") + std::to_string(inputLength - 1) + ":0] state_" + std::to_string(i) + ";\n";
-    if (inputLength > 2) {
-      fsm += std::string("state_") + std::to_string(i) +
-                          " <= {state_" + std::to_string(i - 1) + "[" + std::to_string(inputLength - 2) + ":0], " +
-                          "state_" + std::to_string(i - 1) + "[" + std::to_string(inputLength - 1) + "]};\n";
-    } else if (inputLength == 2) {
-      fsm += std::string("state_") + std::to_string(i) + "[1:0] <= {state_" + std::to_string(i - 1) +
-                         "[0], state_" + std::to_string(i - 1) + "[1]};\n";
+  // Finish creating the first stage of pipeline.
+    if (!fsmNotCreated) {
+      fsm += std::string("};\n");
+    } else {
+      regs += std::string("reg [") + std::to_string(pos - 1) + ":0] state_0;\n";
     }
-    else {
-      fsm += std::string("state_") + std::to_string(i) + "[0] <= state_" + std::to_string(i - 1) + "[0];\n";
-    }
-  }
-  if (!fsmNotCreated) {
-    fsm += std::string("end\n");
-  }
 
-  element->ir = std::string("\n") + ifaceWires + inputs + outputs + regs + fsm + assigns;
+    // Extract latency and construct a cascade of assignments.
+    // Indicators indicators;
+    // estimate(params, indicators);
+    // indicators.latency; FIXME
+
+    for (unsigned i = 1; (i < latency) && !fsmNotCreated; i++) {
+      regs += std::string("reg [") + std::to_string(inputLength - 1) + ":0] state_" + std::to_string(i) + ";\n";
+      if (inputLength > 2) {
+        fsm += std::string("state_") + std::to_string(i) +
+                            " <= {state_" + std::to_string(i - 1) + "[" + std::to_string(inputLength - 2) + ":0], " +
+                            "state_" + std::to_string(i - 1) + "[" + std::to_string(inputLength - 1) + "]};\n";
+      } else if (inputLength == 2) {
+        fsm += std::string("state_") + std::to_string(i) + "[1:0] <= {state_" + std::to_string(i - 1) +
+                           "[0], state_" + std::to_string(i - 1) + "[1]};\n";
+      }
+      else {
+        fsm += std::string("state_") + std::to_string(i) + "[0] <= state_" + std::to_string(i - 1) + "[0];\n";
+      }
+    }
+    if (!fsmNotCreated) {
+      fsm += std::string("end\n");
+    }
+
+    element->ir = std::string("\n") + ifaceWires + inputs + outputs + regs + fsm + assigns;
+  }
   return element;
 }
 
@@ -376,18 +377,18 @@ void ElementInternal::estimate(
       latencySum += latency;
   }
 
-  unsigned S = params.getValue("stages");
+  double S = params.getValue("stages");
   double Areg = 1.0;
   double Apipe = S * widthSum * Areg;
   double Fmax = 300.0;
-  double F = Fmax * (1 - std::exp(0.5 - S));
+  double F = Fmax * (1 - std::exp(-S/50.0));
   double C = inputCount * latencySum;
   double N = (C == 0 ? 0 : C * std::log((Fmax / (Fmax - F)) * ((C - 1) / C)));
   double A = C * std::sqrt(N) + Apipe;
   double P = A;
   double D = 1000000000.0 / Fmax;
 
-  indicators.ticks = static_cast<unsigned>(N);
+  indicators.ticks = static_cast<unsigned>(S);
   indicators.power = static_cast<unsigned>(P);
   indicators.area  = static_cast<unsigned>(A);
   indicators.delay = static_cast<unsigned>(D);

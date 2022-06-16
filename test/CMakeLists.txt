@@ -42,6 +42,7 @@ add_executable(${TEST_TARGET}
   hls/parser/hil/hil_test.cpp
   hls/scheduler/param_optimizer_test.cpp
   hls/scheduler/scheduler_test.cpp
+  hls/scheduler/simulated_annealing_test.cpp
   lib/minisat/minisat_test.cpp
   rtl/parser/ril/ril_test.cpp
   test_main.cpp

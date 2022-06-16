@@ -67,6 +67,14 @@ public:
     return value;
   }
 
+  unsigned getMax() const {
+    return constraint.getMax();
+  }
+
+  unsigned getMin() const {
+    return constraint.getMin();
+  }
+
   void setValue(unsigned newValue) {
     assert(constraint.check(newValue));
     value = newValue;

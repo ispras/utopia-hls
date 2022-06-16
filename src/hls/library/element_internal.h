@@ -22,6 +22,7 @@ struct ElementInternal : public MetaElement {
                   const Parameters &params,
                   const std::vector<Port> &ports) :
   MetaElement(name, params, ports) {}
+  virtual ~ElementInternal() = default;
   virtual std::unique_ptr<Element> construct(
       const Parameters &params) const override;
   virtual void estimate(

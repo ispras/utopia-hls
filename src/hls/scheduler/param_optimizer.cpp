@@ -13,6 +13,7 @@
 #include "hls/scheduler/optimizers/simulated_annealing_optimizer.h"
 #include "hls/scheduler/param_optimizer.h"
 
+#include <algorithm>
 #include <cassert>
 #include <fstream>
 #include <iostream>
@@ -25,86 +26,70 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
     const Criteria &criteria,
     Model &model,
     Indicators &indicators) const {
-  srand(42);
   std::ofstream ostrm("real.txt");
 
   std::map<std::string, Parameters> params;
 
   // Get the main dataflow graph.
-  Graph *graph = model.main();
+  auto *graph = model.main();
   assert(graph != nullptr && "Main graph is not found");
 
-  // Collect the parameters for all nodes.
-  Parameters defaultParams;
-  defaultParams.add(Parameter("f", criteria.freq, criteria.freq.getMax()));
+  std::random_device rand_dev{};
+  std::mt19937 gen{rand_dev()};
 
-  auto min_value = criteria.freq.getMin();
-  auto max_value = criteria.freq.getMax();
+  std::normal_distribution<> distr{0.5, 0.05};
 
-  std::vector<float> optimized_values;
-  optimized_values.push_back(normalize(10000, min_value, max_value));
+  std::vector<float> optimized_values, min_values, max_values;
   for (const auto *node : graph->nodes) {
-    auto metaElement = library::Library::get().find(node->type);
+    auto metaElement = node->map; 
     Parameters nodeParams(metaElement->params);
     for(const auto& iter : metaElement->params.getAll()) {
-      optimized_values.push_back(normalize(iter.second.getValue(), min_value, max_value));
+      float value = std::clamp(distr(gen), 0.0, 1.0);
+      optimized_values.push_back(value);
+      min_values.push_back(iter.second.getMin());
+      max_values.push_back(iter.second.getMax());
     }
     params.insert({ node->name, nodeParams });
   }
 
-  // Check if the task is solvable
-  int cur_f = criteria.freq.getMin();
-  estimate(model, params, indicators, cur_f);
-  model.undo();
-  if (!criteria.check(indicators)) { // even if the frequency is minimal the params don't match constratints
-      return params;
-  }
-
-  cur_f = criteria.freq.getMax();
-  estimate(model, params, indicators, cur_f);
-  if (criteria.check(indicators)) { // the maximum frequency is the solution
-      return params;
-  }
-
-  std::function<float(int, float)> temp_fun = [](int i, float temp) -> float {
+  auto temp_fun = [](int i, float temp) -> float {
     return temp / log(i + 1);
   };
 
-  std::function<void(std::vector<float>&, const std::vector<float>&, float)>
-    step_fun = [&](std::vector<float>& x, const std::vector<float>& prev, float temp) -> void {
-      std::random_device rand_dev{};
-      std::mt19937 gen{rand_dev()};
-       std::normal_distribution<> distr{0, 1};
+  auto step_fun = [&](std::vector<float> &x,
+                      const std::vector<float> &prev, // TODO: Why denormalized?
+                      float temp,
+                      float init_temp) -> void {
+    std::normal_distribution<> distr{0.0, 0.3 * (temp / init_temp)};
 
-      for(std::size_t i = 0; i < x.size(); i++) {
-        auto norm = normalize(prev[i], min_value, max_value);
-        auto diff = abs(distr(gen));
-        x[i] = norm + diff;
-      }
-    };
-
-  std::function<float(const std::vector<float>&)> target_function = [&](const std::vector<float>& parameters) -> float {
-    std::vector<float> denormalized_parameters;
-    for(const auto& param : parameters) {
-      denormalized_parameters.push_back(denormalize(param, min_value, max_value));
+    for(std::size_t i = 0; i < x.size(); i++) {
+      auto norm = normalize(prev[i], min_values[i], max_values[i]);
+      auto diff = distr(gen);
+      x[i] = std::clamp(norm + diff, 0.0, 1.0);
     }
-    estimate(model, params, indicators, denormalized_parameters[0]);
+  };
+
+  auto target_function = [&](const std::vector<float> &parameters) -> float {
+    std::vector<float> denormalized_parameters;
+    std::size_t index = 0;
+    for(const auto &param : parameters) {
+      denormalized_parameters.push_back(denormalize(param, min_values[index], max_values[index]));
+      index++;
+    }
+
+    estimate(model, params, indicators, denormalized_parameters);
     model.undo();
+
     return indicators.freq();
   };
 
-  std::function<float(const std::vector<float>&)>
-      limitation_function = [&](const std::vector<float>& parameters) -> float {
-        float tmp = parameters[0];
-        tmp = denormalize(tmp, min_value, max_value);
-        estimate(model, params, indicators, tmp);
-        model.undo();
-        return indicators.area;
-      };
+  auto limitation_function = [&](const std::vector<float> &parameters) -> float {
+    return indicators.area;
+  };
 
-  float init_temp = 10000000000.0;
+  float init_temp = 10000000000.0; // TODO: Why this value?
   float end_temp = 1.0;
-  float limit = 10000;
+  float limit = criteria.area.getMax();
 
   eda::hls::scheduler::optimizers::simulated_annealing_optimizer test(init_temp, end_temp, limit, target_function,
                                                                       limitation_function, step_fun, temp_fun);
@@ -114,6 +99,12 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   auto limitation = limitation_function(optimized_values);
 
   ostrm << std::endl << "After optimization" << std::endl;
+  ostrm << "Parameters values" << std::endl;
+  for(auto val : optimized_values) {
+    ostrm << val << " ";
+  }
+  ostrm << std::endl;
+
   ostrm << "Freq: " << indicators.freq() << std::endl;
   ostrm << "Perf: " << indicators.perf() << std::endl;
   ostrm << "Ticks: " << indicators.ticks << std::endl;
@@ -127,23 +118,28 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   return params;
 }
 
-void ParametersOptimizer::estimate(Model& model,
-    std::map<std::string, Parameters>& params,
-    Indicators& indicators, unsigned freq) const {
-  
+void ParametersOptimizer::estimate(Model &model,
+    std::map<std::string, Parameters> &params,
+    Indicators &indicators,
+    const std::vector<float> &optimized_params) const {
+  std::ofstream ostrm("estimation.txt", std::ios_base::app);
   // Update the values of the parameters & apply to nodes.
-  Graph *graph = model.main();
+  auto *graph = model.main();
+  std::size_t index = 0;
+  ostrm << "Setting values" << std::endl;
   for (auto *node : graph->nodes) {
     auto nodeParams = params.find(node->name);
     if (nodeParams == params.end()) {
       continue;
     }
-    nodeParams->second.setValue("f", freq);
+    nodeParams->second.setValue("stages", optimized_params[index]);
     mapper::Mapper::get().apply(*node, nodeParams->second);
+    index++;
   }
+  ostrm.close();
   
   // Balance flows and align times.
-  LatencyLpSolver::get().balance(model);
+  LatencyLpSolver::get().balance(model, Verbosity::Neutral);
   
   // Estimate overall design indicators
   mapper::Mapper::get().estimate(model);

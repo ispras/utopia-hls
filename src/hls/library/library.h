@@ -43,8 +43,6 @@ struct Port {
   const Direction direction;
   const unsigned width;
   const Parameter param;
-
-
 };
 
 /// Description of a constructed element (module).
@@ -74,6 +72,8 @@ struct MetaElement {
                         Indicators &indicators) const = 0;
 
   virtual std::unique_ptr<Element> construct(const Parameters &params) const = 0;
+
+  virtual ~MetaElement() = default;
 
   const std::string name;
   const Parameters params;

@@ -20,20 +20,6 @@ std::string toLower(std::string s) {
     return s;
 }
 
-bool isLetter(char c) {
-  if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
-    return true;
-  }
-  return false;
-}
-
-bool isDigit(char c) {
-  if (c >= '0' && c <= '9') {
-    return true;
-  }
-  return false;
-}
-
 void IPXACTParser::initialize() {
   XMLPlatformUtils::Initialize();
 }
@@ -101,8 +87,8 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
   DOMLSParser *parser = ((DOMImplementationLS*)impl)->createLSParser(
     DOMImplementationLS::MODE_SYNCHRONOUS, 0);
   xercesc::DOMDocument *doc = nullptr;
-  std::cout << name << std::endl;
-  std::cout << comp_fnames[toLower(name)] << std::endl;
+  //std::cout << name << std::endl;
+  //std::cout << comp_fnames[toLower(name)] << std::endl;
   doc = parser->parseURI(comp_fnames[toLower(name)].c_str());
   //IP-XACT tags.
   XMLCh *port_tag = XMLString::transcode("ipxact:port");
@@ -119,10 +105,10 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
   XMLCh *left_tag_v = XMLString::transcode("kactus2:left");
   XMLCh *right_tag_v = XMLString::transcode("kactus2:right");
   //For component generators.
-  XMLCh *componentGenerators_tag = XMLString::transcode("ipxact:componentGenerators");
+  XMLCh *componentGenerators_tag = XMLString::transcode(
+      "ipxact:componentGenerators");
   XMLCh *generatorExe_tag = XMLString::transcode("ipxact:generatorExe");
   //For static compomonents.
-  //XMLCh *fileSet_tag = XMLString::transcode("ipxact:fileSet");
   XMLCh *file_tag = XMLString::transcode("ipxact:file");
 
   //IP-XACT tags parsing.
@@ -148,7 +134,7 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
         left->getFirstChild()->getNodeValue());
       //If value is a parameter.
       //TODO: Regular expressions.
-      if (isLetter(value.c_str()[0])) {
+      if (std::isalpha(value.c_str()[0])) {
           isParam = true;
           param = value;
       } else {
@@ -163,16 +149,18 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
         }
         std::cout << std::endl;*/
       if (isParam) {
-        ports.push_back(library::Port(name_str,
-                                      direction_str == "in" ? library::Port::IN : library::Port::OUT,
-                                      left_int + 1,
-                                      model::Parameter(std::string(param))));
+        ports.push_back(library::Port(
+            name_str,
+            direction_str == "in" ? library::Port::IN : library::Port::OUT,
+            left_int + 1,
+            model::Parameter(std::string(param))));
       } else {
-        ports.push_back(library::Port(name_str,
-                                      direction_str == "in" ? library::Port::IN : library::Port::OUT,
-                                      left_int + 1,
-                                      model::Parameter(std::string("WIDTH"),
-                                                       left_int + 1)));
+        ports.push_back(library::Port(
+            name_str,
+            direction_str == "in" ? library::Port::IN : library::Port::OUT,
+            left_int + 1,
+            model::Parameter(std::string("WIDTH"),
+                             left_int + 1)));
       }
   }
   //Vendor extensions tags parsing.
