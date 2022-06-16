@@ -87,14 +87,6 @@
 		</kactus2:sourceDirectories>
 		<kactus2:parameters>
 			<kactus2:parameter>
-				<kactus2:name>f</kactus2:name>
-				<kactus2:value>100</kactus2:value>
-				<kactus2:constraints>
-					<kactus2:left>1</kactus2:left>
-					<kactus2:right>1000</kactus2:right>
-				</kactus2:constraints>
-			</kactus2:parameter>
-			<kactus2:parameter>
 				<kactus2:name>stages</kactus2:name>
 				<kactus2:value>10</kactus2:value>
 				<kactus2:constraints>
