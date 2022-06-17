@@ -1,0 +1,19 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2022 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
+model SourceSink {
+  nodetype source  ()                       => (X<1.00> #0 x);
+  nodetype sink    (X<1.00> x)              => ();
+
+  graph main {
+    chan Y y;
+
+    node source  n1()       => (y);
+    node sink    n6(y)      => ();
+  }
+}

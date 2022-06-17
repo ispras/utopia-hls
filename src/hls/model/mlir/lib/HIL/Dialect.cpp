@@ -11,6 +11,8 @@
 #include "mlir/IR/DialectImplementation.h"
 #include "llvm/ADT/TypeSwitch.h"
 
+#include <iostream>
+
 using namespace mlir;
 using namespace hil;
 
@@ -41,9 +43,9 @@ void HILDialect::initialize() {
 }
 
 void mlir::hil::PortAttr::print(mlir::AsmPrinter &printer) const {
-  printer << "<\"" << '"' << getName() << '"'<< getTypeName()
-      << "\"<" << getFlow() << ">" << " " << getLatency()
-      << " " << getIsConst() << " " << getValue() << ">";
+  printer << "<\"" << getName() << "\" \"" << getTypeName() << "\" <"
+      << getFlow() << "> " << getLatency() << ' ' << getIsConst() << ' '
+      << getValue() << '>';
 }
 
 mlir::Attribute mlir::hil::PortAttr::parse(mlir::AsmParser &parser,
@@ -79,9 +81,9 @@ mlir::Attribute mlir::hil::PortAttr::parse(mlir::AsmParser &parser,
 }
 
 void mlir::hil::BindingAttr::print(mlir::AsmPrinter &printer) const {
-  printer << "<\"" << getNodeName() << "\"<";
+  printer << "<\"" << getNodeName() << "\" <";
   getPort().print(printer);
-  printer << ">" << ">";
+  printer << ">>";
 }
 
 mlir::Attribute mlir::hil::BindingAttr::parse(mlir::AsmParser &parser,

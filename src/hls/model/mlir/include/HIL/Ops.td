@@ -108,10 +108,10 @@ def HIL_Chan : HIL_Op<"chan", [HasParent<"Chans">]> {
   let arguments = (ins
     StrAttr:$typeName,
     StrAttr:$varName,
-    OptionalAttr<BindingAttr>:$nodeFrom,
-    OptionalAttr<BindingAttr>:$nodeTo);
+    BindingAttr:$nodeFrom,
+    BindingAttr:$nodeTo);
   let assemblyFormat = [{
-    $typeName $varName (`(` $nodeFrom^ `=``>` $nodeTo `)`)? attr-dict
+    $typeName $varName $nodeFrom `=``=` $nodeTo attr-dict
   }];
 }
 

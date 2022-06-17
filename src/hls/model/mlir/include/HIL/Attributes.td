@@ -32,7 +32,7 @@ def PortAttr : HIL_Attr<"Port"> {
 
 def BindingAttr : HIL_Attr<"Binding"> {
 
-  let mnemonic = "binding";
+  let mnemonic = "bnd";
   let summary = "Binding attribute";
 
   let description = [{

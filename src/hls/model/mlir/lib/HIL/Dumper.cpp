@@ -23,7 +23,8 @@ using eda::hls::model::Graph;
 using eda::hls::model::Model;
 using eda::hls::model::Node;
 using eda::hls::model::NodeType;
-using ModelPort = eda::hls::model::Port;
+using eda::hls::model::Port;
+using eda::hls::model::Binding;
 
 namespace detail {
 
@@ -134,28 +135,16 @@ private:
   indented_ostream &os_;
 };
 
-enum class PortType { Input, Output };
-template <PortType> struct Port {
-  Port(const ModelPort &model_port) : model_port(model_port) {}
-  const ModelPort &model_port;
-};
-using InputPort = Port<PortType::Input>;
-using OutputPort = Port<PortType::Output>;
-
-template <> void ModelDumper<InputPort>::dump() {
-  const auto &port = node_.model_port;
-  os_ << "#hil.input<" << quoted(port.type) << curly_braced(port.flow) << ' '
-      << quoted(port.name) << ">";
+template <> void ModelDumper<Port>::dump() {
+  os_ << "#hil.port<" << quoted(node_.name) << ' ' << quoted(node_.type) << ' '
+      << curly_braced(node_.flow) << ' ' << node_.latency << ' '
+      << node_.isConst << ' ' << node_.value << '>';
 }
 
-template <> void ModelDumper<OutputPort>::dump() {
-  const auto &port = node_.model_port;
-  os_ << "#hil.output<" << quoted(port.type) << curly_braced(port.flow) << ' '
-      << port.latency << ' ' << quoted(port.name);
-  if (port.isConst) {
-    os_ << " = " << quoted(port.value);
-  }
-  os_ << ">";
+template <> void ModelDumper<Binding>::dump() {
+  os_ << "#hil.bnd<" << quoted((*(node_.node)).name) << ' ';
+  ModelDumper::get(*(node_.port), os_).dump();
+  os_ << '>';
 }
 
 template <> void ModelDumper<NodeType>::dump() {
@@ -170,7 +159,7 @@ template <> void ModelDumper<NodeType>::dump() {
         os_ << '\n';
         print_sep = true;
       }
-      ModelDumper::get(InputPort(*input_arg), os_).dump();
+      ModelDumper::get(*input_arg, os_).dump();
     }
   }
   os_ << '\n' << "] => [";
@@ -185,14 +174,17 @@ template <> void ModelDumper<NodeType>::dump() {
         print_sep = true;
       }
       print_sep = true;
-      ModelDumper::get(OutputPort(*output_arg), os_).dump();
+      ModelDumper::get(*output_arg, os_).dump();
     }
   }
   os_ << '\n' << "]";
 }
 
 template <> void ModelDumper<Chan>::dump() {
-  os_ << "hil.chan " << quoted(node_.type) << ' ' << quoted(node_.name);
+  os_ << "hil.chan " << quoted(node_.type) << ' ' << quoted(node_.name) << ' ';
+  ModelDumper::get(node_.source, os_).dump();
+  os_ << " == ";
+  ModelDumper::get(node_.target, os_).dump();
 }
 
 template <> void ModelDumper<Node>::dump() {
