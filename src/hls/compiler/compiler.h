@@ -6,51 +6,40 @@
 //
 //===----------------------------------------------------------------------===//
 #pragma once
-#include "hls/library/library.h"
 
+#include "hls/library/library.h"
 #include "hls/model/model.h"
-#include "hls/scheduler/dijkstra.h"
 
 #include <ctemplate/template.h>
-
-#include <iostream>
-#include <memory>
 
 namespace eda::hls::compiler {
 
 struct Type final {
-  std::string name;
-  std::size_t element_width;
+  const std::string name;
+  const std::size_t width;
 
   Type(const std::string &name,
-       const std::size_t element_width) :
-       name(name),
-       element_width(element_width) {};
+       const std::size_t width) :
+       name(name), width(width) {};
 };
 
 struct Port final {
-  enum Direction {
-    IN,
-    OUT,
-    INOUT
-  };
-  std::string name;
-  Direction direction;
-  Type type;
+  enum Direction { IN, OUT, INOUT };
+  const std::string name;
+  const Direction direction;
+  const Type type;
 
   Port(const std::string &name,
        const Direction direction,
        const Type &type) :
-    name(name),
-    direction(direction),
-    type(type) {}
+    name(name), direction(direction), type(type) {}
 
   bool isClock() const;
 };
 
 struct Instance final {
-  std::string instanceName;
-  std::string moduleName;
+  const std::string instanceName;
+  const std::string moduleName;
   std::vector<Port> inputs;
   std::vector<Port> outputs;
   std::vector<Port> moduleInputs;
@@ -59,13 +48,8 @@ struct Instance final {
 
   Instance(const std::string &instanceName,
            const std::string &moduleName) :
-    instanceName(instanceName),
-    moduleName(moduleName),
-    inputs(),
-    outputs(),
-    moduleInputs(),
-    moduleOutputs(),
-    bindings() {}
+    instanceName(instanceName), moduleName(moduleName),
+    inputs(), outputs(), moduleInputs(), moduleOutputs(), bindings() {}
 
   void addInput(const Port &inputPort) {
     inputs.push_back(inputPort);
@@ -75,23 +59,24 @@ struct Instance final {
     moduleInputs.push_back(moduleInputPort);
   }
 
-  void addModuleOutput(const Port &moduleOutputPort) {
-    moduleOutputs.push_back(moduleOutputPort);
+  void addOutput(const Port &outputPort) {
+    inputs.push_back(outputPort); // TODO why inputs?
   }
 
-  void addOutput(const Port &outputPort) {
-    inputs.push_back(outputPort);
+  void addModuleOutput(const Port &moduleOutputPort) {
+    moduleOutputs.push_back(moduleOutputPort);
   }
 
   void addBinding(const Port &connectsFrom, const Port &connectTo) {
     bindings.push_back({connectsFrom, connectTo});
   }
+
   void addModuleInputs(const std::vector<model::Port*> inputs);
   void addModuleOutputs(const std::vector<model::Port*> outputs);
 };
 
 struct Module {
-  std::string name;
+  const std::string name;
   std::vector<Port> inputs;
   std::vector<Port> outputs;
   std::string path;
@@ -107,11 +92,11 @@ struct Module {
     outputs.push_back(outputPort);
   }
 
-  void addPath(const std::string &path) {
+  void setPath(const std::string &path) {
     this->path = path;
   }
 
-  void addBody(const std::string &body) {
+  void setBody(const std::string &body) {
     this->body = body;
   }
 
@@ -153,9 +138,10 @@ private:
   void addOutputs(const std::vector<model::Port*> outputs);
   void printEpilogue(std::ostream &out) const;
   void printDeclaration(std::ostream &out) const;
+  static std::string getFileNameFromPath(const std::string &path);
 };
 
-class Circuit final {
+struct FirrtlCircuit final {
 private:
   std::string name;
   std::map<std::string, FirrtlModule> firModules;
@@ -164,15 +150,17 @@ private:
   void printFirrtlModules(std::ostream &out) const;
   void printExtDeclarations(std::ostream &out) const;
   void printEpilogue(std::ostream &out) const;
+  static void createDirRecur(const std::string& dirName);
 public:
-  static constexpr const char* indent = "    ";
-  static constexpr const char* opPrefix = "firrtl.";
-  static constexpr const char* typePrefix = "!firrtl.";
-  static constexpr const char* varPrefix = "%";
-  static constexpr const char* circt = "circt-opt ";
-  static constexpr const char* circt_options = " --lower-firrtl-to-hw \
-                                                 --export-split-verilog";
-  Circuit(const std::string& name) : name(name) {};
+  static constexpr const char* indent        = "    ";
+  static constexpr const char* opPrefix      = "firrtl.";
+  static constexpr const char* typePrefix    = "!firrtl.";
+  static constexpr const char* varPrefix     = "%";
+  static constexpr const char* circt         = "circt-opt ";
+  static constexpr const char* circtOptions = " --lower-firrtl-to-hw \
+                                                --export-split-verilog";
+  FirrtlCircuit(const std::string& name) : name(name) {};
+
   void printFiles(const std::string& outputFirrtlName,
                   const std::string& outputVerilogName,
                   const std::string& outputDirName) const;
@@ -218,10 +206,10 @@ struct Compiler final {
    * @param Name of the top module to be generated.
    * @return Constructed circuit.
    */
-  std::shared_ptr<Circuit> constructCircuit(const model::Model &model,
-                                            const std::string &name);
+  std::shared_ptr<FirrtlCircuit> constructCircuit(const model::Model &model,
+                                                  const std::string &name);
 };
 
-std::ostream& operator <<(std::ostream &out, const Circuit &circuit);
+std::ostream& operator <<(std::ostream &out, const FirrtlCircuit &circuit);
 
 } // namespace eda::hls::compiler
