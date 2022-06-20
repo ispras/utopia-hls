@@ -39,6 +39,7 @@ else()
   message(STATUS "XERCES_DIR env var is not set.")
 endif()
 
+include_directories(SYSTEM lib/CLI11)
 include_directories(SYSTEM lib/easyloggingpp)
 include_directories(SYSTEM lib/minisat)
 
