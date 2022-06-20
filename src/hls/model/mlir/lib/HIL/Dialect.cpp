@@ -81,9 +81,9 @@ mlir::Attribute mlir::hil::PortAttr::parse(mlir::AsmParser &parser,
 }
 
 void mlir::hil::BindingAttr::print(mlir::AsmPrinter &printer) const {
-  printer << "<\"" << getNodeName() << "\" <";
+  printer << "<\"" << getNodeName() << "\" ";
   getPort().print(printer);
-  printer << ">>";
+  printer << '>';
 }
 
 mlir::Attribute mlir::hil::BindingAttr::parse(mlir::AsmParser &parser,
@@ -93,14 +93,10 @@ mlir::Attribute mlir::hil::BindingAttr::parse(mlir::AsmParser &parser,
   std::string nodeName;
   if (parser.parseString(&nodeName))
     return {};
-  if (parser.parseLess())
-    return {};
-  mlir::hil::PortAttr *attr = new PortAttr();
-  if (mlir::hil::PortAttr::parse(parser, type))
+  mlir::Attribute attr;
+  if ((attr = mlir::hil::PortAttr::parse(parser, type)))
     return {};
   if (parser.parseGreater())
     return {};
-  if (parser.parseGreater())
-    return {};
-  return get(parser.getContext(), nodeName, *attr);
+  return get(parser.getContext(), nodeName, attr.dyn_cast<PortAttr>());
 }
