@@ -80,15 +80,11 @@ void Mapper::estimate(model::Graph &graph) {
   graph.ind.delay = 0;
   graph.ind.outputs.clear();
 
-  double avg = 0.;
-
   // Iterate over all nodes of the graph.
   for (const auto *node : graph.nodes) {
     // Update the additive characteristics.
     graph.ind.power += node->ind.power;
     graph.ind.area  += node->ind.area;
-
-    avg += node->ind.delay;
 
     // Collect the source nodes for the DFS traveral.
     if (node->isSource()) {
@@ -96,8 +92,6 @@ void Mapper::estimate(model::Graph &graph) {
       visited.insert(node);
     }
   }
-
-  graph.ind.averageDelay = static_cast<unsigned>(avg / graph.nodes.size());
 
   // Traverse the nodes in topological order (DFS).
   while (!stack.empty()) {

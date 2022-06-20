@@ -33,8 +33,6 @@ struct ChanInd {
 struct NodeInd {
   /// Frequency (kHz).
   unsigned freq() const { return 1000000000 / delay; }
-  /// Average frequency (kHz).
-  unsigned avgFreq() const { return 1000000000 / averageDelay; }
   /// Throughput (kops).
   unsigned perf() const { return freq(); }
 
@@ -46,8 +44,6 @@ struct NodeInd {
   unsigned ticks = 0;
   /// Combinational delay (ps): maximum over all output channels (see below).
   unsigned delay = 0;
-  /// Average delay (ps).
-  unsigned averageDelay = 0; // FIXME:
   /// Outputs indicators.
   std::map<std::string, ChanInd> outputs;
 };
