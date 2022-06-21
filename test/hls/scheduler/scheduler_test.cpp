@@ -100,3 +100,10 @@ TEST(SchedulerTest, IdctRowALAP) {
   EXPECT_EQ(dijkstraTest("test/data/hil/idct_row.hil", LatencyBalanceMode::ALAP), 0);
 }
 
+TEST(SchedulerTest, FeedbackASAP) {
+  EXPECT_EQ(dijkstraTest("test/data/hil/feedback.hil", LatencyBalanceMode::ASAP), 0);
+}
+
+TEST(SchedulerTest, FeedbackALAP) {
+  EXPECT_EQ(dijkstraTest("test/data/hil/feedback.hil", LatencyBalanceMode::ALAP), 0);
+}

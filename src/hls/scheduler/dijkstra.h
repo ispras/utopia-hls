@@ -19,6 +19,7 @@
 
 #include <deque>
 #include <map>
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -78,6 +79,7 @@ private:
   void collectGraphTime() override;
 
   std::deque<const Chan*> toVisit;
+  std::set<const Node*> visited;
   std::map<const Node*, unsigned> nodeMap;
   LatencyBalanceMode mode;
   std::vector<const Node*> terminalNodes;

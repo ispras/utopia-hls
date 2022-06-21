@@ -16,6 +16,7 @@ namespace eda::hls::scheduler {
 void DijkstraBalancer::reset() {
    nodeMap = std::map<const Node*, unsigned>();
    toVisit = std::deque<const Chan*>();
+   visited = std::set<const Node*>();
    terminalNodes = std::vector<const Node*>();
 }
 
@@ -48,6 +49,7 @@ void DijkstraBalancer::visitSources(const Graph *graph) {
     const Node *src = chan->source.node;
     if (src->isSource()) {
       toVisit.push_back(chan);
+      visited.insert(src);
       visitChan(chan, nodeMap[src] + chan->ind.ticks);
     }
   }
@@ -58,14 +60,24 @@ void DijkstraBalancer::visitSinks(const Graph *graph) {
     const Node *targ = chan->target.node;
     if (targ->isSink()) {
       toVisit.push_back(chan);
+      visited.insert(targ);
       visitChan(chan, nodeMap[targ] + chan->ind.ticks);
     }
   }
 }
 
 const Node* DijkstraBalancer::getNext(const Chan *chan) {
-  return mode == LatencyBalanceMode::ASAP ? chan->target.node :
-    mode == LatencyBalanceMode::ALAP ? chan->source.node : nullptr;
+  if (mode == LatencyBalanceMode::ASAP && visited.count(chan->target.node) != 0) {
+    visited.insert(chan->target.node);
+    return chan->target.node;
+  }
+
+  if (mode == LatencyBalanceMode::ALAP && visited.count(chan->source.node) != 0) {
+    visited.insert(chan->source.node);
+    return chan->source.node;
+  }
+
+  return nullptr;
 }
 
 void DijkstraBalancer::addConnections(std::vector<Chan*> &connections, 
@@ -96,9 +108,9 @@ void DijkstraBalancer::balance(Model &model, LatencyBalanceMode balanceMode) {
 
   while (!toVisit.empty()) {
     const Node *next = getNext(toVisit.front());
-    std::vector<Chan*> connections;
-    addConnections(connections, next);
     if (next != nullptr) {
+      std::vector<Chan*> connections;
+      addConnections(connections, next);
       visit(nodeMap[next], connections);
     }
     toVisit.pop_front();
