@@ -55,8 +55,12 @@ namespace mlir::hil {
   /// Returns sink nodes for the graph.
   std::vector<Node> getSinks(Graph &graph);
 
+  /// Returns channels for the graph.
   std::vector<Chan> getChans(Graph &graph);
+
+  /// Returns nodes for the graph.
   mlir::Block::OpListType& getNodes(Graph &graph);
+
   bool isDelay(Node &node);
   bool isDup(Node &node);
   bool isKernel(Node &node);
