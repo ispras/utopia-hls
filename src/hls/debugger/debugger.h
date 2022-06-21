@@ -54,7 +54,7 @@ private:
 
   /// Creates constant expression for the channel's binding.
   z3::expr toConst(mlir::hil::Chan &ch,
-      const mlir::hil::PortAttr &port,
+      const mlir::hil::BindingAttr &bnd,
       z3::context &ctx) const;
 
   /// Creates constant expression for the node.
@@ -68,7 +68,7 @@ private:
   z3::sort getSort(mlir::hil::Node &node, z3::context &ctx) const;
 
   /// Calculates sort of the named port.
-  z3::sort getSort(std::string name, z3::context &ctx) const;
+  z3::sort getSort(mlir::hil::PortAttr port, z3::context &ctx) const;
 
   /// Returns sorts of the node's inputs.
   z3::sort_vector getInSorts(mlir::hil::Node &node, z3::context &ctx) const;

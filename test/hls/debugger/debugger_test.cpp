@@ -45,18 +45,18 @@ TEST(DebuggerTest, SolveSrcSink) {
 }
 
 // Test for one kernel example
-/*TEST(DebuggerTest, SolveOneKernel) {
+TEST(DebuggerTest, SolveOneKernel) {
   EXPECT_EQ(
       eqCheckTest(
           "test/data/hil/one_kernel.hil",
           "test/data/hil/one_kernel_clone.hil"),
       false);
-}*/
+}
 
 // Test for no-meaning first HIL example
-/*TEST(DebuggerTest, SolveTest) {
+TEST(DebuggerTest, SolveTest) {
   EXPECT_EQ(
       eqCheckTest("test/data/hil/test.hil",
           "test/data/hil/test_clone.hil"),
       false);
-}*/
+}
