@@ -7,8 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 model SourceSinkClone {
-  nodetype source ()          => (X<1.00> #0 x);
-  nodetype sink   (X<1.00> x) => ();
+  nodetype source ()          => (X<1.00> #0 x_src);
+  nodetype sink   (X<1.00> x_sink) => ();
 
   graph main {
     chan Y y;
