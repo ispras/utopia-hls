@@ -14,6 +14,6 @@ model SourceSink {
     chan Y y;
 
     node source  n1()       => (y);
-    node sink    n6(y)      => ();
+    node sink    n2(y)      => ();
   }
 }
