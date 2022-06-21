@@ -41,6 +41,7 @@ endif()
 
 include_directories(SYSTEM lib/CLI11)
 include_directories(SYSTEM lib/easyloggingpp)
+include_directories(SYSTEM lib/json)
 include_directories(SYSTEM lib/minisat)
 
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/lib/minisat)
