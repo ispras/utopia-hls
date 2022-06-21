@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-model SourceSink {
+model SourceSinkClone {
   nodetype source ()          => (X<1.00> #0 x);
   nodetype sink   (X<1.00> x) => ();
 
