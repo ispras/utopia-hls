@@ -18,16 +18,13 @@ using namespace mlir::hil;
 
 bool eqCheckTest(const std::string &fileM, const std::string &fileM2) {
 
+  // Get first model
   mlir::model::MLIRModule modelM = parseToMlir(fileM);
   mlir::hil::Model model = modelM.get_root();
+
+  // get second model
   mlir::model::MLIRModule modelM2 = parseToMlir(fileM2);
   mlir::hil::Model model2 = modelM2.get_root();
-
-  std::string modelMName = model.name().str();
-  std::cout << modelMName << std::endl;
-
-  std::string modelM2Name = model2.name().str();
-  std::cout << modelM2Name << std::endl;
 
   EqChecker checker = EqChecker::get();
 

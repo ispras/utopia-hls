@@ -234,7 +234,6 @@ std::shared_ptr<Model> parse_model_from_mlir_file(const std::string &filename) {
   } else { // fallback to stdin
     buf << std::cin.rdbuf();
   }
-  //std::cout << buf.str() << std::endl;
   return parse_model_from_mlir(buf.str());
 }
 

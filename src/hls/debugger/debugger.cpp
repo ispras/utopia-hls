@@ -70,7 +70,7 @@ bool EqChecker::equivalent(mlir::hil::Model &left,
 
   if (!match(lOuts, rOuts, outMatch)) {
 
-    std::cout << "Cannot match graphs outputs" << std::endl;
+    std::cerr << "Cannot match graphs outputs" << std::endl;
     return false;
   }
 
@@ -165,8 +165,6 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
     z3::context &ctx,
     z3::expr_vector &nodes) const {
 
-  std::cout << "getChans" << std::endl;
-  std::cout << graph.name().str() << std::endl;
   // create equations for channels
   std::vector<mlir::hil::Chan> gChannels = getChans(graph);
 

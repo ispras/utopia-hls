@@ -38,10 +38,8 @@ namespace mlir::hil {
     for (auto arg : node.commandArguments()) {
 
       llvm::StringRef in_chan_name = arg.cast<StringAttr>().getValue();
-      std::cout << "chan name: " + in_chan_name.str() << std::endl;
 
       for (size_t i = 0; i < chans.size(); i++) {
-        std::cout << "graph chan name: " + chans[i].varName().str() << std::endl;
         if (chans[i].varName() == in_chan_name) {
           inChans.push_back(chans[i]);
         }
