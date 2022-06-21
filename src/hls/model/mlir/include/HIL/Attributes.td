@@ -43,7 +43,7 @@ def BindingAttr : HIL_Attr<"Binding"> {
     "std::string":$nodeName,
     PortAttr:$port);
 
-  let hasCustomAssemblyFormat = 1;
+  let assemblyFormat = "`<` $nodeName $port `>`";
 }
 
 #endif // HIL_ATTRIBUTES

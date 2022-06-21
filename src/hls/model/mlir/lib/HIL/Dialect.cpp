@@ -79,24 +79,3 @@ mlir::Attribute mlir::hil::PortAttr::parse(mlir::AsmParser &parser,
   auto ctx = parser.getContext();
   return get(ctx, name, typeName, flow, latency, isConst, value);
 }
-
-void mlir::hil::BindingAttr::print(mlir::AsmPrinter &printer) const {
-  printer << "<\"" << getNodeName() << "\" ";
-  getPort().print(printer);
-  printer << '>';
-}
-
-mlir::Attribute mlir::hil::BindingAttr::parse(mlir::AsmParser &parser,
-                                               mlir::Type type) {
-  if (parser.parseLess())
-    return {};
-  std::string nodeName;
-  if (parser.parseString(&nodeName))
-    return {};
-  mlir::Attribute attr;
-  if ((attr = mlir::hil::PortAttr::parse(parser, type)))
-    return {};
-  if (parser.parseGreater())
-    return {};
-  return get(parser.getContext(), nodeName, attr.dyn_cast<PortAttr>());
-}
