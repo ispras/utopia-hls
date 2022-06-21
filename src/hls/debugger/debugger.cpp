@@ -175,10 +175,13 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
   for (auto &ch : gChannels) {
 
     z3::expr src = toConst(ch, ch.nodeFrom(), ctx);
-    z3::expr tgt = toConst(ch, ch.nodeTo(), ctx);
+    z3::expr dst = toConst(ch, ch.nodeTo(), ctx);
+    z3::expr chConst = toConst(ch, ctx);
 
-    const z3::expr chanExpr = src == tgt;
-    nodes.push_back(chanExpr);
+    const z3::expr srcExpr = src == chConst;
+    nodes.push_back(srcExpr);
+    const z3::expr dstExpr = chConst == dst;
+    nodes.push_back(dstExpr);
   }
 
   // create equations for nodes
@@ -289,7 +292,7 @@ std::string EqChecker::getModelName(mlir::hil::Chan &ch) const {
 }
 
 std::string EqChecker::getFuncName(mlir::hil::Node &node) const {
-  return getModelName(node) + "_" + node.nodeTypeName().str();
+  return node.nodeTypeName().str();
 }
 
 z3::sort EqChecker::getSort(mlir::hil::Node &node, z3::context &ctx) const {
@@ -321,6 +324,15 @@ z3::expr EqChecker::toConst(mlir::hil::Node &node, z3::context &ctx) const {
   const std::string constName = modelName + "_" + node.name().str();
 
   return ctx.constant(constName.c_str(), fInSort);
+}
+
+z3::expr EqChecker::toConst(mlir::hil::Chan &ch, z3::context &ctx) const {
+
+  const auto fromPort = ch.nodeFrom().getPort();
+  const auto toPort = ch.nodeTo().getPort();
+  assert(fromPort.getTypeName() == toPort.getTypeName());
+
+  return ctx.constant(ch.varName().str().c_str(), getSort(fromPort, ctx));
 }
 
 z3::expr EqChecker::toInFunc(mlir::hil::Node &node, mlir::hil::Chan &ch,

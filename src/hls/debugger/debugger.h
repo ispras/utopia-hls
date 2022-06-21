@@ -60,6 +60,9 @@ private:
   /// Creates constant expression for the node.
   z3::expr toConst(mlir::hil::Node &node, z3::context &ctx) const;
 
+  /// Creates constant expression for the channel.
+  z3::expr toConst(mlir::hil::Chan &ch, z3::context &ctx) const;
+
   /// Creates input function call for the node-chan pair.
   z3::expr toInFunc(mlir::hil::Node &node, mlir::hil::Chan &ch,
     z3::context &ctx) const;
