@@ -53,7 +53,8 @@ private:
       z3::expr_vector &nodes) const;
 
   /// Creates constant expression for the channel's binding.
-  z3::expr toConst(mlir::hil::Chan &ch, std::string portName,
+  z3::expr toConst(mlir::hil::Chan &ch,
+      const mlir::hil::PortAttr &port,
       z3::context &ctx) const;
 
   /// Creates constant expression for the node.
