@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "hls/model/indicators.h"
 #include "hls/model/model.h"
 #include "hls/model/parameters.h"
 #include "hls/scheduler/optimizers/abstract_optimizer.h"
@@ -20,38 +21,6 @@ using namespace eda::hls::model;
 using namespace eda::util;
 
 namespace eda::hls::scheduler {
-
-struct Criteria final {
-  Criteria(Indicator objective,
-           const Constraint &freq,
-           const Constraint &perf,
-           const Constraint &ticks,
-           const Constraint &power,
-           const Constraint &area):
-    objective(objective),
-    freq(freq),
-    perf(perf),
-    ticks(ticks),
-    power(power),
-    area(area) {}
-
-  const Indicator objective;
-
-  const Constraint freq;
-  const Constraint perf;
-  const Constraint ticks;
-  const Constraint power;
-  const Constraint area;
-
-  /// Checks the constraints.
-  bool check(const Indicators &indicators) const {
-    return freq.check(indicators.freq())
-        && perf.check(indicators.perf())
-        && ticks.check(indicators.ticks)
-        && power.check(indicators.power)
-        && area.check(indicators.area);
-  }
-};
 
 class ParametersOptimizer final : public Singleton<ParametersOptimizer> {
   friend class Singleton<ParametersOptimizer>;

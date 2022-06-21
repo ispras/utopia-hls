@@ -8,15 +8,21 @@
 
 #pragma once
 
+#include "hls/model/constraint.h"
+
 #include <map>
 #include <string>
 
 namespace eda::hls::model {
 
+//===----------------------------------------------------------------------===//
+// Circuit Indicators
+//===----------------------------------------------------------------------===//
+
 enum Indicator {
   FREQ,
   PERF,
-  LATENCY,
+  TICKS,
   POWER,
   AREA
 };
@@ -48,9 +54,44 @@ struct NodeInd {
   std::map<std::string, ChanInd> outputs;
 };
 
-using GraphInd = NodeInd;
-using ModelInd = NodeInd;
-
+using GraphInd   = NodeInd;
+using ModelInd   = NodeInd;
 using Indicators = NodeInd;
+
+//===----------------------------------------------------------------------===//
+// Optimization Criteria
+//===----------------------------------------------------------------------===//
+
+struct Criteria final {
+  Criteria(Indicator objective,
+           const Constraint &freq,
+           const Constraint &perf,
+           const Constraint &ticks,
+           const Constraint &power,
+           const Constraint &area):
+    objective(objective),
+    freq(freq),
+    perf(perf),
+    ticks(ticks),
+    power(power),
+    area(area) {}
+
+  const Indicator objective;
+
+  const Constraint freq;
+  const Constraint perf;
+  const Constraint ticks;
+  const Constraint power;
+  const Constraint area;
+
+  /// Checks the constraints.
+  bool check(const Indicators &indicators) const {
+    return freq.check(indicators.freq())
+        && perf.check(indicators.perf())
+        && ticks.check(indicators.ticks)
+        && power.check(indicators.power)
+        && area.check(indicators.area);
+  }
+};
 
 } // namespace eda::hls::model
