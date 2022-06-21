@@ -21,6 +21,6 @@ model M {
     node source  n1()      => (x);
     node kernel1 n2(x, y)  => (z);
     node kernel2 n3(z)     => (w, y);
-    node sink    n3(w)     => ();
+    node sink    n4(w)     => ();
   }
 }
