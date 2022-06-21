@@ -37,13 +37,16 @@ struct HlsOptions final {
   HlsOptions(CLI::App &app) {
     options = app.add_subcommand("hls", "High-level synthesis");
 
-    options->add_option("--output-dir",  outDir, "Output directory")
+    options->add_option("--output-dir",  outDir,  "Output directory")
            ->expected(1);
+    options->add_option("--output-dot",  outDot,  "Output DOT file")
+           ->expected(0, 1);
     options->add_option("--output-mlir", outMlir, "Output MLIR file")
            ->expected(1);
     options->add_option("--output-vlog", outVlog, "Output Verilog file")
            ->expected(1);
-    options->add_option("--output-test", outTest, "Output test file");
+    options->add_option("--output-test", outTest, "Output test file")
+           ->expected(0, 1);
 
     // Input file(s).
     options->allow_extras();
@@ -54,6 +57,7 @@ struct HlsOptions final {
   }
 
   std::string outDir;
+  std::string outDot;
   std::string outMlir;
   std::string outVlog;
   std::string outTest;
