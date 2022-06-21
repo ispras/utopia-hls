@@ -12,9 +12,9 @@
 #include "hls/scheduler/latency_solver.h"
 #include "hls/scheduler/optimizers/simulated_annealing_optimizer.h"
 #include "hls/scheduler/param_optimizer.h"
+#include "util/assert.h"
 
 #include <algorithm>
-#include <cassert>
 #include <fstream>
 #include <iostream>
 #include <random>
@@ -23,96 +23,72 @@
 namespace eda::hls::scheduler {
 
 std::map<std::string, Parameters> ParametersOptimizer::optimize(
-    const Criteria &criteria,
-    Model &model,
-    Indicators &indicators) const {
-  float init_temp = 100.0; // TODO: Why this value?
-  float end_temp = 1.5;
-  float limit = criteria.freq.getMin();
+    const Criteria &criteria, Model &model, Indicators &indicators) const {
+  float initialTemperature = 100.0; // TODO: Why this value?
+  float finalTemperature = 1.5;
 
   std::ofstream ostrm("real.txt");
 
-  std::map<std::string, Parameters> params;
+  std::map<std::string, Parameters> parameters;
 
   // Get the main dataflow graph.
   auto *graph = model.main();
-  assert(graph != nullptr && "Main graph is not found");
+  uassert(graph, "Main graph is not found");
 
-  std::random_device rand_dev{};
-  std::mt19937 gen{rand_dev()};
+  std::random_device numberGenerator{};
+  std::mt19937 generator{numberGenerator()};
+  
+  std::vector<float> parameterValues, minValues, maxValues;
 
-  std::normal_distribution<> distr{0.5, 0.25};
-
-  std::vector<float> optimized_values, min_values, max_values;
-  for (const auto *node : graph->nodes) {
-    auto metaElement = node->map; 
-    Parameters nodeParams(metaElement->params);
-    for(const auto& iter : metaElement->params.getAll()) {
-      float value = std::clamp(distr(gen), 0.0, 1.0);
-      optimized_values.push_back(value);
-      min_values.push_back(iter.second.getMin());
-      max_values.push_back(iter.second.getMax());
-    }
-    params.insert({ node->name, nodeParams });
-  }
-
-  auto temp_fun = [](int i, float temp) -> float {
-    return temp / i /*log(i + 1)*/;
+  auto temperatureFunction = [](int i, float temperature) -> float {
+    return temperature / i;
   };
 
-  auto step_fun = [&](std::vector<float> &x,
-                      const std::vector<float> &prev, // TODO: Why denormalized?
-                      float temp,
-                      float init_temp) -> void {
-    std::normal_distribution<> distr{0.0, (temp / init_temp)};
+  auto stepFunction = [&](std::vector<float> &currentValues,
+                      const std::vector<float> &previousValues, // TODO: Why denormalized?
+                      float currentTemperature,
+                      float initialTemperature) -> void {
+    std::normal_distribution<> distribution{0.0, (currentTemperature / initialTemperature)};
 
-    for(std::size_t i = 0; i < x.size(); i++) {
-      //auto norm = normalize(prev[i], min_values[i], max_values[i]);
-      auto diff = distr(gen);
-      x[i] = std::clamp(prev[i] + diff, 0.0, 1.0);
+    for(std::size_t i = 0; i < currentValues.size(); i++) {
+      auto diff = distribution(generator);
+      currentValues[i] = std::clamp(previousValues[i] + diff, 0.0, 1.0);
     }
   };
 
-  auto target_function = [&](const std::vector<float> &parameters) -> float {
-    std::vector<float> denormalized_parameters;
+  auto targetFunction = [&](const std::vector<float> &currentValues) -> float {
+    std::vector<float> denormalizedValues;
     std::size_t index = 0;
-    for(const auto &param : parameters) {
-      denormalized_parameters.push_back(denormalize(param, min_values[index], max_values[index]));
+    for(const auto &value : currentValues) {
+      denormalizedValues.push_back(denormalize(value, minValues[index], maxValues[index]));
       index++;
     }
 
-    estimate(model, params, indicators, denormalized_parameters);
+    estimate(model, parameters, indicators, denormalizedValues);
     model.undo();
 
-    float a  = 10000.0 * ((float)criteria.area.getMax() - (float)indicators.area)/criteria.area.getMax();
-    //const auto f0 = criteria.freq.getMin();
-    //const auto f  = indicators.avgFreq();
-
-    //if (f < f0) {
-      //return static_cast<unsigned>(a / (1 + 0.01 * (f0 - f)));
-      // return a / std::log(2 + (f0 - f));
-    //}
-
-    //return a + 10 * (f - f0);
-    //return a;
+    float a  = 10000.0 * ((float)criteria.area.getMax() - (float)indicators.area) / (float)criteria.area.getMax();
     return a;
   };
 
-  auto limitation_function = [&](const std::vector<float> &parameters) -> float {
+  auto constraintFunction = [&](const std::vector<float> &parameters) -> float {
     return indicators.freq();
   };
 
+  init(graph, parameters, parameterValues, minValues, maxValues);
 
-  eda::hls::scheduler::optimizers::simulated_annealing_optimizer test(init_temp, end_temp, limit, target_function,
-                                                                      limitation_function, step_fun, temp_fun);
-  test.optimize(optimized_values);
+  eda::hls::scheduler::optimizers::SimulatedAnnealingOptimizer optimizer(
+    initialTemperature, finalTemperature, targetFunction, constraintFunction, 
+    stepFunction, temperatureFunction);
+  
+  optimizer.optimize(parameterValues);
 
-  auto res_freq = target_function(optimized_values);
-  auto limitation = limitation_function(optimized_values);
+  auto result = targetFunction(parameterValues);
+  auto limitation = constraintFunction(parameterValues);
 
   ostrm << std::endl << "After optimization" << std::endl;
   ostrm << "Parameters values" << std::endl;
-  for(auto val : optimized_values) {
+  for(auto val : parameterValues) {
     ostrm << val << " ";
   }
   ostrm << std::endl;
@@ -123,28 +99,49 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   ostrm << "Power: " << indicators.power << std::endl;
   ostrm << "Area: " << indicators.area << std::endl;
 
-  ostrm << "Target function: " << res_freq << std::endl;
+  ostrm << "Target function: " << result << std::endl;
   ostrm << "Limitation: " << limitation << std::endl;
 
   ostrm.close();
-  return params;
+  return parameters;
 }
 
-void ParametersOptimizer::estimate(Model &model,
-    std::map<std::string, Parameters> &params,
-    Indicators &indicators,
-    const std::vector<float> &optimized_params) const {
+void ParametersOptimizer::init(const Graph *graph, 
+    std::map<std::string, Parameters> &parameters, 
+    std::vector<float> &parameterValues, std::vector<float> &minValues, 
+    std::vector<float> &maxValues) const {
+
+  std::random_device numberGenerator{};
+  std::mt19937 generator{numberGenerator()};
+  std::normal_distribution<> distribution{0.5, 0.25};
+
+  for (const auto *node : graph->nodes) {
+    auto metaElement = node->map; 
+    parameters.insert({ node->name, metaElement->params });
+
+    for(const auto& iter : metaElement->params.getAll()) {
+      float value = std::clamp(distribution(generator), 0.0, 1.0);
+      parameterValues.push_back(value);
+      minValues.push_back(iter.second.getMin());
+      maxValues.push_back(iter.second.getMax());
+    }
+  }
+}
+
+void ParametersOptimizer::estimate(Model &model, 
+    std::map<std::string, Parameters> &parameters, Indicators &indicators,
+    const std::vector<float> &parameterValues) const {
   std::ofstream ostrm("estimation.txt", std::ios_base::app);
   // Update the values of the parameters & apply to nodes.
   auto *graph = model.main();
   std::size_t index = 0;
   ostrm << "Setting values" << std::endl;
   for (auto *node : graph->nodes) {
-    auto nodeParams = params.find(node->name);
-    if (nodeParams == params.end()) {
+    auto nodeParams = parameters.find(node->name);
+    if (nodeParams == parameters.end()) {
       continue;
     }
-    nodeParams->second.setValue("stages", optimized_params[index]);
+    nodeParams->second.setValue("stages", parameterValues[index]);
     mapper::Mapper::get().apply(*node, nodeParams->second);
     index++;
   }

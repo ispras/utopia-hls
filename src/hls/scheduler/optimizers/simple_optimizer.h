@@ -7,19 +7,19 @@
 
 namespace eda::hls::scheduler::optimizers {
 
-    class simple_optimizer : public eda::hls::scheduler::optimizers::abstract_optimizer {
-      public:
-        simple_optimizer(std::function<float(const std::vector<float>&)> tar_fun);
-        simple_optimizer(const simple_optimizer& optimizer) = default;
+class SimpleOptimizer : public eda::hls::scheduler::optimizers::AbstractOptimizer {
+public:
+  SimpleOptimizer(std::function<float(const std::vector<float>&)> targetFunction);
+  SimpleOptimizer(const SimpleOptimizer& optimizer) = default;
 
-        void optimize(std::vector<float>& params) override;
-      private:
-        std::function<float(const std::vector<float>&)> target_function;
+  void optimize(std::vector<float>& parameterValues) override;
+private:
+  std::function<float(const std::vector<float>&)> targetFunction;
 
-        float max_freq;
-        float min_freq;
-        float limitation;
-        float cur_area;
-    };
+  float maxFrequency;
+  float minFrequency;
+  float limitation;
+  float currentArea;
+};
 
 } // namespace eda::hls::scheduler::optimizers

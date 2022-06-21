@@ -16,6 +16,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 using namespace eda::hls::model;
 using namespace eda::util;
@@ -45,10 +46,14 @@ private:
                 Indicators &indicators,
                 const std::vector<float> &optimized_params) const;
 
+  void init(const Graph *graph, std::map<std::string, Parameters> &parameters, 
+    std::vector<float> &parameterValues, std::vector<float> &minValues, 
+    std::vector<float> &maxValues) const;
+
   double normalize(double value, double min, double max) const;
   double denormalize(double value, double min, double max) const;
 
-  std::shared_ptr<optimizers::abstract_optimizer> math_optimizer;
+  std::shared_ptr<optimizers::AbstractOptimizer> math_optimizer;
 };
 
 } // namespace eda::hls::scheduler
