@@ -51,20 +51,29 @@ int compilerHilTest(const std::string &inputLibraryPath,
   return 0;
 }
 
-TEST(CompilerTest, CompilerTestIdctTest) {
+TEST(CompilerHilTest, CompilerIdctHilTest) {
   EXPECT_EQ(compilerHilTest("./test/data/ipx/ispras/ip.hw",
                             "catalog/1.0/catalog.1.0.xml",
                             "./test/data/hil/idct.hil",
                             "outputFirrtlIdct.mlir",
                             "outputVerilogIdct.v",
-                            "./test/data/hil/idct/"), 0);
+                            "./output/test/hil/idct/"), 0);
 }
 
-TEST(CompilerTest, CompilerTestHilTest) {
+TEST(CompilerHilTest, CompilerTestHilTest) {
   EXPECT_EQ(compilerHilTest("./test/data/ipx/ispras/ip.hw",
                             "catalog/1.0/catalog.1.0.xml",
                             "./test/data/hil/test.hil",
                             "outputFirrtlTest.mlir",
                             "outputVerilogTest.v",
-                            "./test/data/hil/test/"), 0);
+                            "./output/test/hil/test/"), 0);
+}
+
+TEST(CompilerHilTest, CompilerFeedbackHilTest) {
+  EXPECT_EQ(compilerHilTest("./test/data/ipx/ispras/ip.hw",
+                            "catalog/1.0/catalog.1.0.xml",
+                            "./test/data/hil/feedback.hil",
+                            "outputFirrtlFeedback.mlir",
+                            "outputVerilogFeedback.v",
+                            "./output/test/hil/feedback/"), 0);
 }
