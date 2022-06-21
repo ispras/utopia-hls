@@ -123,8 +123,8 @@ std::vector<Node> getSinks(mlir::hil::Graph &graph) {
     return node.nodeTypeName() == "delay";
   }
 
-  bool isKernel(mlir::hil::Node &node) {
-    return node.nodeTypeName() == "kernel";
+  bool isDup(mlir::hil::Node &node) {
+    return node.nodeTypeName() == "dup";
   }
 
   bool isMerge(mlir::hil::Node &node) {
@@ -141,5 +141,14 @@ std::vector<Node> getSinks(mlir::hil::Graph &graph) {
 
   bool isSplit(mlir::hil::Node &node) {
     return node.nodeTypeName() == "split";
+  }
+
+  bool isKernel(mlir::hil::Node &node) {
+    return !isDelay(node)
+        && !isDup(node)
+        && !isMerge(node)
+        && !isSink(node)
+        && !isSource(node)
+        && !isSplit(node);
   }
 } // namespace mlir::hil

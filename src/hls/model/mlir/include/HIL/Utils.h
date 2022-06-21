@@ -58,6 +58,7 @@ namespace mlir::hil {
   std::vector<Chan> getChans(Graph &graph);
   mlir::Block::OpListType& getNodes(Graph &graph);
   bool isDelay(Node &node);
+  bool isDup(Node &node);
   bool isKernel(Node &node);
   bool isMerge(Node &node);
   bool isSink(Node &node);
