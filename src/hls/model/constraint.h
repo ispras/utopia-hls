@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <climits>
+#include <limits>
 
 namespace eda::hls::model {
 
