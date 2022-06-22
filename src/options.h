@@ -22,7 +22,8 @@ class AppOptions {
 public:
   AppOptions() = delete;
 
-  AppOptions(const std::string &title):
+  AppOptions(const std::string &title,
+             const std::string &version):
       isRoot(true), options(new CLI::App(title)) {}
 
   AppOptions(AppOptions &parent,
@@ -152,9 +153,9 @@ struct HlsOptions final : public AppOptions {
            ->expected(0, 1);
     options->add_option(cli(OUTPUT_MLIR), outMlir, "Output MLIR file")
            ->expected(1);
-    options->add_option(cli(OUTPUT_LIB), outLib, "Output Verilog library file")
+    options->add_option(cli(OUTPUT_LIB),  outLib,  "Output Verilog library file")
            ->expected(1);
-    options->add_option(cli(OUTPUT_TOP), outTop, "Output Verilog top file")
+    options->add_option(cli(OUTPUT_TOP),  outTop,  "Output Verilog top file")
           ->expected(1);
     options->add_option(cli(OUTPUT_TEST), outTest, "Output test file")
            ->expected(0, 1);
@@ -186,20 +187,23 @@ struct HlsOptions final : public AppOptions {
 
 struct Options final : public AppOptions {
   Options(const std::string &title,
-          const std::string &version,
-          const std::string &config,
-          int argc, char **argv):
-      AppOptions(title), rtl(*this), hls(*this) {
+          const std::string &version):
+      AppOptions(title, version), rtl(*this), hls(*this) {
 
     // Top-level options.
-    options->set_help_all_flag("--help-all", "Print help");
-    options->set_version_flag("--version", version, "Print version");
+    options->set_help_all_flag("-H,--help-all", "Print the extended help message and exit");
+    options->set_version_flag("-v,--version", version, "Print the tool version");
+  }
 
-    // Read the configuration file.
+  void initialize(const std::string &config, int argc, char **argv) {
+    // Read the JSON configuration.
     read(config);
-
-    // Parse the command line.
+    // Command line is of higher priority.
     parse(argc, argv);
+  }
+
+  int exit(const CLI::Error &e) const {
+    return options->exit(e);
   }
 
   void fromJson(Json json) override {
