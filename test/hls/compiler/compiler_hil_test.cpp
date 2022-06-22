@@ -27,23 +27,30 @@ int compilerHilTest(const std::string &inputLibraryPath,
                     const std::string &relativeCompPath,
                     const std::string &inputFilePath,
                     const std::string &outputFirrtlName,
-                    const std::string &outputVerilogName,
-                    const std::string &outputDirName) {
+                    const std::string &outputVerilogLibraryName,
+                    const std::string &outputVerilogTopModuleName,
+                    const std::string &outputDirName,
+                    const std::string &outputTestName) {
 
 
   std::shared_ptr<Model> model = parse(inputFilePath);
 
   Library::get().initialize(inputLibraryPath, relativeCompPath);
+
   DijkstraBalancer::get().balance(*model);
 
   auto compiler = std::make_unique<Compiler>();
   auto circuit = compiler->constructCircuit(*model, "main");
-  circuit->printFiles(outputFirrtlName, outputVerilogName, outputDirName);
+  circuit->printFiles(outputFirrtlName,
+                      outputVerilogLibraryName,
+                      outputVerilogTopModuleName,
+                      outputDirName);
 
   // generate random test of the specified length in ticks
   const int testLength = 10;
   circuit->printRndVlogTest(*model,
-                            outputDirName + "testbench.v",
+                            outputDirName,
+                            outputTestName,
                             model->ind.ticks,
                             testLength);
 
@@ -56,8 +63,10 @@ TEST(CompilerHilTest, CompilerIdctHilTest) {
                             "catalog/1.0/catalog.1.0.xml",
                             "./test/data/hil/idct.hil",
                             "outputFirrtlIdct.mlir",
-                            "outputVerilogIdct.v",
-                            "./output/test/hil/idct/"), 0);
+                            "outputVerilogLibraryIdct.v",
+                            "outputVerilogTopModuleIdct.v",
+                            "./output/test/hil/idct",
+                            "testbench.v"), 0);
 }
 
 TEST(CompilerHilTest, CompilerTestHilTest) {
@@ -65,8 +74,10 @@ TEST(CompilerHilTest, CompilerTestHilTest) {
                             "catalog/1.0/catalog.1.0.xml",
                             "./test/data/hil/test.hil",
                             "outputFirrtlTest.mlir",
-                            "outputVerilogTest.v",
-                            "./output/test/hil/test/"), 0);
+                            "outputVerilogLibraryTest.v",
+                            "outputVerilogTopModuleTest.v",
+                            "./output/test/hil/test",
+                            "testbench.v"), 0);
 }
 
 TEST(CompilerHilTest, CompilerFeedbackHilTest) {
@@ -74,6 +85,8 @@ TEST(CompilerHilTest, CompilerFeedbackHilTest) {
                             "catalog/1.0/catalog.1.0.xml",
                             "./test/data/hil/feedback.hil",
                             "outputFirrtlFeedback.mlir",
-                            "outputVerilogFeedback.v",
-                            "./output/test/hil/feedback/"), 0);
+                            "outputVerilogLibraryFeedback.v",
+                            "outputVerilogTopModuleFeedback.v",
+                            "./output/test/hil/feedback/",
+                            "testbench.v"), 0);
 }

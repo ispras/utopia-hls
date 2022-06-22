@@ -192,8 +192,8 @@ void FirrtlModule::printInstances(std::ostream &out) const {
       hasComma = true;
     }
 
-    out << " = " << FirrtlCircuit::opPrefix << "instance " << instance.instanceName
-        << " @" << instance.moduleName << "(";
+    out << " = " << FirrtlCircuit::opPrefix << "instance " <<
+        instance.instanceName   << " @" << instance.moduleName << "(";
     hasComma = false;
     out << "in " << "clock " << ": " << FirrtlCircuit::typePrefix << "clock, ";
     out << "in " << "reset " << ": " << FirrtlCircuit::typePrefix << "reset,";
@@ -223,16 +223,16 @@ void FirrtlModule::printInstances(std::ostream &out) const {
 
 void FirrtlModule::printConnections(std::ostream &out) const {
   for (const auto &instance : instances) {
-    out << FirrtlCircuit::indent << FirrtlCircuit::indent << FirrtlCircuit::opPrefix <<
-        "connect " << FirrtlCircuit::varPrefix << instance.instanceName + "_" +
-        "clock, " << FirrtlCircuit::varPrefix << "clock" << " : " <<
-        FirrtlCircuit::typePrefix << "clock" << ", " << FirrtlCircuit::typePrefix <<
-        "clock\n";
-    out << FirrtlCircuit::indent << FirrtlCircuit::indent << FirrtlCircuit::opPrefix <<
-        "connect " << FirrtlCircuit::varPrefix << instance.instanceName + "_" +
-        "reset, " << FirrtlCircuit::varPrefix << "reset" << " : " <<
-        FirrtlCircuit::typePrefix << "reset" << ", " << FirrtlCircuit::typePrefix <<
-        "reset\n";
+    out << FirrtlCircuit::indent << FirrtlCircuit::indent <<
+        FirrtlCircuit::opPrefix << "connect " << FirrtlCircuit::varPrefix <<
+        instance.instanceName + "_" + "clock, " << FirrtlCircuit::varPrefix <<
+        "clock" << " : " << FirrtlCircuit::typePrefix << "clock" << ", " <<
+        FirrtlCircuit::typePrefix << "clock\n";
+    out << FirrtlCircuit::indent << FirrtlCircuit::indent <<
+         FirrtlCircuit::opPrefix << "connect " << FirrtlCircuit::varPrefix <<
+         instance.instanceName + "_" + "reset, " << FirrtlCircuit::varPrefix <<
+         "reset" << " : " << FirrtlCircuit::typePrefix << "reset" << ", " <<
+         FirrtlCircuit::typePrefix << "reset\n";
     std::string buf1;
     std::string buf2;
     for (const auto &pair : instance.bindings) {
@@ -240,9 +240,9 @@ void FirrtlModule::printConnections(std::ostream &out) const {
       replaceSomeChars(buf1);
       buf2.assign(pair.second.name);
       replaceSomeChars(buf2);
-      out << FirrtlCircuit::indent << FirrtlCircuit::indent << FirrtlCircuit::opPrefix <<
-          "connect " << FirrtlCircuit::varPrefix << buf2 << ", "
-          << FirrtlCircuit::varPrefix << buf1;
+      out << FirrtlCircuit::indent << FirrtlCircuit::indent <<
+          FirrtlCircuit::opPrefix << "connect " << FirrtlCircuit::varPrefix <<
+          buf2 << ", " << FirrtlCircuit::varPrefix << buf1;
       out <<  " : " << FirrtlCircuit::typePrefix << pair.second.type.name;
       out << "<" << pair.second.type.width << ">";
       out << ", ";
@@ -258,8 +258,8 @@ void FirrtlModule::printDeclaration(std::ostream &out) const {
       name << " (\n";
   for (const auto &input : inputs) {
     out << FirrtlCircuit::indent << FirrtlCircuit::indent <<  "in " <<
-        FirrtlCircuit::varPrefix << input.name << " : " << FirrtlCircuit::typePrefix <<
-        input.type.name;
+        FirrtlCircuit::varPrefix << input.name << " : " <<
+        FirrtlCircuit::typePrefix << input.type.name;
     if (input.type.width != 1) {
       out << "<" << input.type.width << ">,\n";
     } else {
@@ -270,8 +270,8 @@ void FirrtlModule::printDeclaration(std::ostream &out) const {
   for (const auto &output : outputs) {
     out << (hasComma ? ",\n" : "\n");
     out << FirrtlCircuit::indent << FirrtlCircuit::indent <<  "out " <<
-        FirrtlCircuit::varPrefix << output.name << ": " << FirrtlCircuit::typePrefix <<
-        output.type.name;
+        FirrtlCircuit::varPrefix << output.name << ": " <<
+        FirrtlCircuit::typePrefix << output.type.name;
     if (output.type.width != 1) {
       out << "<" << output.type.width << ">";
     }
@@ -367,7 +367,7 @@ void ExternalModule::printVerilogModule(std::ostream &out) const {
 }
 
 void FirrtlCircuit::printFirrtlModule(const FirrtlModule &firmodule,
-                                std::ostream &out) const {
+                                      std::ostream &out) const {
   firmodule.printFirrtlModule(out);
 }
 
@@ -400,7 +400,7 @@ void FirrtlCircuit::printFirrtl(std::ostream &out) const {
 }
 
 void FirrtlCircuit::moveVerilogLibrary(const std::string &outputDirName,
-                                 std::ostream &out) const {
+                                       std::ostream &out) const {
   for (const auto &pair : extModules) {
     if (pair.second.body == "") {
       pair.second.moveVerilogModule(outputDirName);
@@ -432,24 +432,29 @@ void FirrtlCircuit::createDirRecur(const std::string& dirName) {
   }
 }
 
+std::string correctPath(const std::string& path) {
+  return path + (path.back() != '/' ? "/" : "");
+}
+
 void FirrtlCircuit::printFiles(const std::string& outputFirrtlName,
-                         const std::string& outputVerilogName,
-                         const std::string& outputDirName) const {
-  createDirRecur(outputDirName);
+                               const std::string& outputVerilogLibraryName,
+                               const std::string& outputVerilogTopModuleName,
+                               const std::string& outputDirName) const {
+  const std::string outputPath = correctPath(outputDirName);
+  createDirRecur(outputPath);
   std::ofstream outputFile;
-  outputFile.open(outputDirName + outputFirrtlName);
+  outputFile.open(outputPath + outputFirrtlName);
   printFirrtl(outputFile);
   outputFile.close();
-  convertToSV(outputDirName + outputFirrtlName);
-  std::filesystem::rename("main.sv", (outputDirName +
-                                      std::string("main.sv")).c_str());
-  outputFile.open(outputDirName + outputVerilogName);
-  moveVerilogLibrary(outputDirName, outputFile);
+  convertToSV(outputPath + outputFirrtlName);
+  std::filesystem::rename("main.sv", (outputPath +
+                                     std::string(outputVerilogTopModuleName)).c_str());
+  outputFile.open(outputPath + outputVerilogLibraryName);
+  moveVerilogLibrary(outputPath, outputFile);
   outputFile.close();
 }
 
-std::shared_ptr<FirrtlCircuit> Compiler::constructCircuit(
-    const Model &model,
+std::shared_ptr<FirrtlCircuit> Compiler::constructCircuit(const Model &model,
     const std::string& name) {
   auto circuit = std::make_shared<FirrtlCircuit>(name);
 
@@ -462,11 +467,13 @@ std::shared_ptr<FirrtlCircuit> Compiler::constructCircuit(
 }
 
 void FirrtlCircuit::printRndVlogTest(const Model &model,
-                               const std::string &tstPath,
-                               const int latency,
-                               const size_t tstCnt) {
-
-  const std::filesystem::path path = tstPath;
+                                     const std::string &outputDirName,
+                                     const std::string &outputTestName,
+                                     const int latency,
+                                     const size_t tstCnt) {
+  const std::string outputPath = correctPath(outputDirName);
+  createDirRecur(outputPath);
+  const std::filesystem::path path = outputPath + outputTestName;
   std::filesystem::create_directories(path.parent_path());
 
   std::ofstream tBenchFile(path);

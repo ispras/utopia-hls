@@ -8,24 +8,25 @@
 
 #pragma once
 
+#include "hls/library/element_internal.h"
 #include "hls/library/library.h"
-#include "util/assert.h"
-
-#include <memory>
-#include <string>
-#include <vector>
 
 namespace eda::hls::library {
 
-struct ElementInternal : public MetaElement {
-  ElementInternal(const std::string &name,
-                  const Parameters &params,
-                  const std::vector<Port> &ports) :
-  MetaElement(name, params, ports) {}
-  virtual ~ElementInternal() = default;
+struct Dup final : public ElementInternal {
+  static constexpr const char *stages = "stages";
+
+  Dup(const std::string &name,
+        const Parameters &params,
+        const std::vector<Port> &ports) :
+  ElementInternal(name, params, ports) {}
+  virtual ~Dup() = default;
+
+  virtual void estimate(
+      const Parameters &params, Indicators &indicators) const override;
+  virtual std::unique_ptr<Element> construct(
+      const Parameters &params) const override;
   static std::shared_ptr<MetaElement> create(const NodeType &nodetype);
-  protected:
-    static std::vector<Port> createPorts(const NodeType &nodetype);
 };
 
 } // namespace eda::hls::library

@@ -5,6 +5,7 @@
 // Copyright 2022 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+
 #include "hls/library/element_core.h"
 
 #include <cmath>

@@ -5,6 +5,7 @@
 // Copyright 2022 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+
 #include "hls/library/ipxact_parser.h"
 
 #include "hls/library/element_core.h"
@@ -25,12 +26,12 @@ std::string toLower(std::string s) {
 }
 
 void IPXACTParser::initialize() {
-//  XMLPlatformUtils::Initialize();
+  XMLPlatformUtils::Initialize();
 }
 
 void IPXACTParser::finalize() {
   readFileNames.clear();
-  //XMLPlatformUtils::Terminate();
+  XMLPlatformUtils::Terminate();
 }
 
 void IPXACTParser::parseCatalog(const std::string &libraryPath,
@@ -50,11 +51,11 @@ void IPXACTParser::parseCatalog(const std::string &libraryPath,
     parser->parseURI((this->libraryPath + "/" + catalogPath).c_str());
 
   size_t ipxactFileSize =
-    doc->getElementsByTagName(ipxFileTag)->getLength();
+    doc->getElementsByTagName(ipxIpxFileTag)->getLength();
 
   for (size_t i = 0; i < ipxactFileSize; i++) {
     const DOMElement *ipxactFile = (const DOMElement*)(
-      doc->getElementsByTagName(ipxFileTag)->item(i));
+      doc->getElementsByTagName(ipxIpxFileTag)->item(i));
 
     const auto *vlnv = ipxactFile->getElementsByTagName(ipxVlnvTag)->item(0);
 
@@ -68,6 +69,9 @@ void IPXACTParser::parseCatalog(const std::string &libraryPath,
 
     readFileNames.insert({key, value});
   }
+  /*for (const auto &[key, value] : readFileNames) {
+    std::cout << key << std::endl << value << std::endl;
+  }*/
   parser->release();
 }
 
@@ -76,7 +80,7 @@ bool IPXACTParser::hasComponent(const std::string &name) {
 }
 
 std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
-    const std::string &name) {
+    const std::string &name/*, const std::string &libraryName*/) {
   Parameters params;
   std::vector<Port> ports;
   /*for (const auto &[key, value] : comp_fnames) {
@@ -88,8 +92,8 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
   DOMLSParser *parser = ((DOMImplementationLS*)impl)->createLSParser(
     DOMImplementationLS::MODE_SYNCHRONOUS, 0);
   xercesc::DOMDocument *doc = nullptr;
-  std::cout << name << std::endl;
-  std::cout << readFileNames[toLower(name)] << std::endl;
+  /*std::cout << name << std::endl;
+  std::cout << readFileNames[toLower(name)] << std::endl;*/
   doc = parser->parseURI(readFileNames[toLower(name)].c_str());
 
   //IP-XACT tags parsing.

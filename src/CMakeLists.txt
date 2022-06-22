@@ -89,6 +89,7 @@ add_library(${MAIN_LIBRARY}
   hls/library/element_internal.cpp
   hls/library/internal/default.cpp
   hls/library/internal/delay.cpp
+  hls/library/internal/dup.cpp
   hls/library/ipxact_parser.cpp
   hls/library/library.cpp
   hls/mapper/config/hwconfig.cpp

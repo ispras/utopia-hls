@@ -162,7 +162,8 @@ public:
   FirrtlCircuit(const std::string& name) : name(name) {};
 
   void printFiles(const std::string& outputFirrtlName,
-                  const std::string& outputVerilogName,
+                  const std::string& outputVerilogLibraryName,
+                  const std::string& outputVerilogTopModuleName,
                   const std::string& outputDirName) const;
   void convertToSV(const std::string& inputFirrtlName) const;
 
@@ -188,8 +189,9 @@ public:
    * @param tstCnt Number of test stimuli at random sequence
    * @return Nothing, but "*.v" testbench should be created.
    */
-  void printRndVlogTest(const model::Model &model,
-                        const std::string &tstPath,
+  void printRndVlogTest(const Model &model,
+                        const std::string &outputDirName,
+                        const std::string &outputTestName,
                         const int latency,
                         const size_t tstCnt);
 

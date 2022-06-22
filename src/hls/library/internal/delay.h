@@ -25,6 +25,8 @@ struct Delay final : public ElementInternal {
 
   virtual void estimate(
       const Parameters &params, Indicators &indicators) const override;
+  virtual std::unique_ptr<Element> construct(
+      const Parameters &params) const override;
   static std::shared_ptr<MetaElement> create(const NodeType &nodetype);
 };
 

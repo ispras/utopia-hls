@@ -92,6 +92,7 @@ public:
   std::shared_ptr<MetaElement> find(const NodeType &nodetype);
   /// Searches for a meta-element for the given name.
   //std::shared_ptr<MetaElement> find(const std::string &name);
+  void importLibrary(const std::string& libraryPath);
 
   void add(const std::shared_ptr<MetaElement> &metaElement) {
     cache.push_back(metaElement);

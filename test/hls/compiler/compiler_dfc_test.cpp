@@ -170,8 +170,10 @@ DFC_KERNEL(IDCT) {
 int dfcIdctCompilerTest(const std::string &inputLibraryPath,
                         const std::string &catalogPath,
                         const std::string &outputFirrtlName,
-                        const std::string &outputVerilogName,
-                        const std::string &outputDirName) {
+                        const std::string &outputVerilogLibraryName,
+                        const std::string &outputVerilogTopModuleName,
+                        const std::string &outputDirName,
+                        const std::string &outputTestName) {
   dfc::params args;
   IDCT kernel(args);
 
@@ -185,7 +187,7 @@ int dfcIdctCompilerTest(const std::string &inputLibraryPath,
   auto compiler = std::make_unique<eda::hls::compiler::Compiler>(*model);
   auto circuit = compiler->constructCircuit("IDCT");
   compiler->printFiles(outputFirrtlName, outputVerilogName, outputDirName);
-  compiler->printRndVlogTest(outputDirName + "testbench.v", 10);
+  compiler->printRndVlogTest(outputDirName, outputTestName, 10);
 
   eda::hls::library::Library::get().finalize();
 
@@ -196,6 +198,8 @@ TEST(DfcTest, DfcIdctCompilerTest) {
   EXPECT_EQ(dfcIdctCompilerTest("./test/data/ipx/ispras/ip.hw",
                                 "catalog/1.0/catalog.1.0.xml",
                                 "outputFirrtlIdct.mlir",
-                                "outputVerilogIdct.v",
-                                "./test/data/dfc/idct/"), 0);
+                                "outputVerilogLibraryIdct.v",
+                                "outputVerilogTopModuleIdct.v",
+                                "./test/data/dfc/idct",
+                                "testbench.v"), 0);
 }

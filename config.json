@@ -4,6 +4,7 @@
     "output-dot"  : "test.dot",
     "output-mlir" : "test.mlir",
     "output-test" : "test_tb.v",
-    "output-vlog" : "test.v"
+    "output-lib"  : "test_lib.v",
+    "output-top"  : "test_top.v"
   }
 }
