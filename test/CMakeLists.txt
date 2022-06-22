@@ -48,7 +48,7 @@ add_executable(${TEST_TARGET}
   test_main.cpp
 )
 
-add_executable(${MULGEN_TARGET} 
+add_executable(${MULGEN_TARGET}
   hls/compiler/mulgen.cpp
 )
 
