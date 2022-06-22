@@ -159,9 +159,9 @@ public:
     auto context = nodetypes_op.getContext();
     // Add nodetype
     auto in_attr = PortAttr::get(context, "in", chan_type.str(),
-       new double{1.0}, new unsigned{latency_}, new bool{false}, 0);
+       new double{1.0}, latency_, false, 0);
     auto out_attr = PortAttr::get(context, "out", chan_type.str(),
-        new double{1.0}, new unsigned{latency_}, new bool{false}, 0);
+        new double {1.0}, latency_, false, 0);
     std::array<Attribute, 1> in_attrs{in_attr};
     std::array<Attribute, 1> out_attrs{out_attr};
     rewriter.setInsertionPointToEnd(nodetypes_op.getBody());
@@ -181,10 +181,10 @@ public:
     // Split the channel with the node
     rewriter.setInsertionPointToEnd(chans_op.getBody());
     rewriter.create<Chan>(chans_op.getLoc(), chan_op.typeName(), new_chan_name,
-        BindingAttr{}.get(context, btw_name, in_attr), node_to);
+        BindingAttr{}.get(context, btw_name, out_attr), node_to);
     rewriter.replaceOpWithNewOp<Chan>(chan_op, chan_op.typeName(),
         chan_op.varName(), node_from,
-        BindingAttr{}.get(context, btw_name, out_attr));
+        BindingAttr{}.get(context, btw_name, in_attr));
     // Rename target node's input channel
     nodes_op.walk([&](Node op) {
       if (op.name() == node_to.getNodeName()) {

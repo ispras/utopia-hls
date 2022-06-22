@@ -123,15 +123,15 @@ public:
     const auto *srcPort = new Port(fPortName,
         Type::get(fPort.getTypeName()),
         *fPort.getFlow(),
-        *fPort.getLatency(),
-        *fPort.getIsConst(),
-        *fPort.getValue());
+        fPort.getLatency(),
+        fPort.getIsConst(),
+        fPort.getValue());
     const auto *dstPort = new Port(tPortName,
         Type::get(tPort.getTypeName()),
         *tPort.getFlow(),
-        *tPort.getLatency(),
-        *tPort.getIsConst(),
-        *tPort.getValue());
+        tPort.getLatency(),
+        tPort.getIsConst(),
+        tPort.getValue());
 
     chan->source.node = srcNode;
     chan->source.port = srcPort;

@@ -68,14 +68,14 @@ mlir::Attribute mlir::hil::PortAttr::parse(mlir::AsmParser &parser,
   unsigned *latency = new unsigned{};
   if (parser.parseInteger(*latency))
     return {};
-  bool *isConst = new bool{};
+  unsigned *isConst = new unsigned{};
   if (parser.parseInteger(*isConst))
     return {};
-  unsigned *value = new unsigned{};
+  unsigned int *value = new unsigned{};
   if (parser.parseInteger(*value))
     return {};
   if (parser.parseGreater())
     return {};
   auto ctx = parser.getContext();
-  return get(ctx, name, typeName, flow, latency, isConst, value);
+  return get(ctx, name, typeName, flow, *latency, *isConst, *value);
 }
