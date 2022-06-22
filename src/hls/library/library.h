@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "hls/mapper/config/hwconfig.h"
 #include "hls/model/model.h"
 #include "util/singleton.h"
 
@@ -16,6 +17,7 @@
 #include <memory>
 #include <string>
 
+using namespace eda::hls::mapper::config::hwconfig;
 using namespace eda::hls::model;
 using namespace eda::util;
 
@@ -75,6 +77,8 @@ struct MetaElement {
 
   virtual ~MetaElement() = default;
 
+  bool supports(const HWConfig &hwconfig);
+
   const std::string name;
   const Parameters params;
   const std::vector<Port> ports;
@@ -88,11 +92,14 @@ public:
                   const std::string &catalogPath);
   void finalize();
 
-  /// Searches for a meta-element for the given node type.
-  std::shared_ptr<MetaElement> find(const NodeType &nodetype);
+  /// Searches for a meta-element for the given node type and HWConfig.
+  std::shared_ptr<MetaElement> find(const NodeType &nodetype,
+                                    const HWConfig &hwconfig);
+
   /// Searches for a meta-element for the given name.
   //std::shared_ptr<MetaElement> find(const std::string &name);
-  void importLibrary(const std::string& libraryPath);
+  void importLibrary(const std::string &libraryPath,
+                     const std::string &catalogPath);
 
   void add(const std::shared_ptr<MetaElement> &metaElement) {
     cache.push_back(metaElement);

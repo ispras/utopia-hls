@@ -9,8 +9,9 @@
 #include "hls/library/element_internal.h"
 #include "hls/library/internal/delay.h"
 
-
 #include <cmath>
+
+using namespace eda::hls::mapper::config::hwconfig;
 
 namespace eda::hls::library {
 
@@ -56,9 +57,9 @@ void Delay::estimate(
   }
 }
 
-std::shared_ptr<MetaElement> Delay::create(const NodeType &nodetype) {
+std::shared_ptr<MetaElement> Delay::create(const NodeType &nodetype,
+                                           const HWConfig &hwconfig) {
   std::string name = nodetype.name;
-  //If there is no such component in the library then it has to be an internal component.
     std::shared_ptr<MetaElement> metaElement;
     auto ports = createPorts(nodetype);
     std::string lowerCaseName = name;
@@ -68,8 +69,10 @@ std::shared_ptr<MetaElement> Delay::create(const NodeType &nodetype) {
       i++;
     }
     Parameters params;
-    params.add(Parameter(depth, Constraint<unsigned>(1, std::numeric_limits<unsigned>::max()), 1));
-    params.add(Parameter(width, Constraint<unsigned>(1, std::numeric_limits<unsigned>::max()), 1));
+    params.add(Parameter(depth,
+        Constraint<unsigned>(1, std::numeric_limits<unsigned>::max()), 1));
+    params.add(Parameter(width,
+        Constraint<unsigned>(1, std::numeric_limits<unsigned>::max()), 1));
 
     metaElement = std::shared_ptr<MetaElement>(new Delay(lowerCaseName,
                                                          params,

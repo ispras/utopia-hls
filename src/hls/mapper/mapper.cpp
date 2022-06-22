@@ -28,7 +28,7 @@ void Mapper::map(model::Model &model, library::Library &library) {
 }
 
 void Mapper::map(model::Node &node, library::Library &library) {
-  auto metaElement = library.find(node.type);
+  auto metaElement = library.find(node.type, HWConfig("", "", ""));
   assert(metaElement != nullptr);
   map(node, metaElement);
 }

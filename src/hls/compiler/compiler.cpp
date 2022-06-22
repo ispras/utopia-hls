@@ -9,13 +9,16 @@
 #include "hls/compiler/compiler.h"
 #include "hls/scheduler/dijkstra.h"
 #include "util/assert.h"
+#include "util/path.h"
 
 #include <filesystem>
 #include <fstream>
 
+using namespace eda::hls::mapper::config::hwconfig;
 using namespace eda::hls::model;
 using namespace eda::hls::scheduler;
 using namespace eda::hls::library;
+using namespace eda::utils;
 
 namespace eda::hls::compiler {
 
@@ -111,7 +114,7 @@ ExternalModule::ExternalModule(const model::NodeType *nodetype) :
   addInputs(nodetype->inputs);
   addOutputs(nodetype->outputs);
 
-  auto metaElement = Library::get().find(*nodetype);
+  auto metaElement = Library::get().find(*nodetype, HWConfig("", "", ""));
   // TODO: what if the element in not found?
 
   auto element = metaElement->construct(metaElement->params);
@@ -430,10 +433,6 @@ void FirrtlCircuit::createDirRecur(const std::string& dirName) {
       start = end + 1;
       end = dirName.find("/", start);
   }
-}
-
-std::string correctPath(const std::string& path) {
-  return path + (path.back() != '/' ? "/" : "");
 }
 
 void FirrtlCircuit::printFiles(const std::string& outputFirrtlName,

@@ -9,6 +9,7 @@
 #include "hls/library/element_internal.h"
 #include "hls/library/internal/default.h"
 #include "hls/library/internal/delay.h"
+#include "hls/library/internal/dup.h"
 
 
 #include <cmath>
@@ -44,14 +45,16 @@ std::vector<Port> ElementInternal::createPorts(const NodeType &nodetype) {
   return ports;
 }
 
-std::shared_ptr<MetaElement> ElementInternal::create(const NodeType &nodetype) {
+std::shared_ptr<MetaElement> ElementInternal::create(const NodeType &nodetype,
+                                                     const HWConfig &hwconfig) {
   std::string name = nodetype.name;
-  //If there is no such component in the library then it has to be an internal component.
   std::shared_ptr<MetaElement> metaElement;
   if (nodetype.isDelay()) {
-    metaElement = Delay::create(nodetype);
+    metaElement = Delay::create(nodetype, hwconfig);
+  } else if (nodetype.isDup()) {
+    metaElement = Dup::create(nodetype, hwconfig);
   } else {
-    metaElement = Default::create(nodetype);
+    metaElement = Default::create(nodetype, hwconfig);
   }
   return metaElement;
 }

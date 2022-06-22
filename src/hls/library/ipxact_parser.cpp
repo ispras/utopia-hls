@@ -7,12 +7,15 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/library/ipxact_parser.h"
-
 #include "hls/library/element_core.h"
 #include "hls/library/element_generator.h"
 
+#include "util/path.h"
+
 #include <xercesc/dom/DOM.hpp>
 
+using namespace eda::hls::mapper::config::hwconfig;
+using namespace eda::utils;
 using namespace xercesc;
 
 namespace eda::hls::library {
@@ -48,7 +51,7 @@ void IPXACTParser::parseCatalog(const std::string &libraryPath,
       createLSParser(DOMImplementationLS::MODE_SYNCHRONOUS, 0);
 
   const DOMDocument *doc =
-    parser->parseURI((this->libraryPath + "/" + catalogPath).c_str());
+    parser->parseURI((libraryPath + "/" + catalogPath).c_str());
 
   size_t ipxactFileSize =
     doc->getElementsByTagName(ipxIpxFileTag)->getLength();
@@ -67,6 +70,8 @@ void IPXACTParser::parseCatalog(const std::string &libraryPath,
     std::string value = std::string(XMLString::transcode(
       name->getFirstChild()->getNodeValue()));
 
+    value = correctPath(libraryPath) + "/" + value;
+
     readFileNames.insert({key, value});
   }
   /*for (const auto &[key, value] : readFileNames) {
@@ -75,7 +80,8 @@ void IPXACTParser::parseCatalog(const std::string &libraryPath,
   parser->release();
 }
 
-bool IPXACTParser::hasComponent(const std::string &name) {
+bool IPXACTParser::hasComponent(const std::string &name,
+                                const HWConfig &hwconfig) {
   return readFileNames.count(toLower(name)) > 0 ? true : false;
 }
 
@@ -135,12 +141,12 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
         std::cout << std::endl;*/
       if (isParam) {
         ports.push_back(library::Port(name_str,
-                                      direction_str == "in" ? library::Port::IN : library::Port::OUT,
+                                      direction_str == "in" ? Port::IN : Port::OUT,
                                       left_int + 1,
                                       model::Parameter(std::string(param))));
       } else {
         ports.push_back(library::Port(name_str,
-                                      direction_str == "in" ? library::Port::IN : library::Port::OUT,
+                                      direction_str == "in" ? Port::IN : Port::OUT,
                                       left_int + 1,
                                       model::Parameter(std::string("WIDTH"),
                                                        left_int + 1)));

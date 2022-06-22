@@ -14,6 +14,7 @@
 
 #include <xercesc/util/XMLString.hpp>
 
+using namespace eda::hls::mapper::config::hwconfig;
 using namespace xercesc;
 
 namespace eda::hls::library {
@@ -25,7 +26,7 @@ public:
   void initialize();
   void finalize();
 
-  bool hasComponent(const std::string &name);
+  bool hasComponent(const std::string &name, const HWConfig &hwconfig);
 
   //bool hasComponent(const std::string &name, const std::string &libraryName);
 

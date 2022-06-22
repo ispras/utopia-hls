@@ -11,6 +11,8 @@
 
 #include <cmath>
 
+using namespace eda::hls::mapper::config::hwconfig;
+
 namespace eda::hls::library {
 
 void Dup::estimate(
@@ -65,9 +67,9 @@ void Dup::estimate(
   }
 }
 
-std::shared_ptr<MetaElement> Dup::create(const NodeType &nodetype) {
+std::shared_ptr<MetaElement> Dup::create(const NodeType &nodetype,
+                                         const HWConfig &hwconfig) {
   std::string name = nodetype.name;
-  //If there is no such component in the library then it has to be an internal component.
     std::shared_ptr<MetaElement> metaElement;
     auto ports = createPorts(nodetype);
     std::string lowerCaseName = name;

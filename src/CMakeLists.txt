@@ -121,6 +121,7 @@ add_library(${MAIN_LIBRARY}
   rtl/parser/ril/builder.cpp
   rtl/parser/ril/parser.cpp
   util/string.cpp
+  util/path.cpp
 
   # Automatically generated sources.
   "${FLEX_HlsHilLexer_OUTPUTS}"

@@ -12,6 +12,8 @@
 #include <cmath>
 #include <cstdlib>
 
+using namespace eda::hls::mapper::config::hwconfig;
+
 namespace eda::hls::library {
 
 void Default::estimate(
@@ -66,9 +68,9 @@ void Default::estimate(
   }
 }
 
-std::shared_ptr<MetaElement> Default::create(const NodeType &nodetype) {
+std::shared_ptr<MetaElement> Default::create(const NodeType &nodetype,
+                                             const HWConfig &hwconfig) {
   std::string name = nodetype.name;
-  //If there is no such component in the library then it has to be an internal component.
     std::shared_ptr<MetaElement> metaElement;
     auto ports = createPorts(nodetype);
     std::string lowerCaseName = name;
@@ -188,7 +190,6 @@ std::unique_ptr<Element> Default::construct(
 
   if (!quickProcess && outputLength == 0) {
     element->ir = std::string("\n") + ifaceWires + inputs;
-    //return element;
   }
 
   std::string ir;
@@ -398,7 +399,5 @@ std::unique_ptr<Element> Default::construct(
   }
   return element;
 }
-
-
 
 } // namespace eda::hls::library
