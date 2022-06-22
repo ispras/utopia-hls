@@ -64,11 +64,11 @@ using Indicators = NodeInd;
 
 struct Criteria final {
   Criteria(Indicator objective,
-           const Constraint &freq,
-           const Constraint &perf,
-           const Constraint &ticks,
-           const Constraint &power,
-           const Constraint &area):
+           const Constraint<unsigned> &freq,
+           const Constraint<unsigned> &perf,
+           const Constraint<unsigned> &ticks,
+           const Constraint<unsigned> &power,
+           const Constraint<unsigned> &area):
     objective(objective),
     freq(freq),
     perf(perf),
@@ -78,11 +78,11 @@ struct Criteria final {
 
   const Indicator objective;
 
-  const Constraint freq;
-  const Constraint perf;
-  const Constraint ticks;
-  const Constraint power;
-  const Constraint area;
+  const Constraint<unsigned> freq;
+  const Constraint<unsigned> perf;
+  const Constraint<unsigned> ticks;
+  const Constraint<unsigned> power;
+  const Constraint<unsigned> area;
 
   /// Checks the constraints.
   bool check(const Indicators &indicators) const {

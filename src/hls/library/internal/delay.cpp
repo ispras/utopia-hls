@@ -68,8 +68,8 @@ std::shared_ptr<MetaElement> Delay::create(const NodeType &nodetype) {
       i++;
     }
     Parameters params;
-    params.add(Parameter(depth, Constraint(1, std::numeric_limits<unsigned>::max()), 1));
-    params.add(Parameter(width, Constraint(1, std::numeric_limits<unsigned>::max()), 1));
+    params.add(Parameter(depth, Constraint<unsigned>(1, std::numeric_limits<unsigned>::max()), 1));
+    params.add(Parameter(width, Constraint<unsigned>(1, std::numeric_limits<unsigned>::max()), 1));
 
     metaElement = std::shared_ptr<MetaElement>(new Delay(lowerCaseName,
                                                          params,

@@ -79,7 +79,7 @@ std::shared_ptr<MetaElement> Default::create(const NodeType &nodetype) {
       i++;
     }
     Parameters params;
-    params.add(Parameter(stages, Constraint(1, 100), 10));
+    params.add(Parameter(stages, Constraint<unsigned>(1, 100), 10));
 
     metaElement = std::shared_ptr<MetaElement>(new Default(lowerCaseName,
                                                            params,

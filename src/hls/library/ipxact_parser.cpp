@@ -162,7 +162,7 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
       right->getFirstChild()->getNodeValue()));
     //Creating Parameter.
     params.add(model::Parameter(name_str,
-                                model::Constraint(left_int, right_int),
+                                model::Constraint<unsigned>(left_int, right_int),
                                 value_int));
   }
   std::string type;

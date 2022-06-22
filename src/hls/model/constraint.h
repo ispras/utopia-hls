@@ -12,26 +12,28 @@
 
 namespace eda::hls::model {
 
+template <typename T>
 class Constraint final {
 public:
-  Constraint(unsigned min, unsigned max):
+  Constraint(T min, T max):
     min(min), max(max) {}
 
   Constraint():
-    min(0), max(std::numeric_limits<unsigned>::max()) {}
+    min(std::numeric_limits<T>::min()),
+    max(std::numeric_limits<T>::max()) {}
 
-  Constraint(const Constraint &) = default;
+  Constraint(const Constraint<T> &) = default;
 
-  bool check(unsigned value) const {
+  bool check(T value) const {
     return min <= value && value <= max;
   }
 
-  unsigned getMin() const { return min; }
-  unsigned getMax() const { return max; }
+  T getMin() const { return min; }
+  T getMax() const { return max; }
 
 private:
-  const unsigned min;
-  const unsigned max;
+  const T min;
+  const T max;
 };
 
 } // namespace eda::hls::model

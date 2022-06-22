@@ -19,11 +19,12 @@ namespace eda::hls::model {
 class Parameter final {
 public:
   Parameter(const std::string &name,
-            const Constraint &constraint,
+            const Constraint<unsigned> &constraint,
             unsigned value):
     name(name), constraint(constraint), value(value), known(true) {}
 
-  Parameter(const std::string &name, const Constraint &constraint):
+  Parameter(const std::string &name,
+            const Constraint<unsigned> &constraint):
     name(name), constraint(constraint), value(-1u), known(false) {}
 
   Parameter(const std::string &name, unsigned value):
@@ -68,7 +69,7 @@ public:
 
 private:
   const std::string name;
-  const Constraint constraint;
+  const Constraint<unsigned> constraint;
   unsigned value;
   bool known;
 };
