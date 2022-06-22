@@ -47,9 +47,6 @@ MLIRModule MLIRModule::load_from_model(const eda::hls::model::Model &m) {
   std::stringstream buf;
   dump_model_mlir(m, buf);
 
-  // TODO: rm debug print
-  dump_model_mlir_to_file(m, "tmp.mlir");
-
   return load_from_mlir(buf.str());
 }
 

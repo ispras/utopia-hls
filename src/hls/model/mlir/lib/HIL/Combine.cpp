@@ -101,9 +101,9 @@ public:
       rewriter.replaceOpWithNewOp<Chan>(
           &chans_block_op, chan_op.typeName(), chan_op.varName(),
           BindingAttr{}.get(context, node_from.value(),
-              chan_op.nodeFromAttr().getPort()),
+              chan_op.nodeFrom().getPort()),
           BindingAttr{}.get(context, node_to.value(),
-              chan_op.nodeToAttr().getPort()));
+              chan_op.nodeTo().getPort()));
     }
     return success();
   }
@@ -139,9 +139,7 @@ public:
 
     auto chan_type = chan_op.typeName();
     auto node_from = chan_op.nodeFromAttr();
-    auto node_from_name = node_from.getNodeName();
     auto node_to = chan_op.nodeToAttr();
-    auto node_to_name = node_to.getNodeName();
 
     auto btw_type_name =
         "delay_" + chan_type.str() + "_" + std::to_string(latency_);
@@ -183,17 +181,13 @@ public:
     // Split the channel with the node
     rewriter.setInsertionPointToEnd(chans_op.getBody());
     rewriter.create<Chan>(chans_op.getLoc(), chan_op.typeName(), new_chan_name,
-        BindingAttr{}.get(context, btw_name, in_attr),
-        BindingAttr{}.get(context, node_to_name,
-            chan_op.nodeToAttr().getPort()));
+        BindingAttr{}.get(context, btw_name, in_attr), node_to);
     rewriter.replaceOpWithNewOp<Chan>(chan_op, chan_op.typeName(),
-        chan_op.varName(),
-        BindingAttr{}.get(context, node_from_name,
-            chan_op.nodeFromAttr().getPort()),
+        chan_op.varName(), node_from,
         BindingAttr{}.get(context, btw_name, out_attr));
     // Rename target node's input channel
     nodes_op.walk([&](Node op) {
-      if (op.name() == node_to_name) {
+      if (op.name() == node_to.getNodeName()) {
         auto &&args = op.commandArguments();
         std::vector<Attribute> in_chans{args.begin(), args.end()};
         for (auto &in_chan_name : in_chans) {
