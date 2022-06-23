@@ -103,10 +103,17 @@ MLIRBuilder<T>::build_model_from_mlir(MLIRModule &mlir_model,
 }
 
 template <> void MLIRBuilder<mlir::hil::PortAttr>::build() {
-  builder_.addPort(node_.getName(), node_.getTypeName(),
-                   std::to_string(*node_.getFlow()),
-                   std::to_string(node_.getLatency()),
-                   std::to_string(node_.getValue()));
+  auto value = node_.getValue();
+  if (value == 0) {
+    builder_.addPort(node_.getName(), node_.getTypeName(),
+                    std::to_string(*node_.getFlow()),
+                    std::to_string(node_.getLatency()));
+  } else {
+    builder_.addPort(node_.getName(), node_.getTypeName(),
+                    std::to_string(*node_.getFlow()),
+                    std::to_string(node_.getLatency()),
+                    std::to_string(value));
+  }
 }
 
 template <> void MLIRBuilder<mlir::hil::NodeType>::build() {

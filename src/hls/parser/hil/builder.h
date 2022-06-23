@@ -112,8 +112,8 @@ public:
     assert(currentGraph != nullptr && "Chan is outside a graph");
 
     auto *chan = new Chan(name, type, *currentGraph);
-    const auto *srcNode = currentGraph->findNode(nodeFrom.getNodeName());
-    const auto *dstNode = currentGraph->findNode(nodeTo.getNodeName());
+    const auto *srcNode = currentGraph->findNode(nodeFrom.getNodeName().str());
+    const auto *dstNode = currentGraph->findNode(nodeTo.getNodeName().str());
     auto fPort = nodeFrom.getPort();
     const std::string fPortName = fPort.getName();
     auto tPort = nodeTo.getPort();

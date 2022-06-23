@@ -311,7 +311,7 @@ z3::expr EqChecker::toConst(mlir::hil::Chan &ch,
   std::string name = port.getName();
   const z3::sort fInSort = getSort(port, ctx);
   const std::string modelName = getModelName(ch);
-  const std::string nodeName = bnd.getNodeName();
+  const std::string nodeName = bnd.getNodeName().str();
   const std::string constName = modelName + "_" + nodeName + "_" + name;
 
   return ctx.constant(constName.c_str(), fInSort);

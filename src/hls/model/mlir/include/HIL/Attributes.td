@@ -31,7 +31,6 @@ def PortAttr : HIL_Attr<"Port"> {
 }
 
 def BindingAttr : HIL_Attr<"Binding"> {
-
   let mnemonic = "bnd";
   let summary = "Binding attribute";
 
@@ -40,10 +39,10 @@ def BindingAttr : HIL_Attr<"Binding"> {
   }];
 
   let parameters = (ins
-    "std::string":$nodeName,
+    StringRefParameter<>:$nodeName,
     PortAttr:$port);
 
-  let assemblyFormat = "`<` $nodeName $port `>`";
+  let assemblyFormat = "`<` $nodeName qualified($port) `>`";
 }
 
 #endif // HIL_ATTRIBUTES
