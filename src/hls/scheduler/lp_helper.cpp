@@ -69,7 +69,7 @@ SolverConstraint* LpSolverHelper::addConstraint(
 }
 
 SolverVariable* LpSolverHelper::addVariable(const std::string &name, 
-    const Node *node) {
+    const model::Node *node) {
   //std::cout << "Adding variable: " << name << "\n";
   SolverVariable *newVariable = 
       new SolverVariable(name, ++currentColumn, node);

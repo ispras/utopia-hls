@@ -29,7 +29,7 @@ class ParametersOptimizer final : public Singleton<ParametersOptimizer> {
 public:
   std::map<std::string, Parameters> optimize(
       const Criteria &criteria,
-      Model &model,
+      model::Model &model,
       Indicators &indicators
   ) const;
 
@@ -41,7 +41,7 @@ public:
 private:
   ParametersOptimizer() = default;
 
-  void estimate(Model &model,
+  void estimate(model::Model &model,
                 std::map<std::string, Parameters> &params,
                 Indicators &indicators,
                 const std::vector<float> &optimized_params) const;

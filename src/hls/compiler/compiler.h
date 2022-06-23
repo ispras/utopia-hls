@@ -173,7 +173,6 @@ public:
   void printFirrtlModule(const FirrtlModule &firmodule,
                          std::ostream &out) const;
 
-
   void addFirModule(const FirrtlModule &firModule) {
     firModules.insert({firModule.getName(), firModule});
   }
@@ -187,7 +186,7 @@ public:
    *
    * @param tstPath Path to testbench file to be created.
    * @param tstCnt Number of test stimuli at random sequence
-   * @return Nothing, but "*.v" testbench should be created.
+   * @return Nothing, but Verilog testbench should be created.
    */
   void printRndVlogTest(const Model &model,
                         const std::string &outputDirName,

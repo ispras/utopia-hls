@@ -11,6 +11,8 @@
 #include "mlir/IR/DialectImplementation.h"
 #include "llvm/ADT/TypeSwitch.h"
 
+#include <iostream>
+
 using namespace mlir;
 using namespace hil;
 
@@ -40,102 +42,40 @@ void HILDialect::initialize() {
       >();
 }
 
-/* Type HILDialect::parseType(DialectAsmParser &parser) const { */
-/*   StringRef data_type; */
-/*   if (parser.parseKeyword(&data_type)) */
-/*     return {}; */
-/*   Type value; */
-/*   generatedTypeParser(parser, data_type, value); */
-/*   return value; */
-/* } */
-
-/* void HILDialect::printType(Type type, */
-/*                            DialectAsmPrinter &printer) const { */
-/*   (void)generatedTypePrinter(type, printer); */
-/* } */
-
-/*
-Attribute HILDialect::parseAttribute(DialectAsmParser &parser,
-                         Type type) const {
-  StringRef data_type;
-  if (parser.parseKeyword(&data_type))
-    return {};
-  Attribute value;
-  generatedAttributeParser(parser, data_type, type, value);
-  return value;
+void mlir::hil::PortAttr::print(mlir::AsmPrinter &printer) const {
+  printer << "<\"" << getName() << "\" \"" << getTypeName() << "\" <"
+      << getFlow() << "> " << getLatency() << ' ' << getIsConst() << ' '
+      << getValue() << '>';
 }
 
-void HILDialect::printAttribute(Attribute attr,
-                           DialectAsmPrinter &printer) const {
-  (void)generatedAttributePrinter(attr, printer);
-}
-*/
-
-void mlir::hil::InputArgAttr::print(mlir::AsmPrinter &printer) const {
-  printer << "<\"" <<
-      getTypeName() <<
-      "\"<" << getFlow()
-      << ">" << " " << '"' << getName() << '"' << ">";
-}
-
-mlir::Attribute mlir::hil::InputArgAttr::parse(mlir::AsmParser &parser,
-                                               mlir::Type type) {
-  if (parser.parseLess())
-      return {};
-    std::string typeName;
-    if (parser.parseString(&typeName))
-      return {};
-    if (parser.parseLess())
-      return {};
-    double *flow = new double{};
-    if (parser.parseFloat(*flow))
-      return {};
-    if (parser.parseGreater())
-      return {};
-    std::string name;
-    if (parser.parseString(&name))
-      return {};
-    if (parser.parseGreater())
-      return {};
-    return get(parser.getContext(), typeName, flow, name);
-}
-
-void mlir::hil::OutputArgAttr::print(mlir::AsmPrinter &printer) const {
-  printer << "<\"" << getTypeName() << "\"<" << getFlow()
-      << ">" << " " << getLatency() << " " << '"' << getName()
-      << '"' << (getValue().empty() ? "" : " = \"" + getValue() + "\"") << ">";
-}
-
-mlir::Attribute mlir::hil::OutputArgAttr::parse(mlir::AsmParser &parser,
+mlir::Attribute mlir::hil::PortAttr::parse(mlir::AsmParser &parser,
                                                 mlir::Type type) {
   if (parser.parseLess())
-      return {};
-    std::string typeName;
-    if (parser.parseString(&typeName))
-      return {};
-    if (parser.parseLess())
-      return {};
-    double *flow = new double{};
-    if (parser.parseFloat(*flow))
-      return {};
-    if (parser.parseGreater())
-      return {};
-    unsigned latency;
-    if (parser.parseInteger(latency))
-      return {};
-    std::string name;
-    if (parser.parseString(&name))
-      return {};
-    if (parser.parseOptionalEqual()) {
-      if (parser.parseGreater())
-        return {};
-      return get(parser.getContext(), typeName, flow, latency, name, "");
-    }
-    std::string value;
-    if (parser.parseString(&value))
-      return {};
-    if (parser.parseGreater())
-      return {};
-    return get(parser.getContext(), typeName, flow, latency, name, value);
+    return {};
+  std::string name;
+  if (parser.parseString(&name))
+    return {};
+  std::string typeName;
+  if (parser.parseString(&typeName))
+    return {};
+  if (parser.parseLess())
+    return {};
+  double *flow = new double{};
+  if (parser.parseFloat(*flow))
+    return {};
+  if (parser.parseGreater())
+    return {};
+  unsigned *latency = new unsigned{};
+  if (parser.parseInteger(*latency))
+    return {};
+  unsigned *isConst = new unsigned{};
+  if (parser.parseInteger(*isConst))
+    return {};
+  unsigned int *value = new unsigned{};
+  if (parser.parseInteger(*value))
+    return {};
+  if (parser.parseGreater())
+    return {};
+  auto ctx = parser.getContext();
+  return get(ctx, name, typeName, flow, *latency, *isConst, *value);
 }
-

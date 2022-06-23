@@ -1,4 +1,4 @@
-//===- HILOps.td - HIL dialect ops -------------------------*- tablegen -*-===//
+//===- HILOps.td - HIL dialect operations ------------------*- tablegen -*-===//
 //
 // This file is licensed under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -76,8 +76,8 @@ def HIL_NodeType : HIL_Op<"nodetype", [HasParent<"NodeTypes">]> {
 
   let arguments = (ins
     StrAttr:$name,
-    TypedArrayAttrBase<InputArgAttr, "input args">:$commandArguments,
-    TypedArrayAttrBase<OutputArgAttr, "output args">:$commandResults);
+    TypedArrayAttrBase<PortAttr, "input ports">:$commandArguments,
+    TypedArrayAttrBase<PortAttr, "output ports">:$commandResults);
   let assemblyFormat = [{
     $name $commandArguments `=``>` $commandResults attr-dict
   }];
@@ -108,10 +108,10 @@ def HIL_Chan : HIL_Op<"chan", [HasParent<"Chans">]> {
   let arguments = (ins
     StrAttr:$typeName,
     StrAttr:$varName,
-    OptionalAttr<StrAttr>:$nodeFrom,
-    OptionalAttr<StrAttr>:$nodeTo);
+    BindingAttr:$nodeFrom,
+    BindingAttr:$nodeTo);
   let assemblyFormat = [{
-    $typeName $varName (`(` $nodeFrom^ `=``>` $nodeTo `)`)? attr-dict
+    $typeName $varName qualified($nodeFrom) `=``=` qualified($nodeTo) attr-dict
   }];
 }
 

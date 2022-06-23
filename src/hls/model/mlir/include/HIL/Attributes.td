@@ -11,40 +11,38 @@
 
 include "Dialect.td"
 
-def InputArgAttr : HIL_Attr<"InputArg"> {
-  let mnemonic = "input";
-
-  let summary = "Input argument";
+def PortAttr : HIL_Attr<"Port"> {
+  let mnemonic = "port";
+  let summary = "Port attribute";
 
   let description = [{
-    Input arg type
+    port arg type
   }];
 
   let parameters = (ins
+    "std::string":$name,
     "std::string":$typeName,
     "double*":$flow,
-    "std::string":$name);
+    "unsigned":$latency,
+    "unsigned":$isConst,
+    "unsigned":$value);
 
   let hasCustomAssemblyFormat = 1;
 }
 
-def OutputArgAttr : HIL_Attr<"OutputArg"> {
-  let mnemonic = "output";
-
-  let summary = "Output argument";
+def BindingAttr : HIL_Attr<"Binding"> {
+  let mnemonic = "bnd";
+  let summary = "Binding attribute";
 
   let description = [{
-    Output arg type
+    binding attr type
   }];
 
   let parameters = (ins
-    "std::string":$typeName,
-    "double*":$flow,
-    "unsigned":$latency,
-    "std::string":$name,
-    "std::string":$value);
+    StringRefParameter<>:$nodeName,
+    PortAttr:$port);
 
-  let hasCustomAssemblyFormat = 1;
+  let assemblyFormat = "`<` $nodeName qualified($port) `>`";
 }
 
 #endif // HIL_ATTRIBUTES

@@ -32,7 +32,6 @@ int compilerHilTest(const std::string &inputLibraryPath,
                     const std::string &outputDirName,
                     const std::string &outputTestName) {
 
-
   std::shared_ptr<Model> model = parse(inputFilePath);
 
   Library::get().initialize(inputLibraryPath, relativeCompPath);

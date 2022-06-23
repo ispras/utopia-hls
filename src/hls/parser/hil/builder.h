@@ -15,6 +15,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "HIL/Ops.h"
+#include "HIL/Utils.h"
 #include "hls/model/model.h"
 #include "util/assert.h"
 #include "util/singleton.h"
@@ -25,7 +27,7 @@ using namespace eda::util;
 namespace eda::hls::parser::hil {
 
 /**
- * \brief Helps to contruct the IR from source code.
+ * \brief Helps to construct the IR from source code.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class Builder final : public Singleton<Builder> {
@@ -102,7 +104,46 @@ public:
     currentGraph = nullptr;
   }
 
+  void addChan(const std::string &type,
+      const std::string &name,
+      const mlir::hil::BindingAttr &nodeFrom,
+      const mlir::hil::BindingAttr &nodeTo) {
+
+    assert(currentGraph != nullptr && "Chan is outside a graph");
+
+    auto *chan = new Chan(name, type, *currentGraph);
+    const auto *srcNode = currentGraph->findNode(nodeFrom.getNodeName().str());
+    const auto *dstNode = currentGraph->findNode(nodeTo.getNodeName().str());
+    auto fPort = nodeFrom.getPort();
+    const std::string fPortName = fPort.getName();
+    auto tPort = nodeTo.getPort();
+    const std::string tPortName = tPort.getName();
+
+    // FIXME: deprecated Type constructor is used here
+    const auto *srcPort = new Port(fPortName,
+        Type::get(fPort.getTypeName()),
+        *fPort.getFlow(),
+        fPort.getLatency(),
+        fPort.getIsConst(),
+        fPort.getValue());
+    const auto *dstPort = new Port(tPortName,
+        Type::get(tPort.getTypeName()),
+        *tPort.getFlow(),
+        tPort.getLatency(),
+        tPort.getIsConst(),
+        tPort.getValue());
+
+    chan->source.node = srcNode;
+    chan->source.port = srcPort;
+    chan->target.node = dstNode;
+    chan->target.port = dstPort;
+
+    chans.insert({ name, chan });
+    currentGraph->addChan(chan);
+  }
+
   void addChan(const std::string &type, const std::string &name) {
+
     assert(currentGraph != nullptr && "Chan is outside a graph");
 
     auto *chan = new Chan(name, type, *currentGraph);
