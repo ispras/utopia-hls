@@ -9,7 +9,6 @@
 #include "hls/compiler/compiler.h"
 #include "hls/scheduler/dijkstra.h"
 #include "util/assert.h"
-#include "util/path.h"
 
 #include <filesystem>
 #include <fstream>
@@ -420,36 +419,22 @@ void FirrtlCircuit::convertToSV(const std::string& inputFirrtlName) const {
          "Error while creating top verilog module!");
 }
 
-void FirrtlCircuit::createDirRecur(const std::string& dirName) {
-  int start = 0;
-  int end = dirName.find("/");
-  std::string dir = "";
-  while (end != -1) {
-    dir = dir + dirName.substr(start, end - start) + "/";
-    if (!std::filesystem::exists(dir)) {
-      assert(std::filesystem::create_directory(dir) &&
-             "Error while creating output directory!");
-    }
-      start = end + 1;
-      end = dirName.find("/", start);
-  }
-}
-
 void FirrtlCircuit::printFiles(const std::string& outputFirrtlName,
                                const std::string& outputVerilogLibraryName,
                                const std::string& outputVerilogTopModuleName,
                                const std::string& outputDirName) const {
-  const std::string outputPath = correctPath(outputDirName);
-  createDirRecur(outputPath);
+  const std::filesystem::path outputPath = outputDirName;
+  std::filesystem::create_directories(outputPath.parent_path());
   std::ofstream outputFile;
-  outputFile.open(outputPath + outputFirrtlName);
+  const std::string outputPathStr = outputPath.string();
+  outputFile.open(outputPathStr + outputFirrtlName);
   printFirrtl(outputFile);
   outputFile.close();
-  convertToSV(outputPath + outputFirrtlName);
-  std::filesystem::rename("main.sv", (outputPath +
+  convertToSV(outputPathStr + outputFirrtlName);
+  std::filesystem::rename("main.sv", (outputPathStr +
                                      std::string(outputVerilogTopModuleName)).c_str());
-  outputFile.open(outputPath + outputVerilogLibraryName);
-  moveVerilogLibrary(outputPath, outputFile);
+  outputFile.open(outputPathStr + outputVerilogLibraryName);
+  moveVerilogLibrary(outputPathStr, outputFile);
   outputFile.close();
 }
 
@@ -470,9 +455,7 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
                                      const std::string &outputTestName,
                                      const int latency,
                                      const size_t tstCnt) {
-  const std::string outputPath = correctPath(outputDirName);
-  createDirRecur(outputPath);
-  const std::filesystem::path path = outputPath + outputTestName;
+  const std::filesystem::path path = outputDirName + outputTestName;
   std::filesystem::create_directories(path.parent_path());
 
   std::ofstream tBenchFile(path);

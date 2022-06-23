@@ -10,8 +10,7 @@
 #include "hls/library/element_core.h"
 #include "hls/library/element_generator.h"
 
-#include "util/path.h"
-
+#include <filesystem>
 #include <xercesc/dom/DOM.hpp>
 
 using namespace eda::hls::mapper::config::hwconfig;
@@ -46,12 +45,16 @@ void IPXACTParser::parseCatalog(const std::string &libraryPath,
 
   uassert(impl != nullptr, "DOMImplementation is not found!");
 
+  std::filesystem::path path = libraryPath;
+
+  path /= catalogPath;
+
   DOMLSParser *parser =
     dynamic_cast<DOMImplementationLS*>(impl)->
       createLSParser(DOMImplementationLS::MODE_SYNCHRONOUS, 0);
 
   const DOMDocument *doc =
-    parser->parseURI((libraryPath + "/" + catalogPath).c_str());
+    parser->parseURI(path.c_str());
 
   size_t ipxactFileSize =
     doc->getElementsByTagName(ipxIpxFileTag)->getLength();
@@ -67,12 +70,14 @@ void IPXACTParser::parseCatalog(const std::string &libraryPath,
 
     const auto *name = ipxactFile->getElementsByTagName(ipxNameTag)->item(0);
 
-    std::string value = std::string(XMLString::transcode(
+    std::string nodeValue = std::string(XMLString::transcode(
       name->getFirstChild()->getNodeValue()));
 
-    value = correctPath(libraryPath) + "/" + value;
+    std::filesystem::path value = libraryPath;
 
-    readFileNames.insert({key, value});
+    value /= nodeValue;
+
+    readFileNames.insert({key, value.string()});
   }
   /*for (const auto &[key, value] : readFileNames) {
     std::cout << key << std::endl << value << std::endl;
@@ -195,7 +200,11 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
     const auto *name = file->getElementsByTagName(ipxNameTag)->item(0);
     std::string name_str = std::string(XMLString::transcode(
       name->getFirstChild()->getNodeValue()));
-    comPath = libraryPath + "/" + name_str;
+    std::filesystem::path path = libraryPath;
+    //std::cout << libraryPath << std::endl;
+    path /= name_str;
+    comPath = path.string();
+    //std::cout << comPath << std::endl;
     metaElement = std::shared_ptr<MetaElement>(new ElementCore(name_str,
                                                                params,
                                                                ports,
