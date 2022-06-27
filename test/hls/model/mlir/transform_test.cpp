@@ -77,14 +77,14 @@ protected:
     n4->addInput(chan_z);
     n4->addInput(chan_w);
     // tie chans to node ports
-    chan_x->source = {n1, &port_x};
-    chan_x->target = {n2, &port_x};
-    chan_y->source = {n1, &port_y};
-    chan_y->target = {n3, &port_y};
-    chan_z->source = {n2, &port_z};
-    chan_z->target = {n4, &port_z};
-    chan_w->source = {n3, &port_w};
-    chan_w->target = {n4, &port_w};
+    chan_x->source = {n1, new Port{port_x}};
+    chan_x->target = {n2, new Port{port_x}};
+    chan_y->source = {n1, new Port{port_y}};
+    chan_y->target = {n3, new Port{port_y}};
+    chan_z->source = {n2, new Port{port_z}};
+    chan_z->target = {n4, new Port{port_z}};
+    chan_w->source = {n3, new Port{port_w}};
+    chan_w->target = {n4, new Port{port_w}};
     // add nodes to graph
     graph->addNode(n1);
     graph->addNode(n2);
