@@ -136,8 +136,8 @@ private:
 };
 
 template <> void ModelDumper<Port>::dump() {
-  os_ << "#hil.port<" << quoted(node_.name) << ' ' << quoted(node_.type) << ' '
-      << curly_braced(node_.flow) << ' ' << node_.latency << ' '
+  os_ << "#hil.port<" << quoted(node_.name) << ' ' << quoted(node_.type.name)
+      << ' ' << curly_braced(node_.flow) << ' ' << node_.latency << ' '
       << node_.isConst << ' ' << node_.value << '>';
 }
 
