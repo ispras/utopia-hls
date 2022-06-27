@@ -394,6 +394,12 @@ struct Graph final {
 
   void addNode(Node *node) {
     nodes.push_back(node);
+
+    if (node->isSource()) {
+      sources.push_back(node);
+    } else if (node->isSink()) {
+      targets.push_back(node);
+    }
   }
 
   Chan* findChan(const std::string &name) const {
@@ -414,9 +420,20 @@ struct Graph final {
     const std::map<std::string, std::map<std::string, Chan*>> &inputs,
     const std::map<std::string, std::map<std::string, Chan*>> &outputs);
 
+  /// To apply graph processing templates.
+  const std::vector<Node*>& getNodes() const { return nodes; }
+  const std::vector<Node*>& getSources() const { return sources; }
+  const std::vector<Node*>& getTargets() const { return targets; }
+  const std::vector<Chan*>& getOutEdges(const Node *node) const { return node->outputs; }
+  const Node* getSource(const Chan *chan) const { return chan->source.node; }
+  const Node* getTarget(const Chan *chan) const { return chan->target.node; }
+
   const std::string name;
   std::vector<Chan*> chans;
   std::vector<Node*> nodes;
+
+  std::vector<Node*> sources;
+  std::vector<Node*> targets;
 
   /// Reference to the parent.
   Model &model;
