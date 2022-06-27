@@ -18,13 +18,12 @@ namespace eda::utils::graph {
 
 /// Traverses the graph in topological order.
 /// 
-/// The following methods are assumed: 
+/// The following methods are assumed to be implemented: 
 ///
 /// const std::vector<V> &Graph::getNodes() const
 /// const std::vector<V> &Graph::getSources() const
 /// const std::vector<E> &Graph::getOutEdges(V v) const
-/// V                     Graph::getSource(E e) const
-/// V                     Graph::getTarget(E e) const
+/// V Graph::getTarget(E e) const
 template <typename G, typename V, typename E>
 void traverseTopologicalOrder(G &graph,
                               std::function<void(V)> handleNode,
@@ -43,13 +42,14 @@ void traverseTopologicalOrder(G &graph,
   // Traverse the nodes in topological order (DFS).
   while (!stack.empty()) {
     auto &[v, i] = stack.top();
-    const auto &edges = graph.getOutEdges(v);
+    const auto &out = graph.getOutEdges(v);
 
     // Visit the node once (when added to the stack).
     if (i == 0) {
+      // Handle the node.
       handleNode(v);
-
-      for (auto e : edges) {
+      // Handle each outgoing edge.
+      for (auto e : out) {
         handleEdge(e);
       }
     }
@@ -57,8 +57,8 @@ void traverseTopologicalOrder(G &graph,
     // Schedule the next node (implicit topological sort).
     bool hasMoved = false;
 
-    while (i < edges.size()) {
-      auto e = edges[i++];
+    while (i < out.size()) {
+      auto e = out[i++];
       auto n = graph.getTarget(e);
 
       // The next node is unvisited.
