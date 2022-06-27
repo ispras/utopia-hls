@@ -17,7 +17,7 @@
 #include <memory>
 #include <string>
 
-using namespace eda::hls::mapper::config::hwconfig;
+using namespace eda::hls::mapper;
 using namespace eda::hls::model;
 using namespace eda::util;
 

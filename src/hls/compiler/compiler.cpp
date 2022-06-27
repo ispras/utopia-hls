@@ -13,7 +13,7 @@
 #include <filesystem>
 #include <fstream>
 
-using namespace eda::hls::mapper::config::hwconfig;
+using namespace eda::hls::mapper;
 using namespace eda::hls::model;
 using namespace eda::hls::scheduler;
 using namespace eda::hls::library;

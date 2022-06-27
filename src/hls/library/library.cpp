@@ -19,7 +19,7 @@
 #include <iostream>
 #include <memory>
 
-using namespace eda::hls::mapper::config::hwconfig;
+using namespace eda::hls::mapper;
 
 namespace eda::hls::library {
 

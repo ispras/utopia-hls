@@ -13,7 +13,7 @@
 #include <filesystem>
 #include <xercesc/dom/DOM.hpp>
 
-using namespace eda::hls::mapper::config::hwconfig;
+using namespace eda::hls::mapper;
 using namespace eda::utils;
 using namespace xercesc;
 

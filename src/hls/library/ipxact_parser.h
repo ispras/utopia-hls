@@ -14,7 +14,7 @@
 
 #include <xercesc/util/XMLString.hpp>
 
-using namespace eda::hls::mapper::config::hwconfig;
+using namespace eda::hls::mapper;
 using namespace xercesc;
 
 namespace eda::hls::library {

@@ -11,7 +11,7 @@
 #include "hls/library/element_internal.h"
 #include "hls/library/library.h"
 
-using namespace eda::hls::mapper::config::hwconfig;
+using namespace eda::hls::mapper;
 
 namespace eda::hls::library {
 

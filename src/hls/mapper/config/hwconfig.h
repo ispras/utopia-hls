@@ -10,7 +10,7 @@
 
 #include <string>
 
-namespace eda::hls::mapper::config::hwconfig {
+namespace eda::hls::mapper {
 
 /**
  * \brief Describes configuration of hardware.
@@ -40,4 +40,4 @@ private:
      - Communications: Interfaces | Buses
 */
 
-} // namespace eda::hls::mapper::config::hwconfig
+} // namespace eda::hls::mapper
