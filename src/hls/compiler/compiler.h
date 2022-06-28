@@ -165,7 +165,7 @@ public:
                   const std::string& outputVerilogLibraryName,
                   const std::string& outputVerilogTopModuleName,
                   const std::string& outputDirName) const;
-  void convertToSV(const std::string& inputFirrtlName) const;
+  void dumpVerilogOptFile(const std::string& inputFirrtlName) const;
 
   void moveVerilogLibrary(const std::string &outputDirName,
                           std::ostream &out) const;

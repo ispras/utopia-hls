@@ -129,6 +129,8 @@ FirrtlModule::FirrtlModule(const eda::hls::model::Model &model,
   addInput(Port("clock", Port::Direction::IN, Type("clock", 1)));
   addInput(Port("reset", Port::Direction::IN, Type("reset", 1)));
 
+  assert(graph && "TopModel.graph is null");
+
   for (const auto *node : graph->nodes) {
     if (node->isSource()) {
       addInputs(node, node->outputs);
@@ -412,29 +414,42 @@ void FirrtlCircuit::moveVerilogLibrary(const std::string &outputDirName,
   }
 }
 
-void FirrtlCircuit::convertToSV(const std::string& inputFirrtlName) const {
+void FirrtlCircuit::dumpVerilogOptFile(const std::string& inputFirrtlName) const {
   assert((system((std::string(FirrtlCircuit::circt) +
          inputFirrtlName +
          std::string(FirrtlCircuit::circtOptions)).c_str()) != -1) &&
          "Error while creating top verilog module!");
 }
 
-void FirrtlCircuit::printFiles(const std::string& outputFirrtlName,
-                               const std::string& outputVerilogLibraryName,
-                               const std::string& outputVerilogTopModuleName,
-                               const std::string& outputDirName) const {
-  const std::filesystem::path outputPath = outputDirName;
-  std::filesystem::create_directories(outputPath.parent_path());
+void FirrtlCircuit::printFiles(const std::string& firrtlFileName,
+                               const std::string& verilogLibraryName,
+                               const std::string& verilogTopModuleName,
+                               const std::string& outDir) const {
+
+  std::filesystem::create_directories(((const std::filesystem::path)outDir).parent_path());
   std::ofstream outputFile;
-  const std::string outputPathStr = outputPath.string();
-  outputFile.open(outputPathStr + outputFirrtlName);
+
+  try {
+    outputFile.open(outDir + firrtlFileName);
+  } catch (...) {
+     // TODO
+  }
+
+  assert(outputFile && "Can't open outputFile!");
   printFirrtl(outputFile);
   outputFile.close();
-  convertToSV(outputPathStr + outputFirrtlName);
-  std::filesystem::rename("main.sv", (outputPathStr +
-                                     std::string(outputVerilogTopModuleName)).c_str());
-  outputFile.open(outputPathStr + outputVerilogLibraryName);
-  moveVerilogLibrary(outputPathStr, outputFile);
+
+  dumpVerilogOptFile(outDir + firrtlFileName);
+
+  try {
+    std::filesystem::rename("main.sv", // TODO: main.sv!
+      (outDir + verilogTopModuleName).c_str());
+  } catch (...) {
+    std::cout << "File main.sv is not found! (CIRCT doesn't work)\n";
+  }
+
+  outputFile.open(outDir + verilogLibraryName);
+  moveVerilogLibrary(outDir, outputFile); // TODO
   outputFile.close();
 }
 
