@@ -13,43 +13,30 @@
 
 namespace eda::hls::scheduler {
 
-void DijkstraBalancer::reset() {
-   nodeMap = std::map<const Node*, unsigned>();
-   toVisit = std::deque<const Chan*>();
-   visited = std::set<const Node*>();
-   terminalNodes = std::vector<const Node*>();
-}
-
 void DijkstraBalancer::init(const Graph *graph) {
-  reset();
+  nodeMap = std::map<const Node*, unsigned>();
+  toVisit = std::deque<const Chan*>();
+  terminalNodes = std::vector<const Node*>();
+
   // Init the elements
   for (const auto *node : graph->nodes) {
     nodeMap[node] = 0;
   }
 }
 
-void DijkstraBalancer::visitChan(const Chan *chan, unsigned dstTime) {
-  const Node *dstNode = getNext(chan);
+void DijkstraBalancer::visitChan(const Chan *chan, unsigned targetTime) {
+  const Node *targetNode = getNext(chan);
   // Update destination node time
-  if (dstNode != nullptr && dstTime > nodeMap[dstNode]) {
-    nodeMap[dstNode] = dstTime;
-  }
-}
-
-void DijkstraBalancer::visit(unsigned curTime, 
-    const std::vector<Chan*> &connections) {
-  // Visit neighbours and update their times
-  for (const auto *next : connections) {
-    visitChan(next, curTime + next->ind.ticks);
+  if (targetNode && targetTime > nodeMap[targetNode]) {
+    nodeMap[targetNode] = targetTime;
   }
 }
 
 void DijkstraBalancer::visitSources(const Graph *graph) {
   for (const auto *chan : graph->chans) {
     const Node *src = chan->source.node;
-    if (src->isSource()) {
+    if (src->isSource() || src->isConst()) {
       toVisit.push_back(chan);
-      visited.insert(src);
       visitChan(chan, nodeMap[src] + chan->ind.ticks);
     }
   }
@@ -60,20 +47,17 @@ void DijkstraBalancer::visitSinks(const Graph *graph) {
     const Node *targ = chan->target.node;
     if (targ->isSink()) {
       toVisit.push_back(chan);
-      visited.insert(targ);
       visitChan(chan, nodeMap[targ] + chan->ind.ticks);
     }
   }
 }
 
 const Node* DijkstraBalancer::getNext(const Chan *chan) {
-  if (mode == LatencyBalanceMode::ASAP && visited.count(chan->target.node) != 0) {
-    visited.insert(chan->target.node);
+  if (mode == LatencyBalanceMode::ASAP) {
     return chan->target.node;
   }
 
-  if (mode == LatencyBalanceMode::ALAP && visited.count(chan->source.node) != 0) {
-    visited.insert(chan->source.node);
+  if (mode == LatencyBalanceMode::ALAP) {
     return chan->source.node;
   }
 
@@ -108,17 +92,15 @@ void DijkstraBalancer::balance(Model &model, LatencyBalanceMode balanceMode) {
 
   while (!toVisit.empty()) {
     const Node *next = getNext(toVisit.front());
-    if (next != nullptr) {
+    if (next) {
       std::vector<Chan*> connections;
       addConnections(connections, next);
-      visit(nodeMap[next], connections);
+      for (const auto *chan : connections) {
+        visitChan(chan, nodeMap[next] + chan->ind.ticks);
+      }
     }
     toVisit.pop_front();
   }
-  /*for (const auto &elem : nodeMap) {
-    std::cout << elem.first->name << " ";
-    std::cout << elem.second << std::endl;
-  }*/
   insertBuffers(model);
   collectGraphTime();
 }
@@ -137,7 +119,7 @@ void DijkstraBalancer::insertBuffers(Model &model) {
       if (mode == LatencyBalanceMode::ALAP) {
         delta = (nodeMap[predNode] - pred->ind.ticks) - curTime;
       }
-      uassert(delta >= 0,  "Delta for channel " + pred->name + " < 0\n");
+      uassert(delta >= 0,  "Delta for channel " + pred->name + " < 0!\n");
       if (delta > 0 && !predNode->isConst()) {
         model.insertDelay(*pred, delta);
         bufsInserted++;
@@ -148,15 +130,12 @@ void DijkstraBalancer::insertBuffers(Model &model) {
 }
 
 void DijkstraBalancer::collectGraphTime() {
-  unsigned maxTime = 0;
-  for (const auto *node : terminalNodes) {
-    unsigned nodeTime = nodeMap[node];
-    if (nodeTime > maxTime) {
-      maxTime = nodeTime;
+    unsigned maxTime = 0;
+    for (const auto *node : terminalNodes) {
+      maxTime = std::max(nodeMap[node], maxTime);
     }
-  }
-  graphTime = maxTime;
-  std::cout << "Max time: " << graphTime << std::endl;
+    graphTime = maxTime;
+    std::cout << "Max time: " << graphTime << std::endl;
 }
 
 } // namespace eda::hls::scheduler

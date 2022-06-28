@@ -45,8 +45,8 @@ public:
 
   void balance(model::Model &model, Verbosity verbosity);
 
-  void balance(model::Model &model) override {
-    balance(model, Verbosity::Full);
+  void balance(Model &model) override { 
+    balance(model, Verbosity::Neutral); 
   }
 
   int getStatus() { return lastStatus; }
