@@ -28,11 +28,25 @@ public:
 
   bool hasComponent(const std::string &name, const HWConfig &hwconfig);
 
-  //bool hasComponent(const std::string &name, const std::string &libraryName);
-
+  /**
+   * @brief Parses an IP-XACT catalog and creates PreMetaElements.
+   *
+   * PreMetaElement is a structure which hold the following information:
+   * path to IP-XACT components, library path, (not)supported HWConfig
+   * and estimationfunction.
+   *
+   * @param libraryPath IP-XACT library path.
+   * @param catalogPath IP-XACT catalog path relative to IP-XACT library path.
+   * @return Nothing, but creates a map of PreMetaElements.
+   */
   void parseCatalog(const std::string &libPath, const std::string &catalogPath);
-  std::shared_ptr<MetaElement> parseComponent(const std::string &name/*,
-                                              const std::string &libraryName*/);
+  /**
+   * @brief Parses an IP-XACT component and creates MetaElement.
+   *
+   * @param name IP-XACT component name.
+   * @return MetaElement, which corresponds to the IP-XACT component.
+   */
+  std::shared_ptr<MetaElement> parseComponent(const std::string &name);
 
 private:
   IPXACTParser() {
@@ -84,7 +98,7 @@ private:
   std::map<std::string, std::string> readFileNames; // TODO what is this
   /*Replace libraryPath and readFileNames and make a map.*/
   /*std::map<std::string, std::map<std::string, std::string>> compFileNames;*/
-  std::string libraryPath; // TODO there might be several lib pathes
+  std::string libraryPath; // TODO there might be several lib paths
 
   // Attributes.
   XMLCh *nameAttr;

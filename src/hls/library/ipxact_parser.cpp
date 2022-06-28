@@ -53,25 +53,52 @@ void IPXACTParser::parseCatalog(const std::string &libraryPath,
     dynamic_cast<DOMImplementationLS*>(impl)->
       createLSParser(DOMImplementationLS::MODE_SYNCHRONOUS, 0);
 
+  uassert(parser != nullptr, "Cannot create LSParser!");
+
   const DOMDocument *doc =
     parser->parseURI(path.c_str());
 
-  size_t ipxactFileSize =
+  uassert(doc != nullptr, "Cannot parse IP-XACT catalog!");
+
+  size_t ipxactFileCount =
     doc->getElementsByTagName(ipxIpxFileTag)->getLength();
 
-  for (size_t i = 0; i < ipxactFileSize; i++) {
+  for (size_t i = 0; i < ipxactFileCount; i++) {
     const DOMElement *ipxactFile = (const DOMElement*)(
       doc->getElementsByTagName(ipxIpxFileTag)->item(i));
 
+    size_t vlnvCount = ipxactFile->getElementsByTagName(ipxVlnvTag)->getLength();
+
+    uassert(vlnvCount >= 1,
+            "Cannot find 'ipxact:vlnv' tag!");
+    uassert(vlnvCount == 1,
+            "Two 'ipxact:vlnv' tags inside 'ipxact:ipxactFile' tag!");
+
     const auto *vlnv = ipxactFile->getElementsByTagName(ipxVlnvTag)->item(0);
 
+    const auto *namedItem = vlnv->getAttributes()->getNamedItem(nameAttr);
+
+    uassert(namedItem != nullptr,
+            "Cannot find 'name' attribute inside 'ipxact:vlnv' tag!");
+
     std::string key = std::string(XMLString::transcode(
-      vlnv->getAttributes()->getNamedItem(nameAttr)->getNodeValue()));
+      namedItem->getNodeValue()));
+
+    size_t nameCount = ipxactFile->getElementsByTagName(ipxNameTag)->getLength();
+
+    uassert(nameCount >= 1, "Cannot find 'ipxact:name' tag!");
+    uassert(nameCount == 1,
+            "Two 'ipxact:name' tags inside 'ipxact:ipxactFile' tag!");
 
     const auto *name = ipxactFile->getElementsByTagName(ipxNameTag)->item(0);
 
+    const auto *nameFirstChild = name->getFirstChild();
+
+    uassert(nameFirstChild != nullptr,
+            "Missing value inside 'ipxact:name' tag!");
+
     std::string nodeValue = std::string(XMLString::transcode(
-      name->getFirstChild()->getNodeValue()));
+      nameFirstChild->getNodeValue()));
 
     std::filesystem::path value = libraryPath;
 
