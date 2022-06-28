@@ -104,13 +104,14 @@ add_library(${MAIN_LIBRARY}
   hls/parser/hil/parser.cpp
   hls/scheduler/dijkstra.cpp
   hls/scheduler/flow_solver.cpp
+  hls/scheduler/latency_balancer_base.h
   hls/scheduler/latency_solver.cpp
   hls/scheduler/lp_helper.cpp
-  hls/scheduler/param_optimizer.cpp
-  hls/scheduler/latency_balancer_base.h
   hls/scheduler/optimizers/abstract_optimizer.cpp
   hls/scheduler/optimizers/simple_optimizer.cpp
   hls/scheduler/optimizers/simulated_annealing_optimizer.cpp
+  hls/scheduler/param_optimizer.cpp
+  hls/scheduler/topological_balancer.cpp
   rtl/compiler/compiler.cpp
   rtl/library/flibrary.cpp
   rtl/model/event.cpp
