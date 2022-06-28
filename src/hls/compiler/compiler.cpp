@@ -368,6 +368,7 @@ void ExternalModule::printVerilogModule(std::ostream &out) const {
   printDeclaration(out);
   printBody(out);
   printEpilogue(out);
+  out << std::endl;
 }
 
 void FirrtlCircuit::printFirrtlModule(const FirrtlModule &firmodule,
@@ -442,7 +443,7 @@ void FirrtlCircuit::printFiles(const std::string& firrtlFileName,
   dumpVerilogOptFile(outDir + firrtlFileName);
 
   try {
-    std::filesystem::rename("main.sv", // TODO: main.sv!
+    std::filesystem::rename(name + ".sv", // TODO: main.sv!
       (outDir + verilogTopModuleName).c_str());
   } catch (...) {
     std::cout << "File main.sv is not found! (CIRCT doesn't work)\n";
@@ -489,7 +490,7 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
                           localTime->tm_min,
                           localTime->tm_sec);
 
-  const auto main = (firModules.find("main"))->second;
+  const auto main = (firModules.find(name))->second;
 
   dict->SetValue("MODULE_NAME", main.name);
 
