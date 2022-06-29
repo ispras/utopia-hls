@@ -125,7 +125,7 @@ TEST(SchedulerTest, SmallSolveLatency) {
 }
 
 TEST(SchedulerTest, FeedbackSolveLatency) {
-  EXPECT_EQ(lpsolveTest("test/data/hil/feedback.hil"), OPTIMAL);
+  EXPECT_EQ(lpsolveTest("test/data/hil/feedback.hil"), INFEASIBLE);
 }
 
 TEST(SchedulerTest, DijkstraLatencyASAP) {

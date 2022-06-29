@@ -12,7 +12,6 @@
 #include "hls/library/library.h"
 #include "hls/model/printer.h"
 #include "hls/parser/hil/parser.h"
-#include "hls/scheduler/dijkstra.h"
 
 #include <iostream>
 #include <fstream>
@@ -21,7 +20,6 @@
 using namespace eda::hls::compiler;
 using namespace eda::hls::parser::hil;
 using namespace eda::hls::library;
-using namespace eda::hls::scheduler;
 
 int compilerHilTest(const std::string &inputLibraryPath,
                     const std::string &relativeCompPath,
@@ -35,8 +33,6 @@ int compilerHilTest(const std::string &inputLibraryPath,
   std::shared_ptr<Model> model = parse(inputFilePath);
 
   Library::get().initialize(inputLibraryPath, relativeCompPath);
-
-  DijkstraBalancer::get().balance(*model);
 
   auto compiler = std::make_unique<Compiler>();
   auto circuit = compiler->constructCircuit(*model, "main");
