@@ -421,7 +421,10 @@ struct Graph final {
     const std::map<std::string, std::map<std::string, Chan*>> &outputs);
 
   /// To apply graph processing templates.
+  std::size_t nNodes() const { return nodes.size(); }
+  std::size_t nEdges() const { return chans.size(); }
   const std::vector<Node*>& getNodes() const { return nodes; }
+  const std::vector<Chan*>& getEdges() const { return chans; }
   const std::vector<Node*>& getSources() const { return sources; }
   const std::vector<Node*>& getTargets() const { return targets; }
   const std::vector<Chan*>& getOutEdges(const Node *node) const { return node->outputs; }

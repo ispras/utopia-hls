@@ -10,51 +10,50 @@
 
 #include <functional>
 #include <stack>
-#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 namespace eda::utils::graph {
 
-/// Traverses the graph in topological order.
-/// 
-/// The following methods are assumed to be implemented: 
-///
-/// const std::vector<V> &Graph::getNodes() const
-/// const std::vector<V> &Graph::getSources() const
-/// const std::vector<E> &Graph::getOutEdges(V v) const
-/// V Graph::getTarget(E e) const
+//===----------------------------------------------------------------------===//
+//
+// It is assumed that graph G(V,E) implements the following methods:
+//
+// std::size_t           G::nNodes()         const;
+// std::size_t           G::nEdges()         const;
+// const std::vector<V> &G::getNodes()       const;
+// const std::vector<E> &G::getEdges()       const;
+// const std::vector<V> &G::getSources()     const;
+// const std::vector<V> &G::getTargets()     const;
+// const std::vector<E> &G::getOutEdges(V v) const;
+// V                     G::getSource(E e)   const;
+// V                     G::getTarget(E e)   const;
+//
+//===----------------------------------------------------------------------===//
+
+/// Performs topological sorting of the directed graph (feedbacks are ignored).
 template <typename G, typename V, typename E>
-void traverseTopologicalOrder(G &graph,
-                              std::function<void(V)> handleNode,
-                              std::function<void(E)> handleEdge) {
-  // DFS stack.
-  std::stack<std::pair<V, std::size_t>> stack;
-  // Set of visited nodes.
-  std::unordered_set<V> visited;
+std::vector<V> topologicalSort(const G &graph) {
+  // DFS stack and visited nodes.
+  std::stack<std::pair<V, std::size_t>> searchStack;
+  std::unordered_set<V> visitedNodes;
+
+  // Set of nodes in topological order.
+  std::vector<V> sortedNodes(graph.nNodes());
+  auto it = sortedNodes.rbegin();
 
   // Collect the source nodes for the DFS traveral.
   for (auto v : graph.getSources()) {
-    stack.push({v, 0});
-    visited.insert(v);
+    searchStack.push({v, 0});
+    visitedNodes.insert(v);
   }
 
-  // Traverse the nodes in topological order (DFS).
-  while (!stack.empty()) {
-    auto &[v, i] = stack.top();
+  // DFS traveral.
+  while (!searchStack.empty()) {
+    auto &[v, i] = searchStack.top();
     const auto &out = graph.getOutEdges(v);
 
-    // Visit the node once (when added to the stack).
-    if (i == 0) {
-      // Handle the node.
-      handleNode(v);
-      // Handle each outgoing edge.
-      for (auto e : out) {
-        handleEdge(e);
-      }
-    }
-
-    // Schedule the next node (implicit topological sort).
+    // Schedule the next node.
     bool hasMoved = false;
 
     while (i < out.size()) {
@@ -62,9 +61,10 @@ void traverseTopologicalOrder(G &graph,
       auto n = graph.getTarget(e);
 
       // The next node is unvisited.
-      if (visited.find(n) == visited.end()) {
-        stack.push({n, 0});
-        visited.insert(n);
+      if (visitedNodes.find(n) == visitedNodes.end()) {
+        searchStack.push({n, 0});
+        visitedNodes.insert(n);
+
         hasMoved = true;
         break;
       }
@@ -72,7 +72,34 @@ void traverseTopologicalOrder(G &graph,
 
     // All successors of the node has been traversed.
     if (!hasMoved) {
-      stack.pop();
+      *(it++) = v;
+      searchStack.pop();
+    }
+  }
+
+  return sortedNodes;
+}
+
+/// Traverses the graph in topological order and handles the nodes.
+template <typename G, typename V, typename E>
+void traverseTopologicalOrder(const G &graph,
+                              std::function<void(V)> handleNode) {
+  std::vector<V> sortedNodes = topologicalSort<G, V, E>(graph);
+  for (auto v : sortedNodes) {
+    handleNode(v);
+  }
+}
+
+/// Traverses the graph in topological order and handles the nodes and edges.
+template <typename G, typename V, typename E>
+void traverseTopologicalOrder(const G &graph,
+                              std::function<void(V)> handleNode,
+                              std::function<void(E)> handleEdge) {
+  std::vector<V> sortedNodes = topologicalSort<G, V, E>(graph);
+  for (auto v : sortedNodes) {
+    handleNode(v);
+    for (auto e : graph.getOutEdges(v)) {
+      handleEdge(e);
     }
   }
 }
