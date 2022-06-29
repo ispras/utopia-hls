@@ -12,6 +12,7 @@
 #include "hls/library/library.h"
 #include "util/singleton.h"
 
+#include <xercesc/dom/DOM.hpp>
 #include <xercesc/util/XMLString.hpp>
 
 using namespace eda::hls::mapper;
@@ -71,6 +72,34 @@ private:
 
     nameAttr       = XMLString::transcode("name");
   }
+/**
+ * @brief Parses a tag to get a string value.
+ *
+ * @param element A DOMElement in which the tag is located.
+ * @param tagName Tag name.
+ * @return Tag value.
+ */
+  std::string getStrValueFromTag(const DOMElement *element,
+                                 const XMLCh      *tagName);
+ /**
+  * @brief Parses a tag to get an integer value.
+  *
+  * @param element A DOMElement in which the tag is located.
+  * @param tagName Tag name.
+  * @return Tag value.
+  */
+  int         getIntValueFromTag(const DOMElement *element,
+                                 const XMLCh      *tagName);
+ /**
+  * @brief Parses a tag to get a string value from the given attribute.
+  *
+  * @param element A DOMElement in which the tag is located.
+  * @param tagName Tag name.
+  * @return Tag value.
+  */
+  std::string getStrAttributeFromTag(const DOMElement *element,
+                                     const XMLCh      *tagName,
+                                     const XMLCh      *attributeName);
 public:
   virtual ~IPXACTParser() {
     delete(ipxPortTag);
@@ -93,7 +122,8 @@ public:
 
     delete(nameAttr);
 
-    XMLPlatformUtils::Terminate(); }
+    XMLPlatformUtils::Terminate();
+  }
 private:
   std::map<std::string, std::string> readFileNames; // TODO what is this
   /*Replace libraryPath and readFileNames and make a map.*/
