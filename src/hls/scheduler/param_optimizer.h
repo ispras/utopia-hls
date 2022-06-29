@@ -11,6 +11,7 @@
 #include "hls/model/indicators.h"
 #include "hls/model/model.h"
 #include "hls/model/parameters.h"
+#include "hls/scheduler/latency_balancer_base.h"
 #include "hls/scheduler/optimizers/abstract_optimizer.h"
 #include "util/singleton.h"
 
@@ -38,6 +39,10 @@ public:
     math_optimizer = std::make_shared<T>(optimizer);
   }
 
+  void setBalancer(LatencyBalancerBase *latencyBalancer) {
+    balancer = latencyBalancer;
+  }
+
 private:
   ParametersOptimizer() = default;
 
@@ -54,6 +59,8 @@ private:
   double denormalize(double value, double min, double max) const;
 
   std::shared_ptr<optimizers::AbstractOptimizer> math_optimizer;
+
+  LatencyBalancerBase *balancer;
 };
 
 } // namespace eda::hls::scheduler

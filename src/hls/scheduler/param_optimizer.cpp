@@ -148,7 +148,8 @@ void ParametersOptimizer::estimate(Model &model,
   ostrm.close();
   
   // Balance flows and align times.
-  LatencyLpSolver::get().balance(model, Verbosity::Neutral);
+  uassert(balancer, "Balancer for parameters optimizer is not set!\n");
+  balancer->balance(model);
   
   // Estimate overall design indicators
   mapper::Mapper::get().estimate(model);
