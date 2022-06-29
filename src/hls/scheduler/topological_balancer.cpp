@@ -19,10 +19,13 @@ namespace eda::hls::scheduler {
 
   void TopologicalBalancer::reset() {
     nodeMap = std::map<const Node*, unsigned>();
-    terminalNodes = std::vector<const Node*>();
+    terminalNodes = std::unordered_set<const Node*>();
+    visited = std::unordered_set<const Node*>();
+    currentNode = nullptr;
   }
 
   void TopologicalBalancer::balance(Model &model) {
+    reset();
     Graph *graph = model.main();
     uassert(graph, "Graph 'main' not found!\n");
 
@@ -39,39 +42,41 @@ namespace eda::hls::scheduler {
   }
 
   void TopologicalBalancer::visitNode(const Node *node) {
+    uassert(node, "Nullptr node found!\n");
     currentNode = node;
-    std::cout << "Visiting node: " << node->name << std::endl;
+    if (node->isSink()) {
+      terminalNodes.insert(node);
+    }
+    visited.insert(currentNode);
   }
 
   void TopologicalBalancer::visitChan(const Chan *chan) {
-    //std::cout << "Visiting chan: " << chan->name << std::endl;
+    uassert(chan, "Nullptr chan found!\n");
     if (currentNode) {
       const Node *targetNode = chan->target.node;
-      if (targetNode && (nodeMap[currentNode] + chan->ind.ticks > nodeMap[targetNode])) {
-        nodeMap[targetNode] = nodeMap[currentNode] + chan->ind.ticks;
-        /*std::cout << "Node: " << targetNode->name << " Time update: " << nodeMap[currentNode] + chan->ind.ticks << std::endl;
-        std::cout << "Pred node: " << currentNode->name << std::endl;
-        std::cout << "Chan: " << chan->name << std::endl << std::endl;*/
+      uassert(targetNode, "Nullptr node found!");
+      if (visited.find(targetNode) != visited.end()) {
+        backEdges.insert(chan);
+      } else {
+        nodeMap[targetNode] = std::max(nodeMap[currentNode] + chan->ind.ticks, nodeMap[targetNode]);
       }
     }
   }
   
   void TopologicalBalancer::insertBuffers(Model &model) {
     unsigned bufsInserted = 0;
-    for (const auto &node : nodeMap) {
-      const unsigned curTime = node.second;
-      for (const auto &pred : node.first->inputs) {
-        const Node *predNode = pred->source.node;
-        int delta = curTime - (nodeMap[predNode] + pred->ind.ticks);
-        /*std::cout << "Node: " << node.first -> name << " Time: " << curTime << std::endl;
-        std::cout << "Pred node: " << predNode->name << " Pred time: " << nodeMap[predNode] 
-          << " Ticks: " << pred->ind.ticks << std::endl;
-        std::cout << "Delta: " << delta << std::endl;
-        std::cout << std::endl;*/
+    for (const auto &targetNode : nodeMap) {
+      const unsigned currentTime = targetNode.second;
+      for (const auto &connection : targetNode.first->inputs) {
+        const Node *sourceNode = connection->source.node;
+        int delta = currentTime - (nodeMap[sourceNode] + connection->ind.ticks);
+        if (backEdges.find(connection) != backEdges.end()) {
+          delta = -delta;
+        }
 
-        uassert(delta >= 0,  "Delta for channel " + pred->name + " < 0!\n");
-        if (delta > 0 && !predNode->isConst()) {
-          model.insertDelay(*pred, delta);
+        uassert(delta >= 0,  "Delta for channel " + connection->name + " < 0!\n");
+        if (delta > 0 && !sourceNode->isConst()) {
+          model.insertDelay(*connection, delta);
           bufsInserted++;
         }
       }

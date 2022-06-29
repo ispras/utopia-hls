@@ -120,6 +120,14 @@ TEST(SchedulerTest, IdctRowSolveLatency) {
   EXPECT_EQ(lpsolveTest("test/data/hil/idct_row.hil"), OPTIMAL);
 }
 
+TEST(SchedulerTest, SmallSolveLatency) {
+  EXPECT_EQ(lpsolveTest("test/data/hil/test_small.hil"), OPTIMAL);
+}
+
+TEST(SchedulerTest, FeedbackSolveLatency) {
+  EXPECT_EQ(lpsolveTest("test/data/hil/feedback.hil"), OPTIMAL);
+}
+
 TEST(SchedulerTest, DijkstraLatencyASAP) {
   EXPECT_EQ(dijkstraTest("test/data/hil/test.hil", LatencyBalanceMode::ASAP), 0);
 }

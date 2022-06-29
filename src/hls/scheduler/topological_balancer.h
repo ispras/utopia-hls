@@ -17,6 +17,7 @@
 #include "util/singleton.h"
 
 #include <map>
+#include <set>
 
 using namespace eda::hls::model;
 using namespace eda::util;
@@ -41,9 +42,10 @@ private:
   void collectGraphTime() override;
 
   std::map<const Node*, unsigned> nodeMap;
-  std::vector<const Node*> terminalNodes;
+  std::unordered_set<const Node*> terminalNodes;
+  std::unordered_set<const Node*> visited;
+  std::unordered_set<const Chan*> backEdges;
   const Node *currentNode;
-
 };
 
 

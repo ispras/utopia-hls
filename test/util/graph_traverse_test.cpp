@@ -43,3 +43,4 @@ TEST(UtilTest, GraphTraverse) {
 TEST(UtilTest, IdctTraverse) {
   traverseTest("test/data/hil/idct.hil");
 }
+
