@@ -395,9 +395,9 @@ struct Graph final {
   void addNode(Node *node) {
     nodes.push_back(node);
 
-    if (node->isSource()) {
+    if (node->inputs.empty()) {
       sources.push_back(node);
-    } else if (node->isSink()) {
+    } else if (node->outputs.empty()) {
       targets.push_back(node);
     }
   }

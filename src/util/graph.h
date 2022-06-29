@@ -77,6 +77,7 @@ std::vector<V> topologicalSort(const G &graph) {
     }
   }
 
+  assert(visitedNodes.size() == graph.nNodes());
   return sortedNodes;
 }
 
