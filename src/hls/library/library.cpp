@@ -18,6 +18,7 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <unordered_map>
 
 using namespace eda::hls::mapper;
 
@@ -44,24 +45,38 @@ void Library::importLibrary(const std::string &libraryPath,
 
 std::shared_ptr<MetaElement> Library::find(const NodeType &nodetype,
                                            const HWConfig &hwconfig) {
-  const auto name = nodetype.name;
+  std::string hashString = nodetype.name;
 
-  const auto i = std::find_if(cache.begin(), cache.end(),
+  for (const auto *input: nodetype.inputs) {
+    hashString = hashString + " in " + input->name;
+  }
+
+  for (const auto *output: nodetype.outputs) {
+    hashString = hashString + " out " + output->name;
+  }
+
+  /*const auto i = std::find_if(cache.begin(), cache.end(),
     [&name, &hwconfig](const std::shared_ptr<MetaElement> &metaElement) {
       return metaElement->name == name && metaElement->supports(hwconfig);
     });
 
   if (i != cache.end()) {
     return *i;
+  }*/
+
+  const auto hash = std::hash<std::string>{}(hashString);
+
+  if (cache.count(hash) > 0) {
+    return cache[hash];
   }
 
-  if (IPXACTParser::get().hasComponent(name, hwconfig)) {
-    auto metaElement = IPXACTParser::get().parseComponent(name);
-    cache.push_back(metaElement);
+  if (IPXACTParser::get().hasComponent(nodetype.name, hwconfig)) {
+    auto metaElement = IPXACTParser::get().parseComponent(nodetype.name);
+    cache.insert({hash, metaElement});
     return metaElement;
   }
   auto metaElement = ElementInternal::create(nodetype, hwconfig);
-  cache.push_back(metaElement);
+  cache.insert({hash, metaElement});
   return metaElement;
 }
 

@@ -101,15 +101,15 @@ public:
   void importLibrary(const std::string &libraryPath,
                      const std::string &catalogPath);
 
-  void add(const std::shared_ptr<MetaElement> &metaElement) {
+  /*void add(const std::shared_ptr<MetaElement> &metaElement) {
     cache.push_back(metaElement);
-  }
+  }*/
 
 private:
   Library() {}
 
   /// Cached meta-elements.
-  std::vector<std::shared_ptr<MetaElement>> cache;
+  std::map<size_t, std::shared_ptr<MetaElement>> cache;
 };
 
 } // namespace eda::hls::library
