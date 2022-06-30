@@ -211,19 +211,24 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
       // create equation for every output port of kernel node
       for (auto &nOut : nodeOuts) {
 
+        // function name
+        const mlir::hil::BindingAttr nOutBnd = nOut.nodeFrom();
+        const mlir::hil::PortAttr port = nOutBnd.getPort();
+        const std::string pName = port.getName();
+        const std::string tName = node.nodeTypeName().str();
+        const bool oneOut = nodeOuts.size() == 1;
+        const std::string fName = oneOut ? tName : tName + "_" + pName;
+
         // input/output sorts for kernel function
         const z3::sort_vector sorts = getInSorts(node, ctx);
-        const z3::sort fSort = getSort(nOut.nodeFrom().getPort(), ctx);
+        const z3::sort fSort = getSort(port, ctx);
 
         // kernel function
-        const std::string fName = node.nodeTypeName().str();
         const z3::func_decl kernel = function(fName.c_str(), sorts, fSort);
         const z3::expr_vector kArgs = getFuncArgs(node, ctx);
 
-        // create equation
-        const mlir::hil::BindingAttr nOutBnd = nOut.nodeFrom();
+        // create equation & store it
         const z3::expr kernEq = kernel(kArgs) == toConst(nOut, nOutBnd, ctx);
-
         nodes.push_back(kernEq);
       }
     } else if (isMerge(node)) {
