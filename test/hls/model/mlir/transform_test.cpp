@@ -11,6 +11,7 @@
 #include "hls/model/model.h"
 #include <gtest/gtest.h>
 
+using eda::hls::model::Binding;
 using eda::hls::model::Chan;
 using eda::hls::model::Graph;
 using eda::hls::model::Model;
@@ -21,13 +22,13 @@ using eda::hls::model::Port;
 class SimpleModel : public ::testing::Test {
 protected:
   void SetUp() override {
-    /*               n1[fst]              */
+    /*               n2[fst]              */
     /* n1[source]┌───>┌─┐                 */
     /*         ┌─┤x[X]└─┘┐z[Z]            */
     /*         └─┤       └───>┌─┐         */
     /*           └───>┌─┐────>└─┘n4[sink] */
     /*            y[Y]└─┘ w[W]            */
-    /*               n2[snd]              */
+    /*               n3[snd]              */
 
     // create model
     model_ = std::make_unique<Model>("M");
@@ -75,6 +76,15 @@ protected:
     n3->addOutput(chan_w);
     n4->addInput(chan_z);
     n4->addInput(chan_w);
+    // tie chans to node ports
+    chan_x->source = {n1, new Port{port_x}};
+    chan_x->target = {n2, new Port{port_x}};
+    chan_y->source = {n1, new Port{port_y}};
+    chan_y->target = {n3, new Port{port_y}};
+    chan_z->source = {n2, new Port{port_z}};
+    chan_z->target = {n4, new Port{port_z}};
+    chan_w->source = {n3, new Port{port_w}};
+    chan_w->target = {n4, new Port{port_w}};
     // add nodes to graph
     graph->addNode(n1);
     graph->addNode(n2);

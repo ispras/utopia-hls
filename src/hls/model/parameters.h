@@ -8,42 +8,23 @@
 
 #pragma once
 
+#include "hls/model/constraint.h"
+
 #include <cassert>
 #include <map>
 #include <string>
 
 namespace eda::hls::model {
 
-class Constraint final {
-public:
-  Constraint(unsigned min, unsigned max):
-    min(min), max(max) {}
-
-  Constraint():
-    min(0), max(std::numeric_limits<unsigned>::max()) {}
-
-  Constraint(const Constraint &) = default;
-
-  bool check(unsigned value) const {
-    return min <= value && value <= max;
-  }
-
-  unsigned getMin() const { return min; }
-  unsigned getMax() const { return max; }
-
-private:
-  const unsigned min;
-  const unsigned max;
-};
-
 class Parameter final {
 public:
   Parameter(const std::string &name,
-            const Constraint &constraint,
+            const Constraint<unsigned> &constraint,
             unsigned value):
     name(name), constraint(constraint), value(value), known(true) {}
 
-  Parameter(const std::string &name, const Constraint &constraint):
+  Parameter(const std::string &name,
+            const Constraint<unsigned> &constraint):
     name(name), constraint(constraint), value(-1u), known(false) {}
 
   Parameter(const std::string &name, unsigned value):
@@ -88,7 +69,7 @@ public:
 
 private:
   const std::string name;
-  const Constraint constraint;
+  const Constraint<unsigned> constraint;
   unsigned value;
   bool known;
 };

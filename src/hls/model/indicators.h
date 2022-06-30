@@ -8,15 +8,21 @@
 
 #pragma once
 
+#include "hls/model/constraint.h"
+
 #include <map>
 #include <string>
 
 namespace eda::hls::model {
 
+//===----------------------------------------------------------------------===//
+// Circuit Indicators
+//===----------------------------------------------------------------------===//
+
 enum Indicator {
   FREQ,
   PERF,
-  LATENCY,
+  TICKS,
   POWER,
   AREA
 };
@@ -33,8 +39,6 @@ struct ChanInd {
 struct NodeInd {
   /// Frequency (kHz).
   unsigned freq() const { return 1000000000 / delay; }
-  /// Average frequency (kHz).
-  unsigned avgFreq() const { return 1000000000 / averageDelay; }
   /// Throughput (kops).
   unsigned perf() const { return freq(); }
 
@@ -46,15 +50,48 @@ struct NodeInd {
   unsigned ticks = 0;
   /// Combinational delay (ps): maximum over all output channels (see below).
   unsigned delay = 0;
-  /// Average delay (ps).
-  unsigned averageDelay = 0; // FIXME:
   /// Outputs indicators.
   std::map<std::string, ChanInd> outputs;
 };
 
-using GraphInd = NodeInd;
-using ModelInd = NodeInd;
-
+using GraphInd   = NodeInd;
+using ModelInd   = NodeInd;
 using Indicators = NodeInd;
+
+//===----------------------------------------------------------------------===//
+// Optimization Criteria
+//===----------------------------------------------------------------------===//
+
+struct Criteria final {
+  Criteria(Indicator objective,
+           const Constraint<unsigned> &freq,
+           const Constraint<unsigned> &perf,
+           const Constraint<unsigned> &ticks,
+           const Constraint<unsigned> &power,
+           const Constraint<unsigned> &area):
+    objective(objective),
+    freq(freq),
+    perf(perf),
+    ticks(ticks),
+    power(power),
+    area(area) {}
+
+  const Indicator objective;
+
+  const Constraint<unsigned> freq;
+  const Constraint<unsigned> perf;
+  const Constraint<unsigned> ticks;
+  const Constraint<unsigned> power;
+  const Constraint<unsigned> area;
+
+  /// Checks the constraints.
+  bool check(const Indicators &indicators) const {
+    return freq.check(indicators.freq())
+        && perf.check(indicators.perf())
+        && ticks.check(indicators.ticks)
+        && power.check(indicators.power)
+        && area.check(indicators.area);
+  }
+};
 
 } // namespace eda::hls::model

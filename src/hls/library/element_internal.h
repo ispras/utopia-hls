@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+using namespace eda::hls::mapper;
+
 namespace eda::hls::library {
 
 struct ElementInternal : public MetaElement {
@@ -23,9 +25,8 @@ struct ElementInternal : public MetaElement {
                   const std::vector<Port> &ports) :
   MetaElement(name, params, ports) {}
   virtual ~ElementInternal() = default;
-  virtual std::unique_ptr<Element> construct(
-      const Parameters &params) const override;
-  static std::shared_ptr<MetaElement> create(const NodeType &nodetype);
+  static std::shared_ptr<MetaElement> create(const NodeType &nodetype,
+                                             const HWConfig &hwconfig);
   protected:
     static std::vector<Port> createPorts(const NodeType &nodetype);
 };

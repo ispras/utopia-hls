@@ -6,11 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <hls/mapper/config/hwconfig.h>
+#include "hls/mapper/config/hwconfig.h"
 
 #include <string>
 
-namespace eda::hls::mapper::config::hwconfig {
+namespace eda::hls::mapper {
 
 HWConfig::HWConfig(const std::string &name, const std::string &family, const std::string &vendor) :
   name(name), family(family), vendor(vendor) {};
@@ -27,4 +27,4 @@ std::string HWConfig::getVendor() {
   return vendor;
 }
 
-} // namespace eda::hls::mapper::config::hwconfig
+} // namespace eda::hls::mapper

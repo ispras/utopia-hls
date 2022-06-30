@@ -8,6 +8,7 @@
 
 #include "hls/mapper/mapper.h"
 #include "util/assert.h"
+#include "util/graph.h"
 
 #include <limits>
 #include <stack>
@@ -16,6 +17,8 @@
 
 #define uassert_node(cond, node, mess) \
   uassert(cond, mess << ": " << node.name << "[" << node.type.name << "]")
+
+using namespace eda::utils::graph;
 
 namespace eda::hls::mapper {
 
@@ -28,8 +31,8 @@ void Mapper::map(model::Model &model, library::Library &library) {
 }
 
 void Mapper::map(model::Node &node, library::Library &library) {
-  auto metaElement = library.find(node.type);
-  assert(metaElement != nullptr);
+  auto metaElement = library.find(node.type, HWConfig("", "", ""));
+  assert(metaElement);
   map(node, metaElement);
 }
 
@@ -44,10 +47,8 @@ void Mapper::apply(model::Node &node, const model::Parameters &params) {
 
   // Store the parameters.
   node.params = params;
-
   // Estimate the node indicators.
   node.map->estimate(params, node.ind);
-
   // Set the outputs indicators and derive some node indicators.
   node.ind.ticks = node.ind.delay = 0;
 
@@ -66,88 +67,46 @@ void Mapper::apply(model::Node &node, const model::Parameters &params) {
 }
 
 void Mapper::estimate(model::Graph &graph) {
-  using V = const Node*;
-  using E = std::size_t;
-  using D = ChanInd;
-
-  std::stack<std::pair<V, E>> stack;
-  std::unordered_set<V> visited;
-  std::unordered_map<V, D> distance;
-
   graph.ind.power = 0;
   graph.ind.area  = 0;
   graph.ind.ticks = 0;
   graph.ind.delay = 0;
   graph.ind.outputs.clear();
 
-  double avg = 0.;
+  std::unordered_map<const Node*, ChanInd> distance;
 
-  // Iterate over all nodes of the graph.
-  for (const auto *node : graph.nodes) {
-    // Update the additive characteristics.
-    graph.ind.power += node->ind.power;
-    graph.ind.area  += node->ind.area;
+  traverseTopologicalOrder<model::Graph>(
+    graph,
 
-    avg += node->ind.delay;
+    // Node handler.
+    [&graph](const Node *node) {
+      // Update the additive characteristics.
+      graph.ind.power += node->ind.power;
+      graph.ind.area  += node->ind.area;
+    },
 
-    // Collect the source nodes for the DFS traveral.
-    if (node->isSource()) {
-      stack.push({ node, 0 });
-      visited.insert(node);
+    // Channel handler.
+    [&graph, &distance](const Chan *chan) {
+      const auto *node = chan->source.node;
+      const auto *next = chan->target.node;
+
+      // Update the distance (indicators) of the adjacent node.
+      auto &distNode = distance[node];
+      auto &distNext = distance[next];
+
+      const auto newTicks = distNode.ticks + chan->ind.ticks;
+      const auto newDelay = (chan->ind.ticks > 0)
+        ? /* New path */   chan->ind.delay
+        : distNode.delay + chan->ind.delay;
+
+      distNext.ticks = std::max(distNext.ticks, newTicks);
+      distNext.delay = std::max(distNext.delay, newDelay);
+
+      // Update the integral latency and combinational delay.
+      graph.ind.ticks = std::max(graph.ind.ticks, newTicks);
+      graph.ind.delay = std::max(graph.ind.delay, newDelay);
     }
-  }
-
-  graph.ind.averageDelay = static_cast<unsigned>(avg / graph.nodes.size());
-
-  // Traverse the nodes in topological order (DFS).
-  while (!stack.empty()) {
-    auto &[node, edge] = stack.top();
-
-    // Visit the node once (when added to the stack).
-    if (edge == 0) {
-      // Relax all outgoing edges.
-      for (const auto *output : node->outputs) {
-        const auto *next = output->target.node;
-
-        // Update the distance (indicators) of the adjacent node.
-        auto &distNode = distance[node];
-        auto &distNext = distance[next];
-
-        const auto newTicks = distNode.ticks + output->ind.ticks;
-        const auto newDelay = (output->ind.ticks > 0)
-          ? /* New path */   output->ind.delay
-          : distNode.delay + output->ind.delay;
-
-        distNext.ticks = std::max(distNext.ticks, newTicks);
-        distNext.delay = std::max(distNext.delay, newDelay);
-
-        // Update the integral latency and combinational delay.
-        graph.ind.ticks = std::max(graph.ind.ticks, newTicks);
-        graph.ind.delay = std::max(graph.ind.delay, newDelay);
-      }
-    }
-
-    // Schedule the next node (implicit topological sort).
-    bool hasMoved = false;
-
-    while (edge < node->outputs.size()) {
-      const auto *output = node->outputs[edge++];
-      const auto *next = output->target.node;
-
-      // The next node is unvisited.
-      if (visited.find(next) == visited.end()) {
-        stack.push({ next, 0 });
-        visited.insert(next);
-        hasMoved = true;
-        break;
-      }
-    }
-
-    // All successors of the node has been traversed.
-    if (!hasMoved) {
-      stack.pop();
-    }
-  }
+  );
 }
 
 void Mapper::estimate(model::Model &model) {

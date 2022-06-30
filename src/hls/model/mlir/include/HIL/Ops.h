@@ -18,6 +18,7 @@
 #include "mlir/Interfaces/SideEffectInterfaces.h"
 
 #define GET_OP_CLASSES
+#include "HIL/Dialect.h"
 #include "HIL/Ops.h.inc"
 
 #endif // HIL_HILOPS_H

@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 /// \file
 /// This file contains the declaration of the LpSolverHelper class and its
-/// supplement structures, that should be used for lp_solver problem building 
+/// supplement structures, that should be used for lp_solver problem building
 /// and invocation.
 ///
 /// \author <a href="mailto:lebedev@ispras.ru">Mikhail Lebedev</a>
@@ -26,7 +26,6 @@
 #include <string>
 #include <vector>
 
-using namespace eda::hls::model;
 using namespace eda::util;
 
 namespace eda::hls::scheduler {
@@ -61,25 +60,25 @@ public:
   ~LpSolverHelper();
 
   /// Solves the formulated problem.
-  void solve(); 
+  void solve();
 
   /// Returns the solution results.
   std::vector<double> getResults();
 
   /// Constructs a constraint.
-  /// 
+  ///
   /// \param names variable names
   /// \param values variable coefficients
   /// \param operation operation
   /// \param rhs right-hand side value
-  SolverConstraint* addConstraint(const std::vector<std::string> &names, 
+  SolverConstraint* addConstraint(const std::vector<std::string> &names,
     const std::vector<double> &values, OperationType operation, double rhs);
 
   /// Constructs and adds a variable to the problem.
   ///
   /// \param name variable name
   /// \param node corresponding graph node
-  SolverVariable* addVariable(const std::string&, const Node*);
+  SolverVariable* addVariable(const std::string&, const model::Node*);
 
   /// Prints the problem.
   void printProblem() { write_LP(lp, stdout); }
@@ -109,7 +108,7 @@ public:
   std::vector<SolverVariable*> getVariables();
 
   /// Searches for the variables with the given names.
-  std::vector<SolverVariable*> 
+  std::vector<SolverVariable*>
       getVariables(const std::vector<std::string> &names);
 
   /// Get the existing constraints.
@@ -141,22 +140,22 @@ private:
 
 struct SolverVariable final {
 
-  SolverVariable(const std::string &name, unsigned colNumber, 
-      const Node *node) : name(name), columnNumber(colNumber), 
+  SolverVariable(const std::string &name, unsigned colNumber,
+      const model::Node *node) : name(name), columnNumber(colNumber),
       node(node) {}
 
   std::string name;
   unsigned columnNumber;
-  const Node *node;
+  const model::Node *node;
 };
 
 struct SolverConstraint final {
 
-  SolverConstraint(const std::vector<SolverVariable*> &variables, 
-      const std::vector<double> &values, OperationType operation, double rhs) : 
+  SolverConstraint(const std::vector<SolverVariable*> &variables,
+      const std::vector<double> &values, OperationType operation, double rhs) :
       variables(variables), values(values), operation(operation), rhs(rhs) {
-    
-    assert(variables.size() == values.size() 
+
+    assert(variables.size() == values.size()
       && "Variables & values sizes do not match!");
   }
 
@@ -168,7 +167,7 @@ struct SolverConstraint final {
 };
 
 std::ostream& operator <<(std::ostream &out, const LpSolverHelper &problem);
-std::ostream& operator <<(std::ostream &out, 
+std::ostream& operator <<(std::ostream &out,
     const SolverConstraint &constraint);
 
 } // namespace eda::hls::scheduler

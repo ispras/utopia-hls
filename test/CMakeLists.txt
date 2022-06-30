@@ -10,6 +10,7 @@ set(TEST_TARGET utest)
 set(MULGEN_TARGET mulgen)
 
 set(CMAKE_CXX_STANDARD 17)
+add_compile_options(-g3 -Wall -Wignored-qualifiers -DYYERROR_VERBOSE)
 
 # Check if the 'gtest' target has been already imported (e.g., by LLVM).
 if(NOT TARGET gtest)
@@ -32,7 +33,7 @@ add_executable(${TEST_TARGET}
   gate/debugger/checker_test.cpp
   gate/model/gnet_test.cpp
   hls/compiler/compiler_hil_test.cpp
-  #hls/compiler/compiler_dfc_test.cpp
+  hls/compiler/compiler_dfc_test.cpp
   hls/debugger/debugger_test.cpp
   #hls/library/library_test.cpp
   hls/model/mlir/transform_test.cpp
@@ -44,10 +45,11 @@ add_executable(${TEST_TARGET}
   hls/scheduler/simulated_annealing_test.cpp
   lib/minisat/minisat_test.cpp
   rtl/parser/ril/ril_test.cpp
+  util/graph_traverse_test.cpp
   test_main.cpp
 )
 
-add_executable(${MULGEN_TARGET} 
+add_executable(${MULGEN_TARGET}
   hls/compiler/mulgen.cpp
 )
 
@@ -55,3 +57,5 @@ target_link_libraries(${TEST_TARGET} PRIVATE gtest_main ${MAIN_LIBRARY})
 
 include(GoogleTest)
 gtest_discover_tests(${TEST_TARGET})
+
+file(COPY data DESTINATION .)

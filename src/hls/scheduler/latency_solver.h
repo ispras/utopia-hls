@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 /// \file
 /// This file contains the declaration of the LatencyLpSolver class  and its
-/// supplement structures, that can schedule or balance latencies in the 
+/// supplement structures, that can schedule or balance latencies in the
 /// dataflow graph using linear programming.
 ///
 /// \author <a href="mailto:lebedev@ispras.ru">Mikhail Lebedev</a>
@@ -27,10 +27,10 @@ using namespace eda::util;
 namespace eda::hls::scheduler {
 
 struct Buffer final {
-  Buffer(Chan *chan, unsigned latency, unsigned position) : channel(chan), 
+  Buffer(model::Chan *chan, unsigned latency, unsigned position) : channel(chan),
       latency(latency), position(position) {}
 
-  Chan *channel;
+  model::Chan *channel;
   unsigned latency;
   unsigned position;
 };
@@ -43,10 +43,10 @@ public:
 
   ~LatencyLpSolver();
 
-  void balance(Model &model, Verbosity verbosity);
+  void balance(model::Model &model, Verbosity verbosity);
 
   void balance(Model &model) override { 
-    balance(model, Verbosity::Full); 
+    balance(model, Verbosity::Neutral); 
   }
 
   int getStatus() { return lastStatus; }
@@ -56,23 +56,23 @@ private:
   void deleteBuffers();
   void reset();
 
-  void insertBuffers(Model &model) override;
+  void insertBuffers(model::Model &model) override;
   void collectGraphTime() override;
 
   /// Generates the constraint for next node timestep.
-  void genLatencyConstraint(const std::string &nextName, 
+  void genLatencyConstraint(const std::string &nextName,
       const std::string &prevName, unsigned latency);
-  
+
   /// Generates the constraint for time delta between nodes.
-  void genDeltaConstraint(const std::string &dstName, 
+  void genDeltaConstraint(const std::string &dstName,
       const std::string &srcName, std::vector<std::string> &deltas);
-  
+
   /// Generates the constraint for buffer latency.
-  void genBufferConstraint(const std::string &nextName, 
-      const std::string &prevName, unsigned latency, Chan *channel);
+  void genBufferConstraint(const std::string &nextName,
+      const std::string &prevName, unsigned latency, model::Chan *channel);
 
   /// Schedules the graph.
-  void balanceLatency(const Graph *graph);
+  void balanceLatency(const model::Graph *graph);
 
   /// Generates the constraint for input.
   void synchronizeInput(const std::string &varName);
@@ -89,7 +89,7 @@ private:
   const std::string FlowPrefix = "f_";
   const std::string DeltaPrefix = "delta_";
   const std::string BufferPrefix = "buf_";
-  
+
   LpSolverHelper &helper;
   int lastStatus;
   std::vector<Buffer*> buffers;

@@ -19,6 +19,7 @@
 
 #include <deque>
 #include <map>
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -48,14 +49,11 @@ public:
 
 private:
   DijkstraBalancer() : mode(LatencyBalanceMode::ASAP) {}
-  void reset();
+
   void init(const Graph *graph);
 
-  /// Visits the specified channels.
-  void visit(unsigned curTime, const std::vector<Chan*> &connections);
-  
   /// Visits the specified channel and updates the destination's time.
-  void visitChan(const Chan *chan, unsigned dstTime);
+  void visitChan(const Chan *chan, unsigned targetTime);
   
   /// Returns the next node depending on the exploration direction: 
   /// ASAP - top->down

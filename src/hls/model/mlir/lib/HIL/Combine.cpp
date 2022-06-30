@@ -100,8 +100,10 @@ public:
       rewriter.setInsertionPoint(&chans_block_op);
       rewriter.replaceOpWithNewOp<Chan>(
           &chans_block_op, chan_op.typeName(), chan_op.varName(),
-          StringAttr{}.get(context, node_from.value()),
-          StringAttr{}.get(context, node_to.value()));
+          BindingAttr{}.get(context, node_from.value(),
+              chan_op.nodeFrom().getPort()),
+          BindingAttr{}.get(context, node_to.value(),
+              chan_op.nodeTo().getPort()));
     }
     return success();
   }
@@ -156,10 +158,10 @@ public:
 
     auto context = nodetypes_op.getContext();
     // Add nodetype
-    auto in_attr =
-        InputArgAttr::get(context, chan_type.str(), new double{1.0}, "in");
-    auto out_attr = OutputArgAttr::get(context, chan_type.str(),
-                                       new double{1.0}, latency_, "out", "0");
+    auto in_attr = PortAttr::get(context, "in", chan_type.str(),
+       new double{1.0}, latency_, false, 0);
+    auto out_attr = PortAttr::get(context, "out", chan_type.str(),
+        new double {1.0}, latency_, false, 0);
     std::array<Attribute, 1> in_attrs{in_attr};
     std::array<Attribute, 1> out_attrs{out_attr};
     rewriter.setInsertionPointToEnd(nodetypes_op.getBody());
@@ -179,13 +181,13 @@ public:
     // Split the channel with the node
     rewriter.setInsertionPointToEnd(chans_op.getBody());
     rewriter.create<Chan>(chans_op.getLoc(), chan_op.typeName(), new_chan_name,
-                          StringAttr{}.get(context, btw_name), node_to);
+        BindingAttr{}.get(context, btw_name, out_attr), node_to);
     rewriter.replaceOpWithNewOp<Chan>(chan_op, chan_op.typeName(),
-                                      chan_op.varName(), node_from,
-                                      StringAttr{}.get(context, btw_name));
+        chan_op.varName(), node_from,
+        BindingAttr{}.get(context, btw_name, in_attr));
     // Rename target node's input channel
     nodes_op.walk([&](Node op) {
-      if (op.name() == node_to.getValue()) {
+      if (op.name() == node_to.getNodeName()) {
         auto &&args = op.commandArguments();
         std::vector<Attribute> in_chans{args.begin(), args.end()};
         for (auto &in_chan_name : in_chans) {

@@ -18,6 +18,10 @@
 
 #include <array>
 
+using namespace eda::hls::compiler;
+using namespace eda::hls::library;
+using namespace eda::hls::scheduler;
+
 DFC_KERNEL(IDCT) {
   static const int W1 = 2841; // 2048*sqrt(2)*cos(1*pi/16)
   static const int W2 = 2676; // 2048*sqrt(2)*cos(2*pi/16)
@@ -29,11 +33,11 @@ DFC_KERNEL(IDCT) {
   DFC_KERNEL_CTOR(IDCT) {
     std::array<dfc::stream<dfc::sint16>, 64> blk;
 
-    for (std::size_t i = 0; i < 1/*8*/; i++)
+    for (std::size_t i = 0; i < 8; i++)
       idctrow(blk, i);
 
-//    for (std::size_t i = 0; i < 8; i++)
-//      idctcol(blk, i);
+    for (std::size_t i = 0; i < 8; i++)
+      idctcol(blk, i);
   }
 
   /* row (horizontal) IDCT
@@ -168,34 +172,47 @@ DFC_KERNEL(IDCT) {
 };
 
 int dfcIdctCompilerTest(const std::string &inputLibraryPath,
-                        const std::string &catalogPath,
+                        const std::string &relativeCompPath,
                         const std::string &outputFirrtlName,
-                        const std::string &outputVerilogName,
-                        const std::string &outputDirName) {
+                        const std::string &outputVerilogLibraryName,
+                        const std::string &outputVerilogTopModuleName,
+                        const std::string &outputDirName,
+                        const std::string &outputTestName) {
   dfc::params args;
   IDCT kernel(args);
 
-  std::shared_ptr<eda::hls::model::Model> model =
+  std::shared_ptr<Model> model =
     eda::hls::parser::dfc::Builder::get().create("IDCT");
 
-  eda::hls::library::Library::get().initialize(inputLibraryPath, catalogPath);
+  Library::get().initialize(inputLibraryPath, relativeCompPath);
 
-  eda::hls::scheduler::DijkstraBalancer::get().balance(*model);
+  DijkstraBalancer::get().balance(*model);
 
-  auto compiler = std::make_unique<eda::hls::compiler::Compiler>(*model);
-  auto circuit = compiler->constructCircuit("IDCT");
-  compiler->printFiles(outputFirrtlName, outputVerilogName, outputDirName);
-  compiler->printRndVlogTest(outputDirName + "testbench.v", 10);
+  auto compiler = std::make_unique<Compiler>();
+  auto circuit = compiler->constructCircuit(*model, "IDCT");
+  circuit->printFiles(outputFirrtlName,
+                      outputVerilogLibraryName,
+                      outputVerilogTopModuleName,
+                      outputDirName);
 
-  eda::hls::library::Library::get().finalize();
+  // generate random test of the specified length in ticks
+  const int testLength = 10;
+  circuit->printRndVlogTest(*model,
+                            outputDirName,
+                            outputTestName,
+                            model->ind.ticks,
+                            testLength);
 
+  Library::get().finalize();
   return 0;
 }
 
-TEST(DfcTest, DfcIdctCompilerTest) {
+TEST(CompilerDfcTest, CompilerIdctDfcTest) {
   EXPECT_EQ(dfcIdctCompilerTest("./test/data/ipx/ispras/ip.hw",
                                 "catalog/1.0/catalog.1.0.xml",
                                 "outputFirrtlIdct.mlir",
-                                "outputVerilogIdct.v",
-                                "./test/data/dfc/idct/"), 0);
+                                "outputVerilogLibraryDfcIdct.v",
+                                "outputVerilogTopModuleDfcIdct.v",
+                                "./output/test/dfc/idct",
+                                "testbench.v"), 0);
 }

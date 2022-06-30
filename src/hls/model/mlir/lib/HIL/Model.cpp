@@ -46,6 +46,7 @@ MLIRModule MLIRModule::load_from_mlir_file(const std::string &filename) {
 MLIRModule MLIRModule::load_from_model(const eda::hls::model::Model &m) {
   std::stringstream buf;
   dump_model_mlir(m, buf);
+
   return load_from_mlir(buf.str());
 }
 
@@ -101,30 +102,31 @@ MLIRBuilder<T>::build_model_from_mlir(MLIRModule &mlir_model,
   return builder.create();
 }
 
-template <> void MLIRBuilder<mlir::hil::InputArgAttr>::build() {
-  builder_.addPort(node_.getName(), node_.getTypeName(),
-                   std::to_string(*node_.getFlow()), "0");
-}
-
-template <> void MLIRBuilder<mlir::hil::OutputArgAttr>::build() {
-  builder_.addPort(node_.getName(), node_.getTypeName(),
-                   std::to_string(*node_.getFlow()),
-                   std::to_string(node_.getLatency()), node_.getValue());
+template <> void MLIRBuilder<mlir::hil::PortAttr>::build() {
+  auto value = node_.getValue();
+  if (value == 0) {
+    builder_.addPort(node_.getName(), node_.getTypeName(),
+                    std::to_string(*node_.getFlow()),
+                    std::to_string(node_.getLatency()));
+  } else {
+    builder_.addPort(node_.getName(), node_.getTypeName(),
+                    std::to_string(*node_.getFlow()),
+                    std::to_string(node_.getLatency()),
+                    std::to_string(value));
+  }
 }
 
 template <> void MLIRBuilder<mlir::hil::NodeType>::build() {
   builder_.startNodetype(node_.name().str());
   // Build inputs
   for (auto op : node_.commandArguments()) {
-    auto in_port_op =
-        op.cast<mlir::Attribute>().cast<mlir::hil::InputArgAttr>();
+    auto in_port_op = op.cast<mlir::Attribute>().cast<mlir::hil::PortAttr>();
     MLIRBuilder::get(in_port_op, builder_).build();
   }
   // Build outputs
   builder_.startOutputs();
   for (auto op : node_.commandResults()) {
-    auto out_port_op =
-        op.cast<mlir::Attribute>().cast<mlir::hil::OutputArgAttr>();
+    auto out_port_op = op.cast<mlir::Attribute>().cast<mlir::hil::PortAttr>();
     MLIRBuilder::get(out_port_op, builder_).build();
   }
   builder_.endNodetype();
@@ -138,7 +140,11 @@ template <> void MLIRBuilder<mlir::hil::NodeTypes>::build() {
 }
 
 template <> void MLIRBuilder<mlir::hil::Chan>::build() {
-  builder_.addChan(node_.typeName().str(), node_.varName().str());
+  auto nodeFrom = node_.nodeFrom();
+  auto nodeTo = node_.nodeTo();
+  auto typeName = node_.typeName().str();
+  auto varName = node_.varName().str();
+  builder_.addChan(typeName, varName, nodeFrom, nodeTo);
 }
 
 template <> void MLIRBuilder<mlir::hil::Chans>::build() {
@@ -232,7 +238,6 @@ std::shared_ptr<Model> parse_model_from_mlir_file(const std::string &filename) {
   } else { // fallback to stdin
     buf << std::cin.rdbuf();
   }
-  //std::cout << buf.str() << std::endl;
   return parse_model_from_mlir(buf.str());
 }
 

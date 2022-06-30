@@ -5,13 +5,16 @@
 // Copyright 2022 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-#include "hls/library/ipxact_parser.h"
 
+#include "hls/library/ipxact_parser.h"
 #include "hls/library/element_core.h"
 #include "hls/library/element_generator.h"
 
+#include <filesystem>
 #include <xercesc/dom/DOM.hpp>
 
+using namespace eda::hls::mapper;
+using namespace eda::utils;
 using namespace xercesc;
 
 namespace eda::hls::library {
@@ -24,176 +27,237 @@ std::string toLower(std::string s) {
     return s;
 }
 
+bool stringIsDigit(std::string str) {
+  for (size_t i = 0; i < str.length(); i++) {
+    if (!isdigit(str.at(i))) {
+      return false;
+    }
+  }
+  return true;
+}
+
 void IPXACTParser::initialize() {
-//  XMLPlatformUtils::Initialize();
+  XMLPlatformUtils::Initialize();
 }
 
 void IPXACTParser::finalize() {
   readFileNames.clear();
-  //XMLPlatformUtils::Terminate();
+  XMLPlatformUtils::Terminate();
+}
+
+std::string IPXACTParser::getStrValueFromTag(const DOMElement *element,
+                                             const XMLCh *tagName) {
+  size_t tagCount = element->getElementsByTagName(tagName)->getLength();
+  std::string tagNameStr = XMLString::transcode(tagName);
+  //std::cout << std::endl << tagCount << std::endl;
+  uassert(tagCount >= 1,
+          "Cannot find tag " + tagNameStr + "!");
+  uassert(tagCount == 1,
+          "Multiple tags " + tagNameStr + "!");
+  const auto *tag = element->getElementsByTagName(
+    tagName)->item(0);
+  const auto *tagFirstChild = tag->getFirstChild();
+  uassert(tagFirstChild != nullptr,
+          "Missing value inside " + tagNameStr + "tag!");
+
+  std::string tagValue = XMLString::transcode(
+    tagFirstChild->getNodeValue());
+
+  return tagValue;
+}
+
+int IPXACTParser::getIntValueFromTag(const DOMElement *element,
+                                     const XMLCh *tagName) {
+  std::string tagValueStr = getStrValueFromTag(element, tagName);
+  std::string tagNameStr = XMLString::transcode(tagName);
+  uassert(stringIsDigit(tagValueStr), tagNameStr + "value must be an integer!");
+  int tagValueInt = std::stoi(tagValueStr);
+  return tagValueInt;
+}
+
+std::string IPXACTParser::getStrAttributeFromTag(const DOMElement *element,
+                                                 const XMLCh *tagName,
+                                                 const XMLCh *attributeName) {
+
+  size_t tagCount = element->getElementsByTagName(tagName)->getLength();
+  std::string tagNameStr = XMLString::transcode(tagName);
+  uassert(tagCount >= 1,
+          "Cannot find tag " + tagNameStr + "!");
+  uassert(tagCount == 1,
+          "Multiple tags " + tagNameStr + "!");
+  const auto *tag = element->getElementsByTagName(tagName)->item(0);
+  const auto *item = tag->getAttributes()->getNamedItem(attributeName);
+  uassert(item != nullptr,
+          "Missing attribute inside " + tagNameStr + "tag!");
+
+  std::string attributeValue = std::string(XMLString::transcode(
+    item->getNodeValue()));
+  return attributeValue;
 }
 
 void IPXACTParser::parseCatalog(const std::string &libraryPath,
                                 const std::string &catalogPath) {
-  this->libraryPath = libraryPath;
-
   DOMImplementation *impl = DOMImplementationRegistry::getDOMImplementation(
-                              XMLString::transcode("LS"));
-
+    XMLString::transcode("LS"));
   uassert(impl != nullptr, "DOMImplementation is not found!");
 
-  DOMLSParser *parser =
-    dynamic_cast<DOMImplementationLS*>(impl)->
-      createLSParser(DOMImplementationLS::MODE_SYNCHRONOUS, 0);
+  // Create Xercecs Parser
+  DOMLSParser *parser = ((DOMImplementationLS*)impl)->createLSParser(
+    DOMImplementationLS::MODE_SYNCHRONOUS, 0);
+  uassert(parser != nullptr, "Cannot create LSParser!");
 
-  const DOMDocument *doc =
-    parser->parseURI((this->libraryPath + "/" + catalogPath).c_str());
+  // Calculate path to IP-XACT catalog
+  this->libraryPath = libraryPath;
+  std::filesystem::path path = libraryPath;
+  path /= catalogPath;
 
-  size_t ipxactFileSize =
-    doc->getElementsByTagName(ipxFileTag)->getLength();
+  // Open IP-XACT catalog
+  const DOMDocument *doc = parser->parseURI(path.c_str());
+  uassert(doc != nullptr, "Cannot parse IP-XACT catalog!");
 
-  for (size_t i = 0; i < ipxactFileSize; i++) {
+  // The number of IP-XACT files to be read
+  const size_t ipxactFileCount =
+    doc->getElementsByTagName(ipxIpxFileTag)->getLength();
+
+  // Read IP-XACT files one-by-one
+  for (size_t i = 0; i < ipxactFileCount; i++) {
     const DOMElement *ipxactFile = (const DOMElement*)(
-      doc->getElementsByTagName(ipxFileTag)->item(i));
+      doc->getElementsByTagName(ipxIpxFileTag)->item(i));
 
-    const auto *vlnv = ipxactFile->getElementsByTagName(ipxVlnvTag)->item(0);
+    // Parse tags
+    const std::string key = getStrAttributeFromTag(ipxactFile,
+                                                   ipxVlnvTag,
+                                                   nameAttr);
 
-    std::string key = std::string(XMLString::transcode(
-      vlnv->getAttributes()->getNamedItem(nameAttr)->getNodeValue()));
+    const std::string name = getStrValueFromTag(ipxactFile, ipxNameTag);
 
-    const auto *name = ipxactFile->getElementsByTagName(ipxNameTag)->item(0);
+    // Construct filesystem path to the component
+    std::filesystem::path value = libraryPath;
+    value /= name;
 
-    std::string value = std::string(XMLString::transcode(
-      name->getFirstChild()->getNodeValue()));
-
-    readFileNames.insert({key, value});
+    // Bind component's name and its filesystem path
+    readFileNames.insert({key, value.string()});
   }
   parser->release();
 }
 
-bool IPXACTParser::hasComponent(const std::string &name) {
+bool IPXACTParser::hasComponent(const std::string &name,
+                                const HWConfig &hwconfig) {
   return readFileNames.count(toLower(name)) > 0 ? true : false;
 }
 
 std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
-    const std::string &name) {
-  Parameters params;
-  std::vector<Port> ports;
-  /*for (const auto &[key, value] : comp_fnames) {
-    std::cout << key << std::endl << value << std::endl;
-  }*/
-  //Initialization.
+    const std::string &name/*, const std::string &libraryName*/) {
+    Parameters params;
+    std::vector<Port> ports;
+
+  // Creating parser
   DOMImplementation *impl = DOMImplementationRegistry::getDOMImplementation(
     XMLString::transcode("LS"));
+  uassert(impl != nullptr, "DOMImplementation is not found!");
   DOMLSParser *parser = ((DOMImplementationLS*)impl)->createLSParser(
     DOMImplementationLS::MODE_SYNCHRONOUS, 0);
-  xercesc::DOMDocument *doc = nullptr;
-  std::cout << name << std::endl;
-  std::cout << readFileNames[toLower(name)] << std::endl;
-  doc = parser->parseURI(readFileNames[toLower(name)].c_str());
+  uassert(parser != nullptr, "Cannot create LSParser!");
 
-  //IP-XACT tags parsing.
-  size_t port_count = doc->getElementsByTagName(ipxPortTag)->getLength();
-  for (size_t i = 0; i < port_count; i++) {
+  // Parse document
+  const DOMDocument *doc = parser->parseURI(readFileNames[toLower(name)].c_str());
+  uassert(doc != nullptr, "Cannot parse IP-XACT component!");
+
+  // Parse ports
+  size_t portCount = doc->getElementsByTagName(ipxPortTag)->getLength();
+  for (size_t i = 0; i < portCount; i++) {
     const DOMElement *port = (const DOMElement*)(
       doc->getElementsByTagName(ipxPortTag)->item(i));
-    const auto *name = port->getElementsByTagName(ipxNameTag)->item(0);
-    std::string name_str = std::string(XMLString::transcode(
-      name->getFirstChild()->getNodeValue()));
-    const auto *direction = port->getElementsByTagName(
-      ipxDirectTag)->item(0);
-    std::string direction_str = std::string(XMLString::transcode(
-      direction->getFirstChild()->getNodeValue()));
-    const auto *left = port->getElementsByTagName(ipxLeftTag)->item(0);
-    int left_int = -1;
-    std::string value;
-    bool isParam = false;
-    std::string param;
-    if (left != nullptr) {
-      value = XMLString::transcode(left->getFirstChild()->getNodeValue());
-      std::string value = XMLString::transcode(
-        left->getFirstChild()->getNodeValue());
-      //If value is a parameter.
-      //TODO: Regular expressions.
-      if (isalpha(value.c_str()[0])) {
-          isParam = true;
-          param = value;
-      } else {
-        left_int = std::stoi(XMLString::transcode(
-          left->getFirstChild()->getNodeValue()));
-      }
+    // Parse tags
+    std::string name = getStrValueFromTag(port, ipxNameTag);
+
+    std::string direction = getStrValueFromTag(port, ipxDirectTag);
+
+    size_t vectorCount = port->getElementsByTagName(ipxVectTag)->getLength();
+    std::string leftStr = vectorCount ? getStrValueFromTag(port, ipxLeftTag)
+                                      : "";
+
+    // Create port and adding it to multitude of ports
+    int leftInt = -1;
+    // Value can be parameter
+    if (leftStr == "") {
+      ports.push_back(library::Port(name,
+                                    direction == "in" ? Port::IN : Port::OUT,
+                                    leftInt + 1,
+                                    model::Parameter(std::string("WIDTH"),
+                                                     leftInt + 1)));
+    } else if (isalpha(leftStr.c_str()[0])) {
+      ports.push_back(library::Port(name,
+                                    direction == "in" ? Port::IN : Port::OUT,
+                                    leftInt + 1,
+                                    model::Parameter(std::string(leftStr))));
+    } else if (stringIsDigit(leftStr)) {
+      leftInt = std::stoi(leftStr);
+      ports.push_back(library::Port(name,
+                                    direction == "in" ? Port::IN : Port::OUT,
+                                    leftInt + 1,
+                                    model::Parameter(std::string("WIDTH"),
+                                                     leftInt + 1)));
     }
-    //Creating Port.
-        /*std::cout << "in " << name_str;
-        if (left != nullptr) {
-          std::cout << " [" << left_int << ":" << "0" << "]";
-        }
-        std::cout << std::endl;*/
-      if (isParam) {
-        ports.push_back(library::Port(name_str,
-                                      direction_str == "in" ? library::Port::IN : library::Port::OUT,
-                                      left_int + 1,
-                                      model::Parameter(std::string(param))));
-      } else {
-        ports.push_back(library::Port(name_str,
-                                      direction_str == "in" ? library::Port::IN : library::Port::OUT,
-                                      left_int + 1,
-                                      model::Parameter(std::string("WIDTH"),
-                                                       left_int + 1)));
-      }
   }
-  //Vendor extensions tags parsing.
-  size_t parameter_count = doc->getElementsByTagName(
+
+  // Parse vendor extensions
+  size_t parameterCount = doc->getElementsByTagName(
     k2ParamTag)->getLength();
-  for (size_t i = 0; i < parameter_count; i++) {
+  for (size_t i = 0; i < parameterCount; i++) {
     const DOMElement *parameter = (const DOMElement*)(
       doc->getElementsByTagName(k2ParamTag)->item(i));
-    const auto *name = parameter->getElementsByTagName(k2NameTag)->item(0);
-    std::string name_str = std::string(XMLString::transcode(
-      name->getFirstChild()->getNodeValue()));
-    const auto *value = parameter->getElementsByTagName(k2ValueTag)->item(0);
-    int value_int = std::stoi(XMLString::transcode(
-      value->getFirstChild()->getNodeValue()));
-    const auto *left = parameter->getElementsByTagName(k2LeftTag)->item(0);
-    int left_int = std::stoi(XMLString::transcode(
-      left->getFirstChild()->getNodeValue()));
-    const auto *right = parameter->getElementsByTagName(k2RightTag)->item(0);
-    int right_int = std::stoi(XMLString::transcode(
-      right->getFirstChild()->getNodeValue()));
-    //Creating Parameter.
-    params.add(model::Parameter(name_str,
-                                model::Constraint(left_int, right_int),
-                                value_int));
+    // Parse tags
+    std::string name = getStrValueFromTag(parameter, k2NameTag);
+
+    int value = getIntValueFromTag(parameter, k2ValueTag);
+
+    int left = getIntValueFromTag(parameter, k2LeftTag);
+
+    int right = getIntValueFromTag(parameter, k2RightTag);
+
+    // Creating Parameter
+    params.add(model::Parameter(name,
+                                model::Constraint<unsigned>(left, right),
+                                value));
   }
-  std::string type;
-  std::string genPath;
-  std::string comPath;
-  size_t generator_count = doc->getElementsByTagName(
-    ipxCompGensTag)->getLength();
+
+  // Check if component is generator
   std::shared_ptr<MetaElement> metaElement;
-  if (generator_count != 0) {
-    const auto *genExe = doc->getElementsByTagName(ipxGenExeTag)->item(0);
-    genPath = std::string(XMLString::transcode(
-      genExe->getFirstChild()->getNodeValue()));
+  size_t generatorTagCount = doc->getElementsByTagName(
+    ipxCompGensTag)->getLength();
+  if (generatorTagCount != 0) {
+    // Parse tag
+    const DOMElement *ipxCompGens = (const DOMElement*)(
+      doc->getElementsByTagName(ipxCompGensTag)->item(0));
+    std::string path = getStrValueFromTag(ipxCompGens, ipxGenExeTag);
+
+    // Create metaElement
     metaElement = std::shared_ptr<MetaElement>(new ElementGenerator(name,
                                                                     params,
                                                                     ports,
-                                                                    genPath));
+                                                                    path));
+
   } else {
-    const DOMElement *file = (const DOMElement*)(doc->getElementsByTagName(
+    const auto *file = (const DOMElement*)(doc->getElementsByTagName(
       ipxFileTag)->item(0));
-    const auto *name = file->getElementsByTagName(ipxNameTag)->item(0);
-    std::string name_str = std::string(XMLString::transcode(
-      name->getFirstChild()->getNodeValue()));
-    comPath = libraryPath + "/" + name_str;
-    metaElement = std::shared_ptr<MetaElement>(new ElementCore(name_str,
+    // Parse tag
+    std::string name = getStrValueFromTag(file, ipxNameTag);
+
+    // Construct complete path
+    std::filesystem::path filesystemPath = libraryPath;
+
+    filesystemPath /= name;
+    std::string path = filesystemPath.string();
+
+    // Create metaElement
+    metaElement = std::shared_ptr<MetaElement>(new ElementCore(name,
                                                                params,
                                                                ports,
-                                                               comPath));
+                                                               path));
+
   }
-
   parser->release();
-
   return metaElement;
 }
 

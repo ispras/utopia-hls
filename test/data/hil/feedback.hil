@@ -1,0 +1,26 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
+model M {
+  nodetype source  ()                    => (X<1.0> #1 x);
+  nodetype kernel1 (X<1.0> x,  Y<1.0> y) => (Z<1.0> #1 z);
+  nodetype kernel2 (Z<1.0> z)            => (W<1.0> #1 w, Y<1.0> #1 y);
+  nodetype sink    (W<1.0> w)            => ();
+
+  graph main {
+    chan X x;
+    chan Y y;
+    chan Z z;
+    chan W w;
+
+    node source  n1()      => (x);
+    node kernel1 n2(x, y)  => (z);
+    node kernel2 n3(z)     => (w, y);
+    node sink    n4(w)     => ();
+  }
+}

@@ -23,9 +23,7 @@
 using namespace eda::utils;
 
 namespace eda::hls::library {
-
 struct MetaElement;
-
 } // namespace eda::hls::library
 
 namespace eda::hls::model {
@@ -394,6 +392,12 @@ struct Graph final {
 
   void addNode(Node *node) {
     nodes.push_back(node);
+
+    if (node->inputs.empty()) {
+      sources.push_back(node);
+    } else if (node->outputs.empty()) {
+      targets.push_back(node);
+    }
   }
 
   Chan* findChan(const std::string &name) const {
@@ -414,9 +418,22 @@ struct Graph final {
     const std::map<std::string, std::map<std::string, Chan*>> &inputs,
     const std::map<std::string, std::map<std::string, Chan*>> &outputs);
 
+  /// To apply graph processing templates.
+  using V = Node*;
+  using E = Chan*;
+
+  std::size_t nNodes() const { return nodes.size(); }
+  std::size_t nEdges() const { return chans.size(); }
+  const std::vector<V>& getSources() const { return sources; }
+  const std::vector<E>& getOutEdges(V v) const { return v->outputs; }
+  V leadsTo(E e) const { return const_cast<V>(e->target.node); }
+
   const std::string name;
   std::vector<Chan*> chans;
   std::vector<Node*> nodes;
+
+  std::vector<Node*> sources;
+  std::vector<Node*> targets;
 
   /// Reference to the parent.
   Model &model;

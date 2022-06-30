@@ -23,12 +23,13 @@ using namespace eda::hls::scheduler;
 
 void paramOptimizerTest(const std::string &filename) {
   // Optimization criterion and constraints.
-  Criteria criteria(PERF,
-    Constraint(1000, 500000),                               // Frequency (kHz)
-    Constraint(1000, 500000),                               // Performance (=frequency)
-    Constraint(0,    100),                                  // Latency (cycles)
-    Constraint(0,    std::numeric_limits<unsigned>::max()), // Power (does not matter)
-    Constraint(1,    150000));                              // Area (number of LUTs)
+  Criteria criteria(
+    PERF,
+    Constraint<unsigned>(1000, 500000),  // Frequency (kHz)
+    Constraint<unsigned>(1000, 500000),  // Performance (=frequency)
+    Constraint<unsigned>(0,    100),     // Latency (cycles)
+    Constraint<unsigned>(),              // Power (does not matter)
+    Constraint<unsigned>(1,    150000)); // Area (number of LUTs)
 
   // Model whose parameters need to be optimized.
   std::shared_ptr<Model> model = parse(filename);

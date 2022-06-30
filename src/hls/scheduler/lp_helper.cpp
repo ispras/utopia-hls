@@ -42,8 +42,8 @@ void LpSolverHelper::deleteFields() {
 void LpSolverHelper::initFields() {
   lp = ::make_lp(0, 0);
   assert(lp != nullptr && "LP problem creation error!");
-  variables = std::map<std::string, SolverVariable*>();
-  constraints = std::vector<SolverConstraint*>();
+  variables.clear();
+  constraints.clear();
   currentColumn = 0;
   status = -10;
 }
@@ -64,13 +64,11 @@ SolverConstraint* LpSolverHelper::addConstraint(
   SolverConstraint *constraint = new SolverConstraint(getVariables(names), 
       values, operation, rhs);
   constraints.push_back(constraint);
-  //std::cout << "Added constraint: " << *constraint << "\n";
   return constraint;
 }
 
 SolverVariable* LpSolverHelper::addVariable(const std::string &name, 
-    const Node *node) {
-  //std::cout << "Adding variable: " << name << "\n";
+    const model::Node *node) {
   SolverVariable *newVariable = 
       new SolverVariable(name, ++currentColumn, node);
   variables[name] = newVariable;
@@ -216,10 +214,5 @@ std::ostream& operator <<(std::ostream &out,
   
   return out << constraint.rhs << std::endl;
 }
-
-/*std::ostream& operator <<(std::ostream &out, const LpSolverHelper &problem) {
-  
-
-}*/
 
 } // namespace eda::hls::scheduler

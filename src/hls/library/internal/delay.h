@@ -11,6 +11,8 @@
 #include "hls/library/element_internal.h"
 #include "hls/library/library.h"
 
+using namespace eda::hls::mapper;
+
 namespace eda::hls::library {
 
 struct Delay final : public ElementInternal {
@@ -25,7 +27,10 @@ struct Delay final : public ElementInternal {
 
   virtual void estimate(
       const Parameters &params, Indicators &indicators) const override;
-  static std::shared_ptr<MetaElement> create(const NodeType &nodetype);
+  virtual std::unique_ptr<Element> construct(
+      const Parameters &params) const override;
+  static std::shared_ptr<MetaElement> create(const NodeType &nodetype,
+                                             const HWConfig &hwconfig);
 };
 
 } // namespace eda::hls::library

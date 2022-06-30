@@ -5,10 +5,10 @@
 
 namespace eda::hls::scheduler::optimizers {
 
-class abstract_optimizer {
+class AbstractOptimizer {
 public:
-  abstract_optimizer();
-  virtual void optimize(std::vector<float> &param) = 0;
+  AbstractOptimizer();
+  virtual void optimize(std::vector<float> &parameterValues) = 0;
 };
 
 } // namespace eda::hls::scheduler::optimizers

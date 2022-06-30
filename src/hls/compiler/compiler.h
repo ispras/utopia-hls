@@ -162,16 +162,16 @@ public:
   FirrtlCircuit(const std::string& name) : name(name) {};
 
   void printFiles(const std::string& outputFirrtlName,
-                  const std::string& outputVerilogName,
+                  const std::string& outputVerilogLibraryName,
+                  const std::string& outputVerilogTopModuleName,
                   const std::string& outputDirName) const;
-  void convertToSV(const std::string& inputFirrtlName) const;
+  void dumpVerilogOptFile(const std::string& inputFirrtlName) const;
 
   void moveVerilogLibrary(const std::string &outputDirName,
                           std::ostream &out) const;
   void printFirrtl(std::ostream &out) const;
   void printFirrtlModule(const FirrtlModule &firmodule,
                          std::ostream &out) const;
-
 
   void addFirModule(const FirrtlModule &firModule) {
     firModules.insert({firModule.getName(), firModule});
@@ -186,10 +186,11 @@ public:
    *
    * @param tstPath Path to testbench file to be created.
    * @param tstCnt Number of test stimuli at random sequence
-   * @return Nothing, but "*.v" testbench should be created.
+   * @return Nothing, but Verilog testbench should be created.
    */
-  void printRndVlogTest(const model::Model &model,
-                        const std::string &tstPath,
+  void printRndVlogTest(const Model &model,
+                        const std::string &outputDirName,
+                        const std::string &outputTestName,
                         const int latency,
                         const size_t tstCnt);
 
