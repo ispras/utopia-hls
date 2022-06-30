@@ -75,7 +75,7 @@ void Mapper::estimate(model::Graph &graph) {
 
   std::unordered_map<const Node*, ChanInd> distance;
 
-  traverseTopologicalOrder<model::Graph, const Node*, const Chan*>(
+  traverseTopologicalOrder<model::Graph>(
     graph,
 
     // Node handler.

@@ -28,40 +28,43 @@ namespace eda::utils::graph {
 //===----------------------------------------------------------------------===//
 
 /// Performs topological sorting of the directed graph (feedbacks are ignored).
-template <typename G, typename V, typename E>
-std::vector<V> topologicalSort(const G &graph) {
-  // DFS stack.
-  std::stack<std::pair<V, std::size_t>> searchStack;
+template <typename G, typename OutEdgeContainer = std::vector<typename G::E>>
+std::vector<typename G::V> topologicalSort(const G &graph) {
+  using V = typename G::V;
+  using OutEdgeIterator = typename OutEdgeContainer::const_iterator;
 
-  // Set of visited nodes.
-  std::unordered_set<V> visitedNodes;
-  visitedNodes.reserve(graph.nNodes());
-
-  // Set of nodes in topological order.
   std::vector<V> sortedNodes(graph.nNodes());
   auto it = sortedNodes.rbegin();
 
+  std::stack<std::pair<V, OutEdgeIterator>> searchStack;
+
+  std::unordered_set<V> visitedNodes;
+  visitedNodes.reserve(graph.nNodes());
+
   // Collect the source nodes for the DFS traveral.
   for (auto v : graph.getSources()) {
-    searchStack.push({v, 0});
+    const OutEdgeContainer &out = graph.getOutEdges(v);
+
+    searchStack.push({v, out.cbegin()});
     visitedNodes.insert(v);
   }
 
   // DFS traveral.
   while (!searchStack.empty()) {
     auto &[v, i] = searchStack.top();
-    const auto &out = graph.getOutEdges(v);
+    const OutEdgeContainer &out = graph.getOutEdges(v);
 
     // Schedule the next node.
     bool hasMoved = false;
 
-    while (i < out.size()) {
-      auto e = out[i++];
-      auto n = graph.leadsTo(e);
+    while (i != out.cend()) {
+      auto n = graph.leadsTo(*i++);
 
       // The next node is unvisited.
       if (visitedNodes.find(n) == visitedNodes.end()) {
-        searchStack.push({n, 0});
+        const OutEdgeContainer &out = graph.getOutEdges(n);
+
+        searchStack.push({n, out.cbegin()});
         visitedNodes.insert(n);
 
         hasMoved = true;
@@ -71,7 +74,7 @@ std::vector<V> topologicalSort(const G &graph) {
 
     // All successors of the node has been traversed.
     if (!hasMoved) {
-      *(it++) = v;
+      *it++ = v;
       searchStack.pop();
     }
   }
@@ -81,21 +84,23 @@ std::vector<V> topologicalSort(const G &graph) {
 }
 
 /// Traverses the graph in topological order and handles the nodes.
-template <typename G, typename V, typename E>
+template <typename G, typename OutEdgeContainer = std::vector<typename G::E>>
 void traverseTopologicalOrder(const G &graph,
-                              std::function<void(V)> handleNode) {
-  std::vector<V> sortedNodes = topologicalSort<G, V, E>(graph);
+                              std::function<void(typename G::V)> handleNode) {
+  std::vector<typename G::V> sortedNodes =
+    topologicalSort<G, OutEdgeContainer>(graph);
   for (auto v : sortedNodes) {
     handleNode(v);
   }
 }
 
 /// Traverses the graph in topological order and handles the nodes and edges.
-template <typename G, typename V, typename E>
+template <typename G, typename OutEdgeContainer = std::vector<typename G::E>>
 void traverseTopologicalOrder(const G &graph,
-                              std::function<void(V)> handleNode,
-                              std::function<void(E)> handleEdge) {
-  std::vector<V> sortedNodes = topologicalSort<G, V, E>(graph);
+                              std::function<void(typename G::V)> handleNode,
+                              std::function<void(typename G::E)> handleEdge) {
+  std::vector<typename G::V> sortedNodes =
+    topologicalSort<G, OutEdgeContainer>(graph);
   for (auto v : sortedNodes) {
     handleNode(v);
     for (auto e : graph.getOutEdges(v)) {

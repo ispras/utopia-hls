@@ -36,7 +36,7 @@ namespace eda::hls::scheduler {
     auto handleNode = [this](const Node *node) { visitNode(node); };
     auto handleEdge = [this](const Chan *chan) { visitChan(chan); };
 
-    graph::traverseTopologicalOrder<Graph, const Node*, const Chan*>(*graph, handleNode, handleEdge);
+    graph::traverseTopologicalOrder<Graph>(*graph, handleNode, handleEdge);
     insertBuffers(model);
     collectGraphTime();
   }

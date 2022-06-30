@@ -33,7 +33,7 @@ void traverseTest(const std::string &filename) {
 
   auto handleEdge = [](const Chan* node) {};
 
-  traverseTopologicalOrder<Graph, const Node*, const Chan*>(*graph, handleNode, handleEdge);
+  traverseTopologicalOrder<Graph>(*graph, handleNode, handleEdge);
 }
 
 TEST(UtilTest, GraphTraverse) {
