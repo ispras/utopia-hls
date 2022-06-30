@@ -53,7 +53,7 @@ TEST(DebuggerTest, SolveOneKernel) {
       false);
 }
 
-// Test for no-meaning first HIL example
+// Test for split-merge HIL example
 TEST(DebuggerTest, SolveTest) {
   EXPECT_EQ(
       eqCheckTest("test/data/hil/test.hil",
