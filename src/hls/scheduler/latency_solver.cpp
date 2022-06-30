@@ -26,8 +26,8 @@ void LatencyLpSolver::deleteBuffers() {
 
 void LatencyLpSolver::reset() {
   deleteBuffers();
-  buffers = std::vector<Buffer*>();
-  sinks = std::vector<std::string>();
+  buffers.clear();
+  sinks.clear();
 }
 
 void LatencyLpSolver::balance(Model &model, Verbosity verbosity) {

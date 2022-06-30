@@ -18,9 +18,9 @@
 namespace eda::hls::scheduler {
 
   void TopologicalBalancer::reset() {
-    nodeMap = std::map<const Node*, unsigned>();
-    terminalNodes = std::unordered_set<const Node*>();
-    visited = std::unordered_set<const Node*>();
+    nodeMap.clear();
+    terminalNodes.clear();
+    visited.clear();
     currentNode = nullptr;
   }
 
@@ -54,7 +54,6 @@ namespace eda::hls::scheduler {
     uassert(chan, "Nullptr chan found!\n");
     if (currentNode) {
       const Node *targetNode = chan->target.node;
-      uassert(targetNode, "Nullptr node found!");
       if (visited.find(targetNode) != visited.end()) {
         backEdges.insert(chan);
       } else {
@@ -69,7 +68,6 @@ namespace eda::hls::scheduler {
       const unsigned currentTime = targetNode.second;
       for (const auto &connection : targetNode.first->inputs) {
         const Node *sourceNode = connection->source.node;
-        uassert(sourceNode, "Nullptr node found!");
         // FIXME: feedback buffer size
         int delta = (backEdges.find(connection) == backEdges.end()) ? 
           currentTime - (nodeMap[sourceNode] + connection->ind.ticks) : 0;
@@ -86,7 +84,6 @@ namespace eda::hls::scheduler {
   void TopologicalBalancer::collectGraphTime() {
     unsigned maxTime = 0;
     for (const auto *node : terminalNodes) {
-      uassert(node, "Nullptr node found!");
       maxTime = std::max(nodeMap[node], maxTime);
     }
     graphTime = maxTime;
