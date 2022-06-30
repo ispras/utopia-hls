@@ -251,7 +251,7 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
         mergeVec.push_back(outConst == inConst);
       }
 
-      nodes.push_back(mk_and(mergeVec));
+      nodes.push_back(mk_or(mergeVec));
 
     } else if (isSplit(node)) {
 
