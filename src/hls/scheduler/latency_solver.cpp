@@ -45,13 +45,14 @@ void LatencyLpSolver::balance(Model &model, Verbosity verbosity) {
   if (verbosity > 4) {
     helper.printResults();
   }
-
-  insertBuffers(model);
-  collectGraphTime();
-  std::cout << "Max time: " << graphTime << std::endl;
-
+  
   lastStatus = helper.getStatus();
-
+  if (lastStatus == 0 || lastStatus == 1) {
+    insertBuffers(model);
+    collectGraphTime();
+    std::cout << "Max time: " << graphTime << std::endl;
+  }
+  
   // Reset solver for next problem
   helper.reset();
   reset();

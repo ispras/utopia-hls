@@ -69,11 +69,10 @@ namespace eda::hls::scheduler {
       const unsigned currentTime = targetNode.second;
       for (const auto &connection : targetNode.first->inputs) {
         const Node *sourceNode = connection->source.node;
-        int delta = currentTime - (nodeMap[sourceNode] + connection->ind.ticks);
-        if (backEdges.find(connection) != backEdges.end()) {
-          delta = -delta;
-        }
-
+        uassert(sourceNode, "Nullptr node found!");
+        // FIXME: feedback buffer size
+        int delta = (backEdges.find(connection) == backEdges.end()) ? 
+          currentTime - (nodeMap[sourceNode] + connection->ind.ticks) : 0;
         uassert(delta >= 0,  "Delta for channel " + connection->name + " < 0!\n");
         if (delta > 0 && !sourceNode->isConst()) {
           model.insertDelay(*connection, delta);
@@ -87,6 +86,7 @@ namespace eda::hls::scheduler {
   void TopologicalBalancer::collectGraphTime() {
     unsigned maxTime = 0;
     for (const auto *node : terminalNodes) {
+      uassert(node, "Nullptr node found!");
       maxTime = std::max(nodeMap[node], maxTime);
     }
     graphTime = maxTime;
