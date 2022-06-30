@@ -86,8 +86,5 @@ private:
 
   /// Returns parent model's name for the channel.
   std::string getModelName(mlir::hil::Chan &ch) const;
-
-  /// Returns name of the function that will be built from the node.
-  std::string getFuncName(mlir::hil::Node &node) const;
 };
 } // namespace eda::hls::debugger

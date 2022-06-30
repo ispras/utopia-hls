@@ -83,8 +83,8 @@ bool EqChecker::equivalent(mlir::hil::Model &left,
     mlir::hil::Node sOut = outPair.second;
 
     // function names
-    const std::string fName = getFuncName(fOut);
-    const std::string sName = getFuncName(sOut);
+    const std::string fName = fOut.nodeTypeName().str();
+    const std::string sName = sOut.nodeTypeName().str();
 
     // output sorts
     const z3::sort fOutSort = getSort(fOut, ctx);
@@ -251,7 +251,7 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
         mergeVec.push_back(outConst == inConst);
       }
 
-      nodes.push_back(mk_and(mergeVec));
+      nodes.push_back(mk_or(mergeVec));
 
     } else if (isSplit(node)) {
 
@@ -294,10 +294,6 @@ std::string EqChecker::getModelName(mlir::hil::Chan &ch) const {
   auto model =
       mlir::cast<Model>(*ch->getParentOp()->getParentOp()->getParentOp());
   return model.name().str();
-}
-
-std::string EqChecker::getFuncName(mlir::hil::Node &node) const {
-  return node.nodeTypeName().str();
 }
 
 z3::sort EqChecker::getSort(mlir::hil::Node &node, z3::context &ctx) const {
