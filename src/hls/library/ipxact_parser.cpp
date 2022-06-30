@@ -97,53 +97,53 @@ std::string IPXACTParser::getStrAttributeFromTag(const DOMElement *element,
 
 void IPXACTParser::parseCatalog(const std::string &libraryPath,
                                 const std::string &catalogPath) {
-  //Creating parser.
   DOMImplementation *impl = DOMImplementationRegistry::getDOMImplementation(
     XMLString::transcode("LS"));
   uassert(impl != nullptr, "DOMImplementation is not found!");
+
+  // Create Xercecs Parser
   DOMLSParser *parser = ((DOMImplementationLS*)impl)->createLSParser(
     DOMImplementationLS::MODE_SYNCHRONOUS, 0);
   uassert(parser != nullptr, "Cannot create LSParser!");
-  //---------------------------------------------------------------------------
-  //Setting libraryPath.
+
+  // Calculate path to IP-XACT catalog
   this->libraryPath = libraryPath;
-  //---------------------------------------------------------------------------
-  //Constructing path to IP-XACT catalog.
   std::filesystem::path path = libraryPath;
   path /= catalogPath;
-  //---------------------------------------------------------------------------
-  //Parsing document.
+
+  // Open IP-XACT catalog
   const DOMDocument *doc = parser->parseURI(path.c_str());
   uassert(doc != nullptr, "Cannot parse IP-XACT catalog!");
-  //---------------------------------------------------------------------------
-  //ipxact:ipxactFile tag(s) parsing.
-  size_t ipxactFileCount =
+
+  // The number of IP-XACT files to be read
+  const size_t ipxactFileCount =
     doc->getElementsByTagName(ipxIpxFileTag)->getLength();
+
+  // Read IP-XACT files one-by-one
   for (size_t i = 0; i < ipxactFileCount; i++) {
     const DOMElement *ipxactFile = (const DOMElement*)(
       doc->getElementsByTagName(ipxIpxFileTag)->item(i));
-    //ipxact:vlnv tag parsing (to get attribute, not value).
-    std::string key = getStrAttributeFromTag(ipxactFile, ipxVlnvTag, nameAttr);
-    //-------------------------------------------------------------------------
-    //ipxact:name tag parsing.
-    std::string nodeValue = getStrValueFromTag(ipxactFile, ipxNameTag);
-    //-------------------------------------------------------------------------
-    //Constructing path.
+
+    // Parse ipxact:vlnv tag (to get attribute, not value)
+    const std::string key = getStrAttributeFromTag(ipxactFile, ipxVlnvTag, nameAttr);
+
+    // Parse ipxact:name tag
+    const std::string name = getStrValueFromTag(ipxactFile, ipxNameTag);
+
+    // Construct filesystem path to the component
     std::filesystem::path value = libraryPath;
-    value /= nodeValue;
-    //-------------------------------------------------------------------------
-    //Mapping component name to it's path.
+    value /= name;
+
+    // Bind component's name and its filesystem path
     readFileNames.insert({key, value.string()});
-    //-------------------------------------------------------------------------
   }
-  //For debuggin purposes.
+
+  // TODO: remove or mask; only for debug
   for (const auto &[key, value] : readFileNames) {
     std::cout << key << std::endl << value << std::endl;
   }
-  //---------------------------------------------------------------------------
-  //Releasing the parser.
+
   parser->release();
-  //---------------------------------------------------------------------------
 }
 
 bool IPXACTParser::hasComponent(const std::string &name,
