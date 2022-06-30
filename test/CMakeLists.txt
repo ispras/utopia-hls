@@ -57,3 +57,5 @@ target_link_libraries(${TEST_TARGET} PRIVATE gtest_main ${MAIN_LIBRARY})
 
 include(GoogleTest)
 gtest_discover_tests(${TEST_TARGET})
+
+file(COPY data DESTINATION .)
