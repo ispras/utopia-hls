@@ -19,15 +19,11 @@ namespace eda::utils::graph {
 //
 // It is assumed that graph G(V,E) implements the following methods:
 //
-// std::size_t           G::nNodes()         const;
-// std::size_t           G::nEdges()         const;
-// const std::vector<V> &G::getNodes()       const;
-// const std::vector<E> &G::getEdges()       const;
-// const std::vector<V> &G::getSources()     const;
-// const std::vector<V> &G::getTargets()     const;
-// const std::vector<E> &G::getOutEdges(V v) const;
-// V                     G::getSource(E e)   const;
-// V                     G::getTarget(E e)   const;
+// std::size_t  G::nNodes()         const;
+// std::size_t  G::nEdges()         const;
+// container<V> G::getSources()     const;
+// container<E> G::getOutEdges(V v) const;
+// V            G::leadsTo(E e)     const;
 //
 //===----------------------------------------------------------------------===//
 
@@ -36,7 +32,9 @@ template <typename G, typename V, typename E>
 std::vector<V> topologicalSort(const G &graph) {
   // DFS stack and visited nodes.
   std::stack<std::pair<V, std::size_t>> searchStack;
+
   std::unordered_set<V> visitedNodes;
+  visitedNodes.reserve(graph.nNodes());
 
   // Set of nodes in topological order.
   std::vector<V> sortedNodes(graph.nNodes());
@@ -58,7 +56,7 @@ std::vector<V> topologicalSort(const G &graph) {
 
     while (i < out.size()) {
       auto e = out[i++];
-      auto n = graph.getTarget(e);
+      auto n = graph.leadsTo(e);
 
       // The next node is unvisited.
       if (visitedNodes.find(n) == visitedNodes.end()) {
