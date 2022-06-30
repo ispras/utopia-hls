@@ -30,9 +30,10 @@ namespace eda::utils::graph {
 /// Performs topological sorting of the directed graph (feedbacks are ignored).
 template <typename G, typename V, typename E>
 std::vector<V> topologicalSort(const G &graph) {
-  // DFS stack and visited nodes.
+  // DFS stack.
   std::stack<std::pair<V, std::size_t>> searchStack;
 
+  // Set of visited nodes.
   std::unordered_set<V> visitedNodes;
   visitedNodes.reserve(graph.nNodes());
 
