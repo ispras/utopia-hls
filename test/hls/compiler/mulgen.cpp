@@ -25,14 +25,16 @@ int main(int argc, char* argv[]) {
               << std::endl;
     std::cout << "outDirName: path to output file. Created if nonexistant."
               << std::endl;
-    std::cout << "moduleName: name of the output module as well as the file."
+    std::cout << "fileName: name of the output file."
+              << std::endl;
+    std::cout << "moduleName: name of the output module."
               << std::endl;
     std::cout << "inputWidth: width of the input. Must be positive integer."
               << "Output will have twice the size."
               << std::endl;
     return 0;
   }
-  //Error handling.
+  // Error handling
   if (argc < 4) {
     std::cout << "Not enough arguments!" << std::endl;
     return 1;
@@ -41,7 +43,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Too many arguments!" << std::endl;
     return 1;
   }
-  if (!isInt(argv[3]) || atoi(argv[3]) <= 0) {
+  if (!isInt(argv[4]) || atoi(argv[4]) <= 0) {
     std::cout << "Input width must be positive integer!" << std::endl;
     return 1;
   }
@@ -57,23 +59,23 @@ int main(int argc, char* argv[]) {
     start = end + 1;
     end = outputDirectoryName.find("/", start);
   }
-  //Open file.
-  outputFile.open(std::string(argv[1]) + "/" + std::string(argv[2]) + ".v");
-  //Interface.
-  outputFile << "module " << argv[2] << "(" << std::endl;
+  // Open file
+  outputFile.open(std::string(argv[1]) + "/" + std::string(argv[2]));
+  // Interface
+  outputFile << "module " << std::string(argv[3]) << "(" << std::endl;
   outputFile << mindent << "input clock," << std::endl;
-  outputFile << mindent << "input reset," << std::endl; 
-  outputFile << mindent << "input " << "[" << atoi(argv[3]) - 1 << ":" << 0
+  outputFile << mindent << "input reset," << std::endl;
+  outputFile << mindent << "input " << "[" << atoi(argv[4]) - 1 << ":" << 0
              << "] x," << std::endl;
-  outputFile << mindent << "input " << "[" << atoi(argv[3]) - 1 << ":" << 0
+  outputFile << mindent << "input " << "[" << atoi(argv[4]) - 1 << ":" << 0
              << "] y," << std::endl;
-  outputFile << mindent << "output " << "[" << atoi(argv[3]) * 2 - 1 << ":" << 0
+  outputFile << mindent << "output " << "[" << atoi(argv[4]) * 2 - 1 << ":" << 0
              << "] z);" << std::endl;
   outputFile << std::endl;
-  //Body.
-  outputFile << indent << "localparam h_w = " << argv[3] << " / 2" << ";"
+  // Body
+  outputFile << indent << "localparam h_w = " << argv[4] << " / 2" << ";"
              << std::endl;
-  //Wires.
+  // Wires
   outputFile << indent << "wire " << "[" << "h_w-1:0" << "]" << " " << "a, b;"
              << std::endl;
   outputFile << indent << "wire " << "[" << "h_w-1:0" << "]" << " " << "c, d;"
@@ -82,7 +84,7 @@ int main(int argc, char* argv[]) {
              << std::endl;
   outputFile << indent << "wire " << "[" << "h_w*2:0" << "]" << " " << "t;"
             << std::endl;
-  //Assignments.
+  // Assignments
   outputFile << indent << "assign " << "{a, b} " << "= " << "x;" << std::endl;
   outputFile << indent << "assign " << "{c, d} " << "= " << "y;" << std::endl;
   outputFile << indent << "assign " << "ac " << "= " << "a * c;" << std::endl;
@@ -91,8 +93,8 @@ int main(int argc, char* argv[]) {
              << std::endl;
   outputFile << indent << "assign " << "z " << "= " << "ac << " << argv[3]
              << " + (t - ac - bd) << h_w + bd;" << std::endl;
-  //Endmodule.
+  // Endmodule
   outputFile << "endmodule";
-  //Close file.
+  // Close file
   outputFile.close();
 }

@@ -358,7 +358,7 @@ void ExternalModule::printFirrtlDeclaration(std::ostream &out) const {
 
 void ExternalModule::moveVerilogModule(
     const std::string &outputDirName) const {
-  std::string outputFileName = outputDirName + getFileNameFromPath(path);
+  std::string outputFileName = outputDirName + "/" + getFileNameFromPath(path);
   std::filesystem::copy(toLower(path),
                         outputFileName,
                         std::filesystem::copy_options::overwrite_existing);
@@ -404,7 +404,7 @@ void FirrtlCircuit::printFirrtl(std::ostream &out) const {
   printEpilogue(out);
 }
 
-void FirrtlCircuit::moveVerilogLibrary(const std::string &outputDirName,
+void FirrtlCircuit::dumpVerilogLibrary(const std::string &outputDirName,
                                        std::ostream &out) const {
   for (const auto &pair : extModules) {
     if (pair.second.body == "") {
@@ -425,32 +425,28 @@ void FirrtlCircuit::dumpVerilogOptFile(const std::string& inputFirrtlName) const
 void FirrtlCircuit::printFiles(const std::string& firrtlFileName,
                                const std::string& verilogLibraryName,
                                const std::string& verilogTopModuleName,
-                               const std::string& outDir) const {
+                               const std::string& outputDirName) const {
 
-  std::filesystem::create_directories(((const std::filesystem::path)outDir).parent_path());
+  std::filesystem::create_directories((const std::filesystem::path)outputDirName);
   std::ofstream outputFile;
 
-  try {
-    outputFile.open(outDir + firrtlFileName);
-  } catch (...) {
-     // TODO
-  }
+  std::filesystem::path filesystemDir = outputDirName;
+  outputFile.open((filesystemDir / firrtlFileName).string());
 
   assert(outputFile && "Can't open outputFile!");
   printFirrtl(outputFile);
   outputFile.close();
 
-  dumpVerilogOptFile(outDir + firrtlFileName);
+  dumpVerilogOptFile((filesystemDir / firrtlFileName).string());
 
   try {
     std::filesystem::rename(name + ".sv", // TODO: main.sv!
-      (outDir + verilogTopModuleName).c_str());
+      ((filesystemDir / verilogTopModuleName).string()).c_str());
   } catch (...) {
     std::cout << "File main.sv is not found! (CIRCT doesn't work)\n";
   }
-
-  outputFile.open(outDir + verilogLibraryName);
-  moveVerilogLibrary(outDir, outputFile); // TODO
+  outputFile.open((filesystemDir / verilogLibraryName).string());
+  dumpVerilogLibrary(filesystemDir.string(), outputFile);
   outputFile.close();
 }
 
@@ -471,10 +467,12 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
                                      const std::string &outputTestName,
                                      const int latency,
                                      const size_t tstCnt) {
-  const std::filesystem::path path = outputDirName + outputTestName;
-  std::filesystem::create_directories(path.parent_path());
+  const std::filesystem::path path = outputDirName;
+  std::filesystem::create_directories(path);
 
-  std::ofstream tBenchFile(path);
+
+  std::ofstream testBenchFile;
+  testBenchFile.open(path / outputTestName);
 
   ctemplate::TemplateDictionary *dict = new ctemplate::TemplateDictionary("tb");
 
@@ -548,8 +546,8 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
   std::string output;
   const std::string vlogTpl = "./src/data/ctemplate/tbench_verilog.tpl";
   ctemplate::ExpandTemplate(vlogTpl, ctemplate::DO_NOT_STRIP, dict, &output);
-  tBenchFile << output;
-  tBenchFile.close();
+  testBenchFile << output;
+  testBenchFile.close();
 }
 
 } // namespace eda::hls::compiler

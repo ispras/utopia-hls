@@ -167,7 +167,7 @@ public:
                   const std::string& outputDirName) const;
   void dumpVerilogOptFile(const std::string& inputFirrtlName) const;
 
-  void moveVerilogLibrary(const std::string &outputDirName,
+  void dumpVerilogLibrary(const std::string &outputDirName,
                           std::ostream &out) const;
   void printFirrtl(std::ostream &out) const;
   void printFirrtlModule(const FirrtlModule &firmodule,

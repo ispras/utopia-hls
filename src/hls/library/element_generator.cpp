@@ -15,10 +15,15 @@ namespace eda::hls::library {
 //FIXME
 std::unique_ptr<Element> ElementGenerator::construct(
     const Parameters &params) const {
-  system((genPath + " " +
-          "." + " " +
-          "mul" + " " +
-          "16").c_str());
+  system((genPath +
+              " " +
+              "." +
+              " " +
+          "mul.v" +
+              " " +
+          name    +
+              " " +
+              "16").c_str());
   std::unique_ptr<Element> element = std::make_unique<Element>(ports);
   element->ir = "";
   element->path = "./mul.v";
