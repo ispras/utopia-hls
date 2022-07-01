@@ -10,8 +10,11 @@
 
 #include "hls/compiler/compiler.h"
 #include "hls/library/library.h"
+#include "hls/mapper/mapper.h"
 #include "hls/model/printer.h"
 #include "hls/parser/hil/parser.h"
+#include "hls/scheduler/param_optimizer.h"
+#include "hls/scheduler/topological_balancer.h"
 
 #include <iostream>
 #include <fstream>
@@ -20,6 +23,8 @@
 using namespace eda::hls::compiler;
 using namespace eda::hls::parser::hil;
 using namespace eda::hls::library;
+using namespace eda::hls::scheduler;
+using namespace eda::hls::mapper;
 
 int compilerHilTest(const std::string &inputLibraryPath,
                     const std::string &relativeCompPath,
@@ -29,10 +34,26 @@ int compilerHilTest(const std::string &inputLibraryPath,
                     const std::string &outputVerilogTopModuleName,
                     const std::string &outputDirName,
                     const std::string &outputTestName) {
+  Indicators indicators;
+  // Optimization criterion and constraints.
+  eda::hls::model::Criteria criteria(
+    PERF,
+    eda::hls::model::Constraint<unsigned>(40000, 500000),                                // Frequency (kHz)
+    eda::hls::model::Constraint<unsigned>(1000,  500000),                                // Performance (=frequency)
+    eda::hls::model::Constraint<unsigned>(0,     1000),                                  // Latency (cycles)
+    eda::hls::model::Constraint<unsigned>(),                                             // Power (does not matter)
+    eda::hls::model::Constraint<unsigned>(1,     10000000));
 
   std::shared_ptr<Model> model = parse(inputFilePath);
 
   Library::get().initialize(inputLibraryPath, relativeCompPath);
+
+  Mapper::get().map(*model, Library::get());
+  ParametersOptimizer::get().setBalancer(&TopologicalBalancer::get());
+  std::map<std::string, Parameters> params =
+    ParametersOptimizer::get().optimize(criteria, *model, indicators);
+
+  TopologicalBalancer::get().balance(*model);
 
   auto compiler = std::make_unique<Compiler>();
   auto circuit = compiler->constructCircuit(*model, "main");
@@ -53,35 +74,35 @@ int compilerHilTest(const std::string &inputLibraryPath,
   return 0;
 }
 
-TEST(CompilerHilTest, CompilerIdctHilTest) {
+TEST(CompilerHilTest, CompilerHilTestIdct) {
   EXPECT_EQ(compilerHilTest("./test/data/ipx/ispras/ip.hw",
                             "catalog/1.0/catalog.1.0.xml",
                             "./test/data/hil/idct.hil",
-                            "outputFirrtlIdct.mlir",
-                            "outputVerilogLibraryIdct.v",
-                            "outputVerilogTopModuleIdct.v",
-                            "./output/test/hil/idct",
-                            "testbench.v"), 0);
+                            "outputIdctFirrtl.mlir",
+                            "outputIdctVerilogLibrary.v",
+                            "outputIdctVerilogTopModule.v",
+                            "./output/test/hil/idct/",
+                            "outputIdctTestbench.v"), 0);
 }
 
-TEST(CompilerHilTest, CompilerTestHilTest) {
+TEST(CompilerHilTest, CompilerHilTestTest) {
   EXPECT_EQ(compilerHilTest("./test/data/ipx/ispras/ip.hw",
                             "catalog/1.0/catalog.1.0.xml",
                             "./test/data/hil/test.hil",
-                            "outputFirrtlTest.mlir",
-                            "outputVerilogLibraryTest.v",
-                            "outputVerilogTopModuleTest.v",
-                            "./output/test/hil/test",
-                            "testbench.v"), 0);
+                            "outputTestFirrtl.mlir",
+                            "outputTestVerilogLibrary.v",
+                            "outputTestVerilogTopModule.v",
+                            "./output/test/hil/test/",
+                            "outputTestTestbench.v"), 0);
 }
 
-TEST(CompilerHilTest, CompilerFeedbackHilTest) {
+TEST(CompilerHilTest, CompilerHilTestFeedback) {
   EXPECT_EQ(compilerHilTest("./test/data/ipx/ispras/ip.hw",
                             "catalog/1.0/catalog.1.0.xml",
                             "./test/data/hil/feedback.hil",
-                            "outputFirrtlFeedback.mlir",
-                            "outputVerilogLibraryFeedback.v",
-                            "outputVerilogTopModuleFeedback.v",
-                            "./output/test/hil/feedback/",
-                            "testbench.v"), 0);
+                            "outputFeedbackFirrtl.mlir",
+                            "outputFeedbackVerilogLibrary.v",
+                            "outputFeedbackVerilogTopModule.v",
+                            "./output/test/hil/feedback",
+                            "outputFeedbackTestbench.v"), 0);
 }
