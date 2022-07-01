@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <functional>
 #include <stack>
 #include <unordered_set>
