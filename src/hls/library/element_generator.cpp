@@ -21,7 +21,7 @@ std::unique_ptr<Element> ElementGenerator::construct(
               " " +
           "mul.v" +
               " " +
-          name    +
+             name +
               " " +
               "16").c_str());
   std::unique_ptr<Element> element = std::make_unique<Element>(ports);

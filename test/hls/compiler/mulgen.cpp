@@ -35,11 +35,11 @@ int main(int argc, char* argv[]) {
     return 0;
   }
   // Error handling
-  if (argc < 4) {
+  if (argc < 5) {
     std::cout << "Not enough arguments!" << std::endl;
     return 1;
   }
-  if (argc > 4) {
+  if (argc > 5) {
     std::cout << "Too many arguments!" << std::endl;
     return 1;
   }
