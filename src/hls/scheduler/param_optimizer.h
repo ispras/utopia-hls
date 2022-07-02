@@ -28,14 +28,11 @@ class ParametersOptimizer final : public Singleton<ParametersOptimizer> {
   friend class Singleton<ParametersOptimizer>;
 
 public:
-  std::map<std::string, Parameters> optimize(
-      const Criteria &criteria,
-      model::Model &model,
-      Indicators &indicators
-  ) const;
+  std::map<std::string, Parameters> optimize(const Criteria &criteria,
+                                             model::Model &model,
+                                             Indicators &indicators) const;
 
-  template <typename T>
-  void set_optimizer(const T &optimizer) {
+  template <typename T> void set_optimizer(const T &optimizer) {
     math_optimizer = std::make_shared<T>(optimizer);
   }
 
@@ -46,14 +43,13 @@ public:
 private:
   ParametersOptimizer() = default;
 
-  void estimate(model::Model &model,
-                std::map<std::string, Parameters> &params,
+  void estimate(model::Model &model, std::map<std::string, Parameters> &params,
                 Indicators &indicators,
                 const std::vector<float> &optimized_params) const;
 
-  void init(const Graph *graph, std::map<std::string, Parameters> &parameters, 
-    std::vector<float> &parameterValues, std::vector<float> &minValues, 
-    std::vector<float> &maxValues) const;
+  void init(const Graph *graph, std::map<std::string, Parameters> &parameters,
+            std::vector<float> &parameterValues, std::vector<float> &minValues,
+            std::vector<float> &maxValues) const;
 
   double normalize(double value, double min, double max) const;
   double denormalize(double value, double min, double max) const;

@@ -12,7 +12,6 @@
 #include "hls/model/model.h"
 #include "hls/scheduler/latency_solver.h"
 #include "hls/scheduler/optimizers/simulated_annealing_optimizer.h"
-#include "hls/scheduler/param_optimizer.h"
 #include "util/assert.h"
 
 #include <algorithm>
@@ -108,8 +107,6 @@ ParametersOptimizer::optimize(const Criteria &criteria, Model &model,
   ostrm << "Target function: " << result << std::endl;
   ostrm << "Limitation: " << limitation << std::endl;
 
-  ostrm << "Time of execution, ms: " << ms_int.count() << std::endl;
-
   ostrm.close();
   return parameters;
 }
@@ -144,7 +141,7 @@ void ParametersOptimizer::estimate(
   // Update the values of the parameters & apply to nodes.
   auto *graph = model.main();
   std::size_t index = 0;
-  // ostrm << "Setting values" << std::endl;
+  ostrm << "Setting values" << std::endl;
   for (auto *node : graph->nodes) {
     auto nodeParams = parameters.find(node->name);
     if (nodeParams == parameters.end()) {
@@ -154,11 +151,9 @@ void ParametersOptimizer::estimate(
     mapper::Mapper::get().apply(*node, nodeParams->second);
     index++;
   }
-  // ostrm.close();
+  ostrm.close();
 
   // Balance flows and align times.
-  LatencyLpSolver::get().balance(model, Verbosity::Neutral);
-
   uassert(balancer, "Balancer for parameters optimizer is not set!\n");
   balancer->balance(model);
 

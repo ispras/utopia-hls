@@ -1,11 +1,19 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
 #include "hls/scheduler/optimizers/simple_optimizer.h"
 
 namespace eda::hls::scheduler::optimizers {
-  SimpleOptimizer::SimpleOptimizer(
-    std::function<float(const std::vector<float>&)> targetFunction) 
-      : targetFunction(targetFunction) {}
+SimpleOptimizer::SimpleOptimizer(
+    std::function<float(const std::vector<float> &)> targetFunction)
+    : targetFunction(targetFunction) {}
 
-void SimpleOptimizer::optimize(std::vector<float>& parameterValues) {
+void SimpleOptimizer::optimize(std::vector<float> &parameterValues) {
   int y1, y2;
   int x2 = parameterValues[0];
   y2 = targetFunction(parameterValues);
@@ -17,7 +25,7 @@ void SimpleOptimizer::optimize(std::vector<float>& parameterValues) {
   parameterValues[0] = (limitation - b) / k;
   targetFunction(parameterValues);
   int sign;
-  if(currentArea > limitation) {
+  if (currentArea > limitation) {
     sign = -1;
   } else {
     sign = 1;
@@ -35,7 +43,6 @@ void SimpleOptimizer::optimize(std::vector<float>& parameterValues) {
       break;
     }
   }
-
 }
 
 } // namespace eda::hls::scheduler::optimizers
