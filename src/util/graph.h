@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <functional>
 #include <stack>
 #include <unordered_set>
@@ -17,13 +18,16 @@ namespace eda::utils::graph {
 
 //===----------------------------------------------------------------------===//
 //
-// It is assumed that graph G(V,E) implements the following methods:
+// It is assumed that graph G contains the following types and methods:
+//
+// G::V (node type);
+// G::E (edge type);
 //
 // std::size_t  G::nNodes()         const;
 // std::size_t  G::nEdges()         const;
 // container<V> G::getSources()     const;
 // container<E> G::getOutEdges(V v) const;
-// V            G::leadsTo(E e)     const;
+// V            G::leadsTo(E e)     const.
 //
 //===----------------------------------------------------------------------===//
 
