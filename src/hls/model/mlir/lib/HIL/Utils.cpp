@@ -7,11 +7,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "HIL/Utils.h"
+#include "util/string.h"
 
 #include "llvm/Support/Casting.h"
 #include "mlir/IR/BuiltinAttributes.h"
 
 #include <iostream>
+
+using namespace eda::utils;
 
 namespace mlir::hil {
 
@@ -69,7 +72,7 @@ namespace mlir::hil {
     return outChans;
   }
 
-  std::vector<Node> getSources(mlir::hil::Graph &graph) {
+  std::vector<Node> getInputs(mlir::hil::Graph &graph) {
 
   std::vector<Node> result;
   mlir::Block::OpListType &graphNodes = getNodes(graph);
@@ -77,7 +80,7 @@ namespace mlir::hil {
   for (auto &gNode : graphNodes) {
 
     auto node = cast<Node>(gNode);
-    if (isSource(node)) {
+    if (isSource(node) || isConst(node)) {
       result.push_back(node);
     }
   }
@@ -119,32 +122,54 @@ std::vector<Node> getSinks(mlir::hil::Graph &graph) {
     return nodes_op.getBody()->getOperations();
   }
 
+  bool isConst(mlir::hil::Node &node) {
+   if (!getInputs(node).empty())
+      return false;
+
+    auto outputs = getOutputs(node);
+    for (auto output : outputs) {
+      auto bnd = output.nodeFromAttr();
+      auto port = bnd.getPort();
+
+      if (!port.getIsConst())
+        return false;
+    }
+
+    return true;
+  }
+
   bool isDelay(mlir::hil::Node &node) {
-    return node.nodeTypeName() == "delay";
+    return getInputs(node).size() == 1
+        && getOutputs(node).size() == 1
+        && starts_with(node.nodeTypeName().str(), "delay");
   }
 
   bool isDup(mlir::hil::Node &node) {
-    return node.nodeTypeName() == "dup";
+    return getInputs(node).size() == 1
+        && starts_with(node.nodeTypeName().str(), "dup");
   }
 
   bool isMerge(mlir::hil::Node &node) {
-    return node.nodeTypeName() == "merge";
+    return getOutputs(node).size() == 1
+        && starts_with(node.nodeTypeName().str(), "merge");
   }
 
   bool isSink(mlir::hil::Node &node) {
-    return node.nodeTypeName() == "sink";
+    return getOutputs(node).empty();
   }
 
   bool isSource(mlir::hil::Node &node) {
-    return node.nodeTypeName() == "source";
+    return getInputs(node).empty() && !isConst(node);
   }
 
   bool isSplit(mlir::hil::Node &node) {
-    return node.nodeTypeName() == "split";
+    return getInputs(node).size() == 1
+        && starts_with(node.nodeTypeName().str(), "split");
   }
 
   bool isKernel(mlir::hil::Node &node) {
-    return !isDelay(node)
+    return !isConst(node)
+        && !isDelay(node)
         && !isDup(node)
         && !isMerge(node)
         && !isSink(node)

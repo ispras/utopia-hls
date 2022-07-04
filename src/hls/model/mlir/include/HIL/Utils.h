@@ -49,8 +49,8 @@ namespace mlir::hil {
   std::vector<Chan> getInputs(Node &node);
   std::vector<Chan> getOutputs(Node &node);
 
-  /// Returns source nodes for the graph.
-  std::vector<Node> getSources(Graph &graph);
+  /// Returns input (source or const) nodes for the graph.
+  std::vector<Node> getInputs(Graph &graph);
 
   /// Returns sink nodes for the graph.
   std::vector<Node> getSinks(Graph &graph);
@@ -61,6 +61,7 @@ namespace mlir::hil {
   /// Returns nodes for the graph.
   mlir::Block::OpListType& getNodes(Graph &graph);
 
+  bool isConst(Node &node);
   bool isDelay(Node &node);
   bool isDup(Node &node);
   bool isKernel(Node &node);
