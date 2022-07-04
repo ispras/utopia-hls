@@ -9,7 +9,6 @@
 #include <iostream>
 
 #include "HIL/Dumper.h"
-#include "HIL/Model.h"
 #include "hls/model/model.h"
 #include "hls/parser/hil/parser.h"
 
@@ -17,11 +16,10 @@
 
 using namespace eda::hls::model;
 using namespace eda::hls::parser::hil;
-using namespace mlir::hil;
 
 bool dumpToMlirTest(const std::string &filePath) {
 
-  const eda::hls::model::Model model = *parse(filePath).get();
+  const Model model = *parse(filePath).get();
   std::stringstream stream;
   dump_model_mlir(model, stream);
 
@@ -32,33 +30,33 @@ bool dumpToMlirTest(const std::string &filePath) {
 /* Dumper tests for HIL->MLIR conversion. */
 
 TEST(DumperTest, HilFeedback) {
-  EXPECT_EQ( dumpToMlirTest("test/data/hil/feedback.hil"), true);
+  EXPECT_EQ(dumpToMlirTest("test/data/hil/feedback.hil"), true);
 }
 
 TEST(DumperTest, HilIdctRow) {
-  EXPECT_EQ( dumpToMlirTest("test/data/hil/idct_row.hil"), true);
+  EXPECT_EQ(dumpToMlirTest("test/data/hil/idct_row.hil"), true);
 }
 
 TEST(DumperTest, HilIdct) {
-  EXPECT_EQ( dumpToMlirTest("test/data/hil/idct.hil"), true);
+  EXPECT_EQ(dumpToMlirTest("test/data/hil/idct.hil"), true);
 }
 
 TEST(DumperTest, HilOneKernel) {
-  EXPECT_EQ( dumpToMlirTest("test/data/hil/one_kernel.hil"), true);
+  EXPECT_EQ(dumpToMlirTest("test/data/hil/one_kernel.hil"), true);
 }
 
 TEST(DumperTest, HilSourceSink) {
-  EXPECT_EQ( dumpToMlirTest("test/data/hil/source_sink.hil"), true);
+  EXPECT_EQ(dumpToMlirTest("test/data/hil/source_sink.hil"), true);
 }
 
 TEST(DumperTest, HilTestInstance) {
-  EXPECT_EQ( dumpToMlirTest("test/data/hil/test_instance.hil"), true);
+  EXPECT_EQ(dumpToMlirTest("test/data/hil/test_instance.hil"), true);
 }
 
 TEST(DumperTest, HilTestSmall) {
-  EXPECT_EQ( dumpToMlirTest("test/data/hil/test_small.hil"), true);
+  EXPECT_EQ(dumpToMlirTest("test/data/hil/test_small.hil"), true);
 }
 
 TEST(DumperTest, HilTest) {
-  EXPECT_EQ( dumpToMlirTest("test/data/hil/test.hil"), true);
+  EXPECT_EQ(dumpToMlirTest("test/data/hil/test.hil"), true);
 }
