@@ -11,42 +11,33 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/scheduler/topological_balancer.h"
-#include "util/assert.h"
 
-#include <iostream>
+#include <algorithm>
 
 namespace eda::hls::scheduler {
 
-  void TopologicalBalancer::reset() {
-    nodeMap.clear();
-    terminalNodes.clear();
+  void TopologicalBalancer::init(const Graph *graph) {
+    TraverseBalancerBase::init(*graph);
     visited.clear();
     currentNode = nullptr;
   }
 
   void TopologicalBalancer::balance(Model &model) {
-    reset();
     Graph *graph = model.main();
     uassert(graph, "Graph 'main' not found!\n");
-
-    for (const auto *node : graph->nodes) {
-      nodeMap[node] = 0;
-    }
+    init(graph);
 
     auto handleNode = [this](const Node *node) { visitNode(node); };
     auto handleEdge = [this](const Chan *chan) { visitChan(chan); };
 
     graph::traverseTopologicalOrder<Graph>(*graph, handleNode, handleEdge);
     insertBuffers(model);
-    collectGraphTime();
+    printGraphTime();
   }
 
   void TopologicalBalancer::visitNode(const Node *node) {
     uassert(node, "Nullptr node found!\n");
     currentNode = node;
-    if (node->isSink()) {
-      terminalNodes.insert(node);
-    }
     visited.insert(currentNode);
   }
 
@@ -57,37 +48,17 @@ namespace eda::hls::scheduler {
       if (visited.find(targetNode) != visited.end()) {
         backEdges.insert(chan);
       } else {
-        nodeMap[targetNode] = std::max(nodeMap[currentNode] + chan->ind.ticks, nodeMap[targetNode]);
+        nodeMap[targetNode] = std::max(nodeMap[currentNode] + 
+          (int)chan->ind.ticks, nodeMap[targetNode]);
+        graphTime = std::max((unsigned)nodeMap[targetNode], graphTime);
       }
     }
   }
-  
-  void TopologicalBalancer::insertBuffers(Model &model) {
-    unsigned bufsInserted = 0;
-    for (const auto &targetNode : nodeMap) {
-      const unsigned currentTime = targetNode.second;
-      for (const auto &connection : targetNode.first->inputs) {
-        const Node *sourceNode = connection->source.node;
-        // FIXME: feedback buffer size
-        int delta = (backEdges.find(connection) == backEdges.end()) ? 
-          currentTime - (nodeMap[sourceNode] + connection->ind.ticks) : 0;
-        uassert(delta >= 0,  "Delta for channel " + connection->name + " < 0!\n");
-        if (delta > 0 && !sourceNode->isConst()) {
-          model.insertDelay(*connection, delta);
-          bufsInserted++;
-        }
-      }
-    }
-    std::cout << "Total buffers inserted: " << bufsInserted << std::endl;
-  }
 
-  void TopologicalBalancer::collectGraphTime() {
-    unsigned maxTime = 0;
-    for (const auto *node : terminalNodes) {
-      maxTime = std::max(nodeMap[node], maxTime);
-    }
-    graphTime = maxTime;
-    std::cout << "Max time: " << graphTime << std::endl;
-  }
-
+  int TopologicalBalancer::getDelta(int curTime, const Chan* curChan) {
+    // FIXME: feedback buffer size
+    return (backEdges.find(curChan) == backEdges.end()) ? 
+      curTime - (nodeMap[curChan->source.node] + (int)curChan->ind.ticks) : 0;
+  };
+   
 } // namespace eda::hls::scheduler

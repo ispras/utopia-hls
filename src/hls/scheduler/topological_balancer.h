@@ -16,15 +16,14 @@
 #include "util/graph.h"
 #include "util/singleton.h"
 
-#include <map>
-#include <set>
+#include <unordered_set>
 
 using namespace eda::hls::model;
 using namespace eda::util;
 
 namespace eda::hls::scheduler {
 
-class TopologicalBalancer : public LatencyBalancerBase, 
+class TopologicalBalancer final : public TraverseBalancerBase, 
     public Singleton<TopologicalBalancer> {
 
 public:
@@ -35,14 +34,11 @@ public:
 private:
   TopologicalBalancer() {}
 
-  void reset();
-  void visitNode(const Node *node);
-  void visitChan(const Chan *chan);
-  void insertBuffers(Model &model) override;
-  void collectGraphTime() override;
+  void init(const Graph *graph);
+  void visitNode(const Node *node) override;
+  void visitChan(const Chan *chan) override;
+  int getDelta(int curTime, const Chan* curChan) override;
 
-  std::map<const Node*, unsigned> nodeMap;
-  std::unordered_set<const Node*> terminalNodes;
   std::unordered_set<const Node*> visited;
   std::unordered_set<const Chan*> backEdges;
   const Node *currentNode;

@@ -57,7 +57,7 @@ private:
   void reset();
 
   void insertBuffers(model::Model &model) override;
-  void collectGraphTime() override;
+  void collectGraphTime(const model::Graph &graph);
 
   /// Generates the constraint for next node timestep.
   void genLatencyConstraint(const std::string &nextName,
