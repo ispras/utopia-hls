@@ -44,10 +44,9 @@ eda::hls::model::Criteria criteria(
 int lpsolveTest(const std::string &filename) {
   std::shared_ptr<Model> model = parse(filename);
   Mapper::get().map(*model, Library::get());
-  ParametersOptimizer::get().setBalancer(&LatencyLpSolver::get());
-
+  
   std::map<std::string, Parameters> params =
-    ParametersOptimizer::get().optimize(criteria, *model, indicators);
+    ParametersOptimizer<LatencyLpSolver>::get().optimize(criteria, *model, indicators);
 
   LatencyLpSolver &solver = LatencyLpSolver::get();
   solver.balance(*model, Verbosity::Neutral);
@@ -69,9 +68,8 @@ int balanceFlowTest(const std::string &filename, FlowBalanceMode mode) {
 int dijkstraTest(const std::string &filename, LatencyBalanceMode mode) {
   std::shared_ptr<Model> model = parse(filename);
   Mapper::get().map(*model, Library::get());
-  ParametersOptimizer::get().setBalancer(&DijkstraBalancer::get());
   std::map<std::string, Parameters> params =
-    ParametersOptimizer::get().optimize(criteria, *model, indicators);
+    ParametersOptimizer<DijkstraBalancer>::get().optimize(criteria, *model, indicators);
 
   DijkstraBalancer::get().balance(*model, mode);
 
@@ -85,9 +83,8 @@ int dijkstraTest(const std::string &filename, LatencyBalanceMode mode) {
 int topologicalTest(const std::string &filename) {
   std::shared_ptr<Model> model = parse(filename);
   Mapper::get().map(*model, Library::get());
-  ParametersOptimizer::get().setBalancer(&TopologicalBalancer::get());
   std::map<std::string, Parameters> params =
-    ParametersOptimizer::get().optimize(criteria, *model, indicators);
+    ParametersOptimizer<TopologicalBalancer>::get().optimize(criteria, *model, indicators);
 
   TopologicalBalancer::get().balance(*model);
 

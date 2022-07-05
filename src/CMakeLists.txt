@@ -110,7 +110,7 @@ add_library(${MAIN_LIBRARY}
   hls/scheduler/optimizers/abstract_optimizer.cpp
   hls/scheduler/optimizers/simple_optimizer.cpp
   hls/scheduler/optimizers/simulated_annealing_optimizer.cpp
-  hls/scheduler/param_optimizer.cpp
+  hls/scheduler/param_optimizer.h
   hls/scheduler/topological_balancer.cpp
   rtl/compiler/compiler.cpp
   rtl/library/flibrary.cpp

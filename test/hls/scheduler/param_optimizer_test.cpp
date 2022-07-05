@@ -10,6 +10,7 @@
 #include "hls/model/model.h"
 #include "hls/parser/hil/parser.h"
 #include "hls/scheduler/param_optimizer.h"
+#include "hls/scheduler/topological_balancer.h"
 
 #include "gtest/gtest.h"
 
@@ -42,7 +43,7 @@ void paramOptimizerTest(const std::string &filename) {
 
   // Optimize parameters.
   std::map<std::string, Parameters> params =
-    ParametersOptimizer::get().optimize(criteria, *model, indicators);
+    ParametersOptimizer<TopologicalBalancer>::get().optimize(criteria, *model, indicators);
 
   // Check the constrains.
   EXPECT_TRUE(criteria.check(indicators));

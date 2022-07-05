@@ -6,23 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "hls/library/library.h"
-#include "hls/mapper/mapper.h"
-#include "hls/model/model.h"
-#include "hls/scheduler/latency_solver.h"
-#include "hls/scheduler/optimizers/simulated_annealing_optimizer.h"
-#include "hls/scheduler/param_optimizer.h"
-#include "util/assert.h"
-
-#include <algorithm>
-#include <fstream>
-#include <iostream>
-#include <random>
-#include <string>
-
-namespace eda::hls::scheduler {
-
-std::map<std::string, Parameters> ParametersOptimizer::optimize(
+template<typename T>
+std::map<std::string, Parameters> ParametersOptimizer<T>::optimize(
     const Criteria &criteria, Model &model, Indicators &indicators) const {
   float initialTemperature = 100.0; // TODO: Why this value?
   float finalTemperature = 1.5;
@@ -106,7 +91,8 @@ std::map<std::string, Parameters> ParametersOptimizer::optimize(
   return parameters;
 }
 
-void ParametersOptimizer::init(const Graph *graph, 
+template<typename T>
+void ParametersOptimizer<T>::init(const Graph *graph, 
     std::map<std::string, Parameters> &parameters, 
     std::vector<float> &parameterValues, std::vector<float> &minValues, 
     std::vector<float> &maxValues) const {
@@ -128,7 +114,8 @@ void ParametersOptimizer::init(const Graph *graph,
   }
 }
 
-void ParametersOptimizer::estimate(Model &model, 
+template<typename T>
+void ParametersOptimizer<T>::estimate(Model &model, 
     std::map<std::string, Parameters> &parameters, Indicators &indicators,
     const std::vector<float> &parameterValues) const {
   std::ofstream ostrm("estimation.txt", std::ios_base::app);
@@ -148,20 +135,19 @@ void ParametersOptimizer::estimate(Model &model,
   ostrm.close();
   
   // Balance flows and align times.
-  uassert(balancer, "Balancer for parameters optimizer is not set!\n");
-  balancer->balance(model);
+  T::get().balance(model);
   
   // Estimate overall design indicators
   mapper::Mapper::get().estimate(model);
   indicators = model.ind;
 }
 
-double ParametersOptimizer::normalize(double value, double min, double max) const {
+template<typename T>
+double ParametersOptimizer<T>::normalize(double value, double min, double max) const {
   return (value - min) / (max - min);
 }
 
-double ParametersOptimizer::denormalize(double value, double min, double max) const {
+template<typename T>
+double ParametersOptimizer<T>::denormalize(double value, double min, double max) const {
   return value * (max - min) + min;
 }
-
-} // namespace eda::hls::scheduler
