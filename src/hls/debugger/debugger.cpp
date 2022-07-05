@@ -285,18 +285,6 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
   }
 }
 
-std::string EqChecker::getModelName(mlir::hil::Node &node) const {
-  auto model =
-      mlir::cast<Model>(*node->getParentOp()->getParentOp()->getParentOp());
-  return model.name().str();
-}
-
-std::string EqChecker::getModelName(mlir::hil::Chan &ch) const {
-  auto model =
-      mlir::cast<Model>(*ch->getParentOp()->getParentOp()->getParentOp());
-  return model.name().str();
-}
-
 z3::sort EqChecker::getSort(mlir::hil::Node &node, z3::context &ctx) const {
   return ctx.uninterpreted_sort(node.nodeTypeName().str().c_str());
 }

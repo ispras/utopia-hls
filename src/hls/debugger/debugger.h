@@ -78,13 +78,5 @@ private:
 
   /// Returns arguments for function call that is constructed from the node.
   z3::expr_vector getFuncArgs(mlir::hil::Node &node, z3::context &ctx) const;
-
-  /* Utility methods to operate with model. */
-
-  /// Returns parent model's name for the node.
-  std::string getModelName(mlir::hil::Node &node) const;
-
-  /// Returns parent model's name for the channel.
-  std::string getModelName(mlir::hil::Chan &ch) const;
 };
 } // namespace eda::hls::debugger
