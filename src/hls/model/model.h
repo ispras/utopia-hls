@@ -428,6 +428,9 @@ struct Graph final {
   std::size_t nNodes() const { return nodes.size(); }
   std::size_t nEdges() const { return chans.size(); }
 
+  bool hasNode(Node *node) const { return true; }
+  bool hasEdge(Chan *chan) const { return true; }
+
   const std::vector<Node*>& getSources() const {
     return sources;
   }
