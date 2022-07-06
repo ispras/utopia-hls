@@ -43,9 +43,9 @@ void SimulatedAnnealingOptimizer::optimize(std::vector<float> &currentValues) {
     ostrm << "Current target: " << candidateTarget << std::endl;
     ostrm << "Current limitation: " << currentLimit << std::endl;
     ostrm << "Current params: " << candidateValues[0] << " "
-          << candidateValues[1] << std::endl;
+          << candidateValues[1] << " " << candidateValues[2] << std::endl;
     ostrm << "Previous params: " << currentValues[0] << " " << currentValues[1]
-          << std::endl
+          << " " << currentValues[2] << std::endl
           << std::endl;
     if (transitionProbability < stepProbability) {
       currentValues = candidateValues;

@@ -137,11 +137,9 @@ void ParametersOptimizer::init(const Graph *graph,
 void ParametersOptimizer::estimate(
     Model &model, std::map<std::string, Parameters> &parameters,
     Indicators &indicators, const std::vector<float> &parameterValues) const {
-  std::ofstream ostrm("estimation.txt", std::ios_base::app);
   // Update the values of the parameters & apply to nodes.
   auto *graph = model.main();
   std::size_t index = 0;
-  ostrm << "Setting values" << std::endl;
   for (auto *node : graph->nodes) {
     auto nodeParams = parameters.find(node->name);
     if (nodeParams == parameters.end()) {
@@ -151,7 +149,6 @@ void ParametersOptimizer::estimate(
     mapper::Mapper::get().apply(*node, nodeParams->second);
     index++;
   }
-  ostrm.close();
 
   // Balance flows and align times.
   uassert(balancer, "Balancer for parameters optimizer is not set!\n");
