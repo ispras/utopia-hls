@@ -28,10 +28,12 @@ std::string toLower(std::string s) {
 }
 
 // TODO: Think about this
-void replaceSomeChars(std::string &buf) {
-  std::replace(buf.begin(), buf.end(), ',', '_');
-  std::replace(buf.begin(), buf.end(), '>', '_');
-  std::replace(buf.begin(), buf.end(), '<', '_');
+std::string replaceSomeChars(const std::string &buf) {
+  std::string result = buf;
+  std::replace(result.begin(), result.end(), ',', '_');
+  std::replace(result.begin(), result.end(), '>', '_');
+  std::replace(result.begin(), result.end(), '<', '_');
+  return result;
 }
 
 const std::string chanSourceToString(const eda::hls::model::Chan &chan) {
@@ -42,39 +44,28 @@ Port createFirrtlPort(const model::Node *node,
                       const model::Port *port,
                       const Port::Direction dir,
                       const Type type) {
-  return Port(node->name + "_" + port->name, dir, type);
+  return Port(replaceSomeChars(node->name) + "_" + replaceSomeChars(port->name),
+      dir, type);
 }
 
 bool Port::isClock() const {
   return name == "clock";
 }
 
-std::string ExternalModule::getFileNameFromPath(const std::string &path) {
-  int start = 0;
-  int end = path.find("/");
-  std::string buf = "";
-  std::string outputFileName;
-  while (end != -1) {
-    buf = path.substr(start, end - start);
-    start = end + 1;
-    end = path.find("/", start);
-  }
-  buf = path.substr(start, end - start);
-  return buf;
-}
-
 void ExternalModule::addInputs(const std::vector<model::Port*> inputs) {
-  //Will be removed in the near future.
+  // Will be removed in the near future
   addInput(Port("clock", Port::Direction::IN, Type("clock", 1)));
   addInput(Port("reset", Port::Direction::IN, Type("reset", 1)));
   for (const auto *input : inputs) {
-      addInput(Port(input->name, Port::Direction::IN, Type("sint", 16)));
+      addInput(Port(replaceSomeChars(input->name),
+          Port::Direction::IN, Type("sint", 16)));
   }
 }
 
 void ExternalModule::addOutputs(const std::vector<model::Port*> outputs) {
   for (const auto *output : outputs) {
-      addOutput(Port(output->name, Port::Direction::OUT, Type("sint", 16)));
+      addOutput(Port(replaceSomeChars(output->name),
+          Port::Direction::OUT, Type("sint", 16)));
   }
 }
 
@@ -95,21 +86,23 @@ void FirrtlModule::addOutputs(const model::Node *node,
 }
 
 void Instance::addModuleInputs(const std::vector<model::Port*> inputs) {
+  addModuleInput(Port("clock", Port::Direction::IN, Type("clock", 1)));
+  addModuleInput(Port("reset", Port::Direction::IN, Type("reset", 1)));
   for (const auto *input : inputs) {
-    addModuleInput(Port(input->name, Port::Direction::IN,
+    addModuleInput(Port(replaceSomeChars(input->name), Port::Direction::IN,
       Type("sint", 16)));
   }
 }
 
 void Instance::addModuleOutputs(const std::vector<model::Port*> outputs) {
   for (const auto *output : outputs) {
-    addModuleOutput(Port(output->name, Port::Direction::OUT,
+    addModuleOutput(Port(replaceSomeChars(output->name), Port::Direction::OUT,
       Type("sint", 16)));
   }
 }
 
 ExternalModule::ExternalModule(const model::NodeType *nodetype) :
-    Module(nodetype->name) {
+    Module(replaceSomeChars(nodetype->name)) {
   addInputs(nodetype->inputs);
   addOutputs(nodetype->outputs);
 
@@ -126,8 +119,10 @@ FirrtlModule::FirrtlModule(const eda::hls::model::Model &model,
   const auto* graph = model.findGraph(topModuleName);
 
   //Inputs & Outputs
-  addInput(Port("clock", Port::Direction::IN, Type("clock", 1)));
-  addInput(Port("reset", Port::Direction::IN, Type("reset", 1)));
+  Port topClockPort = Port("clock", Port::Direction::IN, Type("clock", 1));
+  Port topResetPort = Port("reset", Port::Direction::IN, Type("reset", 1));
+  addInput(topClockPort);
+  addInput(topResetPort);
 
   assert(graph && "TopModel.graph is null");
 
@@ -137,8 +132,19 @@ FirrtlModule::FirrtlModule(const eda::hls::model::Model &model,
     } else if (node->isSink()) {
       addOutputs(node, node->inputs);
     } else {
-      Instance instance(node->name, node->type.name);
 
+      Instance instance(replaceSomeChars(node->name),
+                        replaceSomeChars(node->type.name));
+      Port clockPort = Port(instance.instanceName + "_clock",
+                            Port::Direction::IN,
+                            Type("clock", 1));
+      instance.addInput(clockPort);
+      instance.addBinding(topClockPort, clockPort);
+      Port resetPort = Port(instance.instanceName + "_reset",
+                            Port::Direction::IN,
+                            Type("reset", 1));
+      instance.addInput(resetPort);
+      instance.addBinding(topResetPort, resetPort);
       for (const auto *input : node->inputs) {
         Port inputPort = createFirrtlPort(node,
           input->target.port, Port::Direction::IN, Type("sint", 16));
@@ -158,250 +164,208 @@ FirrtlModule::FirrtlModule(const eda::hls::model::Model &model,
           output->source.port, Port::Direction::OUT, Type("sint", 16));
         instance.addOutput(outputPort);
 
-        if (!node->type.isSink()) { // check this
+        if (!node->type.isSink()) {
           Port connectsTo = createFirrtlPort(output->target.node,
             output->target.port, Port::Direction::IN, Type("sint", 16));
           instance.addBinding(outputPort, connectsTo);
         }
       }
-
       instance.addModuleOutputs(node->type.outputs);
-
       addInstance(instance);
-      setPath(""); // ???
+      setPath("");
     }
   }
 }
 
-void FirrtlModule::printInstances(std::ostream &out) const {
-  for (const auto &instance : instances) {
-    out << FirrtlCircuit::indent << FirrtlCircuit::indent;
-    out << FirrtlCircuit::varPrefix << instance.instanceName << "_clock, ";
-    out << FirrtlCircuit::varPrefix << instance.instanceName << "_reset, ";
-    bool hasComma = false;
-    std::string buf;
-    for (const auto &input : instance.inputs) {
-      out << (hasComma ? ", " : "");
-      buf.assign(input.name);
-      replaceSomeChars(buf);
-      out << FirrtlCircuit::varPrefix << buf;
-      hasComma = true;
-    }
+void ExternalModule::addPrologueToDict(ctemplate::TemplateDictionary *dict)
+    const {
+  // set generation time
+  auto time = std::time(nullptr);
+  auto *localTime = std::localtime(&time);
+  dict->SetFormattedValue("GEN_TIME",
+                          "%d-%d-%d %d:%d:%d",
+                          localTime->tm_mday,
+                          localTime->tm_mon + 1,
+                          localTime->tm_year + 1900,
+                          localTime->tm_hour,
+                          localTime->tm_min,
+                          localTime->tm_sec);
 
-    for (const auto &output : instance.outputs) {
-      out << (hasComma ? ", " : "");
-      buf.assign(output.name);
-      replaceSomeChars(buf);
-      out << FirrtlCircuit::varPrefix << buf;
-      hasComma = true;
-    }
-
-    out << " = " << FirrtlCircuit::opPrefix << "instance " <<
-        instance.instanceName   << " @" << instance.moduleName << "(";
-    hasComma = false;
-    out << "in " << "clock " << ": " << FirrtlCircuit::typePrefix << "clock, ";
-    out << "in " << "reset " << ": " << FirrtlCircuit::typePrefix << "reset,";
-    for (const auto &input : instance.moduleInputs) {
-      out << (hasComma ? ", " : " ");
-      buf.assign(input.name);
-      replaceSomeChars(buf);
-      out << "in " << buf << ": ";
-      out << FirrtlCircuit::typePrefix << input.type.name;
-      out << "<" << input.type.width << ">";
-      hasComma = true;
-    }
-
-    for (const auto &output : instance.moduleOutputs) {
-      out << (hasComma ? ", " : " ");
-      buf.assign(output.name);
-      replaceSomeChars(buf);
-      out << "out " << buf << ": ";
-      out << FirrtlCircuit::typePrefix << output.type.name;
-      out << "<" << output.type.width << ">";
-      hasComma = true;
-    }
-
-    out << ")\n";
-  }
-}
-
-void FirrtlModule::printConnections(std::ostream &out) const {
-  for (const auto &instance : instances) {
-    out << FirrtlCircuit::indent << FirrtlCircuit::indent <<
-        FirrtlCircuit::opPrefix << "connect " << FirrtlCircuit::varPrefix <<
-        instance.instanceName + "_" + "clock, " << FirrtlCircuit::varPrefix <<
-        "clock" << " : " << FirrtlCircuit::typePrefix << "clock" << ", " <<
-        FirrtlCircuit::typePrefix << "clock\n";
-    out << FirrtlCircuit::indent << FirrtlCircuit::indent <<
-         FirrtlCircuit::opPrefix << "connect " << FirrtlCircuit::varPrefix <<
-         instance.instanceName + "_" + "reset, " << FirrtlCircuit::varPrefix <<
-         "reset" << " : " << FirrtlCircuit::typePrefix << "reset" << ", " <<
-         FirrtlCircuit::typePrefix << "reset\n";
-    std::string buf1;
-    std::string buf2;
-    for (const auto &pair : instance.bindings) {
-      buf1.assign(pair.first.name);
-      replaceSomeChars(buf1);
-      buf2.assign(pair.second.name);
-      replaceSomeChars(buf2);
-      out << FirrtlCircuit::indent << FirrtlCircuit::indent <<
-          FirrtlCircuit::opPrefix << "connect " << FirrtlCircuit::varPrefix <<
-          buf2 << ", " << FirrtlCircuit::varPrefix << buf1;
-      out <<  " : " << FirrtlCircuit::typePrefix << pair.second.type.name;
-      out << "<" << pair.second.type.width << ">";
-      out << ", ";
-      out << FirrtlCircuit::typePrefix << pair.second.type.name;
-      out << "<" << pair.second.type.width << ">";
-      out << "\n";
-    }
-  }
-}
-
-void FirrtlModule::printDeclaration(std::ostream &out) const {
-  out << FirrtlCircuit::indent << FirrtlCircuit::opPrefix << "module @" <<
-      name << " (\n";
-  for (const auto &input : inputs) {
-    out << FirrtlCircuit::indent << FirrtlCircuit::indent <<  "in " <<
-        FirrtlCircuit::varPrefix << input.name << " : " <<
-        FirrtlCircuit::typePrefix << input.type.name;
-    if (input.type.width != 1) {
-      out << "<" << input.type.width << ">,\n";
-    } else {
-      out << ",\n";
-    }
-  }
-  bool hasComma = false;
-  for (const auto &output : outputs) {
-    out << (hasComma ? ",\n" : "\n");
-    out << FirrtlCircuit::indent << FirrtlCircuit::indent <<  "out " <<
-        FirrtlCircuit::varPrefix << output.name << ": " <<
-        FirrtlCircuit::typePrefix << output.type.name;
-    if (output.type.width != 1) {
-      out << "<" << output.type.width << ">";
-    }
-    hasComma = true;
-  }
-  out << ")\n";
-  out << FirrtlCircuit::indent << FirrtlCircuit::indent << "{\n";
-}
-
-void FirrtlModule::printEpilogue(std::ostream &out) const {
-  out << FirrtlCircuit::indent << FirrtlCircuit::indent << "} ";
-}
-
-void FirrtlModule::printFirrtlModule(std::ostream &out) const {
-  printDeclaration(out);
-  printInstances(out);
-  printConnections(out);
-  printEpilogue(out);
-}
-
-void ExternalModule::printDeclaration(std::ostream &out) const {
-  out << "module " << name << "(\n";
-  bool hasComma = false;
-  std::string buf;
-  for (const auto &input : inputs) {
-    out << (hasComma ? ",\n" : "\n");
-    buf.assign(input.name);
-    replaceSomeChars(buf);
-    out << FirrtlCircuit::indent << buf;
-    /*if (input.type.element_width != 1) {
-      out << "[" << input.type.element_width - 1 << ":" << 0 << "]";
-    }*/
-    hasComma = true;
-  }
-  for (const auto &output : outputs) {
-    out << (hasComma ? ",\n" : "\n");
-    buf.assign(output.name);
-    replaceSomeChars(buf);
-    out << FirrtlCircuit::indent << buf;
-    /*if (output.type.element_width != 1) {
-      out << "[" << output.type.element_width - 1 << ":" << 0 << "]";
-    }*/
-    hasComma = true;
-  }
-  out << ");\n";
-}
-
-void ExternalModule::printEpilogue(std::ostream &out) const {
-  out << "endmodule " << "//" << name;
-}
-
-void ExternalModule::printFirrtlDeclaration(std::ostream &out) const {
-  out << FirrtlCircuit::indent << FirrtlCircuit::opPrefix << "extmodule @" <<
-  name << "(";
-  bool hasComma = false;
-  std::string buf;
-  for (const auto &input : inputs) {
-    buf.assign(input.name);
-    replaceSomeChars(buf);
-    out << (hasComma ? ",\n" : "\n");
-    out << FirrtlCircuit::indent << FirrtlCircuit::indent <<  "in " <<
-        buf << " : " << FirrtlCircuit::typePrefix << input.type.name;
-    if (input.type.width != 1) {
-      out << "<" << input.type.width << ">";
-    }
-    hasComma = true;
-  }
-  for (const auto &output : outputs) {
-    buf.assign(output.name);
-    replaceSomeChars(buf);
-    out << (hasComma ? ",\n" : "\n");
-    out << FirrtlCircuit::indent << FirrtlCircuit::indent <<  "out " <<  buf <<
-        ": " << FirrtlCircuit::typePrefix << output.type.name;
-    if (output.type.width != 1) {
-      out << "<" << output.type.width << ">";
-    }
-  }
-  out << ")\n";
+  dict->SetValue("MODULE_NAME", name);
 }
 
 void ExternalModule::moveVerilogModule(
     const std::string &outputDirName) const {
-  std::string outputFileName = outputDirName + "/" + getFileNameFromPath(path);
+  std::filesystem::path filesystemPath = outputDirName;
+  std::string outputFileName = (((const std::filesystem::path) path).filename());
   std::filesystem::copy(toLower(path),
-                        outputFileName,
+                        (filesystemPath / outputFileName).string(),
                         std::filesystem::copy_options::overwrite_existing);
 }
 
 void ExternalModule::printVerilogModule(std::ostream &out) const {
-  printDeclaration(out);
-  printBody(out);
-  printEpilogue(out);
-  out << std::endl;
+  auto *dict = new ctemplate::TemplateDictionary("extModule");
+  addPrologueToDict(dict);
+  size_t portCount = inputs.size() + outputs.size();
+  size_t outputCount = outputs.size();
+  addPortsToDict(dict, inputs, "INS", "IN_NAME", "IN_SEP", portCount);
+  addPortsToDict(dict, outputs, "OUTS", "OUT_NAME", "OUT_SEP", outputCount);
+  dict->SetValue("BODY", body);
+
+  std::string output;
+  const std::string extVerilogTpl = "./src/data/ctemplate/ext_verilog.tpl";
+  ctemplate::ExpandTemplate(extVerilogTpl,
+                            ctemplate::DO_NOT_STRIP,
+                            dict, &output);
+  out << output;
 }
 
-void FirrtlCircuit::printFirrtlModule(const FirrtlModule &firmodule,
-                                      std::ostream &out) const {
-  firmodule.printFirrtlModule(out);
-}
-
-void FirrtlCircuit::printDeclaration(std::ostream &out) const {
-  out << FirrtlCircuit::opPrefix << "circuit " << "\"" << name <<
-      "\" " << "{\n";
-}
-
-void FirrtlCircuit::printEpilogue(std::ostream &out) const {
-  out << "}";
-}
-
-void FirrtlCircuit::printFirrtlModules(std::ostream &out) const {
-  for (const auto &pair : firModules) {
-    pair.second.printFirrtlModule(out);
+void ExternalModule::addPortsToDict(ctemplate::TemplateDictionary *dict,
+                                    const std::vector<Port> ports,
+                                    const std::string &tagSectName,
+                                    const std::string &tagPortName,
+                                    const std::string &tagSepName,
+                                    const size_t portCount) const {
+  for (size_t i = 0; i < ports.size(); i++) {
+   const auto port = ports[i];
+   auto *subDict = dict->AddSectionDictionary(tagSectName);
+   subDict->SetValue(tagPortName, port.name);
+   subDict->SetValue(tagSepName, (i == portCount - 1) ? "" : ",");
   }
 }
 
-void FirrtlCircuit::printExtDeclarations(std::ostream &out) const {
+void FirrtlCircuit::addPortsToDict(ctemplate::TemplateDictionary *dict,
+                                   const std::vector<Port> ports,
+                                   const std::string &tagSectName,
+                                   const std::string &tagPortName,
+                                   const std::string &tagTypeName,
+                                   const std::string &tagSepName,
+                                   const size_t portCount) const {
+  for (size_t i = 0; i < ports.size(); i++) {
+   const auto port = ports[i];
+   auto *subDict = dict->AddSectionDictionary(tagSectName);
+   subDict->SetValue(tagPortName, port.name);
+   const auto type = port.type;
+
+   std::string portTypeName = type.name;
+   portTypeName = portTypeName + ((type.width != 1) ? ("<" +
+                                std::to_string(type.width) +
+                                                      ">") :
+                                                          "");
+   subDict->SetValue(tagTypeName, portTypeName);
+   subDict->SetValue(tagSepName, (i == portCount - 1) ? "" : ",");
+  }
+}
+
+void FirrtlCircuit::addInstancesToDict(ctemplate::TemplateDictionary *dict,
+                                       std::vector<Instance> instances) const {
+  for (const auto &instance : instances) {
+   auto *instDict = dict->AddSectionDictionary("INSTS");
+   size_t portCount = instance.inputs.size() + instance.outputs.size();
+   size_t outputCount = instance.moduleOutputs.size();
+   for (size_t i = 0; i < instance.inputs.size(); i++) {
+     const auto input = instance.inputs[i];
+     auto *inInstDict = instDict->AddSectionDictionary("INST_INS");
+     inInstDict->SetValue("INST_IN_NAME", input.name);
+     inInstDict->SetValue("INST_IN_SEP", (i == portCount - 1) ? "" : ",");
+   }
+   for (size_t i = 0; i < instance.outputs.size(); i++) {
+     const auto output = instance.outputs[i];
+     auto *outInstDict = instDict->AddSectionDictionary("INST_OUTS");
+     outInstDict->SetValue("INST_OUT_NAME", output.name);
+     outInstDict->SetValue("INST_OUT_SEP", (i == outputCount - 1) ?
+                                                               "" : ",");
+   }
+   instDict->SetValue("INSTANCE_NAME", instance.instanceName);
+   instDict->SetValue("MODULE_NAME", instance.moduleName);
+   addPortsToDict(instDict, instance.moduleInputs, "MODULE_INS", "MOD_IN_NAME",
+       "MOD_IN_TYPE", "MOD_IN_SEP", portCount);
+   addPortsToDict(instDict, instance.moduleOutputs, "MODULE_OUTS",
+       "MOD_OUT_NAME", "MOD_OUT_TYPE", "MOD_OUT_SEP", outputCount);
+   // Connections
+   for (const auto &pair : instance.bindings) {
+     auto *conDict = dict->AddSectionDictionary("CONS");
+     const auto input = pair.first;
+     const auto output = pair.second;
+     conDict->SetValue("CON_IN_NAME", input.name);
+     conDict->SetValue("CON_OUT_NAME", output.name);
+     std::string inTypeName = input.type.name;
+     inTypeName = inTypeName + ((input.type.width != 1) ? ("<" +
+                              std::to_string(input.type.width) +
+                                                          ">") :
+                                                             "");
+     conDict->SetValue("CON_IN_TYPE", inTypeName);
+     std::string outTypeName = output.type.name;
+     outTypeName = outTypeName + ((output.type.width != 1) ? ("<" +
+                                std::to_string(output.type.width) +
+                                                             ">") :
+                                                                "");
+     conDict->SetValue("CON_OUT_TYPE", outTypeName);
+   }
+  }
+}
+
+void FirrtlCircuit::addExtModulesToDict(ctemplate::TemplateDictionary *dict,
+    std::map<std::string, ExternalModule> extModules) const {
   for (const auto &pair : extModules) {
-    pair.second.printFirrtlDeclaration(out);
+    const auto extModule = pair.second;
+    auto *extDict = dict->AddSectionDictionary("EXTS");
+    size_t portCount = extModule.inputs.size() + extModule.outputs.size();
+    size_t outputCount = extModule.outputs.size();
+    extDict->SetValue("EXTMODULE_NAME", extModule.name);
+    addPortsToDict(extDict, extModule.inputs, "EXT_INS", "EXT_IN_NAME",
+        "EXT_IN_TYPE", "EXT_IN_SEP", portCount);
+    addPortsToDict(extDict, extModule.outputs, "EXT_OUTS", "EXT_OUT_NAME",
+        "EXT_OUT_TYPE", "EXT_OUT_SEP", outputCount);
+
   }
+}
+
+void FirrtlCircuit::addPrologueToDict(ctemplate::TemplateDictionary *dict)
+   const {
+  // Set generation time
+  auto time = std::time(nullptr);
+  auto *localTime = std::localtime(&time);
+  dict->SetFormattedValue("GEN_TIME",
+                          "%d-%d-%d %d:%d:%d",
+                          localTime->tm_mday,
+                          localTime->tm_mon + 1,
+                          localTime->tm_year + 1900,
+                          localTime->tm_hour,
+                          localTime->tm_min,
+                          localTime->tm_sec);
+
+  dict->SetValue("CIRCUIT_NAME", name);
 }
 
 void FirrtlCircuit::printFirrtl(std::ostream &out) const {
-  printDeclaration(out);
-  printFirrtlModules(out);
-  printExtDeclarations(out);
-  printEpilogue(out);
+
+  auto *dict = new ctemplate::TemplateDictionary("top");
+  addPrologueToDict(dict);
+
+  for (const auto &pair : firModules) {
+    const auto firModule = pair.second;
+    size_t portCount = firModule.inputs.size() + firModule.outputs.size();
+    size_t outputCount = firModule.outputs.size();
+    // Inputs
+    addPortsToDict(dict, firModule.inputs, "TOP_INS", "TOP_IN_NAME",
+        "TOP_IN_TYPE", "TOP_IN_SEP", portCount);
+    // Outputs
+    addPortsToDict(dict, firModule.outputs, "TOP_OUTS", "TOP_OUT_NAME",
+        "TOP_OUT_TYPE", "TOP_OUT_SEP", outputCount);
+    // Instances
+    addInstancesToDict(dict, firModule.instances);
+  }
+
+  // External modules declaration
+  addExtModulesToDict(dict, extModules);
+  // Use template to store result to file
+  std::string output;
+  const std::string firDialTopTpl = "./src/data/ctemplate/top_firrtl.tpl";
+  ctemplate::ExpandTemplate(firDialTopTpl,
+                            ctemplate::DO_NOT_STRIP,
+                            dict, &output);
+  out << output;
 }
 
 void FirrtlCircuit::dumpVerilogLibrary(const std::string &outputDirName,
@@ -412,41 +376,40 @@ void FirrtlCircuit::dumpVerilogLibrary(const std::string &outputDirName,
     } else {
       pair.second.printVerilogModule(out);
     }
-  }
+}
 }
 
 void FirrtlCircuit::dumpVerilogOptFile(const std::string& inputFirrtlName) const {
-  assert((system((std::string(FirrtlCircuit::circt) +
+  system((std::string(FirrtlCircuit::circt) +
          inputFirrtlName +
-         std::string(FirrtlCircuit::circtOptions)).c_str()) != -1) &&
-         "Error while creating top verilog module!");
+         std::string(FirrtlCircuit::circtOptions)).c_str());
 }
 
 void FirrtlCircuit::printFiles(const std::string& firrtlFileName,
                                const std::string& verilogLibraryName,
                                const std::string& verilogTopModuleName,
                                const std::string& outputDirName) const {
+  // Create path
+  std::filesystem::path filesystemOutputDir = outputDirName;
+  std::filesystem::create_directories(filesystemOutputDir);
 
-  std::filesystem::create_directories((const std::filesystem::path)outputDirName);
+  // Create firrtl file
   std::ofstream outputFile;
-
-  std::filesystem::path filesystemDir = outputDirName;
-  outputFile.open((filesystemDir / firrtlFileName).string());
-
-  assert(outputFile && "Can't open outputFile!");
+  outputFile.open((filesystemOutputDir / firrtlFileName).string());
+  uassert(outputFile, "Can't open outputFile!");
   printFirrtl(outputFile);
   outputFile.close();
 
-  dumpVerilogOptFile((filesystemDir / firrtlFileName).string());
+  // Lower firrtl to verilog and move result to output directory
+  dumpVerilogOptFile((filesystemOutputDir / firrtlFileName).string());
+  uassert(std::filesystem::exists(name + ".sv"),
+          "File main.sv is not found! (CIRCT doesn't work)\n");
+  std::filesystem::rename(name + ".sv",
+    ((filesystemOutputDir / verilogTopModuleName).string()).c_str());
 
-  try {
-    std::filesystem::rename(name + ".sv", // TODO: main.sv!
-      ((filesystemDir / verilogTopModuleName).string()).c_str());
-  } catch (...) {
-    std::cout << "File main.sv is not found! (CIRCT doesn't work)\n";
-  }
-  outputFile.open((filesystemDir / verilogLibraryName).string());
-  dumpVerilogLibrary(filesystemDir.string(), outputFile);
+  // Get verilog code for library elements and move it to output directory
+  outputFile.open((filesystemOutputDir / verilogLibraryName).string());
+  dumpVerilogLibrary(filesystemOutputDir.string(), outputFile);
   outputFile.close();
 }
 
@@ -463,16 +426,16 @@ std::shared_ptr<FirrtlCircuit> Compiler::constructCircuit(const Model &model,
 }
 
 void FirrtlCircuit::printRndVlogTest(const Model &model,
-                                     const std::string &outputDirName,
-                                     const std::string &outputTestName,
+                                     const std::string &outPath,
+                                     const std::string &outTestFileName,
                                      const int latency,
                                      const size_t tstCnt) {
 
-  const std::filesystem::path path = outputDirName;
+  const std::filesystem::path path = outPath;
   std::filesystem::create_directories(path);
 
   std::ofstream testBenchFile;
-  testBenchFile.open(path / outputTestName);
+  testBenchFile.open(path / outTestFileName);
 
   ctemplate::TemplateDictionary *dict = new ctemplate::TemplateDictionary("tb");
 
@@ -493,20 +456,17 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
   dict->SetValue("MODULE_NAME", main.name);
 
   // set registers for device inputs
-  std::vector<std::string> bndNames;
   std::vector<Port> inputs = main.inputs;
-
+  std::vector<std::string> bndNames;
   for (size_t i = 0; i < inputs.size(); i++) {
 
     ctemplate::TemplateDictionary *inDict = dict->AddSectionDictionary("INS");
-
     if (inputs[i].isClock() || inputs[i].name == "reset") {
-
       inDict->SetValue("IN_TYPE", ""); // TODO: set type when implemented
 
     } else {
-
       inDict->SetValue("IN_TYPE", "[15:0]"); // TODO: set type when implemented
+
     }
 
     const std::string iName = inputs[i].name;
