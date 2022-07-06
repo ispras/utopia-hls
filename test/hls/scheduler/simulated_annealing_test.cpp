@@ -15,8 +15,6 @@ float finalTemperature = 1.0;
 std::random_device numberGenerator{};
 
 std::mt19937 generator{3217459755};
-std::mt19937 generatorRos{1800691079};
-std::mt19937 generatorRastr{194940063};
 
 auto conditionStub = [](const std::vector<float> &) -> float { return -1.0; };
 
@@ -55,28 +53,6 @@ auto stepFunction = [](std::vector<float> &currentValues,
   }
 };
 
-auto stepFunctionRos = [](std::vector<float> &currentValues,
-                          const std::vector<float> &previousValues,
-                          float currentTemperature,
-                          float initialTemperature) -> void {
-  std::cauchy_distribution<double> distribution{0.0, 1.0};
-  for (std::size_t i = 0; i < currentValues.size(); i++) {
-    auto diff = distribution(generatorRos);
-    currentValues[i] = previousValues[i] + diff;
-  }
-};
-
-auto stepFunctionRastr = [](std::vector<float> &currentValues,
-                            const std::vector<float> &previousValues,
-                            float currentTemperature,
-                            float initialTemperature) -> void {
-  std::cauchy_distribution<double> distribution{0.0, 1.0};
-  for (std::size_t i = 0; i < currentValues.size(); i++) {
-    auto diff = distribution(generatorRastr);
-    currentValues[i] = previousValues[i] + diff;
-  }
-};
-
 auto temperatureFunction = [](int i, float temperature) -> float {
   return initialTemperature / i;
 };
@@ -88,19 +64,6 @@ void init(std::vector<float> &parameterValues) {
   }
 }
 
-void initRos(std::vector<float> &parameterValues) {
-  std::cauchy_distribution<double> distribution{0, 1};
-  for (std::size_t i = 0; i < parameterValues.size(); i++) {
-    parameterValues[i] = distribution(generatorRos);
-  }
-}
-
-void initRastr(std::vector<float> &parameterValues) {
-  std::cauchy_distribution<double> distribution{0, 1};
-  for (std::size_t i = 0; i < parameterValues.size(); i++) {
-    parameterValues[i] = distribution(generatorRastr);
-  }
-}
 } // namespace
 
 TEST(SimulatedAnnealing, Sphere) {
@@ -116,10 +79,10 @@ TEST(SimulatedAnnealing, Sphere) {
 
 /*TEST(SimulatedAnnealing, Rosenbrock) {
   std::vector<float> optimizedParameters(3);
-  initRos(optimizedParameters);
+  init(optimizedParameters);
   eda::hls::scheduler::optimizers::SimulatedAnnealingOptimizer test(
       initialTemperature, finalTemperature, rosenbrock, conditionStub,
-      stepFunctionRos, temperatureFunction);
+      stepFunction, temperatureFunction);
   test.optimize(optimizedParameters);
   auto functionValue = rosenbrock(optimizedParameters);
   ASSERT_TRUE(abs(functionValue) < 0.15);
@@ -127,10 +90,10 @@ TEST(SimulatedAnnealing, Sphere) {
 
 TEST(SimulatedAnnealing, Rastrigin) {
   std::vector<float> optimizedParameters(3);
-  initRastr(optimizedParameters);
+  init(optimizedParameters);
   eda::hls::scheduler::optimizers::SimulatedAnnealingOptimizer test(
       initialTemperature, finalTemperature, rastrigin, conditionStub,
-      stepFunctionRastr, temperatureFunction);
+      stepFunction, temperatureFunction);
   test.optimize(optimizedParameters);
   auto functionValue = rastrigin(optimizedParameters);
   ASSERT_TRUE(abs(functionValue) < 2);
