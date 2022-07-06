@@ -82,6 +82,7 @@ add_library(${MAIN_LIBRARY}
   gate/model/gnet.cpp
   gate/model/gsymbol.cpp
   gate/model/signal.cpp
+  gate/simulator/simulator.cpp
   hls/compiler/compiler.cpp
   hls/debugger/debugger.cpp
   hls/library/element_generator.cpp
