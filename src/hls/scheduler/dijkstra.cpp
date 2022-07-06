@@ -7,72 +7,58 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/scheduler/dijkstra.h"
-#include "util/assert.h"
 
+#include <algorithm>
 #include <iostream>
 
 namespace eda::hls::scheduler {
 
 void DijkstraBalancer::init(const Graph *graph) {
-  nodeMap.clear();
-  toVisit.clear();
-  terminalNodes.clear();
-
-  // Init the elements
-  for (const auto *node : graph->nodes) {
-    nodeMap[node] = 0;
+  TraverseBalancerBase::init(*graph);
+  while (!toVisit.empty()) {
+    toVisit.pop();
   }
+  currentNode = nullptr;
 }
 
-void DijkstraBalancer::visitChan(const Chan *chan, unsigned targetTime) {
-  const Node *targetNode = getNext(chan);
+void DijkstraBalancer::visitChan(const Chan *chan) {
+  const Node *targetNode = getNextNode(chan);
   // Update destination node time
-  if (targetNode && targetTime > nodeMap[targetNode]) {
-    nodeMap[targetNode] = targetTime;
+  if (targetNode && currentNode) {
+    nodeMap[targetNode] = std::max(nodeMap[currentNode] + (int)chan->ind.ticks, 
+      nodeMap[targetNode]);
+    graphTime = std::max((unsigned)nodeMap[targetNode], graphTime);
   }
 }
 
-void DijkstraBalancer::visitSources(const Graph *graph) {
-  for (const auto *chan : graph->chans) {
-    const Node *src = chan->source.node;
-    if (src->isSource() || src->isConst()) {
-      toVisit.push_back(chan);
-      visitChan(chan, nodeMap[src] + chan->ind.ticks);
-    }
+void DijkstraBalancer::visitNode(const Node *node) {
+  currentNode = node;
+  for (const auto *chan : getConnections(node)) {
+    toVisit.push(chan);
+    visitChan(chan);
   }
 }
 
-void DijkstraBalancer::visitSinks(const Graph *graph) {
-  for (const auto *chan : graph->chans) {
-    const Node *targ = chan->target.node;
-    if (targ->isSink()) {
-      toVisit.push_back(chan);
-      visitChan(chan, nodeMap[targ] + chan->ind.ticks);
-    }
+void DijkstraBalancer::start(const std::vector<Node*> &startNodes) {
+  for (const auto *node : startNodes) {
+    visitNode(node);
   }
 }
 
-const Node* DijkstraBalancer::getNext(const Chan *chan) {
-  if (mode == LatencyBalanceMode::ASAP) {
-    return chan->target.node;
-  }
-
-  if (mode == LatencyBalanceMode::ALAP) {
-    return chan->source.node;
-  }
-
-  return nullptr;
+const Node* DijkstraBalancer::getNextNode(const Chan *chan) {
+  return 
+    mode == LatencyBalanceMode::ASAP ? chan->target.node : chan->source.node;
 }
 
-void DijkstraBalancer::addConnections(std::vector<Chan*> &connections, 
-    const Node *next) {
-  if (mode == LatencyBalanceMode::ASAP) connections = next->outputs;
-  if (mode == LatencyBalanceMode::ALAP) connections = next->inputs;
-  // Add neighbours to the queue
-  toVisit.insert(toVisit.end(), connections.begin(), connections.end());
-  // Collect sinks or sources
-  if (connections.empty()) {
-    terminalNodes.push_back(next);
+const std::vector<Chan*>& DijkstraBalancer::getConnections(const Node *next) {
+  return mode == LatencyBalanceMode::ASAP ? next->outputs : next->inputs;
+}
+
+void DijkstraBalancer::traverse(const std::vector<Node*> &startNodes) {
+  start(startNodes);
+  while (!toVisit.empty()) {
+    visitNode(getNextNode(toVisit.front()));
+    toVisit.pop();
   }
 }
 
@@ -83,59 +69,26 @@ void DijkstraBalancer::balance(Model &model, LatencyBalanceMode balanceMode) {
   init(graph);
 
   if (mode == LatencyBalanceMode::ASAP) {
-    visitSources(graph);
+    traverse(graph->sources);
   }
 
   if (mode == LatencyBalanceMode::ALAP) {
-    visitSinks(graph);
+    traverse(graph->targets);
   }
 
-  while (!toVisit.empty()) {
-    const Node *next = getNext(toVisit.front());
-    if (next) {
-      std::vector<Chan*> connections;
-      addConnections(connections, next);
-      for (const auto *chan : connections) {
-        visitChan(chan, nodeMap[next] + chan->ind.ticks);
-      }
-    }
-    toVisit.pop_front();
-  }
   insertBuffers(model);
-  collectGraphTime();
+  printGraphTime();
 }
 
-void DijkstraBalancer::insertBuffers(Model &model) {
-  unsigned bufsInserted = 0;
-  for (const auto &node : nodeMap) {
-    const unsigned curTime = node.second;
-    for (const auto &pred : node.first->inputs) {
-      const Node *predNode = pred->source.node;
-      int delta = 0;
-      // Compute delta between neighbouring nodes
-      if (mode == LatencyBalanceMode::ASAP) {
-        delta = curTime - (nodeMap[predNode] + pred->ind.ticks);
-      }
-      if (mode == LatencyBalanceMode::ALAP) {
-        delta = (nodeMap[predNode] - pred->ind.ticks) - curTime;
-      }
-      uassert(delta >= 0,  "Delta for channel " + pred->name + " < 0!\n");
-      if (delta > 0 && !predNode->isConst()) {
-        model.insertDelay(*pred, delta);
-        bufsInserted++;
-      }
-    }
+int DijkstraBalancer::getDelta(int curTime, const Chan* curChan) {
+  // Compute delta between neighbouring nodes
+  if (mode == LatencyBalanceMode::ASAP) {
+    return curTime - (nodeMap[curChan->source.node] + (int)curChan->ind.ticks);
   }
-  std::cout << "Total buffers inserted: " << bufsInserted << std::endl;
-}
-
-void DijkstraBalancer::collectGraphTime() {
-    unsigned maxTime = 0;
-    for (const auto *node : terminalNodes) {
-      maxTime = std::max(nodeMap[node], maxTime);
-    }
-    graphTime = maxTime;
-    std::cout << "Max time: " << graphTime << std::endl;
-}
+  if (mode == LatencyBalanceMode::ALAP) {
+    return (nodeMap[curChan->source.node] - (int)curChan->ind.ticks) - curTime;
+  }
+  return -1;
+};
 
 } // namespace eda::hls::scheduler

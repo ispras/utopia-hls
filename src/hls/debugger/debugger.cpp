@@ -34,8 +34,8 @@ bool EqChecker::equivalent(mlir::hil::Model &left,
   createExprs(rGraph.value(), ctx, nodes);
 
   // create equations for graph inputs
-  const std::vector<mlir::hil::Node> lInputs = getSources(*lGraph);
-  const std::vector<mlir::hil::Node> rInputs = getSources(*rGraph);
+  const std::vector<mlir::hil::Node> lInputs = getInputs(*lGraph);
+  const std::vector<mlir::hil::Node> rInputs = getInputs(*rGraph);
   std::list<std::pair<mlir::hil::Node, mlir::hil::Node>> sources;
 
   if (!match(lInputs, rInputs, sources)) {
@@ -253,11 +253,12 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
 
       nodes.push_back(mk_or(mergeVec));
 
-    } else if (isSplit(node)) {
+    } else if (isDup (node) || isSplit(node)) {
 
       // split node has the only input
       auto inputs = getInputs(node);
-      assert (inputs.size() == 1);
+      assert(inputs.size() == 1);
+
       mlir::hil::Chan nodeInput = inputs[0];
       mlir::hil::BindingAttr inBnd = nodeInput.nodeTo();
 
@@ -282,18 +283,6 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
       std::cerr << "Unsupported node type: " + nodeType << std::endl;
     }
   }
-}
-
-std::string EqChecker::getModelName(mlir::hil::Node &node) const {
-  auto model =
-      mlir::cast<Model>(*node->getParentOp()->getParentOp()->getParentOp());
-  return model.name().str();
-}
-
-std::string EqChecker::getModelName(mlir::hil::Chan &ch) const {
-  auto model =
-      mlir::cast<Model>(*ch->getParentOp()->getParentOp()->getParentOp());
-  return model.name().str();
 }
 
 z3::sort EqChecker::getSort(mlir::hil::Node &node, z3::context &ctx) const {

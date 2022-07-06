@@ -9,7 +9,6 @@
 #pragma once
 
 #include "hls/scheduler/optimizers/abstract_optimizer.h"
-#include "hls/scheduler/param_optimizer.h"
 
 #include <functional>
 

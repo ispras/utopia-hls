@@ -8,14 +8,22 @@
 
 #pragma once
 
+#include "hls/library/library.h"
+#include "hls/mapper/mapper.h"
 #include "hls/model/indicators.h"
 #include "hls/model/model.h"
 #include "hls/model/parameters.h"
-#include "hls/scheduler/latency_balancer_base.h"
+#include "hls/scheduler/latency_solver.h"
 #include "hls/scheduler/optimizers/abstract_optimizer.h"
+#include "hls/scheduler/optimizers/simulated_annealing_optimizer.h"
+#include "util/assert.h"
 #include "util/singleton.h"
 
+#include <algorithm>
+#include <fstream>
+#include <iostream>
 #include <map>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -24,20 +32,20 @@ using namespace eda::util;
 
 namespace eda::hls::scheduler {
 
-class ParametersOptimizer final : public Singleton<ParametersOptimizer> {
-  friend class Singleton<ParametersOptimizer>;
+template<typename T>
+class ParametersOptimizer final : public Singleton<ParametersOptimizer<T>> {
+  friend class Singleton<ParametersOptimizer<T>>;
 
 public:
-  std::map<std::string, Parameters> optimize(const Criteria &criteria,
-                                             model::Model &model,
-                                             Indicators &indicators) const;
+  std::map<std::string, Parameters> optimize(
+      const Criteria &criteria,
+      model::Model &model,
+      Indicators &indicators
+  ) const;
 
-  template <typename T> void set_optimizer(const T &optimizer) {
-    math_optimizer = std::make_shared<T>(optimizer);
-  }
-
-  void setBalancer(LatencyBalancerBase *latencyBalancer) {
-    balancer = latencyBalancer;
+  template <typename O>
+  void set_optimizer(const O &optimizer) {
+    math_optimizer = std::make_shared<O>(optimizer);
   }
 
 private:
@@ -55,8 +63,8 @@ private:
   double denormalize(double value, double min, double max) const;
 
   std::shared_ptr<optimizers::AbstractOptimizer> math_optimizer;
-
-  LatencyBalancerBase *balancer;
 };
+
+#include "hls/scheduler/param_optimizer_impl.h"
 
 } // namespace eda::hls::scheduler

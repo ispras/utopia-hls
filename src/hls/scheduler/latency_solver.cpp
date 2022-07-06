@@ -31,6 +31,7 @@ void LatencyLpSolver::reset() {
 }
 
 void LatencyLpSolver::balance(Model &model, Verbosity verbosity) {
+  LatencyBalancerBase::init();
   const Graph *graph = model.main();
   helper.setVerbosity(verbosity);
 
@@ -49,8 +50,8 @@ void LatencyLpSolver::balance(Model &model, Verbosity verbosity) {
   lastStatus = helper.getStatus();
   if (lastStatus == 0 || lastStatus == 1) {
     insertBuffers(model);
-    collectGraphTime();
-    std::cout << "Max time: " << graphTime << std::endl;
+    collectGraphTime(*graph);
+    printGraphTime();
   }
   
   // Reset solver for next problem
@@ -61,6 +62,7 @@ void LatencyLpSolver::balance(Model &model, Verbosity verbosity) {
 void LatencyLpSolver::insertBuffers(Model &model) {
   std::vector<double> latencies = helper.getResults();
   unsigned bufsInserted = 0;
+  unsigned totalDelta = 0;
   for (const auto *buf : buffers) {
     // lp_solve positions start with 1
     double latency = latencies[buf->position - 1];
@@ -69,22 +71,20 @@ void LatencyLpSolver::insertBuffers(Model &model) {
     if (latency != 0) {
       model.insertDelay(*(buf->channel), (unsigned)latency);
       bufsInserted++;
+      totalDelta+=(unsigned)latency;
     }
   }
   std::cout << "Total buffers inserted: " << bufsInserted << std::endl;
+  std::cout << "Total buffers capacity: " << totalDelta << std::endl;
 }
 
-void LatencyLpSolver::collectGraphTime() {
+void LatencyLpSolver::collectGraphTime(const Graph &graph) {
   std::vector<SolverVariable*> sinkVars = helper.getVariables(sinks);
   std::vector<double> latencies = helper.getResults();
-  unsigned maxTime = 0;
   for (const auto *sink : sinkVars) {
     unsigned index = sink->columnNumber - 1;
-    if (latencies[index] > maxTime) {
-      maxTime = (unsigned)latencies[index];
-    }
+    graphTime = std::max((unsigned)latencies[index], graphTime);
   }
-  graphTime = maxTime;
 }
 
 void LatencyLpSolver::balanceLatency(const Graph *graph) { 

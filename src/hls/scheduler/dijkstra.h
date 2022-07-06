@@ -17,11 +17,7 @@
 #include "hls/scheduler/latency_balancer_base.h"
 #include "util/singleton.h"
 
-#include <deque>
-#include <map>
-#include <set>
-#include <utility>
-#include <vector>
+#include <queue>
 
 using namespace eda::hls::model;
 using namespace eda::util;
@@ -36,7 +32,7 @@ enum LatencyBalanceMode {
   ALAP
 };
 
-class DijkstraBalancer final : public LatencyBalancerBase, 
+class DijkstraBalancer final : public TraverseBalancerBase, 
     public Singleton<DijkstraBalancer> {
 public:
   friend Singleton<DijkstraBalancer>;
@@ -53,18 +49,20 @@ private:
   void init(const Graph *graph);
 
   /// Visits the specified channel and updates the destination's time.
-  void visitChan(const Chan *chan, unsigned targetTime);
+  void visitChan(const Chan *chan) override;
+
+  void visitNode(const Node *node) override;
   
   /// Returns the next node depending on the exploration direction: 
   /// ASAP - top->down
   /// ALAP - down->top
-  const Node* getNext(const Chan *chan);
+  const Node* getNextNode(const Chan *chan);
 
   /// Adds the connections of the node to the specified vector depending on 
   /// the exploration direction:
   /// ASAP - outputs
   /// ALAP - inputs
-  void addConnections(std::vector<Chan*> &connections, const Node *next);
+  const std::vector<Chan*>& getConnections(const Node *next);
 
   /// Visits the sources of the specified graph.
   void visitSources(const Graph *graph);
@@ -72,13 +70,15 @@ private:
   /// Visits the sinks of the specified graph.
   void visitSinks(const Graph *graph);
   
-  void insertBuffers(Model &model) override;
-  void collectGraphTime() override;
+  int getDelta(int curTime, const Chan* curChan) override;
 
-  std::deque<const Chan*> toVisit;
-  std::map<const Node*, unsigned> nodeMap;
+  void start(const std::vector<Node*> &startNodes);
+
+  void traverse(const std::vector<Node*> &startNodes);
+
+  std::queue<const Chan*> toVisit;
   LatencyBalanceMode mode;
-  std::vector<const Node*> terminalNodes;
+  const Node *currentNode;
 };
 
 } // namespace eda::hls::scheduler

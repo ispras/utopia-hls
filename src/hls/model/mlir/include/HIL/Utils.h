@@ -45,22 +45,31 @@ std::optional<T> find_elem_by_type(Container&& c) {
 /* Utility methods for MLIR-based IR */
 
 namespace mlir::hil {
+
+  /// Returns parent model's name for the node.
+  std::string getModelName(mlir::hil::Node &node);
+
+  /// Returns parent model's name for the channel.
+  std::string getModelName(mlir::hil::Chan &ch);
+
+  /// Returns (if exist) named graph that belongs to the model.
   std::optional<Graph> getGraph(Model &model, const std::string &name);
+
+  /* Graph-related methods. */
+
+  std::vector<Node> getInputs(Graph &graph);
+  std::vector<Node> getSinks(Graph &graph);
+  std::vector<Chan> getChans(Graph &graph);
+  mlir::Block::OpListType& getNodes(Graph &graph);
+
+  /* Node-related methods. */
+
   std::vector<Chan> getInputs(Node &node);
   std::vector<Chan> getOutputs(Node &node);
 
-  /// Returns source nodes for the graph.
-  std::vector<Node> getSources(Graph &graph);
+  /* Type-checking methods. */
 
-  /// Returns sink nodes for the graph.
-  std::vector<Node> getSinks(Graph &graph);
-
-  /// Returns channels for the graph.
-  std::vector<Chan> getChans(Graph &graph);
-
-  /// Returns nodes for the graph.
-  mlir::Block::OpListType& getNodes(Graph &graph);
-
+  bool isConst(Node &node);
   bool isDelay(Node &node);
   bool isDup(Node &node);
   bool isKernel(Node &node);

@@ -7,69 +7,84 @@
 //===----------------------------------------------------------------------===//
 
 #include "HIL/Utils.h"
+#include "util/string.h"
 
 #include "llvm/Support/Casting.h"
 #include "mlir/IR/BuiltinAttributes.h"
 
 #include <iostream>
 
+using namespace eda::utils;
+
 namespace mlir::hil {
 
-  std::optional<Graph> getGraph(Model &model, const std::string &name) {
-    auto &model_ops = model.getBody()->getOperations();
-    auto graphs = find_elems_by_type<Graph>(model_ops.begin(), model_ops.end());
+std::string getModelName(mlir::hil::Node &node) {
+  auto model =
+      mlir::cast<Model>(*node->getParentOp()->getParentOp()->getParentOp());
+  return model.name().str();
+}
 
-    for (size_t i = 0; i < graphs.size(); i++) {
-      if (graphs[i].name() == name) {
-        return graphs[i];
+std::string getModelName(mlir::hil::Chan &ch) {
+  auto model =
+      mlir::cast<Model>(*ch->getParentOp()->getParentOp()->getParentOp());
+  return model.name().str();
+}
+
+std::optional<Graph> getGraph(Model &model, const std::string &name) {
+  auto &model_ops = model.getBody()->getOperations();
+  auto graphs = find_elems_by_type<Graph>(model_ops.begin(), model_ops.end());
+
+  for (size_t i = 0; i < graphs.size(); i++) {
+    if (graphs[i].name() == name) {
+      return graphs[i];
+    }
+  }
+  return std::nullopt;
+}
+
+std::vector<Chan> getInputs(Node &node) {
+
+  std::vector<Chan> inChans;
+
+  Graph graph = cast<Graph>(node->getParentOp()->getParentOp());
+
+  std::vector<Chan> chans = getChans(graph);
+
+  for (auto arg : node.commandArguments()) {
+
+    llvm::StringRef in_chan_name = arg.cast<StringAttr>().getValue();
+
+    for (size_t i = 0; i < chans.size(); i++) {
+      if (chans[i].varName() == in_chan_name) {
+        inChans.push_back(chans[i]);
       }
     }
-    return std::nullopt;
   }
+  return inChans;
+}
 
-  std::vector<Chan> getInputs(Node &node) {
+std::vector<Chan> getOutputs(Node &node) {
 
-    std::vector<Chan> inChans;
+  std::vector<Chan> outChans;
 
-    Graph graph = cast<Graph>(node->getParentOp()->getParentOp());
+  Graph graph = cast<Graph>(node->getParentOp()->getParentOp());
 
-    std::vector<Chan> chans = getChans(graph);
+  std::vector<Chan> chans = getChans(graph);
 
-    for (auto arg : node.commandArguments()) {
+  for (auto res : node.commandResults()) {
 
-      llvm::StringRef in_chan_name = arg.cast<StringAttr>().getValue();
+    llvm::StringRef out_chan_name = res.cast<StringAttr>().getValue();
 
-      for (size_t i = 0; i < chans.size(); i++) {
-        if (chans[i].varName() == in_chan_name) {
-          inChans.push_back(chans[i]);
-        }
+    for (size_t i = 0; i < chans.size(); i++) {
+      if (chans[i].varName() == out_chan_name) {
+        outChans.push_back(chans[i]);
       }
     }
-    return inChans;
   }
+  return outChans;
+}
 
-  std::vector<Chan> getOutputs(Node &node) {
-
-    std::vector<Chan> outChans;
-
-    Graph graph = cast<Graph>(node->getParentOp()->getParentOp());
-
-    std::vector<Chan> chans = getChans(graph);
-
-    for (auto res : node.commandResults()) {
-
-      llvm::StringRef out_chan_name = res.cast<StringAttr>().getValue();
-
-      for (size_t i = 0; i < chans.size(); i++) {
-        if (chans[i].varName() == out_chan_name) {
-          outChans.push_back(chans[i]);
-        }
-      }
-    }
-    return outChans;
-  }
-
-  std::vector<Node> getSources(mlir::hil::Graph &graph) {
+std::vector<Node> getInputs(mlir::hil::Graph &graph) {
 
   std::vector<Node> result;
   mlir::Block::OpListType &graphNodes = getNodes(graph);
@@ -77,7 +92,7 @@ namespace mlir::hil {
   for (auto &gNode : graphNodes) {
 
     auto node = cast<Node>(gNode);
-    if (isSource(node)) {
+    if (isSource(node) || isConst(node)) {
       result.push_back(node);
     }
   }
@@ -99,56 +114,78 @@ std::vector<Node> getSinks(mlir::hil::Graph &graph) {
   return result;
 }
 
-  std::vector<mlir::hil::Chan> getChans(mlir::hil::Graph &graph) {
+std::vector<mlir::hil::Chan> getChans(mlir::hil::Graph &graph) {
 
-    std::vector<mlir::hil::Chan> result;
+  std::vector<mlir::hil::Chan> result;
 
-    auto &g_ops = graph.getBody()->getOperations();
-    auto chans_ops = find_elem_by_type<Chans>(g_ops).value();
-    for (auto &chans_op : chans_ops.getBody()->getOperations()) {
-      auto chan = cast<Chan>(chans_op);
-      result.push_back(chan);
-    }
-
-    return result;
+  auto &g_ops = graph.getBody()->getOperations();
+  auto chans_ops = find_elem_by_type<Chans>(g_ops).value();
+  for (auto &chans_op : chans_ops.getBody()->getOperations()) {
+    auto chan = cast<Chan>(chans_op);
+    result.push_back(chan);
   }
 
-  mlir::Block::OpListType& getNodes(mlir::hil::Graph &graph) {
-    auto &graph_ops = graph.getBody()->getOperations();
-    auto nodes_op = find_elem_by_type<Nodes>(graph_ops).value();
-    return nodes_op.getBody()->getOperations();
+  return result;
+}
+
+mlir::Block::OpListType& getNodes(mlir::hil::Graph &graph) {
+  auto &graph_ops = graph.getBody()->getOperations();
+  auto nodes_op = find_elem_by_type<Nodes>(graph_ops).value();
+  return nodes_op.getBody()->getOperations();
+}
+
+bool isConst(mlir::hil::Node &node) {
+  if (!getInputs(node).empty())
+    return false;
+
+  auto outputs = getOutputs(node);
+  for (auto output : outputs) {
+    auto bnd = output.nodeFromAttr();
+    auto port = bnd.getPort();
+
+    if (!port.getIsConst())
+      return false;
   }
 
-  bool isDelay(mlir::hil::Node &node) {
-    return node.nodeTypeName() == "delay";
-  }
+  return true;
+}
 
-  bool isDup(mlir::hil::Node &node) {
-    return node.nodeTypeName() == "dup";
-  }
+bool isDelay(mlir::hil::Node &node) {
+  return getInputs(node).size() == 1
+      && getOutputs(node).size() == 1
+      && starts_with(node.nodeTypeName().str(), "delay");
+}
 
-  bool isMerge(mlir::hil::Node &node) {
-    return node.nodeTypeName() == "merge";
-  }
+bool isDup(mlir::hil::Node &node) {
+  return getInputs(node).size() == 1
+      && starts_with(node.nodeTypeName().str(), "dup");
+}
 
-  bool isSink(mlir::hil::Node &node) {
-    return node.nodeTypeName() == "sink";
-  }
+bool isMerge(mlir::hil::Node &node) {
+  return getOutputs(node).size() == 1
+      && starts_with(node.nodeTypeName().str(), "merge");
+}
 
-  bool isSource(mlir::hil::Node &node) {
-    return node.nodeTypeName() == "source";
-  }
+bool isSink(mlir::hil::Node &node) {
+  return getOutputs(node).empty();
+}
 
-  bool isSplit(mlir::hil::Node &node) {
-    return node.nodeTypeName() == "split";
-  }
+bool isSource(mlir::hil::Node &node) {
+  return getInputs(node).empty() && !isConst(node);
+}
 
-  bool isKernel(mlir::hil::Node &node) {
-    return !isDelay(node)
-        && !isDup(node)
-        && !isMerge(node)
-        && !isSink(node)
-        && !isSource(node)
-        && !isSplit(node);
-  }
+bool isSplit(mlir::hil::Node &node) {
+  return getInputs(node).size() == 1
+      && starts_with(node.nodeTypeName().str(), "split");
+}
+
+bool isKernel(mlir::hil::Node &node) {
+  return !isConst(node)
+      && !isDelay(node)
+      && !isDup(node)
+      && !isMerge(node)
+      && !isSink(node)
+      && !isSource(node)
+      && !isSplit(node);
+}
 } // namespace mlir::hil

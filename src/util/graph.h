@@ -25,6 +25,8 @@ namespace eda::utils::graph {
 //
 // std::size_t  G::nNodes()         const;
 // std::size_t  G::nEdges()         const;
+// bool         G::hasNode(V v)     const;
+// bool         G::hasEdge(E e)     const;
 // container<V> G::getSources()     const;
 // container<E> G::getOutEdges(V v) const;
 // V            G::leadsTo(E e)     const.
@@ -38,7 +40,7 @@ std::vector<typename G::V> topologicalSort(const G &graph) {
   using OutEdgeIterator = typename OutEdgeContainer::const_iterator;
 
   std::vector<V> sortedNodes(graph.nNodes());
-  auto it = sortedNodes.rbegin();
+  auto sortedNodesIt = sortedNodes.rbegin();
 
   std::stack<std::pair<V, OutEdgeIterator>> searchStack;
 
@@ -61,11 +63,13 @@ std::vector<typename G::V> topologicalSort(const G &graph) {
     // Schedule the next node.
     bool hasMoved = false;
 
-    while (i != out.cend()) {
-      auto n = graph.leadsTo(*i++);
+    for (; i != out.cend(); i++) {
+      if (!graph.hasEdge(*i)) continue;
+
+      auto n = graph.leadsTo(*i);
 
       // The next node is unvisited.
-      if (visitedNodes.find(n) == visitedNodes.end()) {
+      if (graph.hasNode(n) && visitedNodes.find(n) == visitedNodes.end()) {
         const OutEdgeContainer &out = graph.getOutEdges(n);
 
         searchStack.push({n, out.cbegin()});
@@ -78,12 +82,13 @@ std::vector<typename G::V> topologicalSort(const G &graph) {
 
     // All successors of the node has been traversed.
     if (!hasMoved) {
-      *it++ = v;
+      if (graph.hasNode(v)) {
+        *sortedNodesIt++ = v;
+      }
       searchStack.pop();
     }
   }
 
-  assert(visitedNodes.size() == graph.nNodes());
   return sortedNodes;
 }
 

@@ -467,9 +467,9 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
                                      const std::string &outputTestName,
                                      const int latency,
                                      const size_t tstCnt) {
+
   const std::filesystem::path path = outputDirName;
   std::filesystem::create_directories(path);
-
 
   std::ofstream testBenchFile;
   testBenchFile.open(path / outputTestName);
@@ -492,16 +492,23 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
 
   dict->SetValue("MODULE_NAME", main.name);
 
-  std::vector<std::string> bndNames;
   // set registers for device inputs
+  std::vector<std::string> bndNames;
   std::vector<Port> inputs = main.inputs;
+
   for (size_t i = 0; i < inputs.size(); i++) {
+
     ctemplate::TemplateDictionary *inDict = dict->AddSectionDictionary("INS");
-    if (inputs[i].name == "clock" || inputs[i].name == "reset") {
+
+    if (inputs[i].isClock() || inputs[i].name == "reset") {
+
       inDict->SetValue("IN_TYPE", ""); // TODO: set type when implemented
+
     } else {
+
       inDict->SetValue("IN_TYPE", "[15:0]"); // TODO: set type when implemented
     }
+
     const std::string iName = inputs[i].name;
     inDict->SetValue("IN_NAME", iName);
     bndNames.push_back(iName);
@@ -509,6 +516,7 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
 
   // set registers for device outputs
   std::vector<Port> outputs = main.outputs;
+
   for (size_t i = 0; i < outputs.size(); i++) {
     ctemplate::TemplateDictionary *outDict = dict->AddSectionDictionary("OUTS");
     outDict->SetValue("OUT_TYPE", "[15:0]"); // TODO: set type when implemented
@@ -534,7 +542,7 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
     for (size_t j = 0; j < inputs.size(); j++) {
 
       if (inputs[j].isClock())
-          continue;
+        continue;
 
       // TODO: set random values for inputs
       ctemplate ::TemplateDictionary *sDict = tDict->AddSectionDictionary("ST");
