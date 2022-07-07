@@ -50,7 +50,9 @@ int compilerHilTest(const std::string &inputLibraryPath,
 
   Mapper::get().map(*model, Library::get());
   std::map<std::string, Parameters> params =
-    ParametersOptimizer<TopologicalBalancer>::get().optimize(criteria, *model, indicators);
+    ParametersOptimizer<TopologicalBalancer>::get().optimize(criteria,
+                                                             *model,
+                                                             indicators);
 
   TopologicalBalancer::get().balance(*model);
 

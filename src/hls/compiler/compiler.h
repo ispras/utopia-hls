@@ -27,15 +27,16 @@ struct Type final {
 struct Port final {
   enum Direction { IN, OUT, INOUT };
   const std::string name;
-  const Direction direction;
+  const Direction dir;
   const Type type;
 
   Port(const std::string &name,
-       const Direction direction,
+       const Direction dir,
        const Type &type) :
-    name(name), direction(direction), type(type) {}
+    name(name), dir(dir), type(type) {}
 
   bool isClock() const;
+  bool isReset() const;
 };
 
 struct Instance final {
@@ -56,24 +57,24 @@ struct Instance final {
     inputs.push_back(inputPort);
   }
 
-  void addModuleInput(const Port &moduleInputPort) {
-    moduleInputs.push_back(moduleInputPort);
+  void addModuleInput(const Port &moduleInPort) {
+    moduleInputs.push_back(moduleInPort);
   }
 
   void addOutput(const Port &outputPort) {
     outputs.push_back(outputPort);
   }
 
-  void addModuleOutput(const Port &moduleOutputPort) {
-    moduleOutputs.push_back(moduleOutputPort);
+  void addModuleOutput(const Port &moduleOutPort) {
+    moduleOutputs.push_back(moduleOutPort);
   }
 
-  void addBinding(const Port &connectsFrom, const Port &connectTo) {
-    bindings.push_back({connectsFrom, connectTo});
+  void addBinding(const Port &connectsFrom, const Port &connectsTo) {
+    bindings.push_back({connectsFrom, connectsTo});
   }
 
-  void addModuleInputs(const std::vector<model::Port*> inputs);
-  void addModuleOutputs(const std::vector<model::Port*> outputs);
+  void addModuleInputs(const std::vector<model::Port*> &inputs);
+  void addModuleOutputs(const std::vector<model::Port*> &outputs);
 };
 
 struct Module {
@@ -112,31 +113,27 @@ struct Module {
 
 struct FirrtlModule final : Module {
   std::vector<Instance> instances;
-  FirrtlModule(const model::Model &model, const std::string &topModuleName);
+  FirrtlModule(const model::Model &model, const std::string &topName);
   void printFirrtlModule(std::ostream &out) const;
-  void addInstance(const Instance &inputInstance) {
-    instances.push_back(inputInstance);
+  void addInstance(const Instance &inInstance) {
+    instances.push_back(inInstance);
   }
 private:
   void addInputs(const model::Node *node,
-                 const std::vector<model::Chan*> outputs);
+                 const std::vector<model::Chan*> &outputs);
   void addOutputs(const model::Node *node,
-                  const std::vector<model::Chan*> inputs);
+                  const std::vector<model::Chan*> &inputs);
 };
 
 struct ExternalModule final : Module {
   ExternalModule(const model::NodeType *nodetype);
   void printVerilogModule(std::ostream &out) const;
-  void moveVerilogModule(const std::string &outputDirName) const;
-  //void printFirrtlDeclaration(std::ostream &out) const;
+  void moveVerilogModule(const std::string &outPath) const;
 private:
-  void addInputs(const std::vector<model::Port*> inputs);
-  void addOutputs(const std::vector<model::Port*> outputs);
-  void printEpilogue(std::ostream &out) const;
-  void printDeclaration(std::ostream &out) const;
-  static std::string getFileNameFromPath(const std::string &path);
+  void addInputs(const std::vector<model::Port*> &inputs);
+  void addOutputs(const std::vector<model::Port*> &outputs);
   void addPortsToDict(ctemplate::TemplateDictionary *dict,
-                      const std::vector<Port> ports,
+                      const std::vector<Port> &ports,
                       const std::string &tagSectName,
                       const std::string &tagPortName,
                       const std::string &tagSepName,
@@ -144,13 +141,13 @@ private:
   void addPrologueToDict(ctemplate::TemplateDictionary *dict) const;
 };
 
-struct FirrtlCircuit final {
+class FirrtlCircuit final {
 private:
-  std::string name;
+  const std::string name;
   std::map<std::string, FirrtlModule> firModules;
   std::map<std::string, ExternalModule> extModules;
   void addPortsToDict(ctemplate::TemplateDictionary *dict,
-                      const std::vector<Port> ports,
+                      const std::vector<Port> &ports,
                       const std::string &tagSectName,
                       const std::string &tagPortName,
                       const std::string &tagTypeName,
@@ -158,9 +155,19 @@ private:
                       const size_t portCount) const;
   void addPrologueToDict(ctemplate::TemplateDictionary *dict) const;
   void addInstancesToDict(ctemplate::TemplateDictionary *dict,
-                          std::vector<Instance> instances) const;
+                          const std::vector<Instance> &instances) const;
   void addExtModulesToDict(ctemplate::TemplateDictionary *dict,
-      std::map<std::string, ExternalModule> extModules) const;
+      const std::map<std::string, ExternalModule> &extModules) const;
+  void dumpVerilogOptFile(const std::string &inFirName) const;
+  void dumpVerilogLibrary(const std::string &outPath,
+                          std::ostream &out) const;
+  void printFirrtl(std::ostream &out) const;
+  void addFirrtlModule(const FirrtlModule &firModule) {
+    firModules.insert({firModule.getName(), firModule});
+  }
+  void addExternalModule(const ExternalModule &extModule) {
+    extModules.insert({extModule.getName(), extModule});
+  }
 public:
   static constexpr const char* indent        = "    ";
   static constexpr const char* opPrefix      = "firrtl.";
@@ -169,34 +176,30 @@ public:
   static constexpr const char* circt         = "circt-opt ";
   static constexpr const char* circtOptions = " --lower-firrtl-to-hw \
                                                 --export-split-verilog";
-  FirrtlCircuit(const std::string& name) : name(name) {};
-
-  void printFiles(const std::string& outputFirrtlName,
-                  const std::string& outputVerilogLibraryName,
-                  const std::string& outputVerilogTopModuleName,
-                  const std::string& outputDirName) const;
-  void dumpVerilogOptFile(const std::string& inputFirrtlName) const;
-
-  void dumpVerilogLibrary(const std::string &outputDirName,
-                          std::ostream &out) const;
-  void printFirrtl(std::ostream &out) const;
-
-  void addFirModule(const FirrtlModule &firModule) {
-    firModules.insert({firModule.getName(), firModule});
-  }
-
-  void addExternalModule(const ExternalModule &externalModule) {
-    extModules.insert({externalModule.getName(), externalModule});
-  }
-
+  FirrtlCircuit(const Model &model, const std::string &name);
+  /**
+   * @brief Constructs output files and moves them to the given directory.
+   *
+   * @param outFirFileName Name of output FIRRTL file.
+   * @param outVlogLibName Name of output file that contains library modules.
+   * @param outVlogTopName Name of top verilog file.
+   * @param outPath Path to store output files (will be created if nonexistant).
+   *
+   * @return Nothing, but output files should be created.
+   */
+  void printFiles(const std::string& outFirFileName,
+                  const std::string& outVlogLibName,
+                  const std::string& outVlogTopName,
+                  const std::string& outPath) const;
   /**
    * @brief Generates a Verilog random testbench for the current model
    *
    * @param model Reference to model
-   * @param outPath Output path
-   * @param outTestFileName Output testbench
-   * @param latency Latency
+   * @param outPath Path to store output testbench
+   * @param outTestFileName Filename for output testbench
+   * @param latency The model's latency that is treated as clock period
    * @param tstCnt Number of test stimuli at random sequence
+   *
    * @return Nothing, but Verilog testbench should be created
    */
    void printRndVlogTest(const Model &model,
@@ -212,11 +215,11 @@ struct Compiler final {
   Compiler() = default;
 
   /**
-   * @brief Generates a FIRRTL IR for the input model
+   * @brief Generates a FIRRTL IR for the input model.
    *
    * @param Input model
-   * @param Name of the top module to be generated
-   * @return Constructed circuit
+   * @param Name of top module in FIRRTL circuit
+   * @return Constructed FIRRTL circuit
    */
   std::shared_ptr<FirrtlCircuit> constructCircuit(const model::Model &model,
                                                   const std::string &name);

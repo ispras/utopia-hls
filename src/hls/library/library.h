@@ -12,9 +12,6 @@
 #include "hls/model/model.h"
 #include "util/singleton.h"
 
-#include <cassert>
-#include <map>
-#include <memory>
 #include <string>
 
 using namespace eda::hls::mapper;

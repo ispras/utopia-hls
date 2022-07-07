@@ -10,7 +10,6 @@
 
 #include "hls/library/library.h"
 
-#include <memory>
 #include <string>
 #include <vector>
 

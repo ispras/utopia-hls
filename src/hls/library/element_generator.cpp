@@ -8,8 +8,6 @@
 
 #include "hls/library/element_generator.h"
 
-#include <cmath>
-
 namespace eda::hls::library {
 
 //FIXME

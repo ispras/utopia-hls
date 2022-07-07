@@ -10,7 +10,6 @@
 #include "hls/library/internal/default.h"
 
 #include <cmath>
-#include <cstdlib>
 
 using namespace eda::hls::mapper;
 

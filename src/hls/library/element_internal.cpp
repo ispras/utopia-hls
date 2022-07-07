@@ -11,9 +11,6 @@
 #include "hls/library/internal/delay.h"
 #include "hls/library/internal/dup.h"
 
-
-#include <cmath>
-
 namespace eda::hls::library {
 
 std::vector<Port> ElementInternal::createPorts(const NodeType &nodetype) {

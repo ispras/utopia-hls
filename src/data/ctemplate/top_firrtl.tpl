@@ -14,10 +14,6 @@
 // of the Russian Academy of Sciences (ISP RAS)
 // 25 Alexander Solzhenitsyn st., Moscow, 109004, Russia
 // http://forge.ispras.ru/projects/utopia
-//
-
-
-
 
 firrtl.circuit "{{CIRCUIT_NAME}}" {
     firrtl.module @{{CIRCUIT_NAME}} (

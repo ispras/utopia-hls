@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -201,9 +201,10 @@ int compilerDfcTest(const std::string &inputLibraryPath,
   Library::get().initialize(inputLibraryPath, relativeCompPath);
 
   Mapper::get().map(*model, Library::get());
-  
   std::map<std::string, Parameters> params =
-    ParametersOptimizer<TopologicalBalancer>::get().optimize(criteria, *model, indicators);
+    ParametersOptimizer<TopologicalBalancer>::get().optimize(criteria,
+                                                             *model,
+                                                             indicators);
 
   TopologicalBalancer::get().balance(*model);
 

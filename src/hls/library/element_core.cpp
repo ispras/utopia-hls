@@ -8,8 +8,6 @@
 
 #include "hls/library/element_core.h"
 
-#include <cmath>
-
 namespace eda::hls::library {
 
 std::unique_ptr<Element> ElementCore::construct(

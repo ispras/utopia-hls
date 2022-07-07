@@ -12,12 +12,6 @@
 #include "hls/mapper/config/hwconfig.h"
 #include "util/assert.h"
 
-#include <algorithm>
-#include <filesystem>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <memory>
 #include <unordered_map>
 
 using namespace eda::hls::mapper;
@@ -54,15 +48,6 @@ std::shared_ptr<MetaElement> Library::find(const NodeType &nodetype,
   for (const auto *output: nodetype.outputs) {
     hashString = hashString + " out " + output->name;
   }
-
-  /*const auto i = std::find_if(cache.begin(), cache.end(),
-    [&name, &hwconfig](const std::shared_ptr<MetaElement> &metaElement) {
-      return metaElement->name == name && metaElement->supports(hwconfig);
-    });
-
-  if (i != cache.end()) {
-    return *i;
-  }*/
 
   const auto hash = std::hash<std::string>{}(hashString);
 

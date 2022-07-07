@@ -11,7 +11,6 @@
 #include "hls/library/library.h"
 #include "util/assert.h"
 
-#include <memory>
 #include <string>
 #include <vector>
 

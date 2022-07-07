@@ -36,10 +36,6 @@ std::string replaceSomeChars(const std::string &buf) {
   return result;
 }
 
-const std::string chanSourceToString(const eda::hls::model::Chan &chan) {
-  return chan.source.node->name + "_" + chan.source.port->name;
-}
-
 Port createFirrtlPort(const model::Node *node,
                       const model::Port *port,
                       const Port::Direction dir,
@@ -49,10 +45,14 @@ Port createFirrtlPort(const model::Node *node,
 }
 
 bool Port::isClock() const {
-  return name == "clock";
+  return type.name == "clock";
 }
 
-void ExternalModule::addInputs(const std::vector<model::Port*> inputs) {
+bool Port::isReset() const {
+  return type.name == "reset";
+}
+
+void ExternalModule::addInputs(const std::vector<model::Port*> &inputs) {
   // Will be removed in the near future
   addInput(Port("clock", Port::Direction::IN, Type("clock", 1)));
   addInput(Port("reset", Port::Direction::IN, Type("reset", 1)));
@@ -62,7 +62,7 @@ void ExternalModule::addInputs(const std::vector<model::Port*> inputs) {
   }
 }
 
-void ExternalModule::addOutputs(const std::vector<model::Port*> outputs) {
+void ExternalModule::addOutputs(const std::vector<model::Port*> &outputs) {
   for (const auto *output : outputs) {
       addOutput(Port(replaceSomeChars(output->name),
           Port::Direction::OUT, Type("sint", 16)));
@@ -70,7 +70,7 @@ void ExternalModule::addOutputs(const std::vector<model::Port*> outputs) {
 }
 
 void FirrtlModule::addInputs(const model::Node *node,
-                             const std::vector<model::Chan*> outputs) {
+                             const std::vector<model::Chan*> &outputs) {
   for (const auto *output : outputs) {
     addInput(createFirrtlPort(node, output->source.port, Port::Direction::IN,
       Type("sint", 16)));
@@ -78,14 +78,14 @@ void FirrtlModule::addInputs(const model::Node *node,
 }
 
 void FirrtlModule::addOutputs(const model::Node *node,
-                              const std::vector<model::Chan*> inputs) {
+                              const std::vector<model::Chan*> &inputs) {
   for (const auto *input : inputs) {
     addOutput(createFirrtlPort(node, input->target.port, Port::Direction::OUT,
       Type("sint", 16)));
   }
 }
 
-void Instance::addModuleInputs(const std::vector<model::Port*> inputs) {
+void Instance::addModuleInputs(const std::vector<model::Port*> &inputs) {
   addModuleInput(Port("clock", Port::Direction::IN, Type("clock", 1)));
   addModuleInput(Port("reset", Port::Direction::IN, Type("reset", 1)));
   for (const auto *input : inputs) {
@@ -94,7 +94,7 @@ void Instance::addModuleInputs(const std::vector<model::Port*> inputs) {
   }
 }
 
-void Instance::addModuleOutputs(const std::vector<model::Port*> outputs) {
+void Instance::addModuleOutputs(const std::vector<model::Port*> &outputs) {
   for (const auto *output : outputs) {
     addModuleOutput(Port(replaceSomeChars(output->name), Port::Direction::OUT,
       Type("sint", 16)));
@@ -195,8 +195,8 @@ void ExternalModule::addPrologueToDict(ctemplate::TemplateDictionary *dict)
 }
 
 void ExternalModule::moveVerilogModule(
-    const std::string &outputDirName) const {
-  std::filesystem::path filesystemPath = outputDirName;
+    const std::string &outPath) const {
+  std::filesystem::path filesystemPath = outPath;
   std::string outputFileName = (((const std::filesystem::path) path).filename());
   std::filesystem::copy(toLower(path),
                         (filesystemPath / outputFileName).string(),
@@ -221,7 +221,7 @@ void ExternalModule::printVerilogModule(std::ostream &out) const {
 }
 
 void ExternalModule::addPortsToDict(ctemplate::TemplateDictionary *dict,
-                                    const std::vector<Port> ports,
+                                    const std::vector<Port> &ports,
                                     const std::string &tagSectName,
                                     const std::string &tagPortName,
                                     const std::string &tagSepName,
@@ -234,8 +234,12 @@ void ExternalModule::addPortsToDict(ctemplate::TemplateDictionary *dict,
   }
 }
 
+std::string portTypeToString(const Type &type) {
+  return ((type.width != 1) ? ("<" + std::to_string(type.width) + ">") : "");
+}
+
 void FirrtlCircuit::addPortsToDict(ctemplate::TemplateDictionary *dict,
-                                   const std::vector<Port> ports,
+                                   const std::vector<Port> &ports,
                                    const std::string &tagSectName,
                                    const std::string &tagPortName,
                                    const std::string &tagTypeName,
@@ -248,17 +252,15 @@ void FirrtlCircuit::addPortsToDict(ctemplate::TemplateDictionary *dict,
    const auto type = port.type;
 
    std::string portTypeName = type.name;
-   portTypeName = portTypeName + ((type.width != 1) ? ("<" +
-                                std::to_string(type.width) +
-                                                      ">") :
-                                                          "");
+   portTypeName = portTypeName + portTypeToString(type);
    subDict->SetValue(tagTypeName, portTypeName);
    subDict->SetValue(tagSepName, (i == portCount - 1) ? "" : ",");
   }
 }
 
 void FirrtlCircuit::addInstancesToDict(ctemplate::TemplateDictionary *dict,
-                                       std::vector<Instance> instances) const {
+                                       const std::vector<Instance> &instances)
+    const {
   for (const auto &instance : instances) {
    auto *instDict = dict->AddSectionDictionary("INSTS");
    size_t portCount = instance.inputs.size() + instance.outputs.size();
@@ -290,23 +292,17 @@ void FirrtlCircuit::addInstancesToDict(ctemplate::TemplateDictionary *dict,
      conDict->SetValue("CON_IN_NAME", input.name);
      conDict->SetValue("CON_OUT_NAME", output.name);
      std::string inTypeName = input.type.name;
-     inTypeName = inTypeName + ((input.type.width != 1) ? ("<" +
-                              std::to_string(input.type.width) +
-                                                          ">") :
-                                                             "");
+     inTypeName = inTypeName + portTypeToString(input.type);
      conDict->SetValue("CON_IN_TYPE", inTypeName);
      std::string outTypeName = output.type.name;
-     outTypeName = outTypeName + ((output.type.width != 1) ? ("<" +
-                                std::to_string(output.type.width) +
-                                                             ">") :
-                                                                "");
+     outTypeName = outTypeName + portTypeToString(output.type);
      conDict->SetValue("CON_OUT_TYPE", outTypeName);
    }
   }
 }
 
 void FirrtlCircuit::addExtModulesToDict(ctemplate::TemplateDictionary *dict,
-    std::map<std::string, ExternalModule> extModules) const {
+    const std::map<std::string, ExternalModule> &extModules) const {
   for (const auto &pair : extModules) {
     const auto extModule = pair.second;
     auto *extDict = dict->AddSectionDictionary("EXTS");
@@ -368,60 +364,63 @@ void FirrtlCircuit::printFirrtl(std::ostream &out) const {
   out << output;
 }
 
-void FirrtlCircuit::dumpVerilogLibrary(const std::string &outputDirName,
+void FirrtlCircuit::dumpVerilogLibrary(const std::string &outPath,
                                        std::ostream &out) const {
   for (const auto &pair : extModules) {
     if (pair.second.body == "") {
-      pair.second.moveVerilogModule(outputDirName);
+      pair.second.moveVerilogModule(outPath);
     } else {
       pair.second.printVerilogModule(out);
     }
 }
 }
 
-void FirrtlCircuit::dumpVerilogOptFile(const std::string& inputFirrtlName) const {
+FirrtlCircuit::FirrtlCircuit(const Model &model, const std::string &name) :
+    name(name) {
+  for (const auto *nodetype : model.nodetypes) {
+    addExternalModule(nodetype);
+  }
+  std::cout << name << std::endl;
+  addFirrtlModule(FirrtlModule(model, name));
+};
+
+void FirrtlCircuit::dumpVerilogOptFile(const std::string &inFirName) const {
   system((std::string(FirrtlCircuit::circt) +
-         inputFirrtlName +
+         inFirName +
          std::string(FirrtlCircuit::circtOptions)).c_str());
 }
 
-void FirrtlCircuit::printFiles(const std::string& firrtlFileName,
-                               const std::string& verilogLibraryName,
-                               const std::string& verilogTopModuleName,
-                               const std::string& outputDirName) const {
+void FirrtlCircuit::printFiles(const std::string &outFirFileName,
+                               const std::string &outVlogLibName,
+                               const std::string &outVlogTopName,
+                               const std::string &outPath) const {
   // Create path
-  std::filesystem::path filesystemOutputDir = outputDirName;
-  std::filesystem::create_directories(filesystemOutputDir);
+  std::filesystem::path fsOutPath = outPath;
+  std::filesystem::create_directories(fsOutPath);
 
-  // Create firrtl file
+  // Create FIRRTL file
   std::ofstream outputFile;
-  outputFile.open((filesystemOutputDir / firrtlFileName).string());
+  outputFile.open((fsOutPath / outFirFileName).string());
   uassert(outputFile, "Can't open outputFile!");
   printFirrtl(outputFile);
   outputFile.close();
 
-  // Lower firrtl to verilog and move result to output directory
-  dumpVerilogOptFile((filesystemOutputDir / firrtlFileName).string());
+  // Lower FIRRTL to verilog and move result to output directory
+  dumpVerilogOptFile((fsOutPath / outFirFileName).string());
   uassert(std::filesystem::exists(name + ".sv"),
           "File main.sv is not found! (CIRCT doesn't work)\n");
   std::filesystem::rename(name + ".sv",
-    ((filesystemOutputDir / verilogTopModuleName).string()).c_str());
+    ((fsOutPath / outVlogTopName).string()).c_str());
 
-  // Get verilog code for library elements and move it to output directory
-  outputFile.open((filesystemOutputDir / verilogLibraryName).string());
-  dumpVerilogLibrary(filesystemOutputDir.string(), outputFile);
+  // Get Verilog code for library elements and move it to output directory
+  outputFile.open((fsOutPath / outVlogLibName).string());
+  dumpVerilogLibrary(fsOutPath.string(), outputFile);
   outputFile.close();
 }
 
 std::shared_ptr<FirrtlCircuit> Compiler::constructCircuit(const Model &model,
-    const std::string& name) {
-  auto circuit = std::make_shared<FirrtlCircuit>(name);
-
-  for (const auto *nodetype : model.nodetypes) {
-    circuit->addExternalModule(nodetype);
-  }
-  circuit->addFirModule(FirrtlModule(model, name));
-
+    const std::string &name) {
+  auto circuit = std::make_shared<FirrtlCircuit>(model, name);
   return circuit;
 }
 
@@ -431,11 +430,11 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
                                      const int latency,
                                      const size_t tstCnt) {
 
-  const std::filesystem::path path = outPath;
-  std::filesystem::create_directories(path);
+  const std::filesystem::path fsPath = outPath;
+  std::filesystem::create_directories(fsPath);
 
   std::ofstream testBenchFile;
-  testBenchFile.open(path / outTestFileName);
+  testBenchFile.open(fsPath / outTestFileName);
 
   ctemplate::TemplateDictionary *dict = new ctemplate::TemplateDictionary("tb");
 
@@ -461,7 +460,7 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
   for (size_t i = 0; i < inputs.size(); i++) {
 
     ctemplate::TemplateDictionary *inDict = dict->AddSectionDictionary("INS");
-    if (inputs[i].isClock() || inputs[i].name == "reset") {
+    if (inputs[i].isClock() || inputs[i].isReset()) {
       inDict->SetValue("IN_TYPE", ""); // TODO: set type when implemented
 
     } else {
