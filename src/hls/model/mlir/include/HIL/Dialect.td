@@ -18,11 +18,10 @@ include "mlir/IR/OpBase.td"
 
 def HIL_Dialect : Dialect {
   let name = "hil";
-  let summary = "A hil out-of-tree MLIR dialect.";
+  let summary = "A MLIR dialect for HIL language.";
   let description = [{
-      This dialect is an example of an out-of-tree MLIR dialect designed to
-      illustrate the basic setup required to develop MLIR-based tools without
-      working inside of the LLVM source tree.
+      This dialect describes primitives of High-level Intermediate Language
+      (HIL) which is an input for the Utopia EDA.
   }];
   let cppNamespace = "::mlir::hil";
 }
