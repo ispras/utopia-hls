@@ -137,8 +137,9 @@ bool EqChecker::match(const std::vector<mlir::hil::Node> &left,
   size_t lSize = left.size();
   size_t rSize = right.size();
 
-  if (lSize != rSize)
+  if (lSize != rSize) {
     return false;
+  }
 
   for (size_t i = 0; i < lSize; i++) {
 
@@ -147,6 +148,7 @@ bool EqChecker::match(const std::vector<mlir::hil::Node> &left,
     bool hasMatch = false;
 
     for (size_t j = 0; j < rSize; j++) {
+
       mlir::hil::Node rNode = right[j];
       std::string rName = rNode.name().str();
 
@@ -277,7 +279,9 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
       }
 
       nodes.push_back(mk_and(splitVec));
+
     } else if (!isSink(node) && !isSource(node)) {
+
       // sink or source, do nothing
       const auto nodeType = node.nodeTypeName().str();
       std::cerr << "Unsupported node type: " + nodeType << std::endl;
@@ -346,6 +350,7 @@ z3::sort_vector EqChecker::getInSorts(mlir::hil::Node &node,
   z3::sort_vector sorts(ctx);
 
   for (size_t i = 0; i < inputs.size(); i++) {
+
     mlir::hil::PortAttr targetPort = inputs[i].nodeTo().getPort();
     sorts.push_back(getSort(targetPort, ctx));
   }
@@ -360,6 +365,7 @@ z3::expr_vector EqChecker::getFuncArgs(mlir::hil::Node &node,
   z3::expr_vector args(ctx);
 
   for (size_t i = 0; i < inputs.size(); i++) {
+
     mlir::hil::BindingAttr bnd = inputs[i].nodeTo();
     args.push_back(toConst(inputs[i], bnd, ctx));
   }
