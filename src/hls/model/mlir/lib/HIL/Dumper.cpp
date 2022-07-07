@@ -221,7 +221,7 @@ template <> void ModelDumper<Node>::dump() {
 }
 
 template <> void ModelDumper<Graph>::dump() {
-  os_ << "hil.graph " << quoted(node_.name) << "{\n";
+  os_ << "hil.graph " << quoted(node_.name) << " {\n";
   {
     indent_block _(os_);
     os_ << "hil.chans {\n";
