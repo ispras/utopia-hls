@@ -215,15 +215,15 @@ public:
                   const std::string& outVlogTopName,
                   const std::string& outPath) const;
   /**
-   * @brief Generates a Verilog random testbench for the current model
+   * @brief Generates a Verilog random testbench for the current model.
    *
-   * @param model Reference to model
-   * @param outPath Path to store output testbench
-   * @param outTestFileName Filename for output testbench
-   * @param latency The model's latency that is treated as clock period
-   * @param tstCnt Number of test stimuli at random sequence
+   * @param model Reference to model.
+   * @param outPath Path to store output testbench.
+   * @param outTestFileName Filename for output testbench.
+   * @param latency The model's latency that is treated as clock period.
+   * @param tstCnt Number of test stimuli at random sequence.
    *
-   * @return Nothing, but Verilog testbench should be created
+   * @return Nothing, but Verilog testbench should be created.
    */
    void printRndVlogTest(const Model &model,
                          const std::string &outPath,
@@ -240,9 +240,9 @@ struct Compiler final {
   /**
    * @brief Generates a FIRRTL IR for the input model.
    *
-   * @param Input model
-   * @param Name of top module in FIRRTL circuit
-   * @return Constructed FIRRTL circuit
+   * @param Input model.
+   * @param Name of top module in FIRRTL circuit.
+   * @return Constructed FIRRTL circuit.
    */
    std::shared_ptr<FirrtlCircuit> constructFirrtlCircuit(const Model &model,
        const std::string &name = "main") {

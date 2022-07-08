@@ -33,6 +33,7 @@ inline std::string toLower(std::string s) {
 
 inline std::string replaceSomeChars(const std::string &buf) {
   std::string result = buf;
+  std::replace(result.begin(), result.end(), '$', '_');
   std::replace(result.begin(), result.end(), ',', '_');
   std::replace(result.begin(), result.end(), '>', '_');
   std::replace(result.begin(), result.end(), '<', '_');

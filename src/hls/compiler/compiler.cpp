@@ -416,13 +416,11 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
     ctemplate::TemplateDictionary *inDict = dict->AddSectionDictionary("INS");
     if (inputs[i].isClock() || inputs[i].isReset()) {
       inDict->SetValue("IN_TYPE", ""); // TODO: set type when implemented
-
     } else {
       inDict->SetValue("IN_TYPE", "[15:0]"); // TODO: set type when implemented
-
     }
 
-    const std::string iName = inputs[i].name;
+    const std::string iName = replaceSomeChars(inputs[i].name);
     inDict->SetValue("IN_NAME", iName);
     bndNames.push_back(iName);
   }
@@ -433,7 +431,7 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
   for (size_t i = 0; i < outputs.size(); i++) {
     ctemplate::TemplateDictionary *outDict = dict->AddSectionDictionary("OUTS");
     outDict->SetValue("OUT_TYPE", "[15:0]"); // TODO: set type when implemented
-    const std::string oName = outputs[i].name;
+    const std::string oName = replaceSomeChars(outputs[i].name);
     outDict->SetValue("OUT_NAME", oName);
     bndNames.push_back(oName);
   }
@@ -459,7 +457,7 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
 
       // TODO: set random values for inputs
       ctemplate ::TemplateDictionary *sDict = tDict->AddSectionDictionary("ST");
-      sDict->SetValue("NAME", inputs[j].name);
+      sDict->SetValue("NAME", replaceSomeChars(inputs[j].name));
     }
   }
 
