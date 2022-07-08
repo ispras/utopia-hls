@@ -8,6 +8,7 @@
 
 #include "hls/library/element_internal.h"
 #include "hls/library/internal/default.h"
+#include "util/string.h"
 
 #include <cmath>
 
@@ -140,7 +141,7 @@ std::unique_ptr<Element> Default::construct(
 
     std::string portDeclr =
       (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) + ":0] " :
-                        std::string("")) + port.name + ";\n";
+                        std::string("")) + replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -162,7 +163,7 @@ std::unique_ptr<Element> Default::construct(
       } else {
         fsm += std::string(", ");
       }
-      fsm += port.name;
+      fsm += replaceSomeChars(port.name);
     }
 
     if (port.direction == Port::OUT || port.direction == Port::INOUT) {
@@ -178,7 +179,7 @@ std::unique_ptr<Element> Default::construct(
         pos -= port.width; // FIXME
       }
       uassert(outputLength != 0, "All the outputs have zero width!");
-      assigns += std::string("assign ") + port.name +
+      assigns += std::string("assign ") + replaceSomeChars(port.name) +
                  " = state_" +
                  (latency == 0 ? "0" : std::to_string(latency - 1)) +
                  "[" + std::to_string((pos + port.width - 1) % outputLength) +
@@ -204,16 +205,16 @@ std::unique_ptr<Element> Default::construct(
       }
       if (port.direction == Port::IN || port.direction == Port::INOUT) {
         if (name == "merge") {
-          portNames.push_back(port.name);
+          portNames.push_back(replaceSomeChars(port.name));
         } else if (name == "split") {
-          portName = port.name;
+          portName = replaceSomeChars(port.name);
         }
       }
       if (port.direction == Port::OUT || port.direction == Port::INOUT) {
         if (name == "merge") {
-          portName = port.name;
+          portName = replaceSomeChars(port.name);
         } else if (name == "split") {
-          portNames.push_back(port.name);
+          portNames.push_back(replaceSomeChars(port.name));
         }
       }
     }
@@ -240,10 +241,10 @@ std::unique_ptr<Element> Default::construct(
         continue;
       }
       if (port.direction == Port::IN || port.direction == Port::INOUT) {
-        inPortNames.push_back(port.name);
+        inPortNames.push_back(replaceSomeChars(port.name));
       }
       if (port.direction == Port::OUT || port.direction == Port::INOUT) {
-        outPortNames.push_back(port.name);
+        outPortNames.push_back(replaceSomeChars(port.name));
       }
     }
 
@@ -277,10 +278,10 @@ std::unique_ptr<Element> Default::construct(
         continue;
       }
       if (port.direction == Port::IN || port.direction == Port::INOUT) {
-        inPortName = port.name;
+        inPortName = replaceSomeChars(port.name);
       }
       if (port.direction == Port::OUT || port.direction == Port::INOUT) {
-        outPortName = port.name;
+        outPortName = replaceSomeChars(port.name);
       }
     }
     if (name == "clip") {
@@ -316,10 +317,10 @@ std::unique_ptr<Element> Default::construct(
         continue;
       }
       if (port.direction == Port::IN || port.direction == Port::INOUT) {
-        inPortName = port.name;
+        inPortName = replaceSomeChars(port.name);
       }
       if (port.direction == Port::OUT || port.direction == Port::INOUT) {
-        outPortNames.push_back(port.name);
+        outPortNames.push_back(replaceSomeChars(port.name));
       }
     }
     for (auto outPortName : outPortNames) {
@@ -340,7 +341,7 @@ std::unique_ptr<Element> Default::construct(
       }
       if (!(name == "clock" || name == "reset") &&
            (port.direction == Port::OUT || port.direction == Port::INOUT)) {
-        outPortName = port.name;
+        outPortName = replaceSomeChars(port.name);
         break;
       }
     }

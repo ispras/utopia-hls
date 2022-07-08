@@ -209,7 +209,7 @@ int compilerDfcTest(const std::string &inputLibraryPath,
   TopologicalBalancer::get().balance(*model);
 
   auto compiler = std::make_unique<Compiler>();
-  auto circuit = compiler->constructCircuit(*model, "IDCT");
+  auto circuit = compiler->constructFirrtlCircuit(*model, "IDCT");
   circuit->printFiles(outputFirrtlName,
                       outputVerilogLibraryName,
                       outputVerilogTopModuleName,

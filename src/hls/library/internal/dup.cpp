@@ -8,6 +8,7 @@
 
 #include "hls/library/element_internal.h"
 #include "hls/library/internal/dup.h"
+#include "util/string.h"
 
 #include <cmath>
 
@@ -104,7 +105,7 @@ std::unique_ptr<Element> Dup::construct(
 
     std::string portDeclr =
       (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) + ":0] " :
-                        std::string("")) + port.name + ";\n";
+                        std::string("")) + replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -131,10 +132,10 @@ std::unique_ptr<Element> Dup::construct(
       continue;
     }
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
-      inPortName = port.name;
+      inPortName = replaceSomeChars(port.name);
     }
     if (port.direction == Port::OUT || port.direction == Port::INOUT) {
-      outPortNames.push_back(port.name);
+      outPortNames.push_back(replaceSomeChars(port.name));
     }
   }
   for (auto outPortName : outPortNames) {

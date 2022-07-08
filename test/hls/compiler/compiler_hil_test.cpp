@@ -57,7 +57,7 @@ int compilerHilTest(const std::string &inputLibraryPath,
   TopologicalBalancer::get().balance(*model);
 
   auto compiler = std::make_unique<Compiler>();
-  auto circuit = compiler->constructCircuit(*model, "main");
+  auto circuit = compiler->constructFirrtlCircuit(*model, "main");
   circuit->printFiles(outputFirrtlName,
                       outputVerilogLibraryName,
                       outputVerilogTopModuleName,

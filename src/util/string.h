@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -22,6 +23,20 @@ inline bool starts_with(const std::string &string, const std::string &prefix) {
 inline bool ends_with(const std::string &string, const std::string &suffix) {
   return string.size() >= suffix.size()
       && string.compare(string.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+inline std::string toLower(std::string s) {
+    std::transform(s.begin(), s.end(), s.begin(),
+                   [](unsigned char c){ return std::tolower(c); });
+    return s;
+}
+
+inline std::string replaceSomeChars(const std::string &buf) {
+  std::string result = buf;
+  std::replace(result.begin(), result.end(), ',', '_');
+  std::replace(result.begin(), result.end(), '>', '_');
+  std::replace(result.begin(), result.end(), '<', '_');
+  return result;
 }
 
 template<typename... Args>

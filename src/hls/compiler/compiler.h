@@ -10,6 +10,7 @@
 
 #include "hls/library/library.h"
 #include "hls/model/model.h"
+#include "util/string.h"
 
 #include <ctemplate/template.h>
 
@@ -22,6 +23,10 @@ struct Type final {
   Type(const std::string &name,
        const std::size_t width) :
        name(name), width(width) {};
+
+  std::string toString() const {
+   return ((this->width != 1) ? ("<" + std::to_string(this->width) + ">") : "");
+  }
 };
 
 struct Port final {
@@ -35,8 +40,22 @@ struct Port final {
        const Type &type) :
     name(name), dir(dir), type(type) {}
 
-  bool isClock() const;
-  bool isReset() const;
+  static Port createFirrtlPort(const model::Node *node,
+                               const model::Port *port,
+                               const Port::Direction dir,
+                               const Type type) {
+    return Port(replaceSomeChars(node->name) +
+                                         "_" + replaceSomeChars(port->name),
+        dir, type);
+  }
+
+  bool isClock() const {
+    return type.name == "clock";
+  }
+
+  bool isReset() const {
+    return type.name == "reset";
+  }
 };
 
 struct Instance final {
@@ -158,7 +177,11 @@ private:
                           const std::vector<Instance> &instances) const;
   void addExtModulesToDict(ctemplate::TemplateDictionary *dict,
       const std::map<std::string, ExternalModule> &extModules) const;
-  void dumpVerilogOptFile(const std::string &inFirName) const;
+  void dumpVerilogOptFile(const std::string &inFirName) const {
+    system((std::string(FirrtlCircuit::circt) +
+           inFirName +
+           std::string(FirrtlCircuit::circtOptions)).c_str());
+  }
   void dumpVerilogLibrary(const std::string &outPath,
                           std::ostream &out) const;
   void printFirrtl(std::ostream &out) const;
@@ -221,10 +244,12 @@ struct Compiler final {
    * @param Name of top module in FIRRTL circuit
    * @return Constructed FIRRTL circuit
    */
-  std::shared_ptr<FirrtlCircuit> constructCircuit(const model::Model &model,
-                                                  const std::string &name);
+   std::shared_ptr<FirrtlCircuit> constructFirrtlCircuit(const Model &model,
+       const std::string &name = "main") {
+     return std::make_shared<FirrtlCircuit>(model, name);
+   }
 };
 
-std::ostream& operator <<(std::ostream &out, const FirrtlCircuit &circuit);
+std::ostream& operator <<(std::ostream &out, const FirrtlCircuit &firCircuit);
 
 } // namespace eda::hls::compiler
