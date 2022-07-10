@@ -77,7 +77,7 @@ TEST(SimulatedAnnealing, Sphere) {
   ASSERT_TRUE(abs(functionValue) < 0.25);
 }
 
-/*TEST(SimulatedAnnealing, Rosenbrock) {
+TEST(SimulatedAnnealing, Rosenbrock) {
   std::vector<float> optimizedParameters(3);
   init(optimizedParameters);
   eda::hls::scheduler::optimizers::SimulatedAnnealingOptimizer test(
@@ -85,7 +85,7 @@ TEST(SimulatedAnnealing, Sphere) {
       stepFunction, temperatureFunction);
   test.optimize(optimizedParameters);
   auto functionValue = rosenbrock(optimizedParameters);
-  ASSERT_TRUE(abs(functionValue) < 0.15);
+  ASSERT_TRUE(abs(functionValue) < 0.25);
 }
 
 TEST(SimulatedAnnealing, Rastrigin) {
@@ -96,5 +96,5 @@ TEST(SimulatedAnnealing, Rastrigin) {
       stepFunction, temperatureFunction);
   test.optimize(optimizedParameters);
   auto functionValue = rastrigin(optimizedParameters);
-  ASSERT_TRUE(abs(functionValue) < 2);
-}*/
+  ASSERT_TRUE(abs(functionValue) < 2.5);
+}
