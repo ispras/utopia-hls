@@ -220,7 +220,6 @@ int compilerDfcTest(const std::string &inputLibraryPath,
   circuit->printRndVlogTest(*model,
                             outputDirName,
                             outputTestName,
-                            model->ind.ticks,
                             testLength);
 
   Library::get().finalize();

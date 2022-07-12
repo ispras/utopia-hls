@@ -343,7 +343,9 @@ void FirrtlCircuit::dumpVerilogLibrary(const std::string &outPath,
 }
 
 FirrtlCircuit::FirrtlCircuit(const Model &model, const std::string &name) :
-    name(name) {
+    name(name), latency(model.ind.ticks), resetInitialValue(0) {
+  //???
+  //resetInitialValue = 0;
   for (const auto *nodetype : model.nodetypes) {
     addExternalModule(nodetype);
   }
@@ -381,7 +383,8 @@ void FirrtlCircuit::printFiles(const std::string &outFirFileName,
 void FirrtlCircuit::printRndVlogTest(const Model &model,
                                      const std::string &outPath,
                                      const std::string &outTestFileName,
-                                     const int latency,
+                                     //const int latency,
+                                     //const int resetInitialValue,
                                      const size_t tstCnt) {
 
   const fs::path fsPath = outPath;
@@ -439,6 +442,7 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
   // calculate model's latency and store it
   dict->SetIntValue("LATENCY", latency);
 
+
   // set bindings to device under test
   for (size_t i = 0; i < bndNames.size(); i++) {
     ctemplate::TemplateDictionary *bndDict = dict->AddSectionDictionary("BIND");
@@ -447,12 +451,21 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
   }
   bndNames.clear();
 
+  // set resets
+  for (size_t i = 0; i < inputs.size(); i++) {
+    if (inputs[i].isReset()) {
+      auto *resetDict = dict->AddSectionDictionary("RESETS");
+      resetDict->SetValue("RESET_NAME", inputs[i].name);
+      resetDict->SetIntValue("RESET_VALUE", resetInitialValue);
+    }
+  }
+
   // generate random stimuli
   for (size_t i = 0; i < tstCnt; i++) {
     ctemplate ::TemplateDictionary *tDict = dict->AddSectionDictionary("TESTS");
     for (size_t j = 0; j < inputs.size(); j++) {
 
-      if (inputs[j].isClock())
+      if (inputs[j].isClock() || inputs[j].isReset())
         continue;
 
       // TODO: set random values for inputs
