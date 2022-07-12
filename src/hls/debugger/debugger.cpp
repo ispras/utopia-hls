@@ -108,7 +108,7 @@ bool EqChecker::equivalent(mlir::hil::Model &left,
   z3::solver solver(ctx);
   solver.add(nodes);
 
-  // TODO: debug print
+  // TODO: use debug print method
   std::cout << "SMT-LIBv2 formula:" << std::endl;
   std::cout << solver.to_smt2() << std::endl;
 
@@ -302,7 +302,7 @@ z3::expr EqChecker::toConst(mlir::hil::Chan &ch,
     z3::context &ctx) const {
 
   const auto port = bnd.getPort();
-  std::string name = port.getName();
+  const std::string name = port.getName();
   const z3::sort fInSort = getSort(port, ctx);
   const std::string modelName = getModelName(ch);
   const std::string nodeName = bnd.getNodeName().str();
@@ -361,7 +361,6 @@ z3::expr_vector EqChecker::getFuncArgs(mlir::hil::Node &node,
     z3::context &ctx) const {
 
   std::vector<mlir::hil::Chan> inputs = getInputs(node);
-
   z3::expr_vector args(ctx);
 
   for (size_t i = 0; i < inputs.size(); i++) {
