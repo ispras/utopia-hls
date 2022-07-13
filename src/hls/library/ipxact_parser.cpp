@@ -9,6 +9,7 @@
 #include "hls/library/ipxact_parser.h"
 #include "hls/library/element_core.h"
 #include "hls/library/element_generator.h"
+#include "util/string.h"
 
 #include <filesystem>
 #include <xercesc/dom/DOM.hpp>
@@ -18,14 +19,6 @@ using namespace eda::utils;
 using namespace xercesc;
 
 namespace eda::hls::library {
-
-// TODO: Duplication (see compiler). Move this function into utils.
-std::string toLower(std::string s) {
-    std::transform(s.begin(), s.end(), s.begin(),
-                   [](unsigned char c){ return std::tolower(c); }
-                  );
-    return s;
-}
 
 bool stringIsDigit(std::string str) {
   for (size_t i = 0; i < str.length(); i++) {
