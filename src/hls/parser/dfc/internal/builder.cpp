@@ -27,12 +27,13 @@ std::string Builder::Unit::fullName() const {
   std::stringstream fullname;
 
   fullname << opcode << "_" << in.size() << "x" << out.size();
-  /*
-  for (auto *wire : in)
-    fullname << "_" << wire->type;
-  for (auto *wire : out)
-    fullname << "_" << wire->type;
-  */
+  //TODO: To discuss!
+  if (opcode == "const") {
+    for (auto *wire : out)
+      fullname << "_" << wire->name.substr(wire->name.find_last_of("_") + 1,
+                                           wire->name.length());
+  }
+
   auto result = fullname.str();
   std::replace_if(result.begin(), result.end(),
     [](char c) { return c == '<' || c == '>' || c == ','; }, '_');
@@ -80,6 +81,16 @@ Builder::Unit* Builder::Kernel::getUnit(const std::string &opcode,
                                         const std::vector<Wire*> &out) {
   auto *unit = new Unit(opcode, in, out);
   units.push_back(unit);
+
+  /*std::cout << "***********************************************" << std::endl;
+  std::cout << opcode << std::endl;
+  for (const auto *input : in) {
+    std::cout << input->name << std::endl;
+  }
+  for (const auto *output : out) {
+    std::cout << output->name << std::endl;
+  }
+  std::cout << "***********************************************" << std::endl;*/
   return unit;
 }
 

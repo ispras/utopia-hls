@@ -252,7 +252,19 @@ std::unique_ptr<Element> Default::construct(
         outPortNames.push_back(replaceSomeChars(port.name));
       }
     }
-
+    if (libName == "lt" || libName == "gt" || libName == "eq" ||
+        libName == "ne" || libName == "le" || libName == "ge") {
+      ir += "assign {"; 
+      bool comma = false;
+      for (auto portName : outPortNames) {
+        ir += (comma ? ", " : "") + portName;
+        if (!comma) {
+          comma = true;
+        }
+      }
+      ir += "} = ";
+      ir += "0;\n";
+    }
     ir += "assign {";
     bool comma = false;
     for (auto portName : outPortNames) {
@@ -293,9 +305,8 @@ std::unique_ptr<Element> Default::construct(
     element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
     //return element;
   }
-  else if (libName == "shl_11" || libName == "shl_8" ||
-           libName == "shr_14" || libName == "shr_8" || libName == "shr_3" ||
-           libName == "clip") {
+  else if (libName == "shl11" || libName == "shl8" || libName == "shr14" ||
+           libName == "shr8"  || libName == "shr3" || libName == "clip") {
     std::string inPortName, outPortName;
     for (auto port : ports) {
       if (port.name == "clock" || port.name == "reset") {
@@ -323,11 +334,11 @@ std::unique_ptr<Element> Default::construct(
             "endfunction\n";
     } else {
       ir += "assign " + outPortName + " = " + inPortName +
-        (libName == "shl_11" ? " << 11" :
-         libName == "shl_8"  ? " << 8"  :
-         libName == "shr_14" ? " >> 14" :
-         libName == "shr_8"  ? " >> 8"  :
-         libName == "shr_3"  ? " >> 3"  : "");
+        (libName == "shl11" ? " << 11" :
+         libName == "shl8"  ? " << 8"  :
+         libName == "shr14" ? " >> 14" :
+         libName == "shr8"  ? " >> 8"  :
+         libName == "shr3"  ? " >> 3"  : "");
       ir += ";\n";
     }
     element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
@@ -358,11 +369,14 @@ std::unique_ptr<Element> Default::construct(
     
     ir += "assign " + replaceSomeChars(ports[ports.size() - 1].name) + " = ";
     for (size_t i = 2; i < ports.size() - 2; i++) {
-      ir += "(" + replaceSomeChars(ports[2].name) + " == " + std::to_string(i - 2) + " ? " + 
-          replaceSomeChars(ports[i].name) + " : " + "0" + ")" + " | ";
+      ir += "(" + replaceSomeChars(ports[2].name) + " == " +
+          std::to_string(i - 2) + " ? " + replaceSomeChars(ports[i].name) +
+          " : " + "0" + ")" + " | ";
     }
-    ir += "(" + replaceSomeChars(ports[2].name) + " == " + std::to_string(ports.size() - 4) + 
-        " ? " + replaceSomeChars(ports[ports.size() - 2].name) + " : " + "0" + ")" + ";";
+    ir += "(" + replaceSomeChars(ports[2].name) + " == " +
+          std::to_string(ports.size() - 4) + " ? " + 
+          replaceSomeChars(ports[ports.size() - 2].name) + " : " + "0" + ")" +
+          ";";
     element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
   }
   else if (libName == "c128"  || libName == "c181" || libName == "c4"        || 
@@ -371,7 +385,7 @@ std::unique_ptr<Element> Default::construct(
            libName == "w2_add_w6" || libName == "w2_sub_w6"                  || 
            libName == "w3"        || libName == "w3_add_w5"                  ||
            libName == "w3_sub_w5" || libName == "w5" || libName == "w6"      || 
-           libName == "w7") {
+           libName == "w7"        || libName == "const") {
     std::string outPortName;
     for (auto port : ports) {
       if (name == "clock" || name == "reset") {
@@ -383,23 +397,28 @@ std::unique_ptr<Element> Default::construct(
         break;
       }
     }
-    ir += std::string("assign ") + outPortName + " = " +
+    if (libName == "const") {
+      ir += std::string("assign ") + outPortName + " = " + "'h" + 
+          name.substr(name.find_last_of("_") + 1, name.length()) + ";\n";
+    } else {
+      ir += std::string("assign ") + outPortName + " = " +
           (libName == "c128" ? "128" :
-           libName == "c181" ? "181" :
-           libName == "c4"   ? "4"   :
-           libName == "c8192" ? "8192" :
-           libName == "w1" ? "2841" :
-           libName == "w1_add_w7" ? "(2841+565)" :
-           libName == "w1_sub_w7" ? "(2841-565)" :
-           libName == "w2" ? "2676" :
-           libName == "w2_add_w6" ? "(2676+1108)" :
-           libName == "w2_sub_w6" ? "(2676-1108)" :
-           libName == "w3" ? "2408" :
-           libName == "w3_add_w5" ? "(2408+1609)" :
-           libName == "w3_sub_w5" ? "(2408-1609)" :
-           libName == "w5" ? "1609" :
-           libName == "w6" ? "1108" :
-           libName == "w7" ? "565"  :  "0") + ";\n";
+          libName == "c181" ? "181" :
+          libName == "c4"   ? "4"   :
+          libName == "c8192" ? "8192" :
+          libName == "w1" ? "2841" :
+          libName == "w1_add_w7" ? "(2841+565)" :
+          libName == "w1_sub_w7" ? "(2841-565)" :
+          libName == "w2" ? "2676" :
+          libName == "w2_add_w6" ? "(2676+1108)" :
+          libName == "w2_sub_w6" ? "(2676-1108)" :
+          libName == "w3" ? "2408" :
+          libName == "w3_add_w5" ? "(2408+1609)" :
+          libName == "w3_sub_w5" ? "(2408-1609)" :
+          libName == "w5" ? "1609" :
+          libName == "w6" ? "1108" :
+          libName == "w7" ? "565"  :  "0") + ";\n";
+    }
     element->ir = std::string("\n") + ifaceWires + outputs + ir;
     //return element;
   } else {
