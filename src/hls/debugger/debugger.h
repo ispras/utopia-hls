@@ -32,7 +32,8 @@ public:
   }
 
   // Checks if models are equivalent.
-  bool equivalent(mlir::hil::Model &left, mlir::hil::Model &right) const;
+  bool equivalent(mlir::hil::Model &left,
+                  mlir::hil::Model &right) const;
 
 private:
   EqChecker() {}
@@ -49,34 +50,42 @@ private:
   /* Methods for model-to-solver interaction. */
 
   /// Creates formal expressions for the specified graph.
-  void createExprs(mlir::hil::Graph &graph, z3::context &ctx,
-      z3::expr_vector &nodes) const;
+  void createExprs(mlir::hil::Graph &graph,
+                   z3::context &ctx,
+                   z3::expr_vector &nodes) const;
 
   /// Creates constant expression for the channel's binding.
   z3::expr toConst(mlir::hil::Chan &ch,
-      const mlir::hil::BindingAttr &bnd,
-      z3::context &ctx) const;
+                   const mlir::hil::BindingAttr &bnd,
+                   z3::context &ctx) const;
 
   /// Creates constant expression for the node.
-  z3::expr toConst(mlir::hil::Node &node, z3::context &ctx) const;
+  z3::expr toConst(mlir::hil::Node &node,
+                   z3::context &ctx) const;
 
   /// Creates constant expression for the channel.
-  z3::expr toConst(mlir::hil::Chan &ch, z3::context &ctx) const;
+  z3::expr toConst(mlir::hil::Chan &ch,
+                   z3::context &ctx) const;
 
   /// Creates input function call for the node-chan pair.
-  z3::expr toInFunc(mlir::hil::Node &node, mlir::hil::Chan &ch,
-    z3::context &ctx) const;
+  z3::expr toInFunc(mlir::hil::Node &node,
+                    mlir::hil::Chan &ch,
+                    z3::context &ctx) const;
 
   /// Calculates sort of the node.
-  z3::sort getSort(mlir::hil::Node &node, z3::context &ctx) const;
+  z3::sort getSort(mlir::hil::Node &node,
+                   z3::context &ctx) const;
 
   /// Calculates sort of the named port.
-  z3::sort getSort(mlir::hil::PortAttr port, z3::context &ctx) const;
+  z3::sort getSort(mlir::hil::PortAttr port,
+                   z3::context &ctx) const;
 
   /// Returns sorts of the node's inputs.
-  z3::sort_vector getInSorts(mlir::hil::Node &node, z3::context &ctx) const;
+  z3::sort_vector getInSorts(mlir::hil::Node &node,
+                             z3::context &ctx) const;
 
   /// Returns arguments for function call that is constructed from the node.
-  z3::expr_vector getFuncArgs(mlir::hil::Node &node, z3::context &ctx) const;
+  z3::expr_vector getFuncArgs(mlir::hil::Node &node,
+                              z3::context &ctx) const;
 };
 } // namespace eda::hls::debugger
