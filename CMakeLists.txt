@@ -45,7 +45,7 @@ if(DEFINED ENV{XERCES_DIR})
   link_directories(SYSTEM ${XERCES_DIR}/lib)
 else()
   find_file(XERCES_C libxerces-c.so
-    PATHS /usr/lib64 /usr/lib /usr/local/lib64
+    PATHS /usr/lib64 /usr/lib /usr/local/lib64 /usr/lib/x86_64-linux-gnu
     REQUIRED
     DOC "Looking for libxerces-c.so installed to system paths")
   if (XERCES_C)
