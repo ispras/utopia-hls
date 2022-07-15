@@ -476,8 +476,9 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
 
   // use the template to store testbench to file
   std::string output;
-  const std::string vlogTpl = "./src/data/ctemplate/tbench_verilog.tpl";
-  ctemplate::ExpandTemplate(vlogTpl, ctemplate::DO_NOT_STRIP, dict, &output);
+  std::string tplPath = std::string(getenv("UP_HOME"))
+      + std::string("/src/data/ctemplate/tbench_verilog.tpl");
+  ctemplate::ExpandTemplate(tplPath, ctemplate::DO_NOT_STRIP, dict, &output);
   testBenchFile << output;
   testBenchFile.close();
 }
