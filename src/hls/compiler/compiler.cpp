@@ -184,7 +184,8 @@ void ExternalModule::printVerilogModule(std::ostream &out) const {
   dict->SetValue("BODY", body);
 
   std::string output;
-  const std::string extVerilogTpl = "./src/data/ctemplate/ext_verilog.tpl";
+  std::string extVerilogTpl = std::string(getenv("UP_HOME"))
+      + std::string("/src/data/ctemplate/ext_verilog.tpl");
   ctemplate::ExpandTemplate(extVerilogTpl,
                             ctemplate::DO_NOT_STRIP,
                             dict, &output);
@@ -324,7 +325,8 @@ void FirrtlCircuit::printFirrtl(std::ostream &out) const {
   addExtModulesToDict(dict, extModules);
   // Use template to store result to file
   std::string output;
-  const std::string firDialTopTpl = "./src/data/ctemplate/top_firrtl.tpl";
+  std::string firDialTopTpl = std::string(getenv("UP_HOME"))
+      + std::string("/src/data/ctemplate/top_firrtl.tpl");
   ctemplate::ExpandTemplate(firDialTopTpl,
                             ctemplate::DO_NOT_STRIP,
                             dict, &output);
@@ -344,8 +346,6 @@ void FirrtlCircuit::dumpVerilogLibrary(const std::string &outPath,
 
 FirrtlCircuit::FirrtlCircuit(const Model &model, const std::string &name) :
     name(name), latency(model.ind.ticks), resetInitialValue(0) {
-  //???
-  //resetInitialValue = 0;
   for (const auto *nodetype : model.nodetypes) {
     addExternalModule(nodetype);
   }
@@ -476,8 +476,8 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
 
   // use the template to store testbench to file
   std::string output;
-  std::string home = getenv("UP_HOME");
-  std::string tplPath = home + "/src/data/ctemplate/tbench_verilog.tpl";
+  std::string tplPath = std::string(getenv("UP_HOME"))
+      + std::string("/src/data/ctemplate/tbench_verilog.tpl");
   ctemplate::ExpandTemplate(tplPath, ctemplate::DO_NOT_STRIP, dict, &output);
   testBenchFile << output;
   testBenchFile.close();

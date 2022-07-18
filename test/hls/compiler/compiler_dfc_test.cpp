@@ -15,15 +15,31 @@
 #include "hls/parser/dfc/internal/builder.h"
 #include "hls/scheduler/param_optimizer.h"
 #include "hls/scheduler/topological_balancer.h"
+#include "util/string.h"
 
 #include "gtest/gtest.h"
 
 #include <array>
+#include <filesystem>
+#include <fstream>
 
 using namespace eda::hls::compiler;
 using namespace eda::hls::library;
 using namespace eda::hls::scheduler;
 using namespace eda::hls::mapper;
+
+namespace fs = std::filesystem;
+
+DFC_KERNEL(MATRIX_SUM) {
+  DFC_KERNEL_CTOR(MATRIX_SUM) {
+    std::array<dfc::stream<dfc::sint16>, 3> frst;
+    std::array<dfc::stream<dfc::sint16>, 3> scnd;
+    std::array<dfc::stream<dfc::sint16>, 3> rslt;
+    for (std::size_t i = 0; i < frst.size(); i++) {
+      rslt[i] = frst[i] + scnd[i];
+    }
+  }
+};
 
 DFC_KERNEL(IDCT) {
   static const int W1 = 2841; // 2048*sqrt(2)*cos(1*pi/16)
@@ -174,31 +190,48 @@ DFC_KERNEL(IDCT) {
   }
 };
 
-int compilerDfcTest(const std::string &inputLibraryPath,
-                    const std::string &relativeCompPath,
-                    const std::string &outputFirrtlName,
-                    const std::string &outputVerilogLibraryName,
-                    const std::string &outputVerilogTopModuleName,
-                    const std::string &outputDirName,
-                    const std::string &outputTestName) {
+int compilerDfcTest(const std::string &funcName,
+                    const std::string &inLibSubPath,
+                    const std::string &relCompPath,
+                    const std::string &outFirName,
+                    const std::string &outVlogLibName,
+                    const std::string &outVlogTopName,
+                    const std::string &outSubPath,
+                    const std::string &outTestName) {
 
   Indicators indicators;
   // Optimization criterion and constraints.
   eda::hls::model::Criteria criteria(
     PERF,
-    eda::hls::model::Constraint<unsigned>(40000, 500000),                                // Frequency (kHz)
-    eda::hls::model::Constraint<unsigned>(1000,  500000),                                // Performance (=frequency)
-    eda::hls::model::Constraint<unsigned>(0,     1000),                                  // Latency (cycles)
-    eda::hls::model::Constraint<unsigned>(),                                             // Power (does not matter)
+    // Frequency (kHz)
+    eda::hls::model::Constraint<unsigned>(40000, 500000), 
+    // Performance (=frequency)
+    eda::hls::model::Constraint<unsigned>(1000,  500000),
+    // Latency (cycles)
+    eda::hls::model::Constraint<unsigned>(0,     1000),
+    // Power (does not matter)
+    eda::hls::model::Constraint<unsigned>(),
     eda::hls::model::Constraint<unsigned>(1,     10000000));
 
   dfc::params args;
-  IDCT kernel(args);
+  if (funcName == "IDCT") {
+    IDCT kernel(args);
+  } else if (funcName == "MATRIX_SUM") {
+    MATRIX_SUM kernel(args);
+  }
 
   std::shared_ptr<Model> model =
-    eda::hls::parser::dfc::Builder::get().create("IDCT");
+    eda::hls::parser::dfc::Builder::get().create(funcName);
 
-  Library::get().initialize(inputLibraryPath, relativeCompPath);
+  /*std::ofstream output("dfc_" + toLower(functionName) +"_test.dot");
+  eda::hls::model::printDot(output, *model);
+  output.close();*/
+
+  const fs::path fsInLibSubPath = inLibSubPath;
+
+  const std::string inLibPath = std::string(getenv("UP_HOME"))
+      / fsInLibSubPath;
+  Library::get().initialize(inLibPath, relCompPath);
 
   Mapper::get().map(*model, Library::get());
   std::map<std::string, Parameters> params =
@@ -209,17 +242,23 @@ int compilerDfcTest(const std::string &inputLibraryPath,
   TopologicalBalancer::get().balance(*model);
 
   auto compiler = std::make_unique<Compiler>();
-  auto circuit = compiler->constructFirrtlCircuit(*model, "IDCT");
-  circuit->printFiles(outputFirrtlName,
-                      outputVerilogLibraryName,
-                      outputVerilogTopModuleName,
-                      outputDirName);
+  auto circuit = compiler->constructFirrtlCircuit(*model, funcName);
+
+  const fs::path fsOutSubPath = outSubPath;
+
+  const std::string outPath = std::string(getenv("UP_HOME"))
+      / fsOutSubPath;
+
+  circuit->printFiles(outFirName,
+                      outVlogLibName,
+                      outVlogTopName,
+                      outPath);
 
   // generate random test of the specified length in ticks
   const int testLength = 10;
   circuit->printRndVlogTest(*model,
-                            outputDirName,
-                            outputTestName,
+                            outPath,
+                            outTestName,
                             testLength);
 
   Library::get().finalize();
@@ -227,11 +266,22 @@ int compilerDfcTest(const std::string &inputLibraryPath,
 }
 
 TEST(CompilerDfcTest, CompilerDfcTestIdct) {
-  EXPECT_EQ(compilerDfcTest("./test/data/ipx/ispras/ip.hw",
+  EXPECT_EQ(compilerDfcTest("IDCT",
+                            "test/data/ipx/ispras/ip.hw",
                             "catalog/1.0/catalog.1.0.xml",
-                            "outputIdctFirrtl.mlir",
-                            "outputIdctVerilogLibrary.v",
-                            "outputIdctVerilogTopModule.v",
-                            "./output/test/dfc/idct",
-                            "outputIdctTestbench.v"), 0);
+                            "idctFir.mlir",
+                            "idctLib.v",
+                            "idctTop.v",
+                            "output/test/dfc/idct",
+                            "idctTestBench.v"), 0);
 }
+/*TEST(CompilerDfcTest, CompilerDfcTestMatrixSum) {
+   EXPECT_EQ(compilerDfcTest("MATRIX_SUM",
+                            "/test/data/ipx/ispras/ip.hw",
+                            "catalog/1.0/catalog.1.0.xml",
+                            "outputMatrixSumFirrtl.mlir",
+                            "outputMatrixSumVerilogLibrary.v",
+                            "outputMatrixSumVerilogTopModule.v",
+                            "/output/test/dfc/matrix_sum",
+                            "outputMatrixSumTestbench.v"), 0);
+}*/

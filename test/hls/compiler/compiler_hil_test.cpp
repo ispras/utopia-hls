@@ -17,6 +17,7 @@
 #include "hls/scheduler/topological_balancer.h"
 
 #include <iostream>
+#include <filesystem>
 #include <fstream>
 #include <memory>
 
@@ -26,14 +27,16 @@ using namespace eda::hls::library;
 using namespace eda::hls::scheduler;
 using namespace eda::hls::mapper;
 
-int compilerHilTest(const std::string &inputLibraryPath,
-                    const std::string &relativeCompPath,
-                    const std::string &inputFilePath,
-                    const std::string &outputFirrtlName,
-                    const std::string &outputVerilogLibraryName,
-                    const std::string &outputVerilogTopModuleName,
-                    const std::string &outputDirName,
-                    const std::string &outputTestName) {
+namespace fs = std::filesystem;
+
+int compilerHilTest(const std::string &inHilSubPath,
+                    const std::string &inLibSubPath,
+                    const std::string &relCatPath,
+                    const std::string &outFirName,
+                    const std::string &outVlogLibName,
+                    const std::string &outVlogTopName,
+                    const std::string &outSubPath,
+                    const std::string &outTestName) {
   Indicators indicators;
   // Optimization criterion and constraints.
   eda::hls::model::Criteria criteria(
@@ -44,9 +47,17 @@ int compilerHilTest(const std::string &inputLibraryPath,
     eda::hls::model::Constraint<unsigned>(),                                             // Power (does not matter)
     eda::hls::model::Constraint<unsigned>(1,     10000000));
 
-  std::shared_ptr<Model> model = parse(inputFilePath);
+  const fs::path fsInHilSubPath = inHilSubPath;
+  const std::string inHilPath = std::string(getenv("UP_HOME"))
+      / fsInHilSubPath;
 
-  Library::get().initialize(inputLibraryPath, relativeCompPath);
+  std::shared_ptr<Model> model = parse(inHilPath);
+
+  const fs::path fsInLibSubPath = inLibSubPath;
+  const std::string inLibPath = std::string(getenv("UP_HOME"))
+      / fsInLibSubPath;
+
+  Library::get().initialize(inLibPath, relCatPath);
 
   Mapper::get().map(*model, Library::get());
   std::map<std::string, Parameters> params =
@@ -58,16 +69,21 @@ int compilerHilTest(const std::string &inputLibraryPath,
 
   auto compiler = std::make_unique<Compiler>();
   auto circuit = compiler->constructFirrtlCircuit(*model, "main");
-  circuit->printFiles(outputFirrtlName,
-                      outputVerilogLibraryName,
-                      outputVerilogTopModuleName,
-                      outputDirName);
+
+  const fs::path fsOutSubPath = outSubPath;
+
+  const std::string outPath = std::string(getenv("UP_HOME"))
+      / fsOutSubPath;
+  circuit->printFiles(outFirName,
+                      outVlogLibName,
+                      outVlogTopName,
+                      outPath);
 
   // generate random test of the specified length in ticks
   const int testLength = 10;
   circuit->printRndVlogTest(*model,
-                            outputDirName,
-                            outputTestName,
+                            outPath,
+                            outTestName,
                             testLength);
 
   Library::get().finalize();
@@ -75,34 +91,34 @@ int compilerHilTest(const std::string &inputLibraryPath,
 }
 
 TEST(CompilerHilTest, CompilerHilTestIdct) {
-  EXPECT_EQ(compilerHilTest("./test/data/ipx/ispras/ip.hw",
+  EXPECT_EQ(compilerHilTest("test/data/hil/idct.hil",
+                            "test/data/ipx/ispras/ip.hw/",
                             "catalog/1.0/catalog.1.0.xml",
-                            "./test/data/hil/idct.hil",
-                            "outputIdctFirrtl.mlir",
-                            "outputIdctVerilogLibrary.v",
-                            "outputIdctVerilogTopModule.v",
-                            "./output/test/hil/idct/",
-                            "outputIdctTestbench.v"), 0);
+                            "idctFir.mlir",
+                            "idctLib.v",
+                            "idctTop.v",
+                            "output/test/hil/idct/",
+                            "idctTestBench.v"), 0);
 }
 
 TEST(CompilerHilTest, CompilerHilTestTest) {
-  EXPECT_EQ(compilerHilTest("./test/data/ipx/ispras/ip.hw",
+  EXPECT_EQ(compilerHilTest("test/data/hil/test.hil",
+                            "test/data/ipx/ispras/ip.hw",
                             "catalog/1.0/catalog.1.0.xml",
-                            "./test/data/hil/test.hil",
-                            "outputTestFirrtl.mlir",
-                            "outputTestVerilogLibrary.v",
-                            "outputTestVerilogTopModule.v",
-                            "./output/test/hil/test/",
-                            "outputTestTestbench.v"), 0);
+                            "testFir.mlir",
+                            "testLib.v",
+                            "testTop.v",
+                            "output/test/hil/test/",
+                            "testTestBench.v"), 0);
 }
 
 TEST(CompilerHilTest, CompilerHilTestFeedback) {
-  EXPECT_EQ(compilerHilTest("./test/data/ipx/ispras/ip.hw",
+  EXPECT_EQ(compilerHilTest("test/data/hil/feedback.hil",
+                            "test/data/ipx/ispras/ip.hw/",
                             "catalog/1.0/catalog.1.0.xml",
-                            "./test/data/hil/feedback.hil",
-                            "outputFeedbackFirrtl.mlir",
-                            "outputFeedbackVerilogLibrary.v",
-                            "outputFeedbackVerilogTopModule.v",
-                            "./output/test/hil/feedback",
-                            "outputFeedbackTestbench.v"), 0);
+                            "feedbackFir.mlir",
+                            "feedbackLib.v",
+                            "feedbackTop.v",
+                            "output/test/hil/feedback/",
+                            "feedbackTestBench.v"), 0);
 }
