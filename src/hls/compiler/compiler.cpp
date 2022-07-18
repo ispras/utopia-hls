@@ -476,8 +476,9 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
 
   // use the template to store testbench to file
   std::string output;
-  std::string tplPath = std::string(getenv("UP_HOME"))
-      + std::string("/src/data/ctemplate/tbench_verilog.tpl");
+  std::string home = getenv("UP_HOME");
+  uassert(!home.empty(), "UP_HOME environment variable is not set!");
+  std::string tplPath = home + "/src/data/ctemplate/tbench_verilog.tpl";
   ctemplate::ExpandTemplate(tplPath, ctemplate::DO_NOT_STRIP, dict, &output);
   testBenchFile << output;
   testBenchFile.close();
