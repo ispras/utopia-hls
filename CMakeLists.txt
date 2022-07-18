@@ -30,7 +30,7 @@ else()
   if (Z3)
     message(STATUS "Z3 found: ${Z3}")
   else()
-    message(STATUS "Z3_DIR env var is not set and Z3 is not found.")
+    message(FATAL_ERROR "Z3_DIR env var is not set and Z3 is not found.")
   endif()
 endif()
 
@@ -44,22 +44,15 @@ else()
   message(STATUS "CT_DIR env var is not set.")
 endif()
 
-# Use custom build of Xerces-C++ XML Parser if XERCES_DIR env var is specified
-if(DEFINED ENV{XERCES_DIR})
-  message(STATUS "XERCES_DIR env var is set.")
-  set(XERCES_DIR $ENV{XERCES_DIR})
-  include_directories(SYSTEM ${XERCES_DIR}/include)
-  link_directories(SYSTEM ${XERCES_DIR}/lib)
+# Looking for Xerces library
+find_file(XERCES_C libxerces-c.so
+  PATHS /usr/lib64 /usr/lib /usr/local/lib64 /usr/lib/x86_64-linux-gnu
+  REQUIRED
+  DOC "Looking for libxerces-c.so installed to system paths")
+if (XERCES_C)
+  message(STATUS "XERCES_C found: ${XERCES_C}")
 else()
-  find_file(XERCES_C libxerces-c.so
-    PATHS /usr/lib64 /usr/lib /usr/local/lib64 /usr/lib/x86_64-linux-gnu
-    REQUIRED
-    DOC "Looking for libxerces-c.so installed to system paths")
-  if (XERCES_C)
-    message(STATUS "XERCES_C found: ${XERCES_C}")
-  else()
-    message(STATUS "XERCES_DIR env var is not set and XERCES_C is not found.")
-  endif()
+  message(FATAL_ERROR "XERCES_C lib is not found.")
 endif()
 
 include_directories(SYSTEM lib/CLI11)
