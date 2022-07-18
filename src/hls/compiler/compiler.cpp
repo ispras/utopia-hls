@@ -169,9 +169,9 @@ void ExternalModule::moveVerilogModule(
     const std::string &outPath) const {
   fs::path filesystemPath = outPath;
   std::string outputFileName = (((const fs::path) path).filename());
-  fs::copy(toLower(path),
-                        (filesystemPath / outputFileName).string(),
-                        fs::copy_options::overwrite_existing);
+  fs::copy(path,
+          (filesystemPath / outputFileName).string(),
+          fs::copy_options::overwrite_existing);
 }
 
 void ExternalModule::printVerilogModule(std::ostream &out) const {
