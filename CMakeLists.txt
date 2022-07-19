@@ -14,7 +14,7 @@ set(ELPP_LIBRARY easyloggingpp) # Used by {lib,src}/CMakeLists.txt
 
 # Check if UP_HOME env var is set
 if(DEFINED ENV{UP_HOME})
-  message(STATUS "UP_HOME env var is set.")
+  message(STATUS "UP_HOME = ${$UP_HOME}")
 else()
   message(FATAL_ERROR "UP_HOME env var is not set!")
 endif()
@@ -29,6 +29,7 @@ else()
   find_file(Z3 z3 REQUIRED DOC "Z3 installed to system paths")
   if (Z3)
     message(STATUS "Z3 found: ${Z3}")
+    message(STATUS "Z3_DIR = ${Z3_DIR}")
   else()
     message(FATAL_ERROR "Z3_DIR env var is not set and Z3 is not found.")
   endif()
