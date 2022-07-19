@@ -12,6 +12,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <string>
 
 using namespace eda::hls::mapper;
 using namespace eda::hls::model;
@@ -184,9 +185,9 @@ void ExternalModule::printVerilogModule(std::ostream &out) const {
   dict->SetValue("BODY", body);
 
   std::string output;
-  std::string extVerilogTpl = std::string(getenv("UP_HOME"))
-      + std::string("/src/data/ctemplate/ext_verilog.tpl");
-  ctemplate::ExpandTemplate(extVerilogTpl,
+  const char* basePath = std::getenv("UP_HOME");
+  const char* verilogTemplate = "/src/data/ctemplate/ext_verilog.tpl";
+  ctemplate::ExpandTemplate(std::string(basePath) + std::string(verilogTemplate),
                             ctemplate::DO_NOT_STRIP,
                             dict, &output);
   out << output;
@@ -325,9 +326,9 @@ void FirrtlCircuit::printFirrtl(std::ostream &out) const {
   addExtModulesToDict(dict, extModules);
   // Use template to store result to file
   std::string output;
-  std::string firDialTopTpl = std::string(getenv("UP_HOME"))
-      + std::string("/src/data/ctemplate/top_firrtl.tpl");
-  ctemplate::ExpandTemplate(firDialTopTpl,
+  const char* basePath = std::getenv("UP_HOME");
+  const char* verilogTemplate = "/src/data/ctemplate/top_firrtl.tpl";
+  ctemplate::ExpandTemplate(std::string(basePath) + std::string(verilogTemplate),
                             ctemplate::DO_NOT_STRIP,
                             dict, &output);
   out << output;
@@ -476,9 +477,10 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
 
   // use the template to store testbench to file
   std::string output;
-  std::string tplPath = std::string(getenv("UP_HOME"))
-      + std::string("/src/data/ctemplate/tbench_verilog.tpl");
-  ctemplate::ExpandTemplate(tplPath, ctemplate::DO_NOT_STRIP, dict, &output);
+  const char* basePath = std::getenv("UP_HOME");
+  const char* verilogTemplate = "/src/data/ctemplate/tbench_verilog.tpl";
+  ctemplate::ExpandTemplate(std::string(basePath) + std::string(verilogTemplate),
+    ctemplate::DO_NOT_STRIP, dict, &output);
   testBenchFile << output;
   testBenchFile.close();
 }
