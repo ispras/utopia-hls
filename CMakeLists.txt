@@ -14,14 +14,14 @@ set(ELPP_LIBRARY easyloggingpp) # Used by {lib,src}/CMakeLists.txt
 
 # Check if UP_HOME env var is set
 if(DEFINED ENV{UP_HOME})
-  message(STATUS "UP_HOME = ${$UP_HOME}")
+  message(STATUS "UP_HOME: $ENV{UP_HOME}")
 else()
   message(FATAL_ERROR "UP_HOME env var is not set!")
 endif()
 
 # Use custom build of Z3 if Z3_DIR env var is specified
 if(DEFINED ENV{Z3_DIR})
-  message(STATUS "Z3_DIR env var is set.")
+  message(STATUS "Z3_DIR: $ENV{Z3_DIR}")
   set(Z3_DIR $ENV{Z3_DIR})
   include_directories(SYSTEM ${Z3_DIR}/include)
   link_directories(SYSTEM ${Z3_DIR}/lib)
@@ -29,7 +29,6 @@ else()
   find_file(Z3 z3 REQUIRED DOC "Z3 installed to system paths")
   if (Z3)
     message(STATUS "Z3 found: ${Z3}")
-    message(STATUS "Z3_DIR = ${Z3_DIR}")
   else()
     message(FATAL_ERROR "Z3_DIR env var is not set and Z3 is not found.")
   endif()
@@ -38,7 +37,7 @@ endif()
 # Use custom build of CTemplate if CT_DIR env var is specified
 if(DEFINED ENV{CT_DIR})
   set(CT_DIR $ENV{CT_DIR})
-  message(STATUS "CT_DIR env var is set: ${CT_DIR}.")
+  message(STATUS "CT_DIR: $ENV{CT_DIR}")
   include_directories(SYSTEM ${CT_DIR}/include)
   link_directories(SYSTEM ${CT_DIR}/lib)
 else()
