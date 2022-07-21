@@ -122,7 +122,6 @@ add_library(${MAIN_LIBRARY}
   rtl/model/vnode.cpp
   rtl/parser/ril/builder.cpp
   rtl/parser/ril/parser.cpp
-  util/fm.cpp
   util/string.cpp
 
   # Automatically generated sources.
