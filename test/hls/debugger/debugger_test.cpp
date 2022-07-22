@@ -46,7 +46,7 @@ TEST(DebuggerTest, SolveSrcSink) {
       false);
 }
 
-// Test for one kernel example
+// Test for one-kernel example
 TEST(DebuggerTest, SolveOneKernel) {
   EXPECT_EQ(
       eqCheckTest(
