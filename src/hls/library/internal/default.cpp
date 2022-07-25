@@ -254,16 +254,6 @@ std::unique_ptr<Element> Default::construct(
     }
     if (libName == "lt" || libName == "gt" || libName == "eq" ||
         libName == "ne" || libName == "le" || libName == "ge") {
-      ir += "assign {"; 
-      bool comma = false;
-      for (auto portName : outPortNames) {
-        ir += (comma ? ", " : "") + portName;
-        if (!comma) {
-          comma = true;
-        }
-      }
-      ir += "} = ";
-      ir += "0;\n";
     }
     ir += "assign {";
     bool comma = false;
@@ -296,7 +286,7 @@ std::unique_ptr<Element> Default::construct(
       action = " >= ";
     } 
     for (auto portName : inPortNames) {
-      ir += (needAction ? action : "") + portName;
+      ir += (needAction ? action : "") + "$signed(" + portName + ")";
       if (!needAction) {
         needAction = true;
       }
@@ -333,12 +323,12 @@ std::unique_ptr<Element> Default::construct(
             "  end\n" +
             "endfunction\n";
     } else {
-      ir += "assign " + outPortName + " = " + inPortName +
-        (libName == "shl11" ? " << 11" :
-         libName == "shl8"  ? " << 8"  :
-         libName == "shr14" ? " >> 14" :
-         libName == "shr8"  ? " >> 8"  :
-         libName == "shr3"  ? " >> 3"  : "");
+      ir += "assign " + outPortName + " = " + "$signed(" + inPortName + ")" +
+        (libName == "shl11" ? " <<< 11" :
+         libName == "shl8"  ? " <<< 8"  :
+         libName == "shr14" ? " >>> 14" :
+         libName == "shr8"  ? " >>> 8"  :
+         libName == "shr3"  ? " >>> 3"  : "");
       ir += ";\n";
     }
     element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
@@ -368,13 +358,13 @@ std::unique_ptr<Element> Default::construct(
   else if (libName == "mux") {
     
     ir += "assign " + replaceSomeChars(ports[ports.size() - 1].name) + " = ";
-    for (size_t i = 2; i < ports.size() - 2; i++) {
+    for (size_t i = 3; i < ports.size() - 2; i++) {
       ir += "(" + replaceSomeChars(ports[2].name) + " == " +
-          std::to_string(i - 2) + " ? " + replaceSomeChars(ports[i].name) +
+          std::to_string(i - 3) + " ? " + replaceSomeChars(ports[i].name) +
           " : " + "0" + ")" + " | ";
     }
     ir += "(" + replaceSomeChars(ports[2].name) + " == " +
-          std::to_string(ports.size() - 4) + " ? " + 
+          std::to_string(ports.size() - 5) + " ? " + 
           replaceSomeChars(ports[ports.size() - 2].name) + " : " + "0" + ")" +
           ";";
     element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
