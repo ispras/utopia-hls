@@ -30,13 +30,27 @@ using namespace eda::hls::mapper;
 
 namespace fs = std::filesystem;
 
-DFC_KERNEL(MATRIX_SUM) {
-  DFC_KERNEL_CTOR(MATRIX_SUM) {
-    std::array<dfc::stream<dfc::sint16>, 3> frst;
-    std::array<dfc::stream<dfc::sint16>, 3> scnd;
-    std::array<dfc::stream<dfc::sint16>, 3> rslt;
+DFC_KERNEL(VECTOR_SUM) {
+  DFC_KERNEL_CTOR(VECTOR_SUM) {
+    static const int SIZE = 4;
+    std::array<dfc::stream<dfc::sint16>, SIZE> frst;
+    std::array<dfc::stream<dfc::sint16>, SIZE> scnd;
+    std::array<dfc::stream<dfc::sint16>, SIZE> rslt;
     for (std::size_t i = 0; i < frst.size(); i++) {
       rslt[i] = frst[i] + scnd[i];
+    }
+  }
+};
+
+DFC_KERNEL(VECTOR_MUL) {
+  DFC_KERNEL_CTOR(VECTOR_MUL) {
+    static const int SIZE = 3;
+    std::array<dfc::stream<dfc::sint16>, SIZE> frst;
+    std::array<dfc::stream<dfc::sint16>, SIZE> scnd;
+    dfc::stream<dfc::sint16> rslt;
+    rslt = frst[0] * scnd[0]; 
+    for (std::size_t i = 1; i < frst.size(); i++) {
+      rslt += frst[i] * scnd[i];
     }
   }
 };
@@ -52,11 +66,11 @@ DFC_KERNEL(IDCT) {
   DFC_KERNEL_CTOR(IDCT) {
     std::array<dfc::stream<dfc::sint16>, 64> blk;
 
-    for (std::size_t i = 0; i < 8; i++)
+    for (std::size_t i = 0; i < 1; i++)
       idctrow(blk, i);
 
-    for (std::size_t i = 0; i < 8; i++)
-      idctcol(blk, i);
+    /*for (std::size_t i = 0; i < 8; i++)
+      idctcol(blk, i);*/
   }
 
   /* row (horizontal) IDCT
@@ -80,7 +94,7 @@ DFC_KERNEL(IDCT) {
     x6 = dfc::cast<dfc::sint32>(blk[8*i+5]);
     x7 = dfc::cast<dfc::sint32>(blk[8*i+3]);
 
-    x0 = (dfc::cast<dfc::sint32>(blk[0])<<11) + 128; /* for proper rounding in the fourth stage */
+    x0 = (dfc::cast<dfc::sint32>(blk[8*i+0])<<11) + 128; /* for proper rounding in the fourth stage */
 
     /* first stage */
     x8 = W7*(x4+x5);
@@ -110,14 +124,14 @@ DFC_KERNEL(IDCT) {
     x4 = (181*(x4-x5)+128)>>8;
 
     /* fourth stage */
-    blk[0] = dfc::cast<dfc::sint16>((x7+x1)>>8);
-    blk[1] = dfc::cast<dfc::sint16>((x3+x2)>>8);
-    blk[2] = dfc::cast<dfc::sint16>((x0+x4)>>8);
-    blk[3] = dfc::cast<dfc::sint16>((x8+x6)>>8);
-    blk[4] = dfc::cast<dfc::sint16>((x8-x6)>>8);
-    blk[5] = dfc::cast<dfc::sint16>((x0-x4)>>8);
-    blk[6] = dfc::cast<dfc::sint16>((x3-x2)>>8);
-    blk[7] = dfc::cast<dfc::sint16>((x7-x1)>>8);
+    blk[0+i*8] = dfc::cast<dfc::sint16>((x7+x1)>>8);
+    blk[1+i*8] = dfc::cast<dfc::sint16>((x3+x2)>>8);
+    blk[2+i*8] = dfc::cast<dfc::sint16>((x0+x4)>>8);
+    blk[3+i*8] = dfc::cast<dfc::sint16>((x8+x6)>>8);
+    blk[4+i*8] = dfc::cast<dfc::sint16>((x8-x6)>>8);
+    blk[5+i*8] = dfc::cast<dfc::sint16>((x0-x4)>>8);
+    blk[6+i*8] = dfc::cast<dfc::sint16>((x3-x2)>>8);
+    blk[7+i*8] = dfc::cast<dfc::sint16>((x7-x1)>>8);
   }
 
   /* column (vertical) IDCT
@@ -185,8 +199,8 @@ DFC_KERNEL(IDCT) {
   dfc::typed<dfc::sint16>& iclp(dfc::typed<dfc::sint32> &i) {
     dfc::value<dfc::sint32> Cm256(-256);
     dfc::value<dfc::sint32> Cp255(+255);
-
-    return dfc::cast<dfc::sint16>(dfc::mux(i < Cm256, Cm256, mux(i > Cp255, Cp255, i)));
+    // TODO: Discuss whether there could be muxes with n inputs
+    return dfc::cast<dfc::sint16>(dfc::mux(i < Cm256, mux(i > Cp255, i, Cp255), Cm256));
   }
 };
 
@@ -216,16 +230,18 @@ int compilerDfcTest(const std::string &funcName,
   dfc::params args;
   if (funcName == "IDCT") {
     IDCT kernel(args);
-  } else if (funcName == "MATRIX_SUM") {
-    MATRIX_SUM kernel(args);
+  } else if (funcName == "VECTOR_SUM") {
+    VECTOR_SUM kernel(args);
+  } else if (funcName == "VECTOR_MUL") {
+    VECTOR_MUL kernel(args);
   }
 
   std::shared_ptr<Model> model =
     eda::hls::parser::dfc::Builder::get().create(funcName);
 
-  /*std::ofstream output("dfc_" + toLower(functionName) +"_test.dot");
+  std::ofstream output("dfc_" + toLower(funcName) +"_test.dot");
   eda::hls::model::printDot(output, *model);
-  output.close();*/
+  output.close();
 
   const fs::path fsInLibSubPath = inLibSubPath;
 
@@ -255,7 +271,7 @@ int compilerDfcTest(const std::string &funcName,
                       outPath);
 
   // generate random test of the specified length in ticks
-  const int testLength = 10;
+  const int testLength = 1;
   circuit->printRndVlogTest(*model,
                             outPath,
                             outTestName,
@@ -275,13 +291,25 @@ TEST(CompilerDfcTest, CompilerDfcTestIdct) {
                             "output/test/dfc/idct",
                             "idctTestBench.v"), 0);
 }
-/*TEST(CompilerDfcTest, CompilerDfcTestMatrixSum) {
-   EXPECT_EQ(compilerDfcTest("MATRIX_SUM",
-                            "/test/data/ipx/ispras/ip.hw",
+
+TEST(CompilerDfcTest, CompilerDfcTestVectorSum) {
+   EXPECT_EQ(compilerDfcTest("VECTOR_SUM",
+                            "test/data/ipx/ispras/ip.hw",
                             "catalog/1.0/catalog.1.0.xml",
-                            "outputMatrixSumFirrtl.mlir",
-                            "outputMatrixSumVerilogLibrary.v",
-                            "outputMatrixSumVerilogTopModule.v",
-                            "/output/test/dfc/matrix_sum",
-                            "outputMatrixSumTestbench.v"), 0);
-}*/
+                            "vectorSumFir.mlir",
+                            "vectorSumLib.v",
+                            "vectorSumTop.v",
+                            "output/test/dfc/vector_sum",
+                            "vectorSumTestbench.v"), 0);
+}
+
+TEST(CompilerDfcTest, CompilerDfcTestVectorMul) {
+   EXPECT_EQ(compilerDfcTest("VECTOR_MUL",
+                            "test/data/ipx/ispras/ip.hw",
+                            "catalog/1.0/catalog.1.0.xml",
+                            "vectorMulFir.mlir",
+                            "vectorMulLib.v",
+                            "vectorMulTop.v",
+                            "output/test/dfc/vector_mul",
+                            "vectorMulTestbench.v"), 0);
+}
