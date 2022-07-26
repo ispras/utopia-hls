@@ -245,7 +245,7 @@ int compilerDfcTest(const std::string &funcName,
 
   const fs::path fsInLibSubPath = inLibSubPath;
 
-  const std::string inLibPath = std::string(getenv("UP_HOME"))
+  const std::string inLibPath = std::string(getenv("UTOPIA_HOME"))
       / fsInLibSubPath;
   Library::get().initialize(inLibPath, relCompPath);
 
@@ -262,7 +262,7 @@ int compilerDfcTest(const std::string &funcName,
 
   const fs::path fsOutSubPath = outSubPath;
 
-  const std::string outPath = std::string(getenv("UP_HOME"))
+  const std::string outPath = std::string(getenv("UTOPIA_HOME"))
       / fsOutSubPath;
 
   circuit->printFiles(outFirName,

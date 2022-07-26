@@ -12,11 +12,11 @@ include(cmake/MLIR.cmake)
 set(MAIN_LIBRARY ueda)          # Used by {src,test}/CMakeLists.txt
 set(ELPP_LIBRARY easyloggingpp) # Used by {lib,src}/CMakeLists.txt
 
-# Check if UP_HOME env var is set
-if(DEFINED ENV{UP_HOME})
-  message(STATUS "UP_HOME: $ENV{UP_HOME}")
+# Check if UTOPIA_HOME env var is set
+if(DEFINED ENV{UTOPIA_HOME})
+  message(STATUS "UTOPIA_HOME: $ENV{UTOPIA_HOME}")
 else()
-  message(FATAL_ERROR "UP_HOME env var is not set!")
+  message(FATAL_ERROR "UTOPIA_HOME env var is not set!")
 endif()
 
 # Use custom build of Z3 if Z3_DIR env var is specified

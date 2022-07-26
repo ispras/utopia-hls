@@ -48,13 +48,13 @@ int compilerHilTest(const std::string &inHilSubPath,
     eda::hls::model::Constraint<unsigned>(1,     10000000));
 
   const fs::path fsInHilSubPath = inHilSubPath;
-  const std::string inHilPath = std::string(getenv("UP_HOME"))
+  const std::string inHilPath = std::string(getenv("UTOPIA_HOME"))
       / fsInHilSubPath;
 
   std::shared_ptr<Model> model = parse(inHilPath);
 
   const fs::path fsInLibSubPath = inLibSubPath;
-  const std::string inLibPath = std::string(getenv("UP_HOME"))
+  const std::string inLibPath = std::string(getenv("UTOPIA_HOME"))
       / fsInLibSubPath;
 
   Library::get().initialize(inLibPath, relCatPath);
@@ -72,7 +72,7 @@ int compilerHilTest(const std::string &inHilSubPath,
 
   const fs::path fsOutSubPath = outSubPath;
 
-  const std::string outPath = std::string(getenv("UP_HOME"))
+  const std::string outPath = std::string(getenv("UTOPIA_HOME"))
       / fsOutSubPath;
   circuit->printFiles(outFirName,
                       outVlogLibName,

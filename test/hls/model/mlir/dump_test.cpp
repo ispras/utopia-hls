@@ -19,7 +19,7 @@ using namespace eda::hls::parser::hil;
 
 bool dumpToMlirTest(const std::string &filePath) {
 
-  const std::string path = getenv("UP_HOME") + filePath;
+  const std::string path = getenv("UTOPIA_HOME") + filePath;
   const Model model = *parse(path).get();
   std::stringstream stream;
   dump_model_mlir(model, stream);

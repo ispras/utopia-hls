@@ -19,12 +19,12 @@ using namespace mlir::hil;
 bool eqCheckTest(const std::string &fileM, const std::string &fileM2) {
 
   // Get first model
-  const std::string pathM = getenv("UP_HOME") + fileM;
+  const std::string pathM = getenv("UTOPIA_HOME") + fileM;
   mlir::model::MLIRModule modelM = parseToMlir(pathM);
   mlir::hil::Model model = modelM.get_root();
 
   // Get second model
-  const std::string pathM2 = getenv("UP_HOME") + fileM2;
+  const std::string pathM2 = getenv("UTOPIA_HOME") + fileM2;
   mlir::model::MLIRModule modelM2 = parseToMlir(pathM2);
   mlir::hil::Model model2 = modelM2.get_root();
 
