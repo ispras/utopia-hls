@@ -25,32 +25,36 @@
 
 using namespace eda::hls::compiler;
 using namespace eda::hls::library;
-using namespace eda::hls::scheduler;
 using namespace eda::hls::mapper;
+using namespace eda::hls::scheduler;
 
 namespace fs = std::filesystem;
 
-DFC_KERNEL(VECTOR_SUM) {
-  DFC_KERNEL_CTOR(VECTOR_SUM) {
+DFC_KERNEL(VectorSum) {
+  DFC_KERNEL_CTOR(VectorSum) {
     static const int SIZE = 4;
-    std::array<dfc::stream<dfc::sint16>, SIZE> frst;
-    std::array<dfc::stream<dfc::sint16>, SIZE> scnd;
-    std::array<dfc::stream<dfc::sint16>, SIZE> rslt;
-    for (std::size_t i = 0; i < frst.size(); i++) {
-      rslt[i] = frst[i] + scnd[i];
+
+    std::array<dfc::stream<dfc::sint16>, SIZE> lhs;
+    std::array<dfc::stream<dfc::sint16>, SIZE> rhs;
+    std::array<dfc::stream<dfc::sint16>, SIZE> res;
+
+    for (std::size_t i = 0; i < lhs.size(); i++) {
+      res[i] = lhs[i] + rhs[i];
     }
   }
 };
 
-DFC_KERNEL(VECTOR_MUL) {
-  DFC_KERNEL_CTOR(VECTOR_MUL) {
+DFC_KERNEL(VectorMul) {
+  DFC_KERNEL_CTOR(VectorMul) {
     static const int SIZE = 3;
-    std::array<dfc::stream<dfc::sint16>, SIZE> frst;
-    std::array<dfc::stream<dfc::sint16>, SIZE> scnd;
-    dfc::stream<dfc::sint16> rslt;
-    rslt = frst[0] * scnd[0]; 
-    for (std::size_t i = 1; i < frst.size(); i++) {
-      rslt += frst[i] * scnd[i];
+
+    std::array<dfc::stream<dfc::sint16>, SIZE> lhs;
+    std::array<dfc::stream<dfc::sint16>, SIZE> rhs;
+    dfc::stream<dfc::sint16> res;
+
+    res = lhs[0] * rhs[0]; 
+    for (std::size_t i = 1; i < lhs.size(); i++) {
+      res += lhs[i] * rhs[i];
     }
   }
 };
@@ -66,11 +70,13 @@ DFC_KERNEL(IDCT) {
   DFC_KERNEL_CTOR(IDCT) {
     std::array<dfc::stream<dfc::sint16>, 64> blk;
 
-    for (std::size_t i = 0; i < 1; i++)
+    // FIXME:
+    for (std::size_t i = 0; i < 1/*8*/; i++)
       idctrow(blk, i);
 
-    /*for (std::size_t i = 0; i < 8; i++)
-      idctcol(blk, i);*/
+    // FIXME:
+    //for (std::size_t i = 0; i < 8; i++)
+    //  idctcol(blk, i);
   }
 
   /* row (horizontal) IDCT
@@ -199,12 +205,12 @@ DFC_KERNEL(IDCT) {
   dfc::typed<dfc::sint16>& iclp(dfc::typed<dfc::sint32> &i) {
     dfc::value<dfc::sint32> Cm256(-256);
     dfc::value<dfc::sint32> Cp255(+255);
-    // TODO: Discuss whether there could be muxes with n inputs
+
     return dfc::cast<dfc::sint16>(dfc::mux(i < Cm256, mux(i > Cp255, i, Cp255), Cm256));
   }
 };
 
-int compilerDfcTest(const std::string &funcName,
+int compilerDfcTest(const dfc::kernel &kernel,
                     const std::string &inLibSubPath,
                     const std::string &relCompPath,
                     const std::string &outFirName,
@@ -212,77 +218,60 @@ int compilerDfcTest(const std::string &funcName,
                     const std::string &outVlogTopName,
                     const std::string &outSubPath,
                     const std::string &outTestName) {
+  const std::string funcName = kernel.name;
+  const fs::path homePath = std::string(getenv("UTOPIA_HOME"));
 
-  Indicators indicators;
   // Optimization criterion and constraints.
   eda::hls::model::Criteria criteria(
     PERF,
     // Frequency (kHz)
     eda::hls::model::Constraint<unsigned>(40000, 500000), 
     // Performance (=frequency)
-    eda::hls::model::Constraint<unsigned>(1000,  500000),
+    eda::hls::model::Constraint<unsigned>(1000, 500000),
     // Latency (cycles)
-    eda::hls::model::Constraint<unsigned>(0,     1000),
+    eda::hls::model::Constraint<unsigned>(0, 1000),
     // Power (does not matter)
     eda::hls::model::Constraint<unsigned>(),
-    eda::hls::model::Constraint<unsigned>(1,     10000000));
+    eda::hls::model::Constraint<unsigned>(1, 10000000));
 
-  dfc::params args;
-  if (funcName == "IDCT") {
-    IDCT kernel(args);
-  } else if (funcName == "VECTOR_SUM") {
-    VECTOR_SUM kernel(args);
-  } else if (funcName == "VECTOR_MUL") {
-    VECTOR_MUL kernel(args);
-  }
+  auto &builder = eda::hls::parser::dfc::Builder::get();
+  std::shared_ptr<Model> model = builder.create(funcName);
 
-  std::shared_ptr<Model> model =
-    eda::hls::parser::dfc::Builder::get().create(funcName);
-
-  std::ofstream output("dfc_" + toLower(funcName) +"_test.dot");
+  std::ofstream output("dfc_" + toLower(funcName) + "_test.dot");
   eda::hls::model::printDot(output, *model);
   output.close();
 
-  const fs::path fsInLibSubPath = inLibSubPath;
-
-  const std::string inLibPath = std::string(getenv("UTOPIA_HOME"))
-      / fsInLibSubPath;
+  const std::string inLibPath = homePath / inLibSubPath;
   Library::get().initialize(inLibPath, relCompPath);
 
   Mapper::get().map(*model, Library::get());
-  std::map<std::string, Parameters> params =
-    ParametersOptimizer<TopologicalBalancer>::get().optimize(criteria,
-                                                             *model,
-                                                             indicators);
+  auto &paramOptimizer = ParametersOptimizer<TopologicalBalancer>::get();
+
+  Indicators indicators;
+  auto params = paramOptimizer.optimize(criteria, *model, indicators);
 
   TopologicalBalancer::get().balance(*model);
 
   auto compiler = std::make_unique<Compiler>();
   auto circuit = compiler->constructFirrtlCircuit(*model, funcName);
 
-  const fs::path fsOutSubPath = outSubPath;
+  const std::string outPath = homePath / outSubPath;
+  circuit->printFiles(outFirName, outVlogLibName, outVlogTopName, outPath);
 
-  const std::string outPath = std::string(getenv("UTOPIA_HOME"))
-      / fsOutSubPath;
-
-  circuit->printFiles(outFirName,
-                      outVlogLibName,
-                      outVlogTopName,
-                      outPath);
-
-  // generate random test of the specified length in ticks
+  // Generate random test of the specified length in ticks.
   const int testLength = 1;
-  circuit->printRndVlogTest(*model,
-                            outPath,
-                            outTestName,
-                            testLength);
+  circuit->printRndVlogTest(*model, outPath, outTestName, testLength);
 
   Library::get().finalize();
+
   return 0;
 }
 
 TEST(CompilerDfcTest, CompilerDfcTestIdct) {
-  EXPECT_EQ(compilerDfcTest("IDCT",
+  dfc::params args;
+  IDCT kernel(args);
+
+  EXPECT_EQ(compilerDfcTest(kernel,
                             "test/data/ipx/ispras/ip.hw",
                             "catalog/1.0/catalog.1.0.xml",
                             "idctFir.mlir",
@@ -293,7 +282,10 @@ TEST(CompilerDfcTest, CompilerDfcTestIdct) {
 }
 
 TEST(CompilerDfcTest, CompilerDfcTestVectorSum) {
-   EXPECT_EQ(compilerDfcTest("VECTOR_SUM",
+  dfc::params args;
+  VectorSum kernel(args);
+
+  EXPECT_EQ(compilerDfcTest(kernel,
                             "test/data/ipx/ispras/ip.hw",
                             "catalog/1.0/catalog.1.0.xml",
                             "vectorSumFir.mlir",
@@ -304,7 +296,10 @@ TEST(CompilerDfcTest, CompilerDfcTestVectorSum) {
 }
 
 TEST(CompilerDfcTest, CompilerDfcTestVectorMul) {
-   EXPECT_EQ(compilerDfcTest("VECTOR_MUL",
+  dfc::params args;
+  VectorMul kernel(args);
+
+  EXPECT_EQ(compilerDfcTest(kernel,
                             "test/data/ipx/ispras/ip.hw",
                             "catalog/1.0/catalog.1.0.xml",
                             "vectorMulFir.mlir",
