@@ -235,7 +235,7 @@ int compilerDfcTest(const dfc::kernel &kernel,
     eda::hls::model::Constraint<unsigned>(1, 10000000));
 
   auto &builder = eda::hls::parser::dfc::Builder::get();
-  std::shared_ptr<Model> model = builder.create(funcName);
+  std::shared_ptr<Model> model = builder.create(funcName, funcName);
 
   std::ofstream output("dfc_" + toLower(funcName) + "_test.dot");
   eda::hls::model::printDot(output, *model);

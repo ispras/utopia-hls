@@ -27,11 +27,11 @@ std::string Builder::Unit::fullName() const {
   std::stringstream fullname;
 
   fullname << opcode << "_" << in.size() << "x" << out.size();
-  //TODO: To discuss!
-  if (opcode == "const") {
-    for (auto *wire : out)
-      fullname << "_" << wire->name.substr(wire->name.find_last_of("_") + 1,
-                                           wire->name.length());
+
+  for (auto *wire : out) {
+    if (wire->isConst) {
+      fullname << "_" << wire->value;
+    }
   }
 
   auto result = fullname.str();
@@ -46,11 +46,10 @@ std::string Builder::Unit::fullName() const {
 //===----------------------------------------------------------------------===//
 
 Builder::Wire* Builder::Kernel::getWire(const ::dfc::wire *wire, Mode mode) {
-  std::cout << "GET_WIRE: " << wire->name << std::endl;
   auto i = originals.find(wire->name);
 
-  const bool access = mode == Kernel::ACCESS_ORIGINAL ||
-                      mode == Kernel::ACCESS_VERSION;
+  const bool access = (mode == Kernel::ACCESS_ORIGINAL) ||
+                      (mode == Kernel::ACCESS_VERSION);
 
   assert((!access || i != originals.end()) && "Wire does not exist");
 
@@ -61,14 +60,19 @@ Builder::Wire* Builder::Kernel::getWire(const ::dfc::wire *wire, Mode mode) {
   if (mode == Kernel::ACCESS_VERSION)
     return versions.find(wire->name)->second;
 
-  const std::string name = (mode == Kernel::CREATE_VERSION) ?
-        eda::utils::unique_name(wire->name) : wire->name;
+  const std::string name = (mode == Kernel::CREATE_VERSION)
+      ? eda::utils::unique_name(wire->name)
+      : wire->name;
 
-  const bool isInput  = wire->direct != ::dfc::OUTPUT; 
-  const bool isOutput = wire->direct != ::dfc::INPUT;
-  const bool isConst  = wire->kind == ::dfc::CONST;
+  const std::string type = wire->type();
 
-  auto *result = new Wire(name, wire->type(), isInput, isOutput, isConst);
+  const bool isInput  = (wire->direct != ::dfc::OUTPUT);
+  const bool isOutput = (wire->direct != ::dfc::INPUT);
+  const bool isConst  = (wire->kind == ::dfc::CONST);
+
+  const std::string value = wire->value.to_string();
+
+  auto *result = new Wire(name, type, isInput, isOutput, isConst, value);
 
   wires.push_back(result);
   versions[wire->name] = originals[name] = result;
@@ -82,15 +86,6 @@ Builder::Unit* Builder::Kernel::getUnit(const std::string &opcode,
   auto *unit = new Unit(opcode, in, out);
   units.push_back(unit);
 
-  /*std::cout << "***********************************************" << std::endl;
-  std::cout << opcode << std::endl;
-  for (const auto *input : in) {
-    std::cout << input->name << std::endl;
-  }
-  for (const auto *output : out) {
-    std::cout << output->name << std::endl;
-  }
-  std::cout << "***********************************************" << std::endl;*/
   return unit;
 }
 
@@ -110,6 +105,9 @@ void Builder::Kernel::connect(Wire *source, Wire *target) {
 }
 
 void Builder::Kernel::transform() {
+  if (isTransformed)
+    return;
+
   // Remove redundant units.
   std::unordered_set<Unit*> removing;
 
@@ -148,19 +146,36 @@ void Builder::Kernel::transform() {
       getUnit("sink", { wire }, {});
     }
   }
+
+  isTransformed = true;
 }
 
 //===----------------------------------------------------------------------===//
 // Builder
 //===----------------------------------------------------------------------===//
 
-std::shared_ptr<Model> Builder::create(const std::string &name) {
-  auto *model = new Model(name);
+std::shared_ptr<Model> Builder::create(const std::string &modelName) {
+  auto *model = new Model(modelName);
 
   for (auto *kernel : kernels) {
     kernel->transform();
     model->addGraph(getGraph(kernel, model));
   }
+
+  return std::shared_ptr<Model>(model);
+}
+
+std::shared_ptr<Model> Builder::create(const std::string &modelName,
+                                       const std::string &kernelName) {
+  auto *model = new Model(modelName);
+
+  auto i = std::find_if(kernels.begin(), kernels.end(),
+    [&kernelName](Kernel *kernel) { return kernel->name == kernelName; });
+  assert(i != kernels.end() && "Kernel does not exist");
+
+  auto *kernel = *i;
+  kernel->transform();
+  model->addGraph(getGraph(kernel, model));
 
   return std::shared_ptr<Model>(model);
 }
