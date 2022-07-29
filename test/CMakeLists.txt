@@ -47,7 +47,6 @@ add_executable(${TEST_TARGET}
   hls/scheduler/simulated_annealing_test.cpp
   lib/minisat/minisat_test.cpp
   rtl/parser/ril/ril_test.cpp
-  util/fm_graph.cpp
   util/fm_test.cpp
   util/graph_traverse_test.cpp
   test_main.cpp
