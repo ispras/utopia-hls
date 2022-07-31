@@ -38,9 +38,11 @@ module {{MODULE_NAME}}_tb;
 
 		// reset the device
 		@(posedge clock);
-		reset = 1;
-		#({{MODULE_NAME}}_latency);
-		reset = 0;
+		{{#RESETS}}
+		{{RESET_NAME}} = {{RESET_VALUE}};
+		#({{MODULE_NAME}}_latency * 6);
+		{{RESET_NAME}} = ~{{RESET_VALUE}};
+		{{/RESETS}}
 
 		// apply sequence of random stimuli
 		{{#TESTS}}

@@ -64,7 +64,12 @@ struct MetaElement {
   MetaElement(const std::string &name,
               const Parameters &params,
               const std::vector<Port> &ports):
-      name(name), params(params), ports(ports) {}
+      name(name), libName(toLibName(name)), params(params), ports(ports) {}
+
+  // TODO: discuss naming conventions
+  static const std::string toLibName(const std::string &name) {
+    return name.substr(0, name.find("_"));
+  }
 
   /// Estimates the indicators the given set of parameters.
   virtual void estimate(const Parameters &params,
@@ -77,6 +82,7 @@ struct MetaElement {
   bool supports(const HWConfig &hwconfig);
 
   const std::string name;
+  const std::string libName;
   const Parameters params;
   const std::vector<Port> ports;
 };

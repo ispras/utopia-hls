@@ -12,6 +12,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <string>
 
 using namespace eda::hls::mapper;
 using namespace eda::hls::model;
@@ -169,9 +170,9 @@ void ExternalModule::moveVerilogModule(
     const std::string &outPath) const {
   fs::path filesystemPath = outPath;
   std::string outputFileName = (((const fs::path) path).filename());
-  fs::copy(toLower(path),
-                        (filesystemPath / outputFileName).string(),
-                        fs::copy_options::overwrite_existing);
+  fs::copy(path,
+          (filesystemPath / outputFileName).string(),
+          fs::copy_options::overwrite_existing);
 }
 
 void ExternalModule::printVerilogModule(std::ostream &out) const {
@@ -184,8 +185,9 @@ void ExternalModule::printVerilogModule(std::ostream &out) const {
   dict->SetValue("BODY", body);
 
   std::string output;
-  const std::string extVerilogTpl = "./src/data/ctemplate/ext_verilog.tpl";
-  ctemplate::ExpandTemplate(extVerilogTpl,
+  const char* basePath = std::getenv("UTOPIA_HOME");
+  const char* verilogTemplate = "/src/data/ctemplate/ext_verilog.tpl";
+  ctemplate::ExpandTemplate(std::string(basePath) + std::string(verilogTemplate),
                             ctemplate::DO_NOT_STRIP,
                             dict, &output);
   out << output;
@@ -324,8 +326,9 @@ void FirrtlCircuit::printFirrtl(std::ostream &out) const {
   addExtModulesToDict(dict, extModules);
   // Use template to store result to file
   std::string output;
-  const std::string firDialTopTpl = "./src/data/ctemplate/top_firrtl.tpl";
-  ctemplate::ExpandTemplate(firDialTopTpl,
+  const char* basePath = std::getenv("UTOPIA_HOME");
+  const char* verilogTemplate = "/src/data/ctemplate/top_firrtl.tpl";
+  ctemplate::ExpandTemplate(std::string(basePath) + std::string(verilogTemplate),
                             ctemplate::DO_NOT_STRIP,
                             dict, &output);
   out << output;
@@ -343,7 +346,7 @@ void FirrtlCircuit::dumpVerilogLibrary(const std::string &outPath,
 }
 
 FirrtlCircuit::FirrtlCircuit(const Model &model, const std::string &name) :
-    name(name) {
+    name(name), latency(model.ind.ticks), resetInitialValue(0) {
   for (const auto *nodetype : model.nodetypes) {
     addExternalModule(nodetype);
   }
@@ -381,7 +384,8 @@ void FirrtlCircuit::printFiles(const std::string &outFirFileName,
 void FirrtlCircuit::printRndVlogTest(const Model &model,
                                      const std::string &outPath,
                                      const std::string &outTestFileName,
-                                     const int latency,
+                                     //const int latency,
+                                     //const int resetInitialValue,
                                      const size_t tstCnt) {
 
   const fs::path fsPath = outPath;
@@ -439,6 +443,7 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
   // calculate model's latency and store it
   dict->SetIntValue("LATENCY", latency);
 
+
   // set bindings to device under test
   for (size_t i = 0; i < bndNames.size(); i++) {
     ctemplate::TemplateDictionary *bndDict = dict->AddSectionDictionary("BIND");
@@ -447,12 +452,21 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
   }
   bndNames.clear();
 
+  // set resets
+  for (size_t i = 0; i < inputs.size(); i++) {
+    if (inputs[i].isReset()) {
+      auto *resetDict = dict->AddSectionDictionary("RESETS");
+      resetDict->SetValue("RESET_NAME", inputs[i].name);
+      resetDict->SetIntValue("RESET_VALUE", resetInitialValue);
+    }
+  }
+
   // generate random stimuli
   for (size_t i = 0; i < tstCnt; i++) {
     ctemplate ::TemplateDictionary *tDict = dict->AddSectionDictionary("TESTS");
     for (size_t j = 0; j < inputs.size(); j++) {
 
-      if (inputs[j].isClock())
+      if (inputs[j].isClock() || inputs[j].isReset())
         continue;
 
       // TODO: set random values for inputs
@@ -463,8 +477,10 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
 
   // use the template to store testbench to file
   std::string output;
-  const std::string vlogTpl = "./src/data/ctemplate/tbench_verilog.tpl";
-  ctemplate::ExpandTemplate(vlogTpl, ctemplate::DO_NOT_STRIP, dict, &output);
+  const char* basePath = std::getenv("UTOPIA_HOME");
+  const char* verilogTemplate = "/src/data/ctemplate/tbench_verilog.tpl";
+  ctemplate::ExpandTemplate(std::string(basePath) + std::string(verilogTemplate),
+    ctemplate::DO_NOT_STRIP, dict, &output);
   testBenchFile << output;
   testBenchFile.close();
 }

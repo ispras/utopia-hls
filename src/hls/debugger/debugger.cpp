@@ -17,7 +17,7 @@ namespace eda::hls::debugger {
 std::unique_ptr<EqChecker> EqChecker::instance = nullptr;
 
 bool EqChecker::equivalent(mlir::hil::Model &left,
-    mlir::hil::Model &right) const {
+                           mlir::hil::Model &right) const {
 
   z3::context ctx;
   z3::expr_vector nodes(ctx);
@@ -108,7 +108,7 @@ bool EqChecker::equivalent(mlir::hil::Model &left,
   z3::solver solver(ctx);
   solver.add(nodes);
 
-  // TODO: debug print
+  // TODO: use debug print method
   std::cout << "SMT-LIBv2 formula:" << std::endl;
   std::cout << solver.to_smt2() << std::endl;
 
@@ -131,9 +131,11 @@ bool EqChecker::equivalent(mlir::hil::Model &left,
   return false;
 }
 
-bool EqChecker::match(const std::vector<mlir::hil::Node> &left,
+bool EqChecker::match(
+    const std::vector<mlir::hil::Node> &left,
     const std::vector<mlir::hil::Node> &right,
     std::list<std::pair<mlir::hil::Node, mlir::hil::Node>> &matched) const {
+
   size_t lSize = left.size();
   size_t rSize = right.size();
 
@@ -168,8 +170,8 @@ bool EqChecker::match(const std::vector<mlir::hil::Node> &left,
 }
 
 void EqChecker::createExprs(mlir::hil::Graph &graph,
-    z3::context &ctx,
-    z3::expr_vector &nodes) const {
+                            z3::context &ctx,
+                            z3::expr_vector &nodes) const {
 
   // create equations for channels
   std::vector<mlir::hil::Chan> gChannels = getChans(graph);
@@ -289,20 +291,24 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
   }
 }
 
-z3::sort EqChecker::getSort(mlir::hil::Node &node, z3::context &ctx) const {
+z3::sort EqChecker::getSort(mlir::hil::Node &node,
+                            z3::context &ctx) const {
+
   return ctx.uninterpreted_sort(node.nodeTypeName().str().c_str());
 }
 
-z3::sort EqChecker::getSort(mlir::hil::PortAttr port, z3::context &ctx) const {
+z3::sort EqChecker::getSort(mlir::hil::PortAttr port,
+                            z3::context &ctx) const {
+
   return ctx.uninterpreted_sort(port.getTypeName().c_str());
 }
 
 z3::expr EqChecker::toConst(mlir::hil::Chan &ch,
-    const mlir::hil::BindingAttr &bnd,
-    z3::context &ctx) const {
+                            const mlir::hil::BindingAttr &bnd,
+                            z3::context &ctx) const {
 
   const auto port = bnd.getPort();
-  std::string name = port.getName();
+  const std::string name = port.getName();
   const z3::sort fInSort = getSort(port, ctx);
   const std::string modelName = getModelName(ch);
   const std::string nodeName = bnd.getNodeName().str();
@@ -311,7 +317,8 @@ z3::expr EqChecker::toConst(mlir::hil::Chan &ch,
   return ctx.constant(constName.c_str(), fInSort);
 }
 
-z3::expr EqChecker::toConst(mlir::hil::Node &node, z3::context &ctx) const {
+z3::expr EqChecker::toConst(mlir::hil::Node &node,
+                            z3::context &ctx) const {
 
   const z3::sort fInSort = getSort(node, ctx);
   const std::string modelName = getModelName(node);
@@ -320,7 +327,8 @@ z3::expr EqChecker::toConst(mlir::hil::Node &node, z3::context &ctx) const {
   return ctx.constant(constName.c_str(), fInSort);
 }
 
-z3::expr EqChecker::toConst(mlir::hil::Chan &ch, z3::context &ctx) const {
+z3::expr EqChecker::toConst(mlir::hil::Chan &ch,
+                            z3::context &ctx) const {
 
   const auto fromPort = ch.nodeFrom().getPort();
   const auto toPort = ch.nodeTo().getPort();
@@ -329,8 +337,9 @@ z3::expr EqChecker::toConst(mlir::hil::Chan &ch, z3::context &ctx) const {
   return ctx.constant(ch.varName().str().c_str(), getSort(fromPort, ctx));
 }
 
-z3::expr EqChecker::toInFunc(mlir::hil::Node &node, mlir::hil::Chan &ch,
-    z3::context &ctx) const {
+z3::expr EqChecker::toInFunc(mlir::hil::Node &node,
+                             mlir::hil::Chan &ch,
+                             z3::context &ctx) const {
 
   const std::string modelName = getModelName(node);
   const std::string nodeName = node.name().str();
@@ -344,7 +353,7 @@ z3::expr EqChecker::toInFunc(mlir::hil::Node &node, mlir::hil::Chan &ch,
 }
 
 z3::sort_vector EqChecker::getInSorts(mlir::hil::Node &node,
-    z3::context &ctx) const {
+                                      z3::context &ctx) const {
 
   auto inputs = getInputs(node);
   z3::sort_vector sorts(ctx);
@@ -358,10 +367,9 @@ z3::sort_vector EqChecker::getInSorts(mlir::hil::Node &node,
 }
 
 z3::expr_vector EqChecker::getFuncArgs(mlir::hil::Node &node,
-    z3::context &ctx) const {
+                                       z3::context &ctx) const {
 
   std::vector<mlir::hil::Chan> inputs = getInputs(node);
-
   z3::expr_vector args(ctx);
 
   for (size_t i = 0; i < inputs.size(); i++) {

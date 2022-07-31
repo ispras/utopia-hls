@@ -53,7 +53,7 @@ struct wire_value {
   const std::string text;
 
 private:
-  static std::string to_string(int value) {
+  static std::string to_string(long long value) {
     std::stringstream out;
     out << std::setfill('0')
         << std::setw(sizeof(value)*2) 

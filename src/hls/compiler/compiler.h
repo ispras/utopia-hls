@@ -163,6 +163,8 @@ private:
 class FirrtlCircuit final {
 private:
   const std::string name;
+  const int latency;
+  int resetInitialValue;
   std::map<std::string, FirrtlModule> firModules;
   std::map<std::string, ExternalModule> extModules;
   void addPortsToDict(ctemplate::TemplateDictionary *dict,
@@ -220,7 +222,6 @@ public:
    * @param model Reference to model.
    * @param outPath Path to store output testbench.
    * @param outTestFileName Filename for output testbench.
-   * @param latency The model's latency that is treated as clock period.
    * @param tstCnt Number of test stimuli at random sequence.
    *
    * @return Nothing, but Verilog testbench should be created.
@@ -228,7 +229,8 @@ public:
    void printRndVlogTest(const Model &model,
                          const std::string &outPath,
                          const std::string &outTestFileName,
-                         const int latency,
+                         //const int latency,
+                         //const int resetInitialValue,
                          const size_t tstCnt);
 
 };

@@ -33,7 +33,12 @@ class Builder final: public eda::util::Singleton<Builder> {
   friend class eda::util::Singleton<Builder>;
 
 public:
-  std::shared_ptr<Model> create(const std::string &name);
+  /// Creates a model that contains all defined kernels (graphs).
+  std::shared_ptr<Model> create(const std::string &modelName);
+
+  /// Creates a model that contains a kernel (graph) w/ the given name.
+  std::shared_ptr<Model> create(const std::string &modelName,
+                                const std::string &kernelName);
 
   void startKernel(const std::string &name);
 
@@ -54,12 +59,14 @@ private:
          const std::string &type,
          bool isInput,
          bool isOutput,
-         bool isConst):
+         bool isConst,
+         unsigned value):
       name(name),
       type(type),
       isInput(isInput),
       isOutput(isOutput),
-      isConst(isConst) {}
+      isConst(isConst),
+      value(value) {}
 
     void setConsumer(Unit *unit) {
       assert(!consumer && "Multiple reads");
@@ -77,6 +84,9 @@ private:
     const bool isInput;
     const bool isOutput;
     const bool isConst;
+
+    // TODO: To be generalized.
+    const unsigned value;
 
     Unit *producer = nullptr;
     Unit *consumer = nullptr;
@@ -141,6 +151,8 @@ private:
     std::unordered_map<std::string, Wire*> originals;
     /// Maps name to the latest version of the wire.
     std::unordered_map<std::string, Wire*> versions;
+
+    bool isTransformed = false;
   };
 
   static Port* getPort(const Wire *wire, unsigned latency);
