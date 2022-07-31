@@ -74,6 +74,7 @@ TEST(SimulatedAnnealing, Sphere) {
       temperatureFunction);
   test.optimize(optimizedParameters);
   auto functionValue = sphere(optimizedParameters);
+  std::cout << "Sphere: " << functionValue << std::endl;
   ASSERT_TRUE(abs(functionValue) < 0.25);
 }
 
@@ -85,6 +86,7 @@ TEST(SimulatedAnnealing, Rosenbrock) {
       stepFunction, temperatureFunction);
   test.optimize(optimizedParameters);
   auto functionValue = rosenbrock(optimizedParameters);
+  std::cout << "Rosenbrock: " << functionValue << std::endl;
   ASSERT_TRUE(abs(functionValue) < 0.25);
 }
 
@@ -96,5 +98,6 @@ TEST(SimulatedAnnealing, Rastrigin) {
       stepFunction, temperatureFunction);
   test.optimize(optimizedParameters);
   auto functionValue = rastrigin(optimizedParameters);
+  std::cout << "Rastrigin: " << functionValue << std::endl;
   ASSERT_TRUE(abs(functionValue) < 2.5);
 }
