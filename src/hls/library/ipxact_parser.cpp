@@ -42,13 +42,8 @@ std::string IPXACTParser::getStrValueFromTag(const DOMElement *element,
                                              const XMLCh *tagName) {
   size_t tagCount = element->getElementsByTagName(tagName)->getLength();
   std::string tagNameStr = XMLString::transcode(tagName);
-  //std::cout << std::endl << tagCount << std::endl;
-  uassert(tagCount >= 1,
-          "Cannot find tag " + tagNameStr + "!");
-  uassert(tagCount == 1,
-          "Multiple tags " + tagNameStr + "!");
-  const auto *tag = element->getElementsByTagName(
-    tagName)->item(0);
+  uassert(tagCount >= 1, "Cannot find tag " + tagNameStr + "!");
+  const auto *tag = element->getElementsByTagName(tagName)->item(0);
   const auto *tagFirstChild = tag->getFirstChild();
   uassert(tagFirstChild != nullptr,
           "Missing value inside " + tagNameStr + "tag!");
@@ -74,22 +69,19 @@ std::string IPXACTParser::getStrAttributeFromTag(const DOMElement *element,
 
   size_t tagCount = element->getElementsByTagName(tagName)->getLength();
   std::string tagNameStr = XMLString::transcode(tagName);
-  uassert(tagCount >= 1,
-          "Cannot find tag " + tagNameStr + "!");
-  uassert(tagCount == 1,
-          "Multiple tags " + tagNameStr + "!");
+  uassert(tagCount >= 1, "Cannot find tag " + tagNameStr + "!");
+  uassert(tagCount == 1, "Multiple tags " + tagNameStr + "!");
   const auto *tag = element->getElementsByTagName(tagName)->item(0);
   const auto *item = tag->getAttributes()->getNamedItem(attributeName);
-  uassert(item != nullptr,
-          "Missing attribute inside " + tagNameStr + "tag!");
-
+  uassert(item != nullptr, "Missing attribute inside " + tagNameStr + "tag!");
   std::string attributeValue = std::string(XMLString::transcode(
     item->getNodeValue()));
   return attributeValue;
 }
 
-void IPXACTParser::parseCatalog(const std::string &libraryPath,
-                                const std::string &catalogPath) {
+std::vector<std::string> IPXACTParser::parseCatalog(
+    const std::string &libraryPath,
+    const std::string &catalogPath) {
   DOMImplementation *impl = DOMImplementationRegistry::getDOMImplementation(
     XMLString::transcode("LS"));
   uassert(impl != nullptr, "DOMImplementation is not found!");
@@ -113,15 +105,12 @@ void IPXACTParser::parseCatalog(const std::string &libraryPath,
     doc->getElementsByTagName(ipxIpxFileTag)->getLength();
 
   // Read IP-XACT files one-by-one
+  std::vector<std::string> fileNames;
   for (size_t i = 0; i < ipxactFileCount; i++) {
     const DOMElement *ipxactFile = (const DOMElement*)(
       doc->getElementsByTagName(ipxIpxFileTag)->item(i));
 
     // Parse tags
-    const std::string key = getStrAttributeFromTag(ipxactFile,
-                                                   ipxVlnvTag,
-                                                   nameAttr);
-
     const std::string name = getStrValueFromTag(ipxactFile, ipxNameTag);
 
     // Construct filesystem path to the component
@@ -129,18 +118,30 @@ void IPXACTParser::parseCatalog(const std::string &libraryPath,
     value /= name;
 
     // Bind component's name and its filesystem path
-    readFileNames.insert({key, value.string()});
+    fileNames.push_back(value.string());
   }
   parser->release();
+  return fileNames;
 }
 
-bool IPXACTParser::hasComponent(const std::string &name,
-                                const HWConfig &hwconfig) {
-  return readFileNames.count(toLower(name)) > 0 ? true : false;
+  std::vector<std::shared_ptr<MetaElement>> IPXACTParser::getDelivery(
+      const std::string &libPath, const std::string &catalogPath) {
+  const auto &fileNames = parseCatalog(libPath, catalogPath);
+  const auto &metaElements = parseComponents(fileNames);
+  return metaElements;
+}
+
+std::vector<std::shared_ptr<MetaElement>> IPXACTParser::parseComponents(
+    const std::vector<std::string> &fileNames) {
+  std::vector<std::shared_ptr<MetaElement>> metaElements;
+  for (const auto &fileName : fileNames) {
+    metaElements.push_back(parseComponent(fileName));
+  }
+  return metaElements;
 }
 
 std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
-    const std::string &name/*, const std::string &libraryName*/) {
+    const std::string &fileName) {
     Parameters params;
     std::vector<Port> ports;
 
@@ -153,9 +154,12 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
   uassert(parser != nullptr, "Cannot create LSParser!");
 
   // Parse document
-  const DOMDocument *doc = parser->parseURI(readFileNames[toLower(name)].c_str());
+  const DOMDocument *doc = parser->parseURI(fileName.c_str());
   uassert(doc != nullptr, "Cannot parse IP-XACT component!");
-
+  const DOMElement *comp = (const DOMElement*)(
+      doc->getElementsByTagName(ipxCompTag)->item(0));
+  const std::string name = getStrValueFromTag(comp, ipxNameTag);
+  const std::string library = getStrValueFromTag(comp, ipxLibTag);
   // Parse ports
   size_t portCount = doc->getElementsByTagName(ipxPortTag)->getLength();
   for (size_t i = 0; i < portCount; i++) {
@@ -227,6 +231,7 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
 
     // Create metaElement
     metaElement = std::shared_ptr<MetaElement>(new ElementGenerator(name,
+                                                                    library,
                                                                     params,
                                                                     ports,
                                                                     path));
@@ -235,21 +240,22 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
     const auto *file = (const DOMElement*)(doc->getElementsByTagName(
       ipxFileTag)->item(0));
     // Parse tag
-    std::string name = getStrValueFromTag(file, ipxNameTag);
+    std::string filePath = getStrValueFromTag(file, ipxNameTag);
 
     // Construct complete path
     std::filesystem::path filesystemPath = libraryPath;
 
-    filesystemPath /= name;
+    filesystemPath /= filePath;
     std::string path = filesystemPath.string();
 
     // Create metaElement
     metaElement = std::shared_ptr<MetaElement>(new ElementCore(name,
+                                                               library,
                                                                params,
                                                                ports,
                                                                path));
-
   }
+
   parser->release();
   return metaElement;
 }

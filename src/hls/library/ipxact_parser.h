@@ -27,33 +27,15 @@ public:
   void initialize();
   void finalize();
 
-  bool hasComponent(const std::string &name, const HWConfig &hwconfig);
-
-  /**
-   * @brief Parses an IP-XACT catalog and creates PreMetaElements.
-   *
-   * PreMetaElement is a structure which hold the following information:
-   * path to IP-XACT components, library path, (not)supported HWConfig
-   * and estimationfunction.
-   *
-   * @param libraryPath IP-XACT library path
-   * @param catalogPath IP-XACT catalog path relative to IP-XACT library path
-   * @return Nothing, but creates a map of PreMetaElements
-   */
-  void parseCatalog(const std::string &libPath, const std::string &catalogPath);
-  /**
-   * @brief Parses an IP-XACT component and creates MetaElement.
-   *
-   * @param name IP-XACT component name
-   * @return MetaElement, which corresponds to the IP-XACT component
-   */
-  std::shared_ptr<MetaElement> parseComponent(const std::string &name);
+  std::vector<std::shared_ptr<MetaElement>> getDelivery(
+      const std::string &libPath, const std::string &catalogPath);
 
 private:
   IPXACTParser() {
     XMLPlatformUtils::Initialize();
     ipxPortTag     = XMLString::transcode("ipxact:port");
     ipxNameTag     = XMLString::transcode("ipxact:name");
+    ipxLibTag      = XMLString::transcode("ipxact:library");
     ipxVlnvTag     = XMLString::transcode("ipxact:vlnv");
     ipxDirectTag   = XMLString::transcode("ipxact:direction");
     ipxVectTag     = XMLString::transcode("ipxact:vector");
@@ -63,6 +45,7 @@ private:
     ipxGenExeTag   = XMLString::transcode("ipxact:generatorExe");
     ipxIpxFileTag  = XMLString::transcode("ipxact:ipxactFile");
     ipxFileTag     = XMLString::transcode("ipxact:file");
+    ipxCompTag     = XMLString::transcode("ipxact:component");
 
     k2ParamTag     = XMLString::transcode("kactus2:parameter");
     k2NameTag      = XMLString::transcode("kactus2:name");
@@ -100,6 +83,25 @@ private:
   std::string getStrAttributeFromTag(const DOMElement *element,
                                      const XMLCh      *tagName,
                                      const XMLCh      *attributeName);
+    /**
+   * @brief Parses an IP-XACT catalog to get components' filenames.
+   *
+   * @param libraryPath IP-XACT library path
+   * @param catalogPath IP-XACT catalog path relative to IP-XACT library path
+   * @return Vector of components' filenames
+   */
+  std::vector<std::string> parseCatalog(const std::string &libPath,
+                                        const std::string &catalogPath);
+  /**
+   * @brief Parses an IP-XACT component and creates MetaElement.
+   *
+   * @param name IP-XACT component name
+   * @return MetaElement, which corresponds to the IP-XACT component
+   */
+  std::shared_ptr<MetaElement> parseComponent(const std::string &fileName);
+  //TODO: Doxygen comment!
+  std::vector<std::shared_ptr<MetaElement>> parseComponents(
+      const std::vector<std::string> &compPaths);
 public:
   virtual ~IPXACTParser() {
     delete(ipxPortTag);
@@ -113,6 +115,8 @@ public:
     delete(ipxGenExeTag);
     delete(ipxIpxFileTag);
     delete(ipxFileTag);
+    delete(ipxCompTag);
+    delete(ipxLibTag);
 
     delete(k2ParamTag);
     delete(k2NameTag);
@@ -134,7 +138,7 @@ private:
   XMLCh *nameAttr;
   // IP-XACT common tags
   XMLCh *ipxPortTag, *ipxNameTag, *ipxVlnvTag, *ipxDirectTag,
-        *ipxVectTag, *ipxLeftTag, *ipxRightTag;
+        *ipxVectTag, *ipxLeftTag, *ipxRightTag, *ipxLibTag;
   // IP-XACT vendor extensions tags (kactus2)
   XMLCh *k2ParamTag, *k2NameTag, *k2ValueTag, *k2LeftTag, *k2RightTag;
   // For catalog
@@ -142,7 +146,7 @@ private:
   // For component generators
   XMLCh *ipxCompGensTag, *ipxGenExeTag;
   // For static compomonents
-  XMLCh *ipxFileTag;
+  XMLCh *ipxFileTag, *ipxCompTag;
 
 };
 

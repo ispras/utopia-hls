@@ -57,7 +57,13 @@ int compilerHilTest(const std::string &inHilSubPath,
   const std::string inLibPath = std::string(getenv("UTOPIA_HOME"))
       / fsInLibSubPath;
 
-  Library::get().initialize(inLibPath, relCatPath);
+  Library::get().initialize();
+  Library::get().importLibrary(inLibPath, relCatPath);
+
+  Library::get().excludeLibrary("ip.hw");
+  Library::get().includeLibrary("ip.hw");
+  Library::get().excludeElementFromLibrary("add", "ip.hw");
+  Library::get().includeElementFromLibrary("add", "ip.hw");
 
   Mapper::get().map(*model, Library::get());
   std::map<std::string, Parameters> params =

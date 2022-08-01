@@ -245,6 +245,17 @@ struct NodeType final {
     return inputs.empty() && !isConst();
   }
 
+  bool isMux() const {
+    return outputs.size() == 1
+        && starts_with(name, "mux");
+  }
+
+  bool isCast() const {
+    return inputs.size()  == 1 
+        && outputs.size() == 1 
+        && starts_with(name, "cast");
+  }
+
   bool isSink() const {
     return outputs.empty();
   }
@@ -268,6 +279,11 @@ struct NodeType final {
     return inputs.size() == 1
         && outputs.size() == 1
         && starts_with(name, "delay");
+  }
+
+  // FIXME:
+  bool isClip() const {
+    return starts_with(name, "clip");
   }
 
   bool isKernel() const {

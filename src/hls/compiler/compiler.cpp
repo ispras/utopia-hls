@@ -96,7 +96,7 @@ FirrtlModule::FirrtlModule(const eda::hls::model::Model &model,
   addInput(topClockPort);
   addInput(topResetPort);
 
-  uassert(graph, "TopModel.graph is null");
+  uassert(graph, "Top Model graph is null!");
 
   for (const auto *node : graph->nodes) {
     if (node->isSource()) {
@@ -384,8 +384,6 @@ void FirrtlCircuit::printFiles(const std::string &outFirFileName,
 void FirrtlCircuit::printRndVlogTest(const Model &model,
                                      const std::string &outPath,
                                      const std::string &outTestFileName,
-                                     //const int latency,
-                                     //const int resetInitialValue,
                                      const size_t tstCnt) {
 
   const fs::path fsPath = outPath;

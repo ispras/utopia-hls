@@ -19,9 +19,10 @@ struct Dup final : public ElementInternal {
   static constexpr const char *stages = "stages";
 
   Dup(const std::string &name,
-        const Parameters &params,
-        const std::vector<Port> &ports) :
-  ElementInternal(name, params, ports) {}
+      const std::string &library, 
+      const Parameters &params,
+      const std::vector<Port> &ports) :
+  ElementInternal(name, library, params, ports) {}
   virtual ~Dup() = default;
 
   virtual void estimate(
@@ -30,6 +31,7 @@ struct Dup final : public ElementInternal {
       const Parameters &params) const override;
   static std::shared_ptr<MetaElement> create(const NodeType &nodetype,
                                              const HWConfig &hwconfig);
+  static std::shared_ptr<MetaElement> createDefaultElement();
 };
 
 } // namespace eda::hls::library

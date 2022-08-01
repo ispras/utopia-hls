@@ -12,57 +12,143 @@
 #include "hls/mapper/config/hwconfig.h"
 #include "util/assert.h"
 
-#include <unordered_map>
-
 using namespace eda::hls::mapper;
+using namespace eda::hls::library;
+
+bool ElementKey::operator==(const ElementKey &elementKey) const {
+  if (name != elementKey.name ||
+      inputs.size() != elementKey.inputs.size() ||
+      outputs.size() != elementKey.outputs.size()) {
+    return false;
+  }
+  for (const auto &input : inputs) {
+    if (elementKey.inputs.find(input) == elementKey.inputs.end()) {
+      return false;
+    }
+  }
+  for (const auto &output : outputs) {
+    if (elementKey.outputs.find(output) == elementKey.outputs.end()) {
+      return false;
+    }
+  }
+  return true;
+}
 
 namespace eda::hls::library {
 
+/*size_t ElementKey::getHash() {
+  size_t hash = std::hash<std::string>{}(elementName);
+
+  for (const auto &elementInput : elementInputs) {
+    hash = hash * N + std::hash<std::string>{}(elementInput);
+  }
+  for (const auto &elementOutput : elementOutputs) {
+    hash = hash * N + std::hash<std::string>{}(elementOutput);
+  }
+
+  return hash;
+}*/
+
+ElementKey::ElementKey(const NodeType &nodeType) {
+  name = toLower(nodeType.name);
+  for (const auto *input : nodeType.inputs) {
+    inputs.insert(input->name);
+  }
+  for (const auto *output : nodeType.outputs) {
+    outputs.insert(output->name);
+  }
+}
+
+ElementKey::ElementKey(const std::shared_ptr<MetaElement> metaElement) {
+  name = metaElement->name;
+  for (const auto &port : metaElement->ports) {
+    if (port.direction == Port::Direction::IN) {
+      if (port.name != "clock" && port.name != "reset") {
+        inputs.insert(port.name);
+      }
+    } else {
+      outputs.insert(port.name);
+    }
+  }
+}
+
+//TODO
 bool MetaElement::supports(const HWConfig &hwconfig) {
   return true;
 }
 
-void Library::initialize(const std::string &libraryPath,
-                         const std::string &catalogPath) {
+void Library::initialize() {
   IPXACTParser::get().initialize();
-  IPXACTParser::get().parseCatalog(libraryPath, catalogPath);
+  const auto defaultElements = ElementInternal::createDefaultElements();
+  for (const auto &defaultElement : defaultElements) {
+    ElementKey elementKey(defaultElement);
+    storage.insert({elementKey, StorageEntry(StorageEntry(defaultElement,
+                                                          true))});
+  }
 }
 
 void Library::finalize() {
+  storage.clear();
   IPXACTParser::get().finalize();
 }
 
 void Library::importLibrary(const std::string &libraryPath,
                             const std::string &catalogPath) {
-  IPXACTParser::get().parseCatalog(libraryPath, catalogPath);
+  const auto &metaElements = IPXACTParser::get().getDelivery(libraryPath,
+                                                             catalogPath);
+  for (const auto &metaElement : metaElements) {
+    ElementKey elementKey(metaElement);
+    storage.insert({elementKey, StorageEntry(StorageEntry(metaElement, true))});
+  }
 }
 
-std::shared_ptr<MetaElement> Library::find(const NodeType &nodetype,
+void Library::excludeLibrary(const std::string &libraryName) {
+  for (auto &storageEntry: storage) {
+    if (storageEntry.second.metaElement->library == libraryName) {
+      storageEntry.second.isEnabled = false;
+    }
+  }
+}
+
+void Library::includeLibrary(const std::string &libraryName) {
+  for (auto &storageEntry: storage) {
+    if (storageEntry.second.metaElement->library == libraryName) {
+      storageEntry.second.isEnabled = true;
+    }
+  }
+}
+
+void Library::excludeElementFromLibrary(const std::string &elementName, 
+                                        const std::string &libraryName) {
+  for (auto &storageEntry: storage) {
+    if (storageEntry.second.metaElement->library == libraryName &&
+        storageEntry.second.metaElement->name    == elementName) {
+      storageEntry.second.isEnabled = false;
+    }
+  }
+}
+
+void Library::includeElementFromLibrary(const std::string &elementName, 
+                                        const std::string &libraryName) {
+  for (auto &storageEntry: storage) {
+    if (storageEntry.second.metaElement->library == libraryName &&
+        storageEntry.second.metaElement->name    == elementName) {
+      storageEntry.second.isEnabled = true;
+    }
+  }
+}
+
+std::shared_ptr<MetaElement> Library::find(const NodeType &nodeType,
                                            const HWConfig &hwconfig) {
-  std::string hashString = nodetype.name;
-
-  for (const auto *input: nodetype.inputs) {
-    hashString = hashString + " in " + input->name;
+  ElementKey elementKey(nodeType);
+  //TODO: Proper diagnostics
+  if (storage.count(elementKey) > 0 &&
+      storage.find(elementKey)->second.isEnabled &&
+      storage.find(elementKey)->second.metaElement->supports(hwconfig)) {
+    return storage.find(elementKey)->second.metaElement;
   }
-
-  for (const auto *output: nodetype.outputs) {
-    hashString = hashString + " out " + output->name;
-  }
-
-  const auto hash = std::hash<std::string>{}(hashString);
-
-  if (cache.count(hash) > 0) {
-    return cache[hash];
-  }
-
-  if (IPXACTParser::get().hasComponent(nodetype.name, hwconfig)) {
-    auto metaElement = IPXACTParser::get().parseComponent(nodetype.name);
-    cache.insert({hash, metaElement});
-    return metaElement;
-  }
-  auto metaElement = ElementInternal::create(nodetype, hwconfig);
-  cache.insert({hash, metaElement});
+  auto metaElement = ElementInternal::create(nodeType, hwconfig);
+  storage.insert({elementKey, StorageEntry(StorageEntry(metaElement, true))});
   return metaElement;
 }
-
 } // namespace eda::hls::library

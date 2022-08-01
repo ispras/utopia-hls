@@ -88,9 +88,15 @@ add_library(${MAIN_LIBRARY}
   hls/library/element_generator.cpp
   hls/library/element_core.cpp
   hls/library/element_internal.cpp
+  hls/library/internal/cast.cpp
+  hls/library/internal/clip.cpp
+  hls/library/internal/const.cpp
   hls/library/internal/default.cpp
   hls/library/internal/delay.cpp
   hls/library/internal/dup.cpp
+  hls/library/internal/merge.cpp
+  hls/library/internal/mux.cpp
+  hls/library/internal/split.cpp
   hls/library/ipxact_parser.cpp
   hls/library/library.cpp
   hls/mapper/config/hwconfig.cpp

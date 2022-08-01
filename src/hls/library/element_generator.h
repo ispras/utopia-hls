@@ -18,10 +18,11 @@ namespace eda::hls::library {
 
 struct ElementGenerator final : public MetaElement {
   ElementGenerator(const std::string &name,
+                   const std::string &library,
                    const Parameters &params,
                    const std::vector<Port> &ports,
                    const std::string &genPath) :
-    MetaElement { name, params, ports }, genPath { genPath } {}
+    MetaElement { name, library, params, ports }, genPath { genPath } {}
   virtual ~ElementGenerator() = default;
   virtual void estimate(
       const Parameters &params, Indicators &indicators) const override;

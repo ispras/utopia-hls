@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/library/element_internal.h"
-#include "hls/library/internal/delay.h"
+#include "hls/library/internal/split.h"
 #include "util/string.h"
 
 #include <cmath>
@@ -16,30 +16,30 @@ using namespace eda::hls::mapper;
 
 namespace eda::hls::library {
 
-void Delay::estimate(
-    const Parameters &params, Indicators &indicators) const {
+void Split::estimate(const Parameters &params, Indicators &indicators) const {
   unsigned inputCount = 0;
   unsigned latencySum = 0;
   unsigned widthSum = 0;
 
-  unsigned latency = params.getValue(depth);
+  const auto latency = params.getValue(stages);
 
-  unsigned width_value = params.getValue(width);
+  const auto width = 1u;
 
   for (const auto &port : ports) {
-    widthSum += width_value;
+    widthSum += width;
     if (port.direction == Port::IN)
       inputCount++;
     else
       latencySum += latency;
   }
 
-  double S = params.getValue(depth);
-  double Areg = 16.0;
-  double A = S * widthSum * Areg;
+  double S = params.getValue(stages);
   double Fmax = 500000.0;
+  double F = Fmax * (1 - std::exp(-S/20.0));
+  double Sa = 100.0 * ((double)std::rand() / RAND_MAX) + 1;
+  double A = 100.0 * (1.0 - std::exp(-(S - Sa) * (S - Sa) / 4.0));
   double P = A;
-  double D = 1000000000.0 / Fmax;
+  double D = 1000000000.0 / F;
 
   indicators.ticks = static_cast<unsigned>(S);
   indicators.power = static_cast<unsigned>(P);
@@ -58,7 +58,7 @@ void Delay::estimate(
   }
 }
 
-std::shared_ptr<MetaElement> Delay::create(const NodeType &nodetype,
+std::shared_ptr<MetaElement> Split::create(const NodeType &nodetype,
                                            const HWConfig &hwconfig) {
   std::string name = nodetype.name;
     std::shared_ptr<MetaElement> metaElement;
@@ -70,20 +70,55 @@ std::shared_ptr<MetaElement> Delay::create(const NodeType &nodetype,
       i++;
     }
     Parameters params;
-    params.add(Parameter(depth,
-        Constraint<unsigned>(1, std::numeric_limits<unsigned>::max()), 1));
-    params.add(Parameter(width,
-        Constraint<unsigned>(1, std::numeric_limits<unsigned>::max()), 1));
+    params.add(Parameter(stages, Constraint<unsigned>(1, 100), 10));
 
-    metaElement = std::shared_ptr<MetaElement>(new Delay(lowerCaseName,
+    metaElement = std::shared_ptr<MetaElement>(new Split(lowerCaseName,
                                                          "std",
                                                          params,
                                                          ports));
   return metaElement;
 };
 
-std::unique_ptr<Element> Delay::construct(
-    const Parameters &params) const {
+std::shared_ptr<MetaElement> Split::createDefaultElement() {
+  std::shared_ptr<MetaElement> metaElement;
+  std::vector<Port> ports;
+
+  ports.push_back(Port("clock",
+                       Port::IN,
+                       1,
+                       model::Parameter(std::string("width"), 1)));
+
+  ports.push_back(Port("reset",
+                       Port::IN,
+                       1,
+                       model::Parameter(std::string("width"), 1)));
+
+  ports.push_back(Port("x",
+                      Port::IN,
+                      16,
+                      model::Parameter(std::string("width"), 16)));
+
+  ports.push_back(Port("x1",
+                       Port::OUT,
+                       16,
+                       model::Parameter(std::string("width"), 16)));
+
+  ports.push_back(Port("x2",
+                      Port::OUT,
+                      16,
+                      model::Parameter(std::string("width"), 16)));
+  Parameters params;
+  params.add(Parameter(stages, Constraint<unsigned>(1, 100), 10));
+
+  metaElement = std::shared_ptr<MetaElement>(new Split("split",
+                                                       "std",
+                                                       params,
+                                                       ports));
+  return metaElement;
+};
+
+
+std::unique_ptr<Element> Split::construct(const Parameters &params) const {
   std::unique_ptr<Element> element = std::make_unique<Element>(ports);
   std::string inputs, outputs, ifaceWires, regs, fsm, assigns;
   std::string outputType;
@@ -118,36 +153,31 @@ std::unique_ptr<Element> Delay::construct(
   }
 
   std::string ir;
-  std::string inPort, outPort;
-  unsigned d = 3; // FIXME
-  regs += std::string("reg [31:0] state;\n");
+  std::vector<std::string> portNames;
+  std::string portName;
+  ir += std::string("reg [31:0] state;\n");
+  ir += std::string("always @(posedge clock) begin\nif (!reset) begin\n  state <= 0; end\nelse");
 
   for (auto port : ports) {
     if (port.name == "clock" || port.name == "reset") {
       continue;
     }
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
-      inPort = replaceSomeChars(port.name);
+      portName = replaceSomeChars(port.name);
     }
     if (port.direction == Port::OUT || port.direction == Port::INOUT) {
-      outPort = replaceSomeChars(port.name);
+      portNames.push_back(replaceSomeChars(port.name));
     }
   }
-
-  ir += std::string(" if (state == 0) begin\n  state <= 1;\n  s0 <= ") + inPort + "; end\nelse";
-  regs += std::string("reg [31:0] s0;\n");
-  for (unsigned i = 1; i < d; i++) {
-    regs += std::string("reg [31:0] s") + std::to_string(i) + ";\n";
-    ir += std::string(" if (state == ") + std::to_string(i) + ") begin\n";
-    ir += std::string("  state <= ") + std::to_string(i + 1) + ";\n";
-    ir += std::string("  s") + std::to_string(i) + " <= s" + std::to_string(i - 1) + "; end\nelse";
+  unsigned counter = 0;
+  for (auto currName : portNames) {
+    ir += std::string(" if (state == ") + std::to_string(counter) + ") begin\n";
+    ir += std::string("  state <= ") + std::to_string(++counter) + ";\n  ";
+    ir += currName + " <= " + portName + "; end\nelse ";
   }
-  ir += std::string(" begin\n  state <= 0;\n  ") + outPort + " <= s" +
-        std::to_string(d - 1) + "; end\nend\n";
-  regs += std::string("always @(posedge clock) begin\nif (!reset) begin\n  state <= 0; end\nelse");
-  element->ir = std::string("\n") + ifaceWires + inputs + outputs + regs + ir;
+  ir += std::string("begin\n  state <= 0; end\nend\n");
+  element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
   //return element;
   return element;
 }
-
 } // namespace eda::hls::library

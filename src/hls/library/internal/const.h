@@ -15,15 +15,15 @@ using namespace eda::hls::mapper;
 
 namespace eda::hls::library {
 
-struct Default final : public ElementInternal {
+struct Const final : public ElementInternal {
   static constexpr const char *stages = "stages";
 
-  Default(const std::string &name,
-          const std::string &library,
-          const Parameters &params,
-          const std::vector<Port> &ports) :
+  Const(const std::string &name,
+      const std::string &library, 
+      const Parameters &params,
+      const std::vector<Port> &ports) :
   ElementInternal(name, library, params, ports) {}
-  virtual ~Default() = default;
+  virtual ~Const() = default;
 
   virtual void estimate(
       const Parameters &params, Indicators &indicators) const override;

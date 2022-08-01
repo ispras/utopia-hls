@@ -7,9 +7,15 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/library/element_internal.h"
+#include "hls/library/internal/cast.h" 
+#include "hls/library/internal/clip.h" 
+#include "hls/library/internal/const.h" 
 #include "hls/library/internal/default.h"
 #include "hls/library/internal/delay.h"
 #include "hls/library/internal/dup.h"
+#include "hls/library/internal/merge.h"
+#include "hls/library/internal/mux.h" 
+#include "hls/library/internal/split.h"  
 
 namespace eda::hls::library {
 
@@ -50,10 +56,32 @@ std::shared_ptr<MetaElement> ElementInternal::create(const NodeType &nodetype,
     metaElement = Delay::create(nodetype, hwconfig);
   } else if (nodetype.isDup()) {
     metaElement = Dup::create(nodetype, hwconfig);
+  } else if (nodetype.isConst()) {
+    metaElement = Const::create(nodetype, hwconfig);
+  } else if (nodetype.isMerge()) {
+    metaElement = Merge::create(nodetype, hwconfig);
+  } else if (nodetype.isSplit()) {
+    metaElement = Split::create(nodetype, hwconfig);
+  } else if (nodetype.isMux()) {
+    metaElement = Mux::create(nodetype, hwconfig);
+  } else if (nodetype.isClip()) {
+    metaElement = Clip::create(nodetype, hwconfig);
+  } else if (nodetype.isCast()) {
+    metaElement = Cast::create(nodetype, hwconfig);
   } else {
     metaElement = Default::create(nodetype, hwconfig);
   }
   return metaElement;
+}
+
+std::vector<std::shared_ptr<MetaElement>> ElementInternal::createDefaultElements() {
+  std::vector<std::shared_ptr<MetaElement>> defaultElements; 
+  defaultElements.push_back(Clip::createDefaultElement());
+  defaultElements.push_back(Merge::createDefaultElement());
+  defaultElements.push_back(Split::createDefaultElement());
+  defaultElements.push_back(Dup::createDefaultElement());
+  defaultElements.push_back(Mux::createDefaultElement());
+  return defaultElements;
 }
 
 } // namespace eda::hls::library

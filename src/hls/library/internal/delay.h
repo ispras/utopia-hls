@@ -20,9 +20,10 @@ struct Delay final : public ElementInternal {
   static constexpr const char *depth = "depth";
 
   Delay(const std::string &name,
+        const std::string &library,
         const Parameters &params,
         const std::vector<Port> &ports) :
-  ElementInternal(name, params, ports) {}
+  ElementInternal(name, library, params, ports) {}
   virtual ~Delay() = default;
 
   virtual void estimate(
