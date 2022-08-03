@@ -14,6 +14,7 @@
 
 #include <set>
 #include <string>
+#include <unordered_map>
 
 using namespace eda::hls::mapper;
 using namespace eda::hls::model;
