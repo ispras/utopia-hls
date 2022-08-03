@@ -78,7 +78,6 @@ bool MetaElement::supports(const HWConfig &hwconfig) {
 }
 
 void Library::initialize() {
-  IPXACTParser::get().initialize();
   const auto defaultElements = ElementInternal::createDefaultElements();
   for (const auto &defaultElement : defaultElements) {
     ElementKey elementKey(defaultElement);
@@ -89,7 +88,6 @@ void Library::initialize() {
 
 void Library::finalize() {
   storage.clear();
-  IPXACTParser::get().finalize();
 }
 
 void Library::importLibrary(const std::string &libraryPath,

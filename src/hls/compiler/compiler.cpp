@@ -96,7 +96,7 @@ FirrtlModule::FirrtlModule(const eda::hls::model::Model &model,
   addInput(topClockPort);
   addInput(topResetPort);
 
-  uassert(graph, "Top Model graph is null!");
+  uassert(graph, "Top Model graph is null!\n");
 
   for (const auto *node : graph->nodes) {
     if (node->isSource()) {
@@ -364,7 +364,7 @@ void FirrtlCircuit::printFiles(const std::string &outFirFileName,
   // Create FIRRTL file
   std::ofstream outputFile;
   outputFile.open((fsOutPath / outFirFileName).string());
-  uassert(outputFile, "Can't open outputFile!");
+  uassert(outputFile, "Can't open outputFile!\n");
   printFirrtl(outputFile);
   outputFile.close();
 
