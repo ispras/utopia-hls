@@ -22,6 +22,8 @@
 
 #include <fstream>
 #include <iostream>
+#include <queue>
+#include <vector>
 
 using namespace eda::hls::library;
 using namespace eda::hls::mapper;
@@ -41,20 +43,27 @@ eda::hls::model::Criteria criteria(
   eda::hls::model::Constraint<unsigned>(),  // Power (does not matter)
   eda::hls::model::Constraint<unsigned>(1,     10000000));                             // Area (number of LUTs)
 
+void printModel(const Model &model, const std::string &filename) {
+  std::ofstream output(filename);
+  eda::hls::model::printDot(output, model);
+  output.close();
+}
+
+template <typename B>
+void prepare(Model &model) {
+  Mapper::get().map(model, Library::get());
+  std::map<std::string, Parameters> params =
+    ParametersOptimizer<B>::get().optimize(criteria, model, indicators);
+}
+
 int lpsolveTest(const std::string &filename) {
   std::shared_ptr<Model> model = parse(filename);
-  Mapper::get().map(*model, Library::get());
-  
-  std::map<std::string, Parameters> params =
-    ParametersOptimizer<LatencyLpSolver>::get().optimize(criteria, *model, indicators);
+  prepare<LatencyLpSolver>(*model);
 
   LatencyLpSolver &solver = LatencyLpSolver::get();
   solver.balance(*model, Verbosity::Neutral);
 
-  std::ofstream output(filename + "_solve.dot");
-  eda::hls::model::printDot(output, *model);
-  output.close();
-
+  printModel(*model, filename + "_solve.dot");
   return solver.getStatus();
 }
 
@@ -65,33 +74,35 @@ int balanceFlowTest(const std::string &filename, FlowBalanceMode mode) {
   return solver.getStatus();
 }
 
-int dijkstraTest(const std::string &filename, LatencyBalanceMode mode) {
+int dijkstraPriorityTest(const std::string &filename, LatencyBalanceMode mode) {
+  using Balancer = DijkstraBalancer<std::priority_queue, std::vector<const Chan*>, CompareChan>;
   std::shared_ptr<Model> model = parse(filename);
-  Mapper::get().map(*model, Library::get());
-  std::map<std::string, Parameters> params =
-    ParametersOptimizer<DijkstraBalancer>::get().optimize(criteria, *model, indicators);
+  prepare<Balancer>(*model);
 
-  DijkstraBalancer::get().balance(*model, mode);
+  Balancer::get().balance(*model, mode);
 
-  std::ofstream output(filename + "_dijkstra.dot");
-  eda::hls::model::printDot(output, *model);
-  output.close();
+  printModel(*model, filename + "_dijkstra.dot");
+  return 0;
+}
 
+int dijkstraTest(const std::string &filename, LatencyBalanceMode mode) {
+  using Balancer = DijkstraBalancer<std::queue>;
+  std::shared_ptr<Model> model = parse(filename);
+  prepare<Balancer>(*model);
+
+  Balancer::get().balance(*model, mode);
+
+  printModel(*model, filename + "_dijkstra.dot");
   return 0;
 }
 
 int topologicalTest(const std::string &filename) {
   std::shared_ptr<Model> model = parse(filename);
-  Mapper::get().map(*model, Library::get());
-  std::map<std::string, Parameters> params =
-    ParametersOptimizer<TopologicalBalancer>::get().optimize(criteria, *model, indicators);
+  prepare<TopologicalBalancer>(*model);
 
   TopologicalBalancer::get().balance(*model);
 
-  std::ofstream output(filename + "_topological.dot");
-  eda::hls::model::printDot(output, *model);
-  output.close();
-
+  printModel(*model, filename + "_topological.dot");
   return 0;
 }
 

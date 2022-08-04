@@ -17,6 +17,8 @@
 #include "hls/scheduler/latency_balancer_base.h"
 #include "util/singleton.h"
 
+#include <algorithm>
+#include <iostream>
 #include <queue>
 
 using namespace eda::hls::model;
@@ -32,11 +34,60 @@ enum LatencyBalanceMode {
   ALAP
 };
 
-class DijkstraBalancer final : public TraverseBalancerBase, 
-    public Singleton<DijkstraBalancer> {
+class CompareChan {
+  std::map<const Node*, int> &nodeMap;
 public:
-  friend Singleton<DijkstraBalancer>;
-  ~DijkstraBalancer() {}
+  CompareChan(std::map<const Node*, int> &nodeMap) : nodeMap(nodeMap) { }
+
+  bool operator() (const Chan *lhs, const Chan *rhs) {
+    return (nodeMap[lhs->source.node] + lhs->ind.ticks) < (nodeMap[rhs->source.node] + rhs->ind.ticks);
+  }
+};
+
+template <typename T, template <typename, typename...> class C, typename... Ts>
+class Queue {
+public:
+
+  Queue() {
+    container = new C<T, Ts...>();
+  }
+
+  Queue(void *comparator) { }
+
+  ~Queue() {
+    delete container;
+  }
+
+  void push(T element) {
+    return container->push(element);
+  }
+
+  void pop() {
+    container->pop();
+  }
+
+  T front() {
+    return container->front();
+  }
+  
+  bool empty() {
+    return container->empty();
+  }
+
+private:
+  C<T, Ts...> *container;
+};
+
+template <template <typename, typename...> class C, typename... Ts>
+class DijkstraBalancer final : public TraverseBalancerBase, 
+    public Singleton<DijkstraBalancer<C>> {
+public:
+  friend Singleton<DijkstraBalancer<C>>;
+
+  ~DijkstraBalancer() {
+    delete toVisit;
+  }
+
   void balance(Model &model) override {
     balance(model, LatencyBalanceMode::ASAP);
   }
@@ -47,6 +98,8 @@ private:
   DijkstraBalancer() : mode(LatencyBalanceMode::ASAP) {}
 
   void init(const Graph *graph);
+
+  void initQueue();
 
   /// Visits the specified channel and updates the destination's time.
   void visitChan(const Chan *chan) override;
@@ -76,9 +129,11 @@ private:
 
   void traverse(const std::vector<Node*> &startNodes);
 
-  std::queue<const Chan*> toVisit;
+  Queue<const Chan*, C, Ts...> *toVisit;
   LatencyBalanceMode mode;
   const Node *currentNode;
 };
+
+#include "hls/scheduler/dijkstra_impl.h"
 
 } // namespace eda::hls::scheduler
