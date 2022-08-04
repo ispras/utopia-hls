@@ -19,11 +19,6 @@ inline const Chan* GenericChanQueue::front() {
     return container->top();
 }
 
-template<>
-inline const Chan* Queue<const Chan*, std::priority_queue>::front() {
-    return container->top();
-}
-
 template <template <typename, typename...> class C, typename... Ts>
 void DijkstraBalancer<C, Ts...>::initQueue() {
   delete toVisit;

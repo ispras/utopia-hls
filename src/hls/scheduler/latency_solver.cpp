@@ -7,8 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/scheduler/latency_solver.h"
+#include "util/assert.h"
 
-#include <cassert>
 #include <iostream>
 
 namespace eda::hls::scheduler {
@@ -65,9 +65,10 @@ void LatencyLpSolver::insertBuffers(Model &model) {
   unsigned totalDelta = 0;
   for (const auto *buf : buffers) {
     // lp_solve positions start with 1
-    double latency = latencies[buf->position - 1];
-    assert(latency >= 0 && ("Delta for channel " + buf->channel->name + " < 0")
-      .c_str());
+    int position = buf->position - 1;
+    uassert(position >= 0, "Position can't be negative!\n");
+    double latency = latencies[position];
+    uassert(latency >= 0, "Delta for channel " + buf->channel->name + " < 0");
     if (latency != 0) {
       model.insertDelay(*(buf->channel), (unsigned)latency);
       bufsInserted++;
@@ -89,7 +90,7 @@ void LatencyLpSolver::collectGraphTime(const Graph &graph) {
 
 void LatencyLpSolver::balanceLatency(const Graph *graph) { 
 
-  for (const Node *node : graph->nodes) {
+  for (const auto *node : graph->nodes) {
     std::string varName = TimePrefix + node->name;
     helper.addVariable(varName, node);
     

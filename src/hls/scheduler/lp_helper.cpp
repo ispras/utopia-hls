@@ -48,7 +48,7 @@ void LpSolverHelper::initFields() {
   status = -10;
 }
 
-std::vector<double> LpSolverHelper::getResults() {
+std::vector<double> LpSolverHelper::getResults() const {
   int size = ::get_Ncolumns(lp);
   double *values = new double[size];
   ::get_variables(lp, values);
@@ -78,7 +78,7 @@ SolverVariable* LpSolverHelper::addVariable(const std::string &name,
   return newVariable;
 }
 
-std::vector<SolverVariable*> LpSolverHelper::getVariables() {
+std::vector<SolverVariable*> LpSolverHelper::getVariables() const {
   std::vector<SolverVariable*> result;
   for (const auto &pair : variables) {
     result.push_back(pair.second);
@@ -115,9 +115,9 @@ void LpSolverHelper::setObjective(const std::vector<std::string> &names,
 }
 
 std::vector<SolverVariable*> LpSolverHelper::getVariables(
-    const std::vector<std::string> &names) {
+    const std::vector<std::string> &names) const {
   std::vector<SolverVariable*> vars;
-  for (const std::string &name : names) {
+  for (const auto &name : names) {
     auto it = variables.find(name);
     assert(it != variables.end() && ("Variable " + name + " not found!").c_str());
     vars.push_back(it->second);
@@ -133,20 +133,20 @@ void LpSolverHelper::setMin() {
   ::set_minim(lp);
 }
 
-int LpSolverHelper::getStatus() {
+int LpSolverHelper::getStatus() const {
   return status;
 }
 
-void LpSolverHelper::printResults() {
+void LpSolverHelper::printResults() const {
   std::cout << "Solution results:" << std::endl;
-  for (auto val : getResults()) {
+  for (const auto val : getResults()) {
     std::cout << val << " ";  
   }
   std::cout << std::endl;
 }
 
-void LpSolverHelper::printStatus() {
-  // Values from lp_lib.h
+void LpSolverHelper::printStatus() const {
+  // Values taken from lp_lib.h
   switch (status) {
     case NOMEMORY:
       std::cout << "Out of memory" << std::endl;
@@ -197,7 +197,7 @@ void LpSolverHelper::printStatus() {
 std::ostream& operator <<(std::ostream &out, 
     const SolverConstraint &constraint) {
   
-  for (unsigned int i = 0; i < constraint.variables.size(); i++) {
+  for (size_t i = 0; i < constraint.variables.size(); i++) {
     if (i != 0) {
       out << " + ";
     }

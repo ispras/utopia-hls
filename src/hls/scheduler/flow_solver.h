@@ -47,7 +47,7 @@ public:
     balance(model, mode, Verbosity::Full); 
   }
 
-  int getStatus() { return lastStatus; }
+  int getStatus() const { return lastStatus; }
 
 private:
   FlowLpSolver() : helper(LpSolverHelper::get()), lastStatus(helper.getStatus()) {}

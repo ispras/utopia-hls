@@ -80,9 +80,9 @@ private:
 
 template <template <typename, typename...> class C, typename... Ts>
 class DijkstraBalancer final : public TraverseBalancerBase, 
-    public Singleton<DijkstraBalancer<C>> {
+    public Singleton<DijkstraBalancer<C, Ts...>> {
 public:
-  friend Singleton<DijkstraBalancer<C>>;
+  friend Singleton<DijkstraBalancer<C, Ts...>>;
 
   ~DijkstraBalancer() {
     delete toVisit;

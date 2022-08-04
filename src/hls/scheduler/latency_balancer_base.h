@@ -34,7 +34,7 @@ public:
   virtual void balance(eda::hls::model::Model &model) = 0;
 
   /// Returns the maximum latency of the main graph.
-  unsigned getGraphLatency() { return graphTime; }
+  unsigned getGraphLatency() const { return graphTime; }
 
 protected:
   LatencyBalancerBase() : graphTime(0) {}
