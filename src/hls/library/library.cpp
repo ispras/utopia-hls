@@ -36,19 +36,6 @@ bool ElementKey::operator==(const ElementKey &elementKey) const {
 
 namespace eda::hls::library {
 
-/*size_t ElementKey::getHash() {
-  size_t hash = std::hash<std::string>{}(elementName);
-
-  for (const auto &elementInput : elementInputs) {
-    hash = hash * N + std::hash<std::string>{}(elementInput);
-  }
-  for (const auto &elementOutput : elementOutputs) {
-    hash = hash * N + std::hash<std::string>{}(elementOutput);
-  }
-
-  return hash;
-}*/
-
 ElementKey::ElementKey(const NodeType &nodeType) {
   name = toLower(nodeType.name);
   for (const auto *input : nodeType.inputs) {

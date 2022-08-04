@@ -27,11 +27,12 @@ class IPXACTParser final : public Singleton<IPXACTParser> {
 
 public:
   /**
-   * @brief Gets IP-XACT delivery and creates vector of MetaElements 
+   * @brief Constructs meta-elements from an IP-XACT delivery.
    *
-   * @param libraryPath IP-XACT library path
-   * @param catalogPath IP-XACT catalog path relative to library path
-   * @return Vector of MetaElements
+   * @param libraryPath IP-XACT library path.
+   * @param catalogPath IP-XACT catalog path relative to IP-XACT library path.
+   * 
+   * @returns Constructed meta-elements.
    */
   std::vector<std::shared_ptr<MetaElement>> getDelivery(
       const std::string &libraryPath, const std::string &catalogPath);
@@ -72,19 +73,21 @@ private:
     nameAttr       = XMLString::transcode("name");
   }
   /**
-   * @brief Tries to parse XML file and to construct a DOM document
+   * @brief Tries to parse an XML file and to construct a DOM document.
    *
-   * @param fileName XML file to parse
-   * @return true if XML file is correct, false otherwise
+   * @param fileName XML file to parse.
+   * 
+   * @returns true if XML file is correct, false otherwise.
    */
   bool tryToParseXML(const char* fileName);
 
   /**
    * @brief Parses a tag to get a string value.
    *
-   * @param element A DOMElement in which the tag is located
-   * @param tagName Tag name
-   * @return Tag value
+   * @param element DOMElement in which tag is located.
+   * @param tagName Tag name.
+   * 
+   * @returns Tag value.
    */
   std::string getStrValueFromTag(const DOMElement *element,
                                  const XMLCh      *tagName);
@@ -92,9 +95,10 @@ private:
   /**
    * @brief Parses a tag to get an integer value.
    *
-   * @param element A DOMElement in which the tag is located
-   * @param tagName Tag name
-   * @return Tag value
+   * @param element DOMElement in which tag is located.
+   * @param tagName Tag name.
+   * 
+   * @returns Tag value.
    */
   int         getIntValueFromTag(const DOMElement *element,
                                  const XMLCh      *tagName);
@@ -102,44 +106,49 @@ private:
   /**
    * @brief Parses a tag to get a string value from the given attribute.
    *
-   * @param element A DOMElement in which the tag is located
-   * @param tagName Tag name
-   * @return Tag value
+   * @param element DOMElement in which tag is located.
+   * @param tagName Tag name.
+   * @param attributeName Attribute name.
+   * 
+   * @returns Attribute value.
    */
   std::string getStrAttributeFromTag(const DOMElement *element,
                                      const XMLCh      *tagName,
                                      const XMLCh      *attributeName);
 
   /**
-   * @brief Parses an IP-XACT catalog to get components' filenames.
+   * @brief Parses an IP-XACT catalog to get the components' filenames.
    *
-   * @param libraryPath IP-XACT library path
-   * @param catalogPath IP-XACT catalog path relative to library
-   * @return Vector of components' filenames
+   * @param libraryPath IP-XACT library path.
+   * @param catalogPath IP-XACT catalog path relative to IP-XACT library.
+   * 
+   * @returns Components' filenames relative to IP-XACT library.
    */
   std::vector<std::string> parseCatalog(const std::string &libraryPath,
                                         const std::string &catalogPath);
   
   /**
-   * @brief Parses IP-XACT components and creates a set of MetaElements.
+   * @brief Parses IP-XACT components and creates the set of meta-elements.
    *
-   * @param libraryPath IP-XACT library path
-   * @param compPaths Vector of paths to IP-XACT components relative to library
-   * @return Vector of MetaElements
+   * @param libraryPath    IP-XACT library path.
+   * @param componentPaths IP-XACT components paths relative to IP-XACT library.
+   * 
+   * @returns Constructed meta-elements.
    */
   std::vector<std::shared_ptr<MetaElement>> parseComponents(
-      const std::string &libraryPath,
-      const std::vector<std::string> &compPaths);
+      const std::string              &libraryPath,
+      const std::vector<std::string> &componentPaths);
 
   /**
-   * @brief Parses an IP-XACT component and creates MetaElement.
+   * @brief Parses an IP-XACT component and creates the meta-element.
    *
-   * @param libraryPath IP-XACT library path
-   * @param fileName IP-XACT component name relative to library
-   * @return MetaElement, which corresponds to the IP-XACT component
+   * @param libraryPath   IP-XACT library path.
+   * @param componentPath IP-XACT component path relative to IP-XACT library.
+   * 
+   * @returns Constructed meta-element.
    */
   std::shared_ptr<MetaElement> parseComponent(const std::string &libraryPath,
-                                              const std::string &fileName);
+                                              const std::string &componentPath);
 
 public:
   virtual ~IPXACTParser() {
@@ -168,22 +177,22 @@ public:
     XMLPlatformUtils::Terminate();
   }
 private:
-  // Parser
+  /// Parser
   XercesDOMParser* parser;
-  // Error handler for parser
+  /// Error handler for parser
   ErrorHandler* errorHandler;
-  // Attributes
+  /// Attributes
   XMLCh *nameAttr;
-  // IP-XACT common tags
+  /// IP-XACT common tags
   XMLCh *ipxPortTag, *ipxNameTag, *ipxVlnvTag, *ipxDirectTag,
         *ipxVectTag, *ipxLeftTag, *ipxRightTag, *ipxLibTag;
-  // IP-XACT vendor extensions tags (kactus2)
+  /// IP-XACT vendor extensions tags (kactus2)
   XMLCh *k2ParamTag, *k2NameTag, *k2ValueTag, *k2LeftTag, *k2RightTag;
-  // For catalog
+  /// For catalog
   XMLCh *ipxIpxFileTag;
-  // For component generators
+  /// For component generators
   XMLCh *ipxCompGensTag, *ipxGenExeTag;
-  // For static compomonents
+  /// For static compomonents
   XMLCh *ipxFileTag, *ipxCompTag;
 };
 

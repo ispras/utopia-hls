@@ -335,7 +335,7 @@ void FirrtlCircuit::printFirrtl(std::ostream &out) const {
 }
 
 void FirrtlCircuit::dumpVerilogLibrary(const std::string &outPath,
-                                       std::ostream &out) const {
+                                       std::ostream      &out) const {
   for (const auto &pair : extModules) {
     if (pair.second.body == "") {
       pair.second.moveVerilogModule(outPath);
@@ -381,10 +381,10 @@ void FirrtlCircuit::printFiles(const std::string &outFirFileName,
   outputFile.close();
 }
 
-void FirrtlCircuit::printRndVlogTest(const Model &model,
+void FirrtlCircuit::printRndVlogTest(const Model       &model,
                                      const std::string &outPath,
                                      const std::string &outTestFileName,
-                                     const size_t tstCnt) {
+                                     const size_t       testCount) const {
 
   const fs::path fsPath = outPath;
   fs::create_directories(fsPath);
@@ -460,7 +460,7 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
   }
 
   // generate random stimuli
-  for (size_t i = 0; i < tstCnt; i++) {
+  for (size_t i = 0; i < testCount; i++) {
     ctemplate ::TemplateDictionary *tDict = dict->AddSectionDictionary("TESTS");
     for (size_t j = 0; j < inputs.size(); j++) {
 

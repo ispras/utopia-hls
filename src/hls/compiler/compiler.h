@@ -149,7 +149,7 @@ struct ExternalModule final : Module {
   void printVerilogModule(std::ostream &out) const;
   void moveVerilogModule(const std::string &outPath) const;
 private:
-  void addInputs(const std::vector<model::Port*> &inputs);
+  void addInputs(const std::vector<model::Port*>  &inputs);
   void addOutputs(const std::vector<model::Port*> &outputs);
   void addPortsToDict(ctemplate::TemplateDictionary *dict,
                       const std::vector<Port> &ports,
@@ -199,8 +199,8 @@ public:
   static constexpr const char* typePrefix    = "!firrtl.";
   static constexpr const char* varPrefix     = "%";
   static constexpr const char* circt         = "circt-opt ";
-  static constexpr const char* circtOptions = " --lower-firrtl-to-hw \
-                                                --export-split-verilog";
+  static constexpr const char* circtOptions  = " --lower-firrtl-to-hw \
+                                                 --export-split-verilog";
   FirrtlCircuit(const Model &model, const std::string &name);
   /**
    * @brief Constructs output files and moves them to the given directory.
@@ -208,30 +208,28 @@ public:
    * @param outFirFileName Name of output FIRRTL file.
    * @param outVlogLibName Name of output file that contains library modules.
    * @param outVlogTopName Name of top verilog file.
-   * @param outPath Path to store output files (will be created if nonexistant).
+   * @param outPath        Path to store output files.
    *
-   * @return Nothing, but output files should be created.
+   * @returns Nothing, but output files should be created.
    */
   void printFiles(const std::string& outFirFileName,
                   const std::string& outVlogLibName,
                   const std::string& outVlogTopName,
                   const std::string& outPath) const;
   /**
-   * @brief Generates a Verilog random testbench for the current model.
+   * @brief Generates a Verilog random testbench for the input model.
    *
-   * @param model Reference to model.
-   * @param outPath Path to store output testbench.
+   * @param model           Input model.
+   * @param outPath         Path to store output testbench.
    * @param outTestFileName Filename for output testbench.
-   * @param tstCnt Number of test stimuli at random sequence.
+   * @param testCount       Number of test stimuli at random sequence.
    *
-   * @return Nothing, but Verilog testbench should be created.
+   * @returns Nothing, but Verilog testbench should be created.
    */
-   void printRndVlogTest(const Model &model,
-                         const std::string &outPath,
-                         const std::string &outTestFileName,
-                         //const int latency,
-                         //const int resetInitialValue,
-                         const size_t tstCnt);
+  void printRndVlogTest(const Model       &model,
+                        const std::string &outPath,
+                        const std::string &outTestFileName,
+                        const size_t       testCount) const;
 
 };
 
@@ -242,13 +240,14 @@ struct Compiler final {
   /**
    * @brief Generates a FIRRTL IR for the input model.
    *
-   * @param Input model.
-   * @param Name of top module in FIRRTL circuit.
-   * @return Constructed FIRRTL circuit.
+   * @param model Input model.
+   * @param name  Name of top module in FIRRTL circuit to be constructed.
+   * 
+   * @returns Constructed FIRRTL circuit.
    */
-   std::shared_ptr<FirrtlCircuit> constructFirrtlCircuit(const Model &model,
-       const std::string &name = "main") {
-     return std::make_shared<FirrtlCircuit>(model, name);
+  std::shared_ptr<FirrtlCircuit> constructFirrtlCircuit(const Model &model,
+      const std::string &name = "main") const {
+    return std::make_shared<FirrtlCircuit>(model, name);
    }
 };
 

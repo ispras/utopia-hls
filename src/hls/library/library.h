@@ -21,7 +21,7 @@ using namespace eda::hls::model;
 using namespace eda::util;
 
 namespace eda::hls::library {
-  /// Key for MetaElement / nodetype.
+/// Key for MetaElement / nodetype.
 struct ElementKey {
   ElementKey(const NodeType &nodetype);
   ElementKey(const std::shared_ptr<MetaElement> metaElement);
@@ -139,78 +139,81 @@ class Library final : public Singleton<Library> {
   friend class Singleton<Library>;
 
 public:
-/**
- * @brief Initializes the library by creating standard internal elements.
- *
- * @returns Nothing, but creates a set of standard internal elements.
- */
+  /**
+   * @brief Initializes the library by creating standard internal elements.
+   *
+   * @returns Nothing, but creates standard internal elements and stores them.
+   */
   void initialize();
-/**
- * @brief Finalizes the library by clearing storage of meta-elements.
- *
- * @returns Nothing, but clears storage of meta-elements.
- */
+
+  /**
+   * @brief Finalizes the library by clearing the storage of meta-elements.
+   *
+   * @returns Nothing, but clears storage of meta-elements.
+   */
   void finalize();
 
-/**
- * @brief Search meta-element for given node type and hardware configuration.
- *
- * @param nodeType Input node type.
- * @param hwconfig Input hardware configuration.
- * @returns Found/constructed meta-element.
- */
+  /**
+   * @brief Search for a meta-element with a given node type and HW config.
+   *
+   * @param nodeType Input node type.
+   * @param hwconfig Input hardware configuration.
+   * 
+   * @returns Found/constructed meta-element.
+   */
   std::shared_ptr<MetaElement> find(const NodeType &nodeType,
                                     const HWConfig &hwconfig);
 
-/**
- * @brief Imports an IP-XACT library using IP-XACT catalog.
- *
- * @param libraryPath Path to IP-XACT library.
- * @param catalogPath Path to IP-XACT catalog relative to the IP-XACT library.
- * @returns Nothing, but creates and stores the meta-elements in the storage.
- */
+  /**
+   * @brief Imports an IP-XACT library using an IP-XACT catalog.
+   *
+   * @param libraryPath Path to IP-XACT library.
+   * @param catalogPath Path to IP-XACT catalog relative to IP-XACT library.
+   * 
+   * @returns Nothing, but constructs and stores meta-elements in storage.
+   */
   void importLibrary(const std::string &libraryPath,
                      const std::string &catalogPath);
 
-/**
- * @brief Excludes all elements from the given library from search.
- *
- * @param libraryPath Library name.
- * @returns Nothing, but excludes all elements from the library from search.
- */
+  /**
+   * @brief Excludes all elements from the given library from search.
+   *
+   * @param libraryName Library name.
+   * 
+   * @returns Nothing, but excludes all elements from library from search.
+   */
   void excludeLibrary(const std::string &libraryName);
 
-/**
- * @brief Includes all elements from the given library in search.
- *
- * @param libraryPath Library name.
- * @returns Nothing, but excludes all elements from the library in search.
- */
+  /**
+   * @brief Includes all elements from the given library in search.
+   *
+   * @param libraryName Library name.
+   * 
+   * @returns Nothing, but excludes all elements from library in search.
+   */
   void includeLibrary(const std::string &libraryName);
 
-/**
- * @brief Excludes the given element from the given library from search.
- * 
- * @param elementName Name of the element to be excluded.
- * @param libraryPath Library name.
- * @returns Nothing, but excludes all elements from the library from search.
- */
+  /**
+   * @brief Excludes the given element from the given library from search.
+   * 
+   * @param elementName Name of element to be excluded.
+   * @param libraryName Library name.
+   * 
+   * @returns Nothing, but excludes all elements from library from search.
+   */
   void excludeElementFromLibrary(const std::string &elementName, 
                                  const std::string &libraryName);
 
-/**
- * @brief Includes the given element from the given library in search.
- * 
- * @param elementName Name of the element to be included.
- * @param libraryPath Library name.
- * @returns Nothing, but includes all elements from the library in search.
- */
+  /**
+   * @brief Includes the given element from the given library in search.
+   * 
+   * @param elementName Name of element to be included.
+   * @param libraryName Library name.
+   * 
+   * @returns Nothing, but includes all elements from library in search.
+   */
   void includeElementFromLibrary(const std::string &elementName, 
                                  const std::string &libraryName);
-
-  /*void add(const std::shared_ptr<MetaElement> &metaElement) {
-    cache.push_back(metaElement);
-  }*/
 
 private:
   Library() {}

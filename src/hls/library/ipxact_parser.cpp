@@ -24,6 +24,7 @@ using namespace xercesc;
 namespace eda::hls::library {
 
 bool stringIsDigit(std::string str) {
+
   for (size_t i = 0; i < str.length(); i++) {
     if (!isdigit(str.at(i))) {
       return false;
@@ -34,12 +35,14 @@ bool stringIsDigit(std::string str) {
 
 std::vector<std::shared_ptr<MetaElement>> IPXACTParser::getDelivery(
     const std::string &libraryPath, const std::string &catalogPath) {
+
   const auto &fileNames = parseCatalog(libraryPath, catalogPath);
   const auto &metaElements = parseComponents(libraryPath, fileNames);
   return metaElements;
 }
 
 bool IPXACTParser::tryToParseXML(const char* fileName) {
+
   try {
     parser->parse(fileName);
   } 
@@ -72,7 +75,8 @@ bool IPXACTParser::tryToParseXML(const char* fileName) {
 }
 
 std::string IPXACTParser::getStrValueFromTag(const DOMElement *element,
-                                             const XMLCh *tagName) {
+                                             const XMLCh      *tagName) {
+
   size_t tagCount = element->getElementsByTagName(tagName)->getLength();
   std::string tagNameStr = XMLString::transcode(tagName);
   uassert(tagCount >= 1, "Cannot find tag " + tagNameStr + "!\n");
@@ -80,15 +84,14 @@ std::string IPXACTParser::getStrValueFromTag(const DOMElement *element,
   const auto *tagFirstChild = tag->getFirstChild();
   uassert(tagFirstChild != nullptr,
           "Missing value inside " + tagNameStr + "tag!\n");
-
   std::string tagValue = XMLString::transcode(
     tagFirstChild->getNodeValue());
-
   return tagValue;
 }
 
 int IPXACTParser::getIntValueFromTag(const DOMElement *element,
-                                     const XMLCh *tagName) {
+                                     const XMLCh      *tagName) {
+
   std::string tagValueStr = getStrValueFromTag(element, tagName);
   std::string tagNameStr = XMLString::transcode(tagName);
   uassert(stringIsDigit(tagValueStr), tagNameStr + 
@@ -125,11 +128,11 @@ std::vector<std::string> IPXACTParser::parseCatalog(
   bool isParsed = tryToParseXML(path.c_str());
   uassert(isParsed, "Error while parsing an IP-XACT catalog!\n");
 
-  // Open IP-XACT catalog
+  // Get DOM document representing IP-XACT catalog
   const DOMDocument *doc = parser->getDocument();
   uassert(doc != nullptr, "Cannot parse IP-XACT catalog!\n");
 
-  // The number of IP-XACT files to be read
+  // Get number of IP-XACT files to be read
   const size_t ipxactFileCount =
     doc->getElementsByTagName(ipxIpxFileTag)->getLength();
 
@@ -142,63 +145,66 @@ std::vector<std::string> IPXACTParser::parseCatalog(
     // Parse tags
     const std::string name = getStrValueFromTag(ipxactFile, ipxNameTag);
 
-    // Construct filesystem path to the component
-    std::filesystem::path value = libraryPath;
-    value /= name;
-
-    // Bind component's name and its filesystem path
-    fileNames.push_back(value.string());
+    // Bind component's name and it's path relative to IP-XACT library path
+    fileNames.push_back(name);
   }
-
+  // Reset parser for further use
   parser->reset();
 
   return fileNames;
 }
 
 std::vector<std::shared_ptr<MetaElement>> IPXACTParser::parseComponents(
-    const std::string &libraryPath, const std::vector<std::string> &fileNames) {
+    const std::string              &libraryPath,
+    const std::vector<std::string> &componentPaths) {
+
   std::vector<std::shared_ptr<MetaElement>> metaElements;
-  for (const auto &fileName : fileNames) {
-    metaElements.push_back(parseComponent(libraryPath, fileName));
+  for (const auto &componentPath : componentPaths) {
+    metaElements.push_back(parseComponent(libraryPath, componentPath));
   }
   return metaElements;
 }
 
 std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
     const std::string &libraryPath,
-    const std::string &fileName) {
-    Parameters params;
-    std::vector<Port> ports;
+    const std::string &componentPath) {
+
+  Parameters params;
+  std::vector<Port> ports;
+
+  // Calculate path to IP-XACT component
+  std::filesystem::path path = libraryPath;
+  path /= componentPath;
 
   // Trying to parse IP-XACT component
-  bool isParsed = tryToParseXML(fileName.c_str());
+  bool isParsed = tryToParseXML(path.c_str());
   uassert(isParsed, "Error while parsing an IP-XACT component!\n");
 
-  // Open IP-XACT component
+  // Get DOM document representing IP-XACT component
   const DOMDocument *doc = parser->getDocument();
-
   uassert(doc != nullptr, "Cannot parse IP-XACT component!\n");
+
+  // Parse tags
   const DOMElement *comp = (const DOMElement*)(
       doc->getElementsByTagName(ipxCompTag)->item(0));
   const std::string name = getStrValueFromTag(comp, ipxNameTag);
   const std::string library = getStrValueFromTag(comp, ipxLibTag);
+
   // Parse ports
   size_t portCount = doc->getElementsByTagName(ipxPortTag)->getLength();
   for (size_t i = 0; i < portCount; i++) {
     const DOMElement *port = (const DOMElement*)(
       doc->getElementsByTagName(ipxPortTag)->item(i));
+  
     // Parse tags
     std::string name = getStrValueFromTag(port, ipxNameTag);
-
     std::string direction = getStrValueFromTag(port, ipxDirectTag);
-
     size_t vectorCount = port->getElementsByTagName(ipxVectTag)->getLength();
     std::string leftStr = vectorCount ? getStrValueFromTag(port, ipxLeftTag)
                                       : "";
 
     // Create port and adding it to multitude of ports
     int leftInt = -1;
-    // Value can be parameter
     if (leftStr == "") {
       ports.push_back(library::Port(name,
                                     direction == "in" ? Port::IN : Port::OUT,
@@ -280,7 +286,7 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
                                                                ports,
                                                                path));
   }
-
+  // Reset parser for further use
   parser->reset();
   
   return metaElement;
