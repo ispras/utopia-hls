@@ -7,8 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 template<>
-inline GenericChanQueue::Queue(void *comparator) {
-  container = new StdPriorityQueue(*(static_cast<CompareChan*>(comparator)));
+inline GenericChanQueue::Queue(CompareChan comparator) {
+  container = new StdPriorityQueue(comparator);
 }
 
 template<>
@@ -16,27 +16,27 @@ inline const Chan* GenericChanQueue::front() {
     return container->top();
 }
 
-template <typename C>
-void DijkstraBalancer<C>::initQueue() {
+template <typename Container, typename Comparator>
+void DijkstraBalancer<Container, Comparator>::initQueue() {
   delete toVisit;
-  toVisit = new Queue<const Chan*, C>();
+  toVisit = new Queue<const Chan*, Container, Comparator>();
 }
 
 template <>
-inline void DijkstraBalancer<StdPriorityQueue>::initQueue() {
+inline void DijkstraBalancer<StdPriorityQueue, CompareChan>::initQueue() {
   delete toVisit;
-  toVisit = new GenericChanQueue(new CompareChan(nodeMap));
+  toVisit = new GenericChanQueue(CompareChan(nodeMap));
 }
 
-template <typename C>
-void DijkstraBalancer<C>::init(const Graph *graph) {
+template <typename Container, typename Comparator>
+void DijkstraBalancer<Container, Comparator>::init(const Graph *graph) {
   TraverseBalancerBase::init(*graph);
   initQueue();
   currentNode = nullptr;
 }
 
-template <typename C>
-void DijkstraBalancer<C>::visitChan(const Chan *chan) {
+template <typename Container, typename Comparator>
+void DijkstraBalancer<Container, Comparator>::visitChan(const Chan *chan) {
   const Node *targetNode = getNextNode(chan);
   // Update destination node time
   if (targetNode && currentNode) {
@@ -46,8 +46,8 @@ void DijkstraBalancer<C>::visitChan(const Chan *chan) {
   }
 }
 
-template <typename C>
-void DijkstraBalancer<C>::visitNode(const Node *node) {
+template <typename Container, typename Comparator>
+void DijkstraBalancer<Container, Comparator>::visitNode(const Node *node) {
   currentNode = node;
   for (const auto *chan : getConnections(node)) {
     toVisit->push(chan);
@@ -55,26 +55,26 @@ void DijkstraBalancer<C>::visitNode(const Node *node) {
   }
 }
 
-template <typename C>
-void DijkstraBalancer<C>::start(const std::vector<Node*> &startNodes) {
+template <typename Container, typename Comparator>
+void DijkstraBalancer<Container, Comparator>::start(const std::vector<Node*> &startNodes) {
   for (const auto *node : startNodes) {
     visitNode(node);
   }
 }
 
-template <typename C>
-const Node* DijkstraBalancer<C>::getNextNode(const Chan *chan) {
+template <typename Container, typename Comparator>
+const Node* DijkstraBalancer<Container, Comparator>::getNextNode(const Chan *chan) {
   return 
     mode == LatencyBalanceMode::ASAP ? chan->target.node : chan->source.node;
 }
 
-template <typename C>
-const std::vector<Chan*>& DijkstraBalancer<C>::getConnections(const Node *next) {
+template <typename Container, typename Comparator>
+const std::vector<Chan*>& DijkstraBalancer<Container, Comparator>::getConnections(const Node *next) {
   return mode == LatencyBalanceMode::ASAP ? next->outputs : next->inputs;
 }
 
-template <typename C>
-void DijkstraBalancer<C>::traverse(const std::vector<Node*> &startNodes) {
+template <typename Container, typename Comparator>
+void DijkstraBalancer<Container, Comparator>::traverse(const std::vector<Node*> &startNodes) {
   start(startNodes);
   while (!toVisit->empty()) {
     const Node *next = getNextNode(toVisit->front());
@@ -83,8 +83,8 @@ void DijkstraBalancer<C>::traverse(const std::vector<Node*> &startNodes) {
   }
 }
 
-template <typename C>
-void DijkstraBalancer<C>::balance(Model &model, LatencyBalanceMode balanceMode) {
+template <typename Container, typename Comparator>
+void DijkstraBalancer<Container, Comparator>::balance(Model &model, LatencyBalanceMode balanceMode) {
   mode = balanceMode;
   const Graph *graph = model.main();
   uassert(graph, "Graph 'main' not found!\n");
@@ -102,8 +102,8 @@ void DijkstraBalancer<C>::balance(Model &model, LatencyBalanceMode balanceMode) 
   printGraphTime();
 }
 
-template <typename C>
-int DijkstraBalancer<C>::getDelta(int curTime, const Chan* curChan) {
+template <typename Container, typename Comparator>
+int DijkstraBalancer<Container, Comparator>::getDelta(int curTime, const Chan* curChan) {
   // Compute delta between neighbouring nodes
   if (mode == LatencyBalanceMode::ASAP) {
     return curTime - (nodeMap[curChan->source.node] + (int)curChan->ind.ticks);

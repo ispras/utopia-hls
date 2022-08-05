@@ -51,11 +51,11 @@ void printModel(const Model &model, const std::string &filename) {
   output.close();
 }
 
-template <typename B>
+template <typename Balancer>
 void prepare(Model &model) {
   Mapper::get().map(model, Library::get());
   std::map<std::string, Parameters> params =
-    ParametersOptimizer<B>::get().optimize(criteria, model, indicators);
+    ParametersOptimizer<Balancer>::get().optimize(criteria, model, indicators);
 }
 
 int runLpsolve(Model &model) {
@@ -105,7 +105,7 @@ void topologicalTest(const std::string &filename) {
 } // namespace
 
 using QueueBalancer = DijkstraBalancer<std::queue<const Chan*>>;
-using PriorityBalancer = DijkstraBalancer<StdPriorityQueue>;
+using PriorityBalancer = DijkstraBalancer<StdPriorityQueue, CompareChan>;
 
 // Hand-written model tests.
 

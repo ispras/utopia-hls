@@ -18,6 +18,7 @@
 #include "util/singleton.h"
 
 #include <algorithm>
+#include <functional>
 #include <iostream>
 #include <queue>
 
@@ -44,21 +45,21 @@ public:
   }
 };
 
-template <typename T, typename C>
+template <typename ElementType, typename Container, typename Comparator = std::less<>>
 class Queue {
 public:
 
   Queue() {
-    container = new C();
+    container = new Container();
   }
 
-  Queue(void *comparator) { }
+  Queue(Comparator comparator) {}
 
   ~Queue() {
     delete container;
   }
 
-  void push(T element) {
+  void push(ElementType element) {
     return container->push(element);
   }
 
@@ -66,7 +67,7 @@ public:
     container->pop();
   }
 
-  T front() {
+  ElementType front() {
     return container->front();
   }
   
@@ -74,17 +75,17 @@ public:
     return container->empty();
   }
 
-  C *container;
+  Container *container;
 };
 
 using StdPriorityQueue = std::priority_queue<const Chan*, std::vector<const Chan*>, CompareChan>;
-using GenericChanQueue = Queue<const Chan*, StdPriorityQueue>;
+using GenericChanQueue = Queue<const Chan*, StdPriorityQueue, CompareChan>;
 
-template <typename C>
+template <typename Container, typename Comparator = std::less<>>
 class DijkstraBalancer final : public TraverseBalancerBase, 
-    public Singleton<DijkstraBalancer<C>> {
+    public Singleton<DijkstraBalancer<Container, Comparator>> {
 public:
-  friend Singleton<DijkstraBalancer<C>>;
+  friend Singleton<DijkstraBalancer<Container, Comparator>>;
 
   ~DijkstraBalancer() {
     delete toVisit;
@@ -131,7 +132,7 @@ private:
 
   void traverse(const std::vector<Node*> &startNodes);
 
-  Queue<const Chan*, C> *toVisit = nullptr;
+  Queue<const Chan*, Container, Comparator> *toVisit = nullptr;
   LatencyBalanceMode mode;
   const Node *currentNode;
 };
