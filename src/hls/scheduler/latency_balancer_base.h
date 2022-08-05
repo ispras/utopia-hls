@@ -78,9 +78,9 @@ protected:
   void insertBuffers(Model &model) override {
     int bufsInserted = 0;
     int totalDelta = 0;
-    for (const auto &node : nodeMap) {
-      for (auto *currentChan : node.first->inputs) {
-        int delta = getDelta(node.second, currentChan);
+    for (const auto &[node, time] : nodeMap) {
+      for (auto *currentChan : node->inputs) {
+        int delta = getDelta(time, currentChan);
         uassert(delta >= 0,  
           "Delta for channel " + currentChan->name + " < 0!\n");
         if (delta > 0 && !currentChan->source.node->isConst()) {
