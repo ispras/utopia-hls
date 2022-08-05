@@ -34,22 +34,22 @@ enum LatencyBalanceMode {
   ALAP
 };
 
-class CompareChan {
-  std::map<const Node*, int> &nodeMap;
+class CompareChan final {
+  std::unordered_map<const Node*, int> &nodeMap;
 public:
-  CompareChan(std::map<const Node*, int> &nodeMap) : nodeMap(nodeMap) { }
+  CompareChan(std::unordered_map<const Node*, int> &nodeMap) : nodeMap(nodeMap) { }
 
   bool operator() (const Chan *lhs, const Chan *rhs) {
     return (nodeMap[lhs->source.node] + lhs->ind.ticks) < (nodeMap[rhs->source.node] + rhs->ind.ticks);
   }
 };
 
-template <typename T, template <typename, typename...> class C, typename... Ts>
+template <typename T, typename C>
 class Queue {
 public:
 
   Queue() {
-    container = new C<T, Ts...>();
+    container = new C();
   }
 
   Queue(void *comparator) { }
@@ -74,15 +74,17 @@ public:
     return container->empty();
   }
 
-private:
-  C<T, Ts...> *container;
+  C *container;
 };
 
-template <template <typename, typename...> class C, typename... Ts>
+using StdPriorityQueue = std::priority_queue<const Chan*, std::vector<const Chan*>, CompareChan>;
+using GenericChanQueue = Queue<const Chan*, StdPriorityQueue>;
+
+template <typename C>
 class DijkstraBalancer final : public TraverseBalancerBase, 
-    public Singleton<DijkstraBalancer<C, Ts...>> {
+    public Singleton<DijkstraBalancer<C>> {
 public:
-  friend Singleton<DijkstraBalancer<C, Ts...>>;
+  friend Singleton<DijkstraBalancer<C>>;
 
   ~DijkstraBalancer() {
     delete toVisit;
@@ -129,7 +131,7 @@ private:
 
   void traverse(const std::vector<Node*> &startNodes);
 
-  Queue<const Chan*, C, Ts...> *toVisit;
+  Queue<const Chan*, C> *toVisit = nullptr;
   LatencyBalanceMode mode;
   const Node *currentNode;
 };

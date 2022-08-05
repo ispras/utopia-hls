@@ -19,7 +19,7 @@
 
 #include <algorithm>
 #include <iostream>
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 using namespace eda::hls::model;
@@ -94,7 +94,7 @@ protected:
     std::cout << "Total buffers capacity: " << totalDelta << std::endl;
   }
 
-  std::map<const Node*, int> nodeMap;
+  std::unordered_map<const Node*, int> nodeMap;
 };
 
 } // namespace eda::hls::scheduler
