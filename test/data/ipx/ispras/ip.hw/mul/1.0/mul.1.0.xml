@@ -68,7 +68,7 @@
 	</ipxact:model>
 		<ipxact:componentGenerators>	
 			<ipxact:componentGenerator> 
-				<ipxact:generatorExe>./build/test/mulgen</ipxact:generatorExe>
+				<ipxact:generatorExe>build/test/mulgen</ipxact:generatorExe>
 			</ipxact:componentGenerator>
 		</ipxact:componentGenerators>
 	<ipxact:description>A simple multiplication function.</ipxact:description>

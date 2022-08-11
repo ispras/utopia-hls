@@ -20,12 +20,14 @@ namespace eda::hls::library {
 
 struct ElementInternal : public MetaElement {
   ElementInternal(const std::string &name,
+                  const std::string &library,
                   const Parameters &params,
                   const std::vector<Port> &ports) :
-  MetaElement(name, params, ports) {}
+  MetaElement(name, library, params, ports) {}
   virtual ~ElementInternal() = default;
   static std::shared_ptr<MetaElement> create(const NodeType &nodetype,
                                              const HWConfig &hwconfig);
+  static std::vector<std::shared_ptr<MetaElement>> createDefaultElements();
   protected:
     static std::vector<Port> createPorts(const NodeType &nodetype);
 };

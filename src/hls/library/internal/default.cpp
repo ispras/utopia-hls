@@ -83,6 +83,7 @@ std::shared_ptr<MetaElement> Default::create(const NodeType &nodetype,
     params.add(Parameter(stages, Constraint<unsigned>(1, 100), 10));
 
     metaElement = std::shared_ptr<MetaElement>(new Default(lowerCaseName,
+                                                           "std",
                                                            params,
                                                            ports));
   return metaElement;
@@ -101,19 +102,11 @@ std::unique_ptr<Element> Default::construct(
 
   if (libName == "merge" || libName == "split") {
     outputType = std::string("reg ");
-  } else if (libName == "add"  || libName == "sub" || libName == "c128"      ||
-             libName == "c181" || libName == "c4"  || libName == "c8192"     ||
-             libName == "mul"  ||  libName == "w1" || libName == "w1_add_w7" || 
-             libName == "w1_sub_w7" || libName == "w2"                       || 
-             libName == "w2_add_w6" || libName == "w2_sub_w6"                ||
-             libName == "w3" || libName == "w3_add_w5"                       || 
-             libName == "w3_sub_w5" || libName == "w5" || libName == "w6"    || 
-             libName == "w7" ||    libName == "shl_11" || libName == "shl_8" ||
-             libName == "shr_14" || libName == "shr_8" || libName == "shr_3" ||
-             libName == "dup_2"  || libName == "clip"  || libName == "cast"  ||
+  } else if (libName == "add"    || libName == "sub"   || libName == "mul"   ||
+             libName == "shl11"  || libName == "shl8"  || libName == "shr14" || 
+             libName == "shr8"   || libName == "shr3"  || libName == "clip"  || 
              libName == "lt"     || libName == "gt"    || libName == "eq"    ||
-             libName == "ne"     || libName == "le"    || libName == "ge"    ||
-             libName == "mux") {
+             libName == "ne"     || libName == "le"    || libName == "ge") {
     outputType = std::string("wire ");
   } else {
     outputType = std::string("wire ");
@@ -196,46 +189,7 @@ std::unique_ptr<Element> Default::construct(
   }
 
   std::string ir;
-  if (libName == "merge" || libName == "split") {
-    std::vector<std::string> portNames;
-    std::string portName;
-    ir += std::string("reg [31:0] state;\n");
-    ir += std::string("always @(posedge clock) begin\nif (!reset) begin\n  state <= 0; end\nelse");
-
-    for (auto port : ports) {
-      if (port.name == "clock" || port.name == "reset") {
-        continue;
-      }
-      if (port.direction == Port::IN || port.direction == Port::INOUT) {
-        if (libName == "merge") {
-          portNames.push_back(replaceSomeChars(port.name));
-        } else if (libName == "split") {
-          portName = replaceSomeChars(port.name);
-        }
-      }
-      if (port.direction == Port::OUT || port.direction == Port::INOUT) {
-        if (libName == "merge") {
-          portName = replaceSomeChars(port.name);
-        } else if (libName == "split") {
-          portNames.push_back(replaceSomeChars(port.name));
-        }
-      }
-    }
-    unsigned counter = 0;
-    for (auto currName : portNames) {
-      ir += std::string(" if (state == ") + std::to_string(counter) + ") begin\n";
-      ir += std::string("  state <= ") + std::to_string(++counter) + ";\n  ";
-      if (libName == "merge") {
-        ir += portName + " <= " + currName + "; end\nelse ";
-      } else if (libName == "split") {
-        ir += currName + " <= " + portName + "; end\nelse ";
-      }
-    }
-    ir += std::string("begin\n  state <= 0; end\nend\n");
-    element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
-    //return element;
-  }
-  else if (libName == "add" || libName == "sub" || libName == "mul" ||
+  if (libName == "add" || libName == "sub" || libName == "mul" ||
            libName == "lt"  || libName ==  "gt" || libName == "eq"  ||
            libName == "ne"  || libName ==  "le" || libName == "ge") {
     std::vector<std::string> inPortNames;
@@ -296,7 +250,7 @@ std::unique_ptr<Element> Default::construct(
     //return element;
   }
   else if (libName == "shl11" || libName == "shl8" || libName == "shr14" ||
-           libName == "shr8"  || libName == "shr3" || libName == "clip") {
+           libName == "shr8"  || libName == "shr3") {
     std::string inPortName, outPortName;
     for (auto port : ports) {
       if (port.name == "clock" || port.name == "reset") {
@@ -309,109 +263,19 @@ std::unique_ptr<Element> Default::construct(
         outPortName = replaceSomeChars(port.name);
       }
     }
-    if (libName == "clip") {
-      ir += "assign " + outPortName + " = clip16(" + inPortName + ");\n";
-      ir += std::string("function [15:0] clip16;\n") +
-            "  input [15:0] in;\n" +
-            "  begin\n" +
-            "    if (in[15] == 1 && in[14:8] != 7'h7F)\n" +
-            "      clip16 = 8'h80;\n" +
-            "    else if (in[15] == 0 && in [14:8] != 0)\n" +
-            "      clip16 = 8'h7F;\n" +
-            "    else\n" +
-            "      clip16 = in;\n" +
-            "  end\n" +
-            "endfunction\n";
-    } else {
-      ir += "assign " + outPortName + " = " + "$signed(" + inPortName + ")" +
-        (libName == "shl11" ? " <<< 11" :
-         libName == "shl8"  ? " <<< 8"  :
-         libName == "shr14" ? " >>> 14" :
-         libName == "shr8"  ? " >>> 8"  :
-         libName == "shr3"  ? " >>> 3"  : "");
-      ir += ";\n";
-    }
-    element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
-    //return element;
-  }
-  else if (libName == "dup_2" || libName == "cast") {
-    std::string inPortName;
-    std::vector<std::string> outPortNames;
-    for (auto port : ports) {
-      if (port.name == "clock" || port.name == "reset") {
-        continue;
-      }
-      if (port.direction == Port::IN || port.direction == Port::INOUT) {
-        inPortName = replaceSomeChars(port.name);
-      }
-      if (port.direction == Port::OUT || port.direction == Port::INOUT) {
-        outPortNames.push_back(replaceSomeChars(port.name));
-      }
-    }
-    for (auto outPortName : outPortNames) {
-      ir += "assign " + outPortName + " = " + inPortName + ";\n";
-    }
+
+    ir += "assign " + outPortName + " = " + "$signed(" + inPortName + ")" +
+      (libName == "shl11" ? " <<< 11" :
+        libName == "shl8"  ? " <<< 8"  :
+        libName == "shr14" ? " >>> 14" :
+        libName == "shr8"  ? " >>> 8"  :
+        libName == "shr3"  ? " >>> 3"  : "");
+    ir += ";\n";
     element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
     //return element;
   }
   // TODO: discuss conventions for sequence of parameters.
-  else if (libName == "mux") {
-    
-    ir += "assign " + replaceSomeChars(ports[ports.size() - 1].name) + " = ";
-    for (size_t i = 3; i < ports.size() - 2; i++) {
-      ir += "(" + replaceSomeChars(ports[2].name) + " == " +
-          std::to_string(i - 3) + " ? " + replaceSomeChars(ports[i].name) +
-          " : " + "0" + ")" + " | ";
-    }
-    ir += "(" + replaceSomeChars(ports[2].name) + " == " +
-          std::to_string(ports.size() - 5) + " ? " + 
-          replaceSomeChars(ports[ports.size() - 2].name) + " : " + "0" + ")" +
-          ";";
-    element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
-  }
-  else if (libName == "c128"  || libName == "c181" || libName == "c4"        || 
-           libName == "c8192" || libName == "w1"   || libName == "w1_add_w7" || 
-           libName == "w1_sub_w7" || libName == "w2"                         ||
-           libName == "w2_add_w6" || libName == "w2_sub_w6"                  || 
-           libName == "w3"        || libName == "w3_add_w5"                  ||
-           libName == "w3_sub_w5" || libName == "w5" || libName == "w6"      || 
-           libName == "w7"        || libName == "const") {
-    std::string outPortName;
-    for (auto port : ports) {
-      if (name == "clock" || name == "reset") {
-        continue;
-      }
-      if (!(name == "clock" || name == "reset") &&
-           (port.direction == Port::OUT || port.direction == Port::INOUT)) {
-        outPortName = replaceSomeChars(port.name);
-        break;
-      }
-    }
-    if (libName == "const") {
-      ir += std::string("assign ") + outPortName + " = " + "'h" + 
-          name.substr(name.find_last_of("_") + 1, name.length()) + ";\n";
-    } else {
-      ir += std::string("assign ") + outPortName + " = " +
-          (libName == "c128" ? "128" :
-          libName == "c181" ? "181" :
-          libName == "c4"   ? "4"   :
-          libName == "c8192" ? "8192" :
-          libName == "w1" ? "2841" :
-          libName == "w1_add_w7" ? "(2841+565)" :
-          libName == "w1_sub_w7" ? "(2841-565)" :
-          libName == "w2" ? "2676" :
-          libName == "w2_add_w6" ? "(2676+1108)" :
-          libName == "w2_sub_w6" ? "(2676-1108)" :
-          libName == "w3" ? "2408" :
-          libName == "w3_add_w5" ? "(2408+1609)" :
-          libName == "w3_sub_w5" ? "(2408-1609)" :
-          libName == "w5" ? "1609" :
-          libName == "w6" ? "1108" :
-          libName == "w7" ? "565"  :  "0") + ";\n";
-    }
-    element->ir = std::string("\n") + ifaceWires + outputs + ir;
-    //return element;
-  } else {
+  else {
   // Finish creating the first stage of pipeline.
     if (!fsmNotCreated) {
       fsm += std::string("};\n");

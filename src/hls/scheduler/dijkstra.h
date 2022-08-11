@@ -17,6 +17,9 @@
 #include "hls/scheduler/latency_balancer_base.h"
 #include "util/singleton.h"
 
+#include <algorithm>
+#include <functional>
+#include <iostream>
 #include <queue>
 
 using namespace eda::hls::model;
@@ -32,11 +35,62 @@ enum LatencyBalanceMode {
   ALAP
 };
 
-class DijkstraBalancer final : public TraverseBalancerBase, 
-    public Singleton<DijkstraBalancer> {
+class CompareChan final {
+  std::unordered_map<const Node*, int> &nodeMap;
 public:
-  friend Singleton<DijkstraBalancer>;
-  ~DijkstraBalancer() {}
+  CompareChan(std::unordered_map<const Node*, int> &nodeMap) : nodeMap(nodeMap) { }
+
+  bool operator() (const Chan *lhs, const Chan *rhs) {
+    return (nodeMap[lhs->source.node] + lhs->ind.ticks) < (nodeMap[rhs->source.node] + rhs->ind.ticks);
+  }
+};
+
+template <typename ElementType, typename Container, typename Comparator = std::less<>>
+class Queue {
+public:
+
+  Queue() {
+    container = new Container();
+  }
+
+  Queue(Comparator comparator) {}
+
+  ~Queue() {
+    delete container;
+  }
+
+  void push(ElementType element) {
+    return container->push(element);
+  }
+
+  void pop() {
+    container->pop();
+  }
+
+  ElementType front() {
+    return container->front();
+  }
+  
+  bool empty() {
+    return container->empty();
+  }
+
+  Container *container;
+};
+
+using StdPriorityQueue = std::priority_queue<const Chan*, std::vector<const Chan*>, CompareChan>;
+using GenericChanQueue = Queue<const Chan*, StdPriorityQueue, CompareChan>;
+
+template <typename Container, typename Comparator = std::less<>>
+class DijkstraBalancer final : public TraverseBalancerBase, 
+    public Singleton<DijkstraBalancer<Container, Comparator>> {
+public:
+  friend Singleton<DijkstraBalancer<Container, Comparator>>;
+
+  ~DijkstraBalancer() {
+    delete toVisit;
+  }
+
   void balance(Model &model) override {
     balance(model, LatencyBalanceMode::ASAP);
   }
@@ -47,6 +101,8 @@ private:
   DijkstraBalancer() : mode(LatencyBalanceMode::ASAP) {}
 
   void init(const Graph *graph);
+
+  void initQueue();
 
   /// Visits the specified channel and updates the destination's time.
   void visitChan(const Chan *chan) override;
@@ -76,9 +132,11 @@ private:
 
   void traverse(const std::vector<Node*> &startNodes);
 
-  std::queue<const Chan*> toVisit;
+  Queue<const Chan*, Container, Comparator> *toVisit = nullptr;
   LatencyBalanceMode mode;
   const Node *currentNode;
 };
+
+#include "hls/scheduler/dijkstra_impl.h"
 
 } // namespace eda::hls::scheduler

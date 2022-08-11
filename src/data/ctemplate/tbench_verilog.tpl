@@ -48,8 +48,9 @@ module {{MODULE_NAME}}_tb;
 		{{#TESTS}}
 		@(posedge clock);
 		{{#ST}}
-		{{NAME}} = $urandom;{{/ST}}
+		{{NAME}} = 1;{{/ST}}
 		{{/TESTS}}
+		#({{MODULE_NAME}}_latency * 240);
 
 		$finish;
 	end

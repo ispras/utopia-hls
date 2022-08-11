@@ -60,7 +60,7 @@ private:
          bool isInput,
          bool isOutput,
          bool isConst,
-         unsigned value):
+         const std::string &value):
       name(name),
       type(type),
       isInput(isInput),
@@ -85,8 +85,7 @@ private:
     const bool isOutput;
     const bool isConst;
 
-    // TODO: To be generalized.
-    const unsigned value;
+    const std::string value;
 
     Unit *producer = nullptr;
     Unit *consumer = nullptr;

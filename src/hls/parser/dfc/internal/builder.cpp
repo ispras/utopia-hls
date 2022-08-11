@@ -30,7 +30,7 @@ std::string Builder::Unit::fullName() const {
 
   for (auto *wire : out) {
     if (wire->isConst) {
-      fullname << "_" << std::hex << wire->value;
+      fullname << "_" << wire->value;
     }
   }
 
@@ -70,8 +70,7 @@ Builder::Wire* Builder::Kernel::getWire(const ::dfc::wire *wire, Mode mode) {
   const bool isOutput = (wire->direct != ::dfc::INPUT);
   const bool isConst  = (wire->kind == ::dfc::CONST);
 
-  // TODO: To be generalized.
-  const unsigned value = static_cast<unsigned>(wire->value.value);
+  const std::string value = wire->value.to_string();
 
   auto *result = new Wire(name, type, isInput, isOutput, isConst, value);
 
@@ -244,7 +243,7 @@ Port* Builder::getPort(const Wire *wire, unsigned latency) {
                   1.0,           // Flow
                   latency,       // Latency
                   wire->isConst, // Constant
-                  wire->value);  // Value 
+                  0);            // Value 
 }
 
 Chan* Builder::getChan(const Wire *wire, Graph *graph) {

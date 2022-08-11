@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/library/element_internal.h"
-#include "hls/library/internal/dup.h"
+#include "hls/library/internal/mux.h"
 #include "util/string.h"
 
 #include <cmath>
@@ -16,7 +16,7 @@ using namespace eda::hls::mapper;
 
 namespace eda::hls::library {
 
-void Dup::estimate(
+void Mux::estimate(
     const Parameters &params, Indicators &indicators) const {
   unsigned inputCount = 0;
   unsigned latencySum = 0;
@@ -35,13 +35,8 @@ void Dup::estimate(
   }
 
   double S = params.getValue(stages);
-//  double Areg = 1.0;
-//  double Apipe = S * widthSum * Areg;
   double Fmax = 500000.0;
   double F = Fmax * (1 - std::exp(-S/20.0));
-//  double C = inputCount * latencySum;
-//  double N = (C == 0 ? 0 : C * std::log((Fmax / (Fmax - F)) * ((C - 1) / C)));
-//  double A = C * std::sqrt(N) + Apipe;
   double Sa = 100.0 * ((double)std::rand() / RAND_MAX) + 1;
   double A = 100.0 * (1.0 - std::exp(-(S - Sa) * (S - Sa) / 4.0));
   double P = A;
@@ -51,11 +46,7 @@ void Dup::estimate(
   indicators.power = static_cast<unsigned>(P);
   indicators.area  = static_cast<unsigned>(A);
   indicators.delay = static_cast<unsigned>(D);
-/*
-  std::cout << "Node: " << name << std::endl;
-  std::cout << "ticks: " << indicators.ticks << " delay: " << indicators.delay;
-  std::cout << " freq: " << F << std::endl;
-*/
+
   ChanInd chanInd;
   chanInd.ticks = indicators.ticks;
   chanInd.delay = indicators.delay;
@@ -68,7 +59,7 @@ void Dup::estimate(
   }
 }
 
-std::shared_ptr<MetaElement> Dup::create(const NodeType &nodetype,
+std::shared_ptr<MetaElement> Mux::create(const NodeType &nodetype,
                                          const HWConfig &hwconfig) {
   std::string name = nodetype.name;
     std::shared_ptr<MetaElement> metaElement;
@@ -82,7 +73,7 @@ std::shared_ptr<MetaElement> Dup::create(const NodeType &nodetype,
     Parameters params;
     params.add(Parameter(stages, Constraint<unsigned>(1, 100), 10));
 
-    metaElement = std::shared_ptr<MetaElement>(new Dup(lowerCaseName,
+    metaElement = std::shared_ptr<MetaElement>(new Mux(lowerCaseName,
                                                        "std",
                                                        params,
                                                        ports));
@@ -90,7 +81,7 @@ std::shared_ptr<MetaElement> Dup::create(const NodeType &nodetype,
 };
 
 
-std::shared_ptr<MetaElement> Dup::createDefaultElement() {
+std::shared_ptr<MetaElement> Mux::createDefaultElement() {
   std::shared_ptr<MetaElement> metaElement;
   std::vector<Port> ports;
 
@@ -104,15 +95,20 @@ std::shared_ptr<MetaElement> Dup::createDefaultElement() {
                        1,
                        model::Parameter(std::string("width"), 1)));
 
-  ports.push_back(Port("x",
+  ports.push_back(Port("s",
                       Port::IN,
                       16,
                       model::Parameter(std::string("width"), 16)));
 
-  ports.push_back(Port("y",
-                       Port::OUT,
+  ports.push_back(Port("x",
+                       Port::IN,
                        16,
                        model::Parameter(std::string("width"), 16)));
+
+  ports.push_back(Port("y",
+                      Port::IN,
+                      16,
+                      model::Parameter(std::string("width"), 16)));
 
   ports.push_back(Port("z",
                       Port::OUT,
@@ -121,7 +117,7 @@ std::shared_ptr<MetaElement> Dup::createDefaultElement() {
   Parameters params;
   params.add(Parameter(stages, Constraint<unsigned>(1, 100), 10));
 
-  metaElement = std::shared_ptr<MetaElement>(new Dup("dup",
+  metaElement = std::shared_ptr<MetaElement>(new Mux("mux3",
                                                      "std",
                                                      params,
                                                      ports));
@@ -129,7 +125,7 @@ std::shared_ptr<MetaElement> Dup::createDefaultElement() {
 };
 
 
-std::unique_ptr<Element> Dup::construct(
+std::unique_ptr<Element> Mux::construct(
     const Parameters &params) const {
   std::unique_ptr<Element> element = std::make_unique<Element>(ports);
   std::string inputs, outputs, ifaceWires, regs, fsm, assigns;
@@ -167,20 +163,16 @@ std::unique_ptr<Element> Dup::construct(
   std::string ir;
   std::string inPortName;
   std::vector<std::string> outPortNames;
-  for (auto port : ports) {
-    if (port.name == "clock" || port.name == "reset") {
-      continue;
-    }
-    if (port.direction == Port::IN || port.direction == Port::INOUT) {
-      inPortName = replaceSomeChars(port.name);
-    }
-    if (port.direction == Port::OUT || port.direction == Port::INOUT) {
-      outPortNames.push_back(replaceSomeChars(port.name));
-    }
+  ir += "assign " + replaceSomeChars(ports[ports.size() - 1].name) + " = ";
+  for (size_t i = 3; i < ports.size() - 2; i++) {
+    ir += "(" + replaceSomeChars(ports[2].name) + " == " +
+        std::to_string(i - 3) + " ? " + replaceSomeChars(ports[i].name) +
+        " : " + "0" + ")" + " | ";
   }
-  for (auto outPortName : outPortNames) {
-    ir += "assign " + outPortName + " = " + inPortName + ";\n";
-  }
+  ir += "(" + replaceSomeChars(ports[2].name) + " == " +
+        std::to_string(ports.size() - 5) + " ? " + 
+        replaceSomeChars(ports[ports.size() - 2].name) + " : " + "0" + ")" +
+        ";";
   element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
   return element;
 }

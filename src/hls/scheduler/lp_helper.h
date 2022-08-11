@@ -63,7 +63,7 @@ public:
   void solve();
 
   /// Returns the solution results.
-  std::vector<double> getResults();
+  std::vector<double> getResults() const;
 
   /// Constructs a constraint.
   ///
@@ -81,16 +81,16 @@ public:
   SolverVariable* addVariable(const std::string&, const model::Node*);
 
   /// Prints the problem.
-  void printProblem() { write_LP(lp, stdout); }
+  void printProblem() const { write_LP(lp, stdout); }
 
   /// Prints the last solution status.
-  void printStatus();
+  void printStatus() const;
 
   /// Prints the solution results.
-  void printResults();
+  void printResults() const;
 
   /// Returns the solution status.
-  int getStatus();
+  int getStatus() const;
 
   /// Sets the optimization objective.
   void setObjective(const std::vector<std::string> &names, double *vals);
@@ -105,14 +105,14 @@ public:
   void setVerbosity(Verbosity verb) { set_verbose(lp, verb); }
 
   /// Get the existing variables.
-  std::vector<SolverVariable*> getVariables();
+  std::vector<SolverVariable*> getVariables() const;
 
   /// Searches for the variables with the given names.
   std::vector<SolverVariable*>
-      getVariables(const std::vector<std::string> &names);
+      getVariables(const std::vector<std::string> &names) const;
 
   /// Get the existing constraints.
-  std::vector<SolverConstraint*> getConstraints() { return constraints; }
+  std::vector<SolverConstraint*> getConstraints() const { return constraints; }
 
   /// Resets the problem.
   void reset();
@@ -134,18 +134,18 @@ private:
   lprec *lp;
   std::map<std::string, SolverVariable*> variables;
   std::vector<SolverConstraint*> constraints;
-  unsigned currentColumn;
+  int currentColumn;
   int status;
 };
 
 struct SolverVariable final {
 
-  SolverVariable(const std::string &name, unsigned colNumber,
+  SolverVariable(const std::string &name, int colNumber,
       const model::Node *node) : name(name), columnNumber(colNumber),
       node(node) {}
 
   std::string name;
-  unsigned columnNumber;
+  int columnNumber;
   const model::Node *node;
 };
 

@@ -212,7 +212,7 @@ DFC_KERNEL(IDCT) {
 
 int compilerDfcTest(const dfc::kernel &kernel,
                     const std::string &inLibSubPath,
-                    const std::string &relCompPath,
+                    const std::string &relCatPath,
                     const std::string &outFirName,
                     const std::string &outVlogLibName,
                     const std::string &outVlogTopName,
@@ -242,7 +242,8 @@ int compilerDfcTest(const dfc::kernel &kernel,
   output.close();
 
   const std::string inLibPath = homePath / inLibSubPath;
-  Library::get().initialize(inLibPath, relCompPath);
+  Library::get().initialize();
+  Library::get().importLibrary(inLibPath, relCatPath);
 
   Mapper::get().map(*model, Library::get());
   auto &paramOptimizer = ParametersOptimizer<TopologicalBalancer>::get();

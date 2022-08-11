@@ -17,11 +17,15 @@
 #include "hls/scheduler/latency_solver.h"
 #include "hls/scheduler/param_optimizer.h"
 #include "hls/scheduler/topological_balancer.h"
+#include "test_hil_model.h"
 
 #include "gtest/gtest.h"
 
+#include <array>
 #include <fstream>
 #include <iostream>
+#include <queue>
+#include <vector>
 
 using namespace eda::hls::library;
 using namespace eda::hls::mapper;
@@ -41,61 +45,107 @@ eda::hls::model::Criteria criteria(
   eda::hls::model::Constraint<unsigned>(),  // Power (does not matter)
   eda::hls::model::Constraint<unsigned>(1,     10000000));                             // Area (number of LUTs)
 
+void printModel(const Model &model, const std::string &filename) {
+  std::ofstream output(filename);
+  eda::hls::model::printDot(output, model);
+  output.close();
+}
+
+template <typename Balancer>
+void prepare(Model &model) {
+  Mapper::get().map(model, Library::get());
+  std::map<std::string, Parameters> params =
+    ParametersOptimizer<Balancer>::get().optimize(criteria, model, indicators);
+}
+
+int runLpsolve(Model &model) {
+  LatencyLpSolver &solver = LatencyLpSolver::get();
+  solver.balance(model, Verbosity::Neutral);
+  return solver.getStatus();
+}
+
 int lpsolveTest(const std::string &filename) {
   std::shared_ptr<Model> model = parse(filename);
-  Mapper::get().map(*model, Library::get());
-  
-  std::map<std::string, Parameters> params =
-    ParametersOptimizer<LatencyLpSolver>::get().optimize(criteria, *model, indicators);
+  prepare<LatencyLpSolver>(*model);
+  int status = runLpsolve(*model);
+  printModel(*model, filename + "_solve.dot");
+  return status;
+}
 
-  LatencyLpSolver &solver = LatencyLpSolver::get();
-  solver.balance(*model, Verbosity::Neutral);
-
-  std::ofstream output(filename + "_solve.dot");
-  eda::hls::model::printDot(output, *model);
-  output.close();
-
+int runLpsolve(Model &model, FlowBalanceMode mode) {
+  FlowLpSolver &solver = FlowLpSolver::get();
+  solver.balance(model, mode, Verbosity::Full);
   return solver.getStatus();
 }
 
 int balanceFlowTest(const std::string &filename, FlowBalanceMode mode) {
   std::shared_ptr<Model> model = parse(filename);
-  FlowLpSolver &solver = FlowLpSolver::get();
-  solver.balance(*model, mode, Verbosity::Full);
-  return solver.getStatus();
+  return runLpsolve(*model, mode);
 }
 
-int dijkstraTest(const std::string &filename, LatencyBalanceMode mode) {
+template <typename Balancer>
+void dijkstraTest(const std::string &filename, LatencyBalanceMode mode) {
   std::shared_ptr<Model> model = parse(filename);
-  Mapper::get().map(*model, Library::get());
-  std::map<std::string, Parameters> params =
-    ParametersOptimizer<DijkstraBalancer>::get().optimize(criteria, *model, indicators);
+  prepare<Balancer>(*model);
 
-  DijkstraBalancer::get().balance(*model, mode);
+  Balancer::get().balance(*model, mode);
 
-  std::ofstream output(filename + "_dijkstra.dot");
-  eda::hls::model::printDot(output, *model);
-  output.close();
-
-  return 0;
+  printModel(*model, filename + "_dijkstra.dot");
 }
 
-int topologicalTest(const std::string &filename) {
+void topologicalTest(const std::string &filename) {
   std::shared_ptr<Model> model = parse(filename);
-  Mapper::get().map(*model, Library::get());
-  std::map<std::string, Parameters> params =
-    ParametersOptimizer<TopologicalBalancer>::get().optimize(criteria, *model, indicators);
+  prepare<TopologicalBalancer>(*model);
 
   TopologicalBalancer::get().balance(*model);
 
-  std::ofstream output(filename + "_topological.dot");
-  eda::hls::model::printDot(output, *model);
-  output.close();
-
-  return 0;
+  printModel(*model, filename + "_topological.dot");
 }
 
 } // namespace
+
+using QueueBalancer = DijkstraBalancer<std::queue<const Chan*>>;
+using PriorityBalancer = DijkstraBalancer<StdPriorityQueue, CompareChan>;
+
+// Hand-written model tests.
+
+TEST(SchedulerTest, ModelTest) {
+  Model *model = TestHilModel::get();
+  std::cout << *model << std::endl;
+}
+
+TEST(SchedulerTest, ModelSolveLatency) {
+  Model *model = TestHilModel::get();
+  int status = runLpsolve(*model);
+  EXPECT_EQ(status, OPTIMAL);
+}
+
+TEST(SchedulerTest, ModelASAP) {
+  Model *model = TestHilModel::get();
+  QueueBalancer::get().balance(*model, LatencyBalanceMode::ASAP);
+}
+
+TEST(SchedulerTest, ModelALAP) {
+  Model *model = TestHilModel::get();
+  QueueBalancer::get().balance(*model, LatencyBalanceMode::ALAP);
+}
+
+TEST(SchedulerTest, ModelPriorityASAP) {
+  Model *model = TestHilModel::get();
+  PriorityBalancer::get().balance(*model, LatencyBalanceMode::ASAP);
+}
+
+TEST(SchedulerTest, ModelPriorityALAP) {
+  Model *model = TestHilModel::get();
+  PriorityBalancer::get().balance(*model, LatencyBalanceMode::ALAP);
+}
+
+TEST(SchedulerTest, ModelTopological) {
+  Model *model = TestHilModel::get();
+  TopologicalBalancer::get().balance(*model);
+}
+
+// lp_solve flow balancer tests.
 
 TEST(SchedulerTest, SolveSimpleInfeasible) {
   EXPECT_EQ(balanceFlowTest("test/data/hil/test.hil", FlowBalanceMode::Simple), INFEASIBLE);
@@ -104,6 +154,8 @@ TEST(SchedulerTest, SolveSimpleInfeasible) {
 TEST(SchedulerTest, SolveBlocking) {
   EXPECT_EQ(balanceFlowTest("test/data/hil/test.hil", FlowBalanceMode::Blocking), OPTIMAL);
 }
+
+// lp_solve latency balancer tests.
 
 TEST(SchedulerTest, SolveLatency) {
   EXPECT_EQ(lpsolveTest("test/data/hil/test.hil"), OPTIMAL);
@@ -125,58 +177,84 @@ TEST(SchedulerTest, FeedbackSolveLatency) {
   EXPECT_EQ(lpsolveTest("test/data/hil/feedback.hil"), INFEASIBLE);
 }
 
-TEST(SchedulerTest, DijkstraLatencyASAP) {
-  EXPECT_EQ(dijkstraTest("test/data/hil/test.hil", LatencyBalanceMode::ASAP), 0);
+// Simple queue-based tests.
+
+TEST(SchedulerTest, SimpleASAP) {
+  dijkstraTest<QueueBalancer>("test/data/hil/test.hil", LatencyBalanceMode::ASAP);
 }
 
-TEST(SchedulerTest, DijkstraLatencyALAP) {
-  EXPECT_EQ(dijkstraTest("test/data/hil/test.hil", LatencyBalanceMode::ALAP), 0);
+TEST(SchedulerTest, SimpleALAP) {
+  dijkstraTest<QueueBalancer>("test/data/hil/test.hil", LatencyBalanceMode::ALAP);
 }
 
 TEST(SchedulerTest, IdctASAP) {
-  EXPECT_EQ(dijkstraTest("test/data/hil/idct.hil", LatencyBalanceMode::ASAP), 0);
+  dijkstraTest<QueueBalancer>("test/data/hil/idct.hil", LatencyBalanceMode::ASAP);
 }
 
 TEST(SchedulerTest, IdctRowASAP) {
-  EXPECT_EQ(dijkstraTest("test/data/hil/idct_row.hil", LatencyBalanceMode::ASAP), 0);
+  dijkstraTest<QueueBalancer>("test/data/hil/idct_row.hil", LatencyBalanceMode::ASAP);
 }
 
 TEST(SchedulerTest, IdctALAP) {
-  EXPECT_EQ(dijkstraTest("test/data/hil/idct.hil", LatencyBalanceMode::ALAP), 0);
+  dijkstraTest<QueueBalancer>("test/data/hil/idct.hil", LatencyBalanceMode::ALAP);
 }
 
 TEST(SchedulerTest, IdctRowALAP) {
-  EXPECT_EQ(dijkstraTest("test/data/hil/idct_row.hil", LatencyBalanceMode::ALAP), 0);
+  dijkstraTest<QueueBalancer>("test/data/hil/idct_row.hil", LatencyBalanceMode::ALAP);
 }
 
 TEST(SchedulerTest, SmallASAP) {
-  EXPECT_EQ(dijkstraTest("test/data/hil/test_small.hil", LatencyBalanceMode::ASAP), 0);
+  dijkstraTest<QueueBalancer>("test/data/hil/test_small.hil", LatencyBalanceMode::ASAP);
 }
 
-/*TEST(SchedulerTest, FeedbackASAP) {
-  EXPECT_EQ(dijkstraTest("test/data/hil/feedback.hil", LatencyBalanceMode::ASAP), 0);
-}*/
+// Priority queue-based balancer tests.
 
-/*TEST(SchedulerTest, FeedbackALAP) {
-  EXPECT_EQ(dijkstraTest("test/data/hil/feedback.hil", LatencyBalanceMode::ALAP), 0);
-}*/
+TEST(SchedulerTest, SimplePriorityASAP) {
+  dijkstraTest<PriorityBalancer>("test/data/hil/test.hil", LatencyBalanceMode::ASAP);
+}
+
+TEST(SchedulerTest, SimplePriorityALAP) {
+  dijkstraTest<PriorityBalancer>("test/data/hil/test.hil", LatencyBalanceMode::ALAP);
+}
+
+TEST(SchedulerTest, IdctPriorityASAP) {
+  dijkstraTest<PriorityBalancer>("test/data/hil/idct.hil", LatencyBalanceMode::ASAP);
+}
+
+TEST(SchedulerTest, IdctRowPriorityASAP) {
+  dijkstraTest<PriorityBalancer>("test/data/hil/idct_row.hil", LatencyBalanceMode::ASAP);
+}
+
+TEST(SchedulerTest, IdctPriorityALAP) {
+  dijkstraTest<PriorityBalancer>("test/data/hil/idct.hil", LatencyBalanceMode::ALAP);
+}
+
+TEST(SchedulerTest, IdctRowAPriorityLAP) {
+  dijkstraTest<PriorityBalancer>("test/data/hil/idct_row.hil", LatencyBalanceMode::ALAP);
+}
+
+TEST(SchedulerTest, SmallPriorityASAP) {
+  dijkstraTest<PriorityBalancer>("test/data/hil/test_small.hil", LatencyBalanceMode::ASAP);
+}
+
+// Topological balancer tests.
 
 TEST(SchedulerTest, Topological) {
-  EXPECT_EQ(topologicalTest("test/data/hil/test.hil"), 0);
+  topologicalTest("test/data/hil/test.hil");
 }
 
 TEST(SchedulerTest, IdctTopological) {
-  EXPECT_EQ(topologicalTest("test/data/hil/idct.hil"), 0);
+  topologicalTest("test/data/hil/idct.hil");
 }
 
 TEST(SchedulerTest, IdctRowTopological) {
-  EXPECT_EQ(topologicalTest("test/data/hil/idct_row.hil"), 0);
+  topologicalTest("test/data/hil/idct_row.hil");
 }
 
 TEST(SchedulerTest, SmallTopological) {
-  EXPECT_EQ(topologicalTest("test/data/hil/test_small.hil"), 0);
+  topologicalTest("test/data/hil/test_small.hil");
 }
 
 TEST(SchedulerTest, FeedbackTopological) {
-  EXPECT_EQ(topologicalTest("test/data/hil/feedback.hil"), 0);
+  topologicalTest("test/data/hil/feedback.hil");
 }

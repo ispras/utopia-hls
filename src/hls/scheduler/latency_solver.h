@@ -27,12 +27,12 @@ using namespace eda::util;
 namespace eda::hls::scheduler {
 
 struct Buffer final {
-  Buffer(model::Chan *chan, unsigned latency, unsigned position) : channel(chan),
+  Buffer(model::Chan *chan, int latency, int position) : channel(chan),
       latency(latency), position(position) {}
 
   model::Chan *channel;
-  unsigned latency;
-  unsigned position;
+  int latency;
+  int position;
 };
 
 class LatencyLpSolver final : public LatencyBalancerBase, public Singleton<LatencyLpSolver> {
@@ -49,7 +49,7 @@ public:
     balance(model, Verbosity::Neutral); 
   }
 
-  int getStatus() { return lastStatus; }
+  int getStatus() const { return lastStatus; }
 
 private:
   LatencyLpSolver() : helper(LpSolverHelper::get()), lastStatus(helper.getStatus()) {}

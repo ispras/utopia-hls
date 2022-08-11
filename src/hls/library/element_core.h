@@ -17,10 +17,11 @@ namespace eda::hls::library {
 
 struct ElementCore final : public MetaElement {
   ElementCore(const std::string &name,
+              const std::string &library,
               const Parameters &params,
               const std::vector<Port> &ports,
               const std::string &path) :
-    MetaElement { name, params, ports }, path { path } {}
+    MetaElement { name, library, params, ports }, path { path } {}
   virtual ~ElementCore() = default;
   virtual void estimate(const Parameters &params,
                         Indicators &indicators) const override;

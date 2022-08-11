@@ -19,7 +19,7 @@
 
 #include <algorithm>
 #include <iostream>
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 using namespace eda::hls::model;
@@ -34,7 +34,7 @@ public:
   virtual void balance(eda::hls::model::Model &model) = 0;
 
   /// Returns the maximum latency of the main graph.
-  unsigned getGraphLatency() { return graphTime; }
+  unsigned getGraphLatency() const { return graphTime; }
 
 protected:
   LatencyBalancerBase() : graphTime(0) {}
@@ -78,9 +78,9 @@ protected:
   void insertBuffers(Model &model) override {
     int bufsInserted = 0;
     int totalDelta = 0;
-    for (const auto &node : nodeMap) {
-      for (auto *currentChan : node.first->inputs) {
-        int delta = getDelta(node.second, currentChan);
+    for (const auto &[node, time] : nodeMap) {
+      for (auto *currentChan : node->inputs) {
+        int delta = getDelta(time, currentChan);
         uassert(delta >= 0,  
           "Delta for channel " + currentChan->name + " < 0!\n");
         if (delta > 0 && !currentChan->source.node->isConst()) {
@@ -94,7 +94,7 @@ protected:
     std::cout << "Total buffers capacity: " << totalDelta << std::endl;
   }
 
-  std::map<const Node*, int> nodeMap;
+  std::unordered_map<const Node*, int> nodeMap;
 };
 
 } // namespace eda::hls::scheduler
