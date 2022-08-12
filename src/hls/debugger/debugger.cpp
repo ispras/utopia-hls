@@ -116,18 +116,18 @@ bool EqChecker::equivalent(mlir::hil::Model &left,
   switch (result) {
     case z3::sat:
       std::cout << "Models are NOT equivalent" << std::endl;
-      std::cout << "Model is:" << std::endl;
+      std::cout << "Counterexample is:" << std::endl;
       std::cout << solver.get_model().to_string() << std::endl;
       return true;
     case z3::unsat:
       std::cout << "Models are equivalent" << std::endl;
       return false;
     case z3::unknown:
-      std::cout << ": Z3 solver returns \"unknown\"" << std::endl;
+      std::cout << "Z3 solver returns \"unknown\"" << std::endl;
       return false;
       break;
   }
-  std::cout << ": Z3 returns unexpected result: " << result << std::endl;
+  std::cout << "Z3 returns unexpected result: " << result << std::endl;
   return false;
 }
 
