@@ -27,21 +27,29 @@ if(DEFINED ENV{Z3_DIR})
   link_directories(SYSTEM ${Z3_DIR}/lib)
 else()
   find_file(Z3 z3 REQUIRED DOC "Z3 installed to system paths")
-  if (Z3)
+  if(Z3)
     message(STATUS "Z3 found: ${Z3}")
   else()
     message(FATAL_ERROR "Z3_DIR env var is not set and Z3 is not found.")
   endif()
 endif()
 
-# Use custom build of CTemplate if CT_DIR env var is specified
+# Looking for CTemplate library
 if(DEFINED ENV{CT_DIR})
-  set(CT_DIR $ENV{CT_DIR})
   message(STATUS "CT_DIR: $ENV{CT_DIR}")
+  set(CT_DIR $ENV{CT_DIR})
   include_directories(SYSTEM ${CT_DIR}/include)
   link_directories(SYSTEM ${CT_DIR}/lib)
 else()
-  message(STATUS "CT_DIR env var is not set.")
+  find_file(CTEMPLATE libctemplate.so
+    PATHS /usr/lib64 /usr/lib /usr/local/lib /usr/local/lib64 /usr/lib/x86_64-linux-gnu
+    REQUIRED
+    DOC "CTEMPLATE installed to system paths")
+  if(CTEMPLATE)
+    message(STATUS "CTEMPLATE found: ${CTEMPLATE}")
+  else()
+    message(FATAL_ERROR "CT_DIR env var is not set and CTEMPLATE is not found.")
+  endif()
 endif()
 
 # Looking for Xerces library
@@ -49,7 +57,7 @@ find_file(XERCES_C libxerces-c.so
   PATHS /usr/lib64 /usr/lib /usr/local/lib64 /usr/lib/x86_64-linux-gnu
   REQUIRED
   DOC "Looking for libxerces-c.so installed to system paths")
-if (XERCES_C)
+if(XERCES_C)
   message(STATUS "XERCES_C found: ${XERCES_C}")
 else()
   message(FATAL_ERROR "XERCES_C lib is not found.")
