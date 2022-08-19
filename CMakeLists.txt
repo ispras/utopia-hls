@@ -12,6 +12,10 @@ include(cmake/MLIR.cmake)
 set(MAIN_LIBRARY ueda)          # Used by {src,test}/CMakeLists.txt
 set(ELPP_LIBRARY easyloggingpp) # Used by {lib,src}/CMakeLists.txt
 
+set(SYSLIB_PATHS /usr/lib64 /usr/lib
+                 /usr/local/lib /usr/local/lib64
+                 /usr/lib/x86_64-linux-gnu)
+
 # Check if UTOPIA_HOME env var is set
 if(DEFINED ENV{UTOPIA_HOME})
   message(STATUS "UTOPIA_HOME: $ENV{UTOPIA_HOME}")
@@ -19,14 +23,17 @@ else()
   message(FATAL_ERROR "UTOPIA_HOME env var is not set!")
 endif()
 
-# Use custom build of Z3 if Z3_DIR env var is specified
+# Looking for Z3 library
 if(DEFINED ENV{Z3_DIR})
   message(STATUS "Z3_DIR: $ENV{Z3_DIR}")
   set(Z3_DIR $ENV{Z3_DIR})
   include_directories(SYSTEM ${Z3_DIR}/include)
   link_directories(SYSTEM ${Z3_DIR}/lib)
 else()
-  find_file(Z3 z3 REQUIRED DOC "Z3 installed to system paths")
+  find_file(Z3 libz3.so
+    PATHS ${SYSLIB_PATHS}
+    REQUIRED
+    DOC "Looking for libz3.so installed to system paths")
   if(Z3)
     message(STATUS "Z3 found: ${Z3}")
   else()
@@ -42,9 +49,9 @@ if(DEFINED ENV{CT_DIR})
   link_directories(SYSTEM ${CT_DIR}/lib)
 else()
   find_file(CTEMPLATE libctemplate.so
-    PATHS /usr/lib64 /usr/lib /usr/local/lib /usr/local/lib64 /usr/lib/x86_64-linux-gnu
+    PATHS ${SYSLIB_PATHS}
     REQUIRED
-    DOC "CTEMPLATE installed to system paths")
+    DOC "Looking for libctemplate.so installed to system paths")
   if(CTEMPLATE)
     message(STATUS "CTEMPLATE found: ${CTEMPLATE}")
   else()
@@ -54,7 +61,7 @@ endif()
 
 # Looking for Xerces library
 find_file(XERCES_C libxerces-c.so
-  PATHS /usr/lib64 /usr/lib /usr/local/lib64 /usr/lib/x86_64-linux-gnu
+  PATHS ${SYSLIB_PATHS}
   REQUIRED
   DOC "Looking for libxerces-c.so installed to system paths")
 if(XERCES_C)
