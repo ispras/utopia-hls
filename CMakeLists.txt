@@ -23,24 +23,6 @@ else()
   message(FATAL_ERROR "UTOPIA_HOME env var is not set!")
 endif()
 
-# Looking for Z3 library
-if(DEFINED ENV{Z3_DIR})
-  message(STATUS "Z3_DIR: $ENV{Z3_DIR}")
-  set(Z3_DIR $ENV{Z3_DIR})
-  include_directories(SYSTEM ${Z3_DIR}/include)
-  link_directories(SYSTEM ${Z3_DIR}/lib)
-else()
-  find_file(Z3 libz3.so
-    PATHS ${SYSLIB_PATHS}
-    REQUIRED
-    DOC "Looking for libz3.so installed to system paths")
-  if(Z3)
-    message(STATUS "Z3 found: ${Z3}")
-  else()
-    message(FATAL_ERROR "Z3_DIR env var is not set and Z3 is not found.")
-  endif()
-endif()
-
 # Looking for CTemplate library
 if(DEFINED ENV{CT_DIR})
   message(STATUS "CT_DIR: $ENV{CT_DIR}")
@@ -68,6 +50,24 @@ if(XERCES_C)
   message(STATUS "XERCES_C found: ${XERCES_C}")
 else()
   message(FATAL_ERROR "XERCES_C lib is not found.")
+endif()
+
+# Looking for Z3 library
+if(DEFINED ENV{Z3_DIR})
+  message(STATUS "Z3_DIR: $ENV{Z3_DIR}")
+  set(Z3_DIR $ENV{Z3_DIR})
+  include_directories(SYSTEM ${Z3_DIR}/include)
+  link_directories(SYSTEM ${Z3_DIR}/lib)
+else()
+  find_file(Z3 libz3.so
+    PATHS ${SYSLIB_PATHS}
+    REQUIRED
+    DOC "Looking for libz3.so installed to system paths")
+  if(Z3)
+    message(STATUS "Z3 found: ${Z3}")
+  else()
+    message(FATAL_ERROR "Z3_DIR env var is not set and Z3 is not found.")
+  endif()
 endif()
 
 include_directories(SYSTEM lib/CLI11)

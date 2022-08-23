@@ -5,16 +5,18 @@ cmake_minimum_required(VERSION 3.13)
 # The project name and version.
 project(Utopia VERSION 0.0)
 
-# The project executable and dependencies.
+# The project executable
 set(MAIN_TARGET umain)
-set(Z3_LIBRARY z3)
-set(XERCES_LIBRARY xerces-c)
-set(LPSOLVE55_LIBRARY lpsolve55)
-set(DL_LIBRARY dl)
+
+# The project dependencies
 set(COLAMD_LIBRARY colamd)
-set(STDCXXFS_LIBRARY stdc++fs)
 set(CTEMPLATE_LIBRARY ctemplate_nothreads)
+set(DL_LIBRARY dl)
+set(LPSOLVE55_LIBRARY lpsolve55)
 set(MINISAT_LIBRARY minisat)
+set(STDCXXFS_LIBRARY stdc++fs)
+set(XERCES_LIBRARY xerces-c)
+set(Z3_LIBRARY z3)
 
 # The project requires flex/bison.
 find_package(FLEX REQUIRED)
