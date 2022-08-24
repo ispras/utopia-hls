@@ -17,6 +17,8 @@
 #include <xercesc/sax/HandlerBase.hpp>
 #include <xercesc/util/XMLString.hpp>
 
+#include <iostream>
+
 using namespace eda::hls::mapper;
 using namespace xercesc;
 
@@ -36,6 +38,40 @@ public:
    */
   std::vector<std::shared_ptr<MetaElement>> getDelivery(
       const std::string &libraryPath, const std::string &catalogPath);
+    
+  /**
+   * @brief Parses an IP-XACT catalog to get the components' filenames.
+   *
+   * @param libraryPath IP-XACT library path.
+   * @param catalogPath IP-XACT catalog path relative to IP-XACT library.
+   * 
+   * @returns Components' filenames relative to IP-XACT library.
+   */
+  std::vector<std::string> parseCatalog(const std::string &libraryPath,
+                                        const std::string &catalogPath);
+  
+  /**
+   * @brief Parses IP-XACT components and creates the set of meta-elements.
+   *
+   * @param libraryPath    IP-XACT library path.
+   * @param componentPaths IP-XACT components paths relative to IP-XACT library.
+   * 
+   * @returns Constructed meta-elements.
+   */
+  std::vector<std::shared_ptr<MetaElement>> parseComponents(
+      const std::string              &libraryPath,
+      const std::vector<std::string> &componentPaths);
+
+  /**
+   * @brief Parses an IP-XACT component and creates the meta-element.
+   *
+   * @param libraryPath   IP-XACT library path.
+   * @param componentPath IP-XACT component path relative to IP-XACT library.
+   * 
+   * @returns Constructed meta-element.
+   */
+  std::shared_ptr<MetaElement> parseComponent(const std::string &libraryPath,
+                                              const std::string &componentPath);
 
 private:
   IPXACTParser() {
@@ -46,6 +82,7 @@ private:
     parser = new XercesDOMParser();
     parser->setValidationScheme(XercesDOMParser::Val_Always);
     parser->setDoNamespaces(true);
+
     errorHandler = (ErrorHandler*) new HandlerBase();
     parser->setErrorHandler(errorHandler);
 
@@ -115,40 +152,6 @@ private:
   std::string getStrAttributeFromTag(const DOMElement *element,
                                      const XMLCh      *tagName,
                                      const XMLCh      *attributeName);
-
-  /**
-   * @brief Parses an IP-XACT catalog to get the components' filenames.
-   *
-   * @param libraryPath IP-XACT library path.
-   * @param catalogPath IP-XACT catalog path relative to IP-XACT library.
-   * 
-   * @returns Components' filenames relative to IP-XACT library.
-   */
-  std::vector<std::string> parseCatalog(const std::string &libraryPath,
-                                        const std::string &catalogPath);
-  
-  /**
-   * @brief Parses IP-XACT components and creates the set of meta-elements.
-   *
-   * @param libraryPath    IP-XACT library path.
-   * @param componentPaths IP-XACT components paths relative to IP-XACT library.
-   * 
-   * @returns Constructed meta-elements.
-   */
-  std::vector<std::shared_ptr<MetaElement>> parseComponents(
-      const std::string              &libraryPath,
-      const std::vector<std::string> &componentPaths);
-
-  /**
-   * @brief Parses an IP-XACT component and creates the meta-element.
-   *
-   * @param libraryPath   IP-XACT library path.
-   * @param componentPath IP-XACT component path relative to IP-XACT library.
-   * 
-   * @returns Constructed meta-element.
-   */
-  std::shared_ptr<MetaElement> parseComponent(const std::string &libraryPath,
-                                              const std::string &componentPath);
 
 public:
   virtual ~IPXACTParser() {

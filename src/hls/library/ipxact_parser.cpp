@@ -23,9 +23,9 @@ using namespace xercesc;
 
 namespace eda::hls::library {
 
-bool stringIsDigit(std::string str) {
-
-  for (size_t i = 0; i < str.length(); i++) {
+bool stringIsInteger(std::string str) {
+  size_t startIndex = (str.at(0) == '-' || str.at(0) == '+') ? 1 : 0;
+  for (size_t i = startIndex; i < str.length(); i++) {
     if (!isdigit(str.at(i))) {
       return false;
     }
@@ -42,7 +42,6 @@ std::vector<std::shared_ptr<MetaElement>> IPXACTParser::getDelivery(
 }
 
 bool IPXACTParser::tryToParseXML(const char* fileName) {
-
   try {
     parser->parse(fileName);
   } 
@@ -94,8 +93,8 @@ int IPXACTParser::getIntValueFromTag(const DOMElement *element,
 
   std::string tagValueStr = getStrValueFromTag(element, tagName);
   std::string tagNameStr = XMLString::transcode(tagName);
-  uassert(stringIsDigit(tagValueStr), tagNameStr + 
-                                      "value must be an integer!\n");
+  uassert(stringIsInteger(tagValueStr), tagNameStr + 
+          " value must be an integer!\n");
   int tagValueInt = std::stoi(tagValueStr);
   return tagValueInt;
 }
@@ -199,12 +198,17 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
     // Parse tags
     std::string name = getStrValueFromTag(port, ipxNameTag);
     std::string direction = getStrValueFromTag(port, ipxDirectTag);
+
+    // TODO: This is a temporal solution. Any HW language may be used
+    uassert(direction == "in" || direction == "out" || direction == "inout",
+        "Direction of the port " + name + "must be 'in', 'out' or 'inout'!\n");
+
     size_t vectorCount = port->getElementsByTagName(ipxVectTag)->getLength();
     std::string leftStr = vectorCount ? getStrValueFromTag(port, ipxLeftTag)
                                       : "";
 
     // Create port and adding it to multitude of ports
-    int leftInt = -1;
+    int leftInt = 0;
     if (leftStr == "") {
       ports.push_back(library::Port(name,
                                     direction == "in" ? Port::IN : Port::OUT,
@@ -214,10 +218,11 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
     } else if (isalpha(leftStr.c_str()[0])) {
       ports.push_back(library::Port(name,
                                     direction == "in" ? Port::IN : Port::OUT,
-                                    leftInt + 1,
+                                    leftInt,
                                     model::Parameter(std::string(leftStr))));
-    } else if (stringIsDigit(leftStr)) {
+    } else if (stringIsInteger(leftStr)) {
       leftInt = std::stoi(leftStr);
+      uassert(leftInt >= 0, "Port width margin value cannot be negative!\n");
       ports.push_back(library::Port(name,
                                     direction == "in" ? Port::IN : Port::OUT,
                                     leftInt + 1,
@@ -240,6 +245,8 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
     int left = getIntValueFromTag(parameter, k2LeftTag);
 
     int right = getIntValueFromTag(parameter, k2RightTag);
+
+    uassert(left <= right, "Incorrect margins!\n");
 
     // Creating Parameter
     params.add(model::Parameter(name,
