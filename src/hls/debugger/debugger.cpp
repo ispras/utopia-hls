@@ -16,26 +16,29 @@ namespace eda::hls::debugger {
 
 std::unique_ptr<EqChecker> EqChecker::instance = nullptr;
 
-bool EqChecker::equivalent(mlir::hil::Model &left,
-                           mlir::hil::Model &right) const {
+bool EqChecker::equivalent(mlir::hil::Model &lhs,
+                           mlir::hil::Model &rhs) const {
 
   z3::context ctx;
   z3::expr_vector nodes(ctx);
 
-  std::optional<mlir::hil::Graph> lGraph = mlir::hil::getGraph(left, "main");
-  std::optional<mlir::hil::Graph> rGraph = mlir::hil::getGraph(right, "main");
+  std::optional<mlir::hil::Graph> lGraphOpt = mlir::hil::getGraph(lhs, "main");
+  std::optional<mlir::hil::Graph> rGraphOpt = mlir::hil::getGraph(rhs, "main");
 
-  if (!lGraph.has_value() || !rGraph.has_value()) {
+  if (!lGraphOpt.has_value() || !rGraphOpt.has_value()) {
     std::cerr << ": One of models doesn't have main graph." << std::endl;
-    return lGraph.has_value() == rGraph.has_value();
+    return lGraphOpt.has_value() == rGraphOpt.has_value();
   }
 
-  createExprs(lGraph.value(), ctx, nodes);
-  createExprs(rGraph.value(), ctx, nodes);
+  auto lGraph = lGraphOpt.value();
+  auto rGraph = rGraphOpt.value();
+
+  createExprs(lGraph, ctx, nodes);
+  createExprs(rGraph, ctx, nodes);
 
   // create equations for graph inputs
-  const std::vector<mlir::hil::Node> lInputs = getInputs(*lGraph);
-  const std::vector<mlir::hil::Node> rInputs = getInputs(*rGraph);
+  const std::vector<mlir::hil::Node> lInputs = getInputs(lGraph);
+  const std::vector<mlir::hil::Node> rInputs = getInputs(rGraph);
   std::list<std::pair<mlir::hil::Node, mlir::hil::Node>> sources;
 
   if (!match(lInputs, rInputs, sources)) {
@@ -67,8 +70,8 @@ bool EqChecker::equivalent(mlir::hil::Model &left,
   }
 
   // create inequations for outputs
-  const std::vector<mlir::hil::Node> lOuts = getSinks(lGraph.value());
-  const std::vector<mlir::hil::Node> rOuts = getSinks(rGraph.value());
+  const std::vector<mlir::hil::Node> lOuts = getSinks(lGraph);
+  const std::vector<mlir::hil::Node> rOuts = getSinks(rGraph);
   std::list<std::pair<mlir::hil::Node, mlir::hil::Node>> outMatch;
 
   if (!match(lOuts, rOuts, outMatch)) {

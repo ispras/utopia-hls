@@ -32,8 +32,8 @@ public:
   }
 
   // Checks if models are equivalent.
-  bool equivalent(mlir::hil::Model &left,
-                  mlir::hil::Model &right) const;
+  bool equivalent(mlir::hil::Model &lhs,
+                  mlir::hil::Model &rhs) const;
 
 private:
   EqChecker() {}
