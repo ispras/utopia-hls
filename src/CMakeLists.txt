@@ -83,6 +83,7 @@ add_library(${MAIN_LIBRARY}
   gate/model/gate.cpp
   gate/model/gnet.cpp
   gate/model/gsymbol.cpp
+  gate/model/hMetis_formatter.cpp
   gate/model/signal.cpp
   gate/simulator/simulator.cpp
   hls/compiler/compiler.cpp
@@ -130,7 +131,8 @@ add_library(${MAIN_LIBRARY}
   rtl/model/vnode.cpp
   rtl/parser/ril/builder.cpp
   rtl/parser/ril/parser.cpp
-  util/fm_hgraph.cpp
+  util/fm.cpp
+  util/partition_hgraph.cpp
   util/string.cpp
 
   # Automatically generated sources.
