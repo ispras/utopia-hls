@@ -256,16 +256,23 @@ int compilerDfcTest(const dfc::kernel &kernel,
   auto compiler = std::make_unique<Compiler>();
   auto circuit = compiler->constructFirrtlCircuit(*model, funcName);
 
-  const std::string outPath = homePath / outSubPath;
+  const fs::path fsOutPath = homePath / outSubPath;
+  const std::string outPath = fsOutPath;
+
   circuit->printFiles(outFirName, outVlogLibName, outVlogTopName, outPath);
 
   // Generate random test of the specified length in ticks.
   const int testLength = 1;
   circuit->printRndVlogTest(*model, outPath, outTestName, testLength);
 
+  std::string pathToOutVlogFiles = fsOutPath / "*.v";
+
+  bool isCompiled = system(("iverilog "
+                            + pathToOutVlogFiles).c_str());
+
   Library::get().finalize();
 
-  return 0;
+  return isCompiled;
 }
 
 TEST(CompilerDfcTest, CompilerDfcTestIdct) {
@@ -278,7 +285,7 @@ TEST(CompilerDfcTest, CompilerDfcTestIdct) {
                             "idctFir.mlir",
                             "idctLib.v",
                             "idctTop.v",
-                            "output/test/dfc/idct",
+                            "output/test/dfc/idct/",
                             "idctTestBench.v"), 0);
 }
 
@@ -306,6 +313,6 @@ TEST(CompilerDfcTest, CompilerDfcTestVectorMul) {
                             "vectorMulFir.mlir",
                             "vectorMulLib.v",
                             "vectorMulTop.v",
-                            "output/test/dfc/vector_mul",
+                            "output/test/dfc/vector_mul/",
                             "vectorMulTestbench.v"), 0);
 }

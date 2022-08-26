@@ -16,7 +16,7 @@
 			<ipxact:componentInstantiation>
 				<ipxact:name>verilog_implementation</ipxact:name>
 				<ipxact:language>Verilog</ipxact:language>
-				<ipxact:moduleName>w3_sub_w5</ipxact:moduleName>
+				<ipxact:moduleName>W3_sub_W5</ipxact:moduleName>
 				<ipxact:fileSetRef>
 					<ipxact:localName>base</ipxact:localName>
 				</ipxact:fileSetRef>

@@ -37,7 +37,7 @@ bool ElementKey::operator==(const ElementKey &elementKey) const {
 namespace eda::hls::library {
 
 ElementKey::ElementKey(const NodeType &nodeType) {
-  name = toLower(nodeType.name);
+  name = nodeType.name;
   for (const auto *input : nodeType.inputs) {
     inputs.insert(input->name);
   }

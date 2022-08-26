@@ -87,27 +87,28 @@ private:
     parser->setErrorHandler(errorHandler);
 
     // Tags and attributes initialization
-    ipxPortTag     = XMLString::transcode("ipxact:port");
-    ipxNameTag     = XMLString::transcode("ipxact:name");
-    ipxLibTag      = XMLString::transcode("ipxact:library");
-    ipxVlnvTag     = XMLString::transcode("ipxact:vlnv");
-    ipxDirectTag   = XMLString::transcode("ipxact:direction");
-    ipxVectTag     = XMLString::transcode("ipxact:vector");
-    ipxLeftTag     = XMLString::transcode("ipxact:left");
-    ipxRightTag    = XMLString::transcode("ipxact:right");
-    ipxCompGensTag = XMLString::transcode("ipxact:componentGenerators");
-    ipxGenExeTag   = XMLString::transcode("ipxact:generatorExe");
-    ipxIpxFileTag  = XMLString::transcode("ipxact:ipxactFile");
-    ipxFileTag     = XMLString::transcode("ipxact:file");
-    ipxCompTag     = XMLString::transcode("ipxact:component");
+    ipxPortTag       = XMLString::transcode("ipxact:port");
+    ipxNameTag       = XMLString::transcode("ipxact:name");
+    ipxModuleNameTag = XMLString::transcode("ipxact:moduleName");
+    ipxLibTag        = XMLString::transcode("ipxact:library");
+    ipxVlnvTag       = XMLString::transcode("ipxact:vlnv");
+    ipxDirectTag     = XMLString::transcode("ipxact:direction");
+    ipxVectTag       = XMLString::transcode("ipxact:vector");
+    ipxLeftTag       = XMLString::transcode("ipxact:left");
+    ipxRightTag      = XMLString::transcode("ipxact:right");
+    ipxCompGensTag   = XMLString::transcode("ipxact:componentGenerators");
+    ipxGenExeTag     = XMLString::transcode("ipxact:generatorExe");
+    ipxIpxFileTag    = XMLString::transcode("ipxact:ipxactFile");
+    ipxFileTag       = XMLString::transcode("ipxact:file");
+    ipxCompTag       = XMLString::transcode("ipxact:component");
 
-    k2ParamTag     = XMLString::transcode("kactus2:parameter");
-    k2NameTag      = XMLString::transcode("kactus2:name");
-    k2ValueTag     = XMLString::transcode("kactus2:value");
-    k2LeftTag      = XMLString::transcode("kactus2:left");
-    k2RightTag     = XMLString::transcode("kactus2:right");
+    k2ParamTag       = XMLString::transcode("kactus2:parameter");
+    k2NameTag        = XMLString::transcode("kactus2:name");
+    k2ValueTag       = XMLString::transcode("kactus2:value");
+    k2LeftTag        = XMLString::transcode("kactus2:left");
+    k2RightTag       = XMLString::transcode("kactus2:right");
 
-    nameAttr       = XMLString::transcode("name");
+    nameAttr         = XMLString::transcode("name");
   }
   /**
    * @brief Tries to parse an XML file and to construct a DOM document.
@@ -157,6 +158,7 @@ public:
   virtual ~IPXACTParser() {
     delete(ipxPortTag);
     delete(ipxNameTag);
+    delete(ipxModuleNameTag);
     delete(ipxVlnvTag);
     delete(ipxDirectTag);
     delete(ipxVectTag);
@@ -187,7 +189,7 @@ private:
   /// Attributes
   XMLCh *nameAttr;
   /// IP-XACT common tags
-  XMLCh *ipxPortTag, *ipxNameTag, *ipxVlnvTag, *ipxDirectTag,
+  XMLCh *ipxPortTag, *ipxNameTag, *ipxVlnvTag,  *ipxDirectTag,
         *ipxVectTag, *ipxLeftTag, *ipxRightTag, *ipxLibTag;
   /// IP-XACT vendor extensions tags (kactus2)
   XMLCh *k2ParamTag, *k2NameTag, *k2ValueTag, *k2LeftTag, *k2RightTag;
@@ -196,7 +198,7 @@ private:
   /// For component generators
   XMLCh *ipxCompGensTag, *ipxGenExeTag;
   /// For static compomonents
-  XMLCh *ipxFileTag, *ipxCompTag;
+  XMLCh *ipxFileTag, *ipxCompTag, *ipxModuleNameTag;
 };
 
 } // namespace eda::hls::library

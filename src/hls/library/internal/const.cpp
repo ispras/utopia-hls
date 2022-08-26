@@ -58,24 +58,30 @@ void Const::estimate(const Parameters &params, Indicators &indicators) const {
   }
 }
 
+static int getConstValueFromOutputs(std::vector<eda::hls::model::Port*> outputs) {
+  return outputs[0]->value;
+}
+
 std::shared_ptr<MetaElement> Const::create(const NodeType &nodetype,
                                            const HWConfig &hwconfig) {
   std::string name = nodetype.name;
-    std::shared_ptr<MetaElement> metaElement;
-    auto ports = createPorts(nodetype);
-    std::string lowerCaseName = name;
-    unsigned i = 0;
-    while (lowerCaseName[i]) {
-      lowerCaseName[i] = tolower(lowerCaseName[i]);
-      i++;
-    }
-    Parameters params;
-    params.add(Parameter(stages, Constraint<unsigned>(1, 100), 10));
+  std::shared_ptr<MetaElement> metaElement;
+  auto ports = createPorts(nodetype);
+  std::string lowerCaseName = name;
+  unsigned i = 0;
+  while (lowerCaseName[i]) {
+    lowerCaseName[i] = tolower(lowerCaseName[i]);
+    i++;
+  }
+  Parameters params;
+  params.add(Parameter(stages, Constraint<unsigned>(1, 100), 10));
 
-    metaElement = std::shared_ptr<MetaElement>(new Const(lowerCaseName,
-                                                         "std",
-                                                         params,
-                                                         ports));
+  metaElement = std::shared_ptr<MetaElement>(new Const(lowerCaseName,
+                                                       "std",
+                                                       params,
+                                                       ports,
+                                                       getConstValueFromOutputs(
+                                                           nodetype.outputs)));
   return metaElement;
 };
 
@@ -84,6 +90,8 @@ std::unique_ptr<Element> Const::construct(const Parameters &params) const {
   std::unique_ptr<Element> element = std::make_unique<Element>(ports);
   std::string inputs, outputs, ifaceWires, regs, fsm, assigns;
   std::string outputType;
+
+  std::string ir;
 
   outputType = std::string("wire ");
 
@@ -94,8 +102,9 @@ std::unique_ptr<Element> Const::construct(const Parameters &params) const {
     }
 
     std::string portDeclr =
-      (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) + ":0] " :
-                        std::string("")) + replaceSomeChars(port.name) + ";\n";
+      (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) 
+                                         + ":0] " : std::string("")) 
+                                         + replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -109,25 +118,12 @@ std::unique_ptr<Element> Const::construct(const Parameters &params) const {
     if (port.direction == Port::OUT || port.direction == Port::INOUT) {
       if (port.direction == Port::OUT) {
         ifaceWires += std::string("output ") + portDeclr;
+        ir += std::string("assign ") + replaceSomeChars(port.name) + " = " 
+                                     + "'h" + std::to_string(value) + ";\n";
       }
       outputs += outputType + portDeclr;
     }
   }
-
-  std::string ir;
-  std::string outPortName;
-  for (auto port : ports) {
-    if (name == "clock" || name == "reset") {
-      continue;
-    }
-    if (!(name == "clock" || name == "reset") &&
-          (port.direction == Port::OUT || port.direction == Port::INOUT)) {
-      outPortName = replaceSomeChars(port.name);
-      break;
-    }
-  }
-  ir += std::string("assign ") + outPortName + " = " + "'h" + 
-        name.substr(name.find_last_of("_") + 1, name.length()) + ";\n";
   element->ir = std::string("\n") + ifaceWires + outputs + ir;
   return element;
 }

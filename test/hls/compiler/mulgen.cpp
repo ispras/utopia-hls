@@ -16,18 +16,17 @@ bool isInt(char* input) {
 
 static constexpr const char* indent = "    ";
 static constexpr const char* mindent = "       ";
+static constexpr const char* moduleName = "MUL";
 
 int main(int argc, char* argv[]) {
   std::ofstream outputFile;
   if (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h")) {
     std::cout << "Karatsuba multiplexer generator. Usage:" << std::endl;
-    std::cout << "kamulgen outDirName moduleName inputWidth"
+    std::cout << "kamulgen outDirName outFileName inputWidth"
               << std::endl;
     std::cout << "outDirName: path to output file. Created if nonexistant."
               << std::endl;
-    std::cout << "fileName: name of the output file."
-              << std::endl;
-    std::cout << "moduleName: name of the output module."
+    std::cout << "outFileName: name of the output file."
               << std::endl;
     std::cout << "inputWidth: width of the input. Must be positive integer."
               << "Output will have twice the size."
@@ -35,15 +34,15 @@ int main(int argc, char* argv[]) {
     return 0;
   }
   // Error handling
-  if (argc < 5) {
+  if (argc < 4) {
     std::cout << "Not enough arguments!" << std::endl;
     return 1;
   }
-  if (argc > 5) {
+  if (argc > 4) {
     std::cout << "Too many arguments!" << std::endl;
     return 1;
   }
-  if (!isInt(argv[4]) || atoi(argv[4]) <= 0) {
+  if (!isInt(argv[3]) || atoi(argv[3]) <= 0) {
     std::cout << "Input width must be positive integer!" << std::endl;
     return 1;
   }
@@ -62,26 +61,26 @@ int main(int argc, char* argv[]) {
   // Open file
   outputFile.open(std::string(argv[1]) + "/" + std::string(argv[2]));
   // Interface
-  outputFile << "module " << std::string(argv[3]) << "(" << std::endl;
+  outputFile << "module " << moduleName << "(" << std::endl;
   outputFile << mindent << "input clock," << std::endl;
   outputFile << mindent << "input reset," << std::endl;
-  outputFile << mindent << "input " << "[" << atoi(argv[4]) - 1 << ":" << 0
+  outputFile << mindent << "input " << "[" << atoi(argv[3]) - 1 << ":" << 0
              << "] x," << std::endl;
-  outputFile << mindent << "input " << "[" << atoi(argv[4]) - 1 << ":" << 0
+  outputFile << mindent << "input " << "[" << atoi(argv[3]) - 1 << ":" << 0
              << "] y," << std::endl;
-  outputFile << mindent << "output " << "[" << atoi(argv[4]) * 2 - 1 << ":" << 0
-             << "] z);" << std::endl;
+  outputFile << mindent << "output " << "[" << atoi(argv[3]) * 2 - 1 << ":" 
+             << 0 << "] z);" << std::endl;
   outputFile << std::endl;
   // Body
-  outputFile << indent << "localparam h_w = " << argv[4] << " / 2" << ";"
+  outputFile << indent << "localparam h_w = " << argv[3] << " / 2" << ";"
              << std::endl;
   // Wires
   outputFile << indent << "wire " << "[" << "h_w-1:0" << "]" << " " << "a, b;"
              << std::endl;
   outputFile << indent << "wire " << "[" << "h_w-1:0" << "]" << " " << "c, d;"
              << std::endl;
-  outputFile << indent << "wire " << "[" << "h_w*2-1:0" << "]" << " " << "ac, bd;"
-             << std::endl;
+  outputFile << indent << "wire " << "[" << "h_w*2-1:0" << "]" << " " 
+             << "ac, bd;" << std::endl;
   outputFile << indent << "wire " << "[" << "h_w*2:0" << "]" << " " << "t;"
             << std::endl;
   // Assignments

@@ -18,11 +18,14 @@ namespace eda::hls::library {
 struct Const final : public ElementInternal {
   static constexpr const char *stages = "stages";
 
+  const int value;
+
   Const(const std::string &name,
-      const std::string &library, 
-      const Parameters &params,
-      const std::vector<Port> &ports) :
-  ElementInternal(name, library, params, ports) {}
+        const std::string &library, 
+        const Parameters &params,
+        const std::vector<Port> &ports,
+        const int value) :
+  ElementInternal(name, library, params, ports), value(value) {}
   virtual ~Const() = default;
 
   virtual void estimate(

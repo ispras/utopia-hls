@@ -186,7 +186,7 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
   // Parse tags
   const DOMElement *comp = (const DOMElement*)(
       doc->getElementsByTagName(ipxCompTag)->item(0));
-  const std::string name = getStrValueFromTag(comp, ipxNameTag);
+  const std::string name = getStrValueFromTag(comp, ipxModuleNameTag);
   const std::string library = getStrValueFromTag(comp, ipxLibTag);
 
   // Parse ports

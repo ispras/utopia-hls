@@ -47,15 +47,13 @@ int compilerHilTest(const std::string &inHilSubPath,
     eda::hls::model::Constraint<unsigned>(),                                             // Power (does not matter)
     eda::hls::model::Constraint<unsigned>(1,     10000000));
 
-  const fs::path fsInHilSubPath = inHilSubPath;
-  const std::string inHilPath = std::string(getenv("UTOPIA_HOME"))
-      / fsInHilSubPath;
+  const fs::path homePath = std::string(getenv("UTOPIA_HOME"));
+
+  const std::string inHilPath = homePath / inHilSubPath;
 
   std::shared_ptr<Model> model = parse(inHilPath);
 
-  const fs::path fsInLibSubPath = inLibSubPath;
-  const std::string inLibPath = std::string(getenv("UTOPIA_HOME"))
-      / fsInLibSubPath;
+  const std::string inLibPath = homePath / inLibSubPath;
 
   Library::get().initialize();
   Library::get().importLibrary(inLibPath, relCatPath);
@@ -76,24 +74,29 @@ int compilerHilTest(const std::string &inHilSubPath,
   auto compiler = std::make_unique<Compiler>();
   auto circuit = compiler->constructFirrtlCircuit(*model, "main");
 
-  const fs::path fsOutSubPath = outSubPath;
+  const fs::path fsOutPath = homePath / outSubPath;
+  const std::string outPath = fsOutPath;
 
-  const std::string outPath = std::string(getenv("UTOPIA_HOME"))
-      / fsOutSubPath;
   circuit->printFiles(outFirName,
                       outVlogLibName,
                       outVlogTopName,
                       outPath);
 
-  // generate random test of the specified length in ticks
+  // Generate random test of the specified length in ticks
   const int testLength = 10;
   circuit->printRndVlogTest(*model,
                             outPath,
                             outTestName,
                             testLength);
 
+  std::string pathToOutVlogFiles = fsOutPath / "*.v";
+
+  bool isCompiled = system(("iverilog "
+                            + pathToOutVlogFiles).c_str());
+
   Library::get().finalize();
-  return 0;
+
+  return isCompiled;
 }
 
 TEST(CompilerHilTest, CompilerHilTestIdct) {
@@ -114,7 +117,7 @@ TEST(CompilerHilTest, CompilerHilTestTest) {
                             "testFir.mlir",
                             "testLib.v",
                             "testTop.v",
-                            "output/test/hil/test/",
+                            "output/test/hil/test",
                             "testTestBench.v"), 0);
 }
 
