@@ -42,6 +42,12 @@ std::vector<std::shared_ptr<MetaElement>> IPXACTParser::getDelivery(
 }
 
 bool IPXACTParser::tryToParseXML(const char* fileName) {
+  // Check wheter the file exists
+  if (!std::filesystem::exists(fileName)) {
+    std::cout << "File" << fileName << " not found!" << std::endl;
+    return false;
+  }
+  // Trying to parse the file
   try {
     parser->parse(fileName);
   } 

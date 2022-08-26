@@ -187,7 +187,8 @@ void ExternalModule::printVerilogModule(std::ostream &out) const {
   std::string output;
   const char* basePath = std::getenv("UTOPIA_HOME");
   const char* verilogTemplate = "/src/data/ctemplate/ext_verilog.tpl";
-  ctemplate::ExpandTemplate(std::string(basePath) + std::string(verilogTemplate),
+  ctemplate::ExpandTemplate(std::string(basePath) +
+                            std::string(verilogTemplate),
                             ctemplate::DO_NOT_STRIP,
                             dict, &output);
   out << output;
@@ -328,7 +329,8 @@ void FirrtlCircuit::printFirrtl(std::ostream &out) const {
   std::string output;
   const char* basePath = std::getenv("UTOPIA_HOME");
   const char* verilogTemplate = "/src/data/ctemplate/top_firrtl.tpl";
-  ctemplate::ExpandTemplate(std::string(basePath) + std::string(verilogTemplate),
+  ctemplate::ExpandTemplate(std::string(basePath) +
+                            std::string(verilogTemplate),
                             ctemplate::DO_NOT_STRIP,
                             dict, &output);
   out << output;
@@ -477,8 +479,9 @@ void FirrtlCircuit::printRndVlogTest(const Model       &model,
   std::string output;
   const char* basePath = std::getenv("UTOPIA_HOME");
   const char* verilogTemplate = "/src/data/ctemplate/tbench_verilog.tpl";
-  ctemplate::ExpandTemplate(std::string(basePath) + std::string(verilogTemplate),
-    ctemplate::DO_NOT_STRIP, dict, &output);
+  ctemplate::ExpandTemplate(std::string(basePath) + 
+                            std::string(verilogTemplate),
+                            ctemplate::DO_NOT_STRIP, dict, &output);
   testBenchFile << output;
   testBenchFile.close();
 }
