@@ -109,6 +109,7 @@ void HyperGraph::printArea(const std::vector<bool> &sides) const {
     ++number[sides[i]];
   }
   std::cout << "Area[0] = " << area[0] << " number[0] = " << number[0] << '\n';
-  std::cout << "Area[1] = " << area[1] << " number[1] = " << number[1] << std::endl;
+  std::cout << "Area[1] = " << area[1] << " number[1] = " << number[1]
+            << std::endl;
 }
 
