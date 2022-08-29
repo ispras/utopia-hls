@@ -246,4 +246,3 @@ void FMAlgo::countAdjacentList() {
     }
   }
 }
-

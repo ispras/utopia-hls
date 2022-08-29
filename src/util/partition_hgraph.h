@@ -160,4 +160,3 @@ public:
     fout << "}" << std::endl;
   }
 };
-
