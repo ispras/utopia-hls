@@ -111,7 +111,6 @@ bool EqChecker::equivalent(mlir::hil::Model &lhs,
   z3::solver solver(ctx);
   solver.add(nodes);
 
-  // TODO: use debug print method
   std::cout << "SMT-LIBv2 formula:" << std::endl;
   std::cout << solver.to_smt2() << std::endl;
 
