@@ -121,7 +121,7 @@ std::shared_ptr<MetaElement> Dup::createDefaultElement() {
   Parameters params;
   params.add(Parameter(stages, Constraint<unsigned>(1, 100), 10));
 
-  metaElement = std::shared_ptr<MetaElement>(new Dup("dup",
+  metaElement = std::shared_ptr<MetaElement>(new Dup("dup_2",
                                                      "std",
                                                      params,
                                                      ports));

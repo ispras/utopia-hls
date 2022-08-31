@@ -77,8 +77,11 @@ ExternalModule::ExternalModule(const model::NodeType *nodetype) :
     Module(replaceSomeChars(nodetype->name)) {
   addInputs(nodetype->inputs);
   addOutputs(nodetype->outputs);
-
-  auto metaElement = Library::get().find(*nodetype, HWConfig("", "", ""));
+  //TODO: Temporal solution.
+  auto metaElements = Library::get().find(*nodetype, HWConfig("", "", ""));
+  uassert(!metaElements.empty(), "No elements have been found!");
+  auto metaElement = metaElements[0];
+  //----------------------------------------------------------------------------
   // TODO: what if the element in not found?
 
   auto element = metaElement->construct(metaElement->params);

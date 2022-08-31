@@ -38,7 +38,7 @@ int parserComponentTest(const std::string &libraryPath,
     if (port.width < 1) {
       std::cout << "Parameter width " << port.param.getName() << "; ";
       std::cout << "Constraints: " << "[" << port.param.getMin() << ",";
-      std::cout << " " << port.param.getMax() << "]; ";
+      std::cout << " " << port.param.getMax() << "];";
     }
     std::cout << std::endl;
   }

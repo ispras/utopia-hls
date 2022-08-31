@@ -100,7 +100,8 @@ DFC_KERNEL(IDCT) {
     x6 = dfc::cast<dfc::sint32>(blk[8*i+5]);
     x7 = dfc::cast<dfc::sint32>(blk[8*i+3]);
 
-    x0 = (dfc::cast<dfc::sint32>(blk[8*i+0])<<11) + 128; /* for proper rounding in the fourth stage */
+    /* for proper rounding in the fourth stage */
+    x0 = (dfc::cast<dfc::sint32>(blk[8*i+0])<<11) + 128; 
 
     /* first stage */
     x8 = W7*(x4+x5);
@@ -206,7 +207,9 @@ DFC_KERNEL(IDCT) {
     dfc::value<dfc::sint32> Cm256(-256);
     dfc::value<dfc::sint32> Cp255(+255);
 
-    return dfc::cast<dfc::sint16>(dfc::mux(i < Cm256, mux(i > Cp255, i, Cp255), Cm256));
+    return dfc::cast<dfc::sint16>(dfc::mux(i < Cm256,
+                                           mux(i > Cp255, i, Cp255),
+                                           Cm256));
   }
 };
 
@@ -232,6 +235,7 @@ int compilerDfcTest(const dfc::kernel &kernel,
     eda::hls::model::Constraint<unsigned>(0, 1000),
     // Power (does not matter)
     eda::hls::model::Constraint<unsigned>(),
+    // Area (number of LUTs)      
     eda::hls::model::Constraint<unsigned>(1, 10000000));
 
   auto &builder = eda::hls::parser::dfc::Builder::get();

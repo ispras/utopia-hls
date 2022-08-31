@@ -41,10 +41,15 @@ int compilerHilTest(const std::string &inHilSubPath,
   // Optimization criterion and constraints.
   eda::hls::model::Criteria criteria(
     PERF,
-    eda::hls::model::Constraint<unsigned>(40000, 500000),                                // Frequency (kHz)
-    eda::hls::model::Constraint<unsigned>(1000,  500000),                                // Performance (=frequency)
-    eda::hls::model::Constraint<unsigned>(0,     1000),                                  // Latency (cycles)
-    eda::hls::model::Constraint<unsigned>(),                                             // Power (does not matter)
+    // Frequency (kHz)
+    eda::hls::model::Constraint<unsigned>(40000, 500000),
+    // Performance (=frequency)                                
+    eda::hls::model::Constraint<unsigned>(1000,  500000),        
+    // Latency (cycles)
+    eda::hls::model::Constraint<unsigned>(0,     1000),    
+    // Power (does not matter)
+    eda::hls::model::Constraint<unsigned>(),       
+    // Area (number of LUTs)                                      
     eda::hls::model::Constraint<unsigned>(1,     10000000));
 
   const fs::path homePath = std::string(getenv("UTOPIA_HOME"));
@@ -65,9 +70,9 @@ int compilerHilTest(const std::string &inHilSubPath,
 
   Mapper::get().map(*model, Library::get());
   std::map<std::string, Parameters> params =
-    ParametersOptimizer<TopologicalBalancer>::get().optimize(criteria,
-                                                             *model,
-                                                             indicators);
+      ParametersOptimizer<TopologicalBalancer>::get().optimize(criteria,
+                                                               *model,
+                                                               indicators);
 
   TopologicalBalancer::get().balance(*model);
 

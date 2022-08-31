@@ -154,15 +154,15 @@ public:
   void finalize();
 
   /**
-   * @brief Search for a meta-element with a given node type and HW config.
+   * @brief Search for a meta-elements with a given node type and HW config.
    *
    * @param nodeType Input node type.
    * @param hwconfig Input hardware configuration.
    * 
-   * @returns Found/constructed meta-element.
+   * @returns Found/constructed meta-elements.
    */
-  std::shared_ptr<MetaElement> find(const NodeType &nodeType,
-                                    const HWConfig &hwconfig);
+  std::vector<std::shared_ptr<MetaElement>> find(const NodeType &nodeType,
+                                                 const HWConfig &hwconfig);
 
   /**
    * @brief Imports an IP-XACT library using an IP-XACT catalog.
@@ -218,8 +218,10 @@ public:
 private:
   Library() {}
 
-  /// Stored meta-elements.
-  std::unordered_map<ElementKey, StorageEntry> storage;
+  using LibraryToStorageEntry = std::unordered_map<std::string, StorageEntry>;
+
+  /// Stored meta-elements (second level is for from different libraries)
+  std::unordered_map<ElementKey, LibraryToStorageEntry> groupedMetaElements;
 };
 
 } // namespace eda::hls::library

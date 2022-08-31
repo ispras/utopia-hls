@@ -68,13 +68,15 @@ void Library::initialize() {
   const auto defaultElements = ElementInternal::createDefaultElements();
   for (const auto &defaultElement : defaultElements) {
     ElementKey elementKey(defaultElement);
-    storage.insert({elementKey, StorageEntry(StorageEntry(defaultElement,
-                                                          true))});
+    LibraryToStorageEntry metaElementsEntries;
+    metaElementsEntries.insert({defaultElement->library,
+                                StorageEntry(defaultElement, true)});
+    groupedMetaElements.insert({elementKey, metaElementsEntries});
   }
 }
 
 void Library::finalize() {
-  storage.clear();
+  groupedMetaElements.clear();
 }
 
 void Library::importLibrary(const std::string &libraryPath,
@@ -83,57 +85,103 @@ void Library::importLibrary(const std::string &libraryPath,
                                                              catalogPath);
   for (const auto &metaElement : metaElements) {
     ElementKey elementKey(metaElement);
-    storage.insert({elementKey, StorageEntry(StorageEntry(metaElement, true))});
+    auto iterator = groupedMetaElements.find(elementKey);
+    if (iterator == groupedMetaElements.end()) {
+      LibraryToStorageEntry metaElementsEntries;
+      metaElementsEntries.insert({metaElement->library,
+                                  StorageEntry(metaElement, true)});
+      groupedMetaElements.insert({elementKey, metaElementsEntries});
+    } else {
+      auto &metaElementsEntries = iterator->second;
+      auto status = metaElementsEntries.insert({metaElement->library, 
+                                                StorageEntry(metaElement,
+                                                             true)});
+      if (!status.second) {
+        std::cout << "Element " << metaElement->name << " from "
+                  << metaElement->library << " has been already imported!" 
+                  << std::endl;
+      }
+    }
   }
 }
 
 void Library::excludeLibrary(const std::string &libraryName) {
-  for (auto &storageEntry: storage) {
-    if (storageEntry.second.metaElement->library == libraryName) {
-      storageEntry.second.isEnabled = false;
+  for (auto groupIterator = groupedMetaElements.begin();
+       groupIterator != groupedMetaElements.end();
+       groupIterator++) {
+    auto entryIterator = groupIterator->second.find(libraryName);
+    if (entryIterator != groupIterator->second.end()) {
+      entryIterator->second.isEnabled = false;
     }
   }
 }
 
 void Library::includeLibrary(const std::string &libraryName) {
-  for (auto &storageEntry: storage) {
-    if (storageEntry.second.metaElement->library == libraryName) {
-      storageEntry.second.isEnabled = true;
+   for (auto groupIterator = groupedMetaElements.begin();
+       groupIterator != groupedMetaElements.end();
+       groupIterator++) {
+    auto entryIterator = groupIterator->second.find(libraryName);
+    if (entryIterator != groupIterator->second.end()) {
+      entryIterator->second.isEnabled = true;
     }
   }
 }
 
 void Library::excludeElementFromLibrary(const std::string &elementName, 
                                         const std::string &libraryName) {
-  for (auto &storageEntry: storage) {
-    if (storageEntry.second.metaElement->library == libraryName &&
-        storageEntry.second.metaElement->name    == elementName) {
-      storageEntry.second.isEnabled = false;
+  for (auto groupIterator = groupedMetaElements.begin();
+       groupIterator != groupedMetaElements.end();
+       groupIterator++) {
+    auto entryIterator = groupIterator->second.find(libraryName);
+    if (entryIterator != groupIterator->second.end() &&
+        entryIterator->second.metaElement->name == elementName) {
+      entryIterator->second.isEnabled = false;
     }
   }
 }
 
 void Library::includeElementFromLibrary(const std::string &elementName, 
                                         const std::string &libraryName) {
-  for (auto &storageEntry: storage) {
-    if (storageEntry.second.metaElement->library == libraryName &&
-        storageEntry.second.metaElement->name    == elementName) {
-      storageEntry.second.isEnabled = true;
+  for (auto groupIterator = groupedMetaElements.begin();
+       groupIterator != groupedMetaElements.end();
+       groupIterator++) {
+    auto entryIterator = groupIterator->second.find(libraryName);
+    if (entryIterator != groupIterator->second.end() &&
+        entryIterator->second.metaElement->name == elementName) {
+      entryIterator->second.isEnabled = true;
     }
   }
 }
 
-std::shared_ptr<MetaElement> Library::find(const NodeType &nodeType,
-                                           const HWConfig &hwconfig) {
+
+std::vector<std::shared_ptr<MetaElement>> Library::find(
+  const NodeType &nodeType,
+  const HWConfig &hwconfig) {
   ElementKey elementKey(nodeType);
-  //TODO: Proper diagnostics
-  if (storage.count(elementKey) > 0 &&
-      storage.find(elementKey)->second.isEnabled &&
-      storage.find(elementKey)->second.metaElement->supports(hwconfig)) {
-    return storage.find(elementKey)->second.metaElement;
+  std::vector<std::shared_ptr<MetaElement>> metaElements;
+  auto groupIterator = groupedMetaElements.find(elementKey);
+  if (groupIterator != groupedMetaElements.end()) {
+    for (auto entryIterator = groupIterator->second.begin();
+         entryIterator != groupIterator->second.end();
+         entryIterator++) {
+      if (entryIterator->second.isEnabled && 
+          entryIterator->second.metaElement->supports(hwconfig)) {
+        metaElements.push_back(entryIterator->second.metaElement);
+      }
+    }
+  } else {
+    LibraryToStorageEntry metaElementsEntries;
+    groupedMetaElements.insert({elementKey, metaElementsEntries});
   }
-  auto metaElement = ElementInternal::create(nodeType, hwconfig);
-  storage.insert({elementKey, StorageEntry(StorageEntry(metaElement, true))});
-  return metaElement;
+  groupIterator = groupedMetaElements.find(elementKey);
+  auto entryIterator = groupIterator->second.find("std");
+  if (entryIterator == groupIterator->second.end()) {
+    auto metaElement = ElementInternal::create(nodeType, hwconfig);
+    groupIterator->second.insert({"std", StorageEntry(metaElement,
+                                                      true)});
+    metaElements.push_back(metaElement);
+  }
+  return metaElements;
 }
+
 } // namespace eda::hls::library
