@@ -93,12 +93,12 @@ void Library::importLibrary(const std::string &libraryPath,
       groupedMetaElements.insert({elementKey, metaElementsEntries});
     } else {
       auto &metaElementsEntries = iterator->second;
-      auto status = metaElementsEntries.insert({metaElement->library, 
+      auto status = metaElementsEntries.insert({metaElement->library,
                                                 StorageEntry(metaElement,
                                                              true)});
       if (!status.second) {
         std::cout << "Element " << metaElement->name << " from "
-                  << metaElement->library << " has been already imported!" 
+                  << metaElement->library << " has been already imported!"
                   << std::endl;
       }
     }
@@ -164,7 +164,7 @@ std::vector<std::shared_ptr<MetaElement>> Library::find(
     for (auto entryIterator = groupIterator->second.begin();
          entryIterator != groupIterator->second.end();
          entryIterator++) {
-      if (entryIterator->second.isEnabled && 
+      if (entryIterator->second.isEnabled &&
           entryIterator->second.metaElement->supports(hwconfig)) {
         metaElements.push_back(entryIterator->second.metaElement);
       }
