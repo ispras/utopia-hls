@@ -48,7 +48,10 @@ std::vector<typename G::V> topologicalSort(const G &graph) {
   visitedNodes.reserve(graph.nNodes());
 
   // Collect the source nodes for the DFS traveral.
-  for (auto v : graph.getSources()) {
+  auto sources = graph.getSources();
+  assert(!sources.empty() || graph.nNodes() == 0);
+
+  for (auto v : sources) {
     const OutEdgeContainer &out = graph.getOutEdges(v);
 
     searchStack.push({v, out.cbegin()});
