@@ -49,7 +49,7 @@ std::vector<typename G::V> topologicalSort(const G &graph) {
 
   // Collect the source nodes for the DFS traveral.
   auto sources = graph.getSources();
-  assert(!sources.empty() || graph.nNodes() == 0);
+  assert(sources.empty() == !graph.nNodes());
 
   for (auto v : sources) {
     const OutEdgeContainer &out = graph.getOutEdges(v);
@@ -92,6 +92,8 @@ std::vector<typename G::V> topologicalSort(const G &graph) {
     }
   }
 
+  // All nodes have been visited.
+  assert(sortedNodesIt == sortedNodes.rend());
   return sortedNodes;
 }
 
