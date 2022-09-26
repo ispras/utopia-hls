@@ -20,7 +20,7 @@ set(Z3_LIBRARY z3)
 
 # The project requires flex/bison.
 find_package(FLEX REQUIRED)
-find_package(BISON REQUIRED)
+find_package(BISON 3.0.0 REQUIRED)
 
 # Add mlir subproject
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/hls/model/mlir)
