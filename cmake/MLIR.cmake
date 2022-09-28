@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
+set(MLIR_DIR /opt/local/libexec/llvm-devel/lib/cmake/mlir)
+set(MLIR /opt/local/libexec/llvm-devel/lib/cmake/mlir)
+
 find_package(MLIR REQUIRED CONFIG)
 
 message(STATUS "Using MLIRConfig.cmake in: ${MLIR_DIR}")

@@ -9,10 +9,10 @@ project(Utopia VERSION 0.0)
 set(MAIN_TARGET umain)
 
 # The project dependencies
-set(COLAMD_LIBRARY colamd)
+#set(COLAMD_LIBRARY colamd)
 set(CTEMPLATE_LIBRARY ctemplate_nothreads)
 set(DL_LIBRARY dl)
-set(LPSOLVE55_LIBRARY lpsolve55)
+#set(LPSOLVE55_LIBRARY lpsolve55)
 set(MINISAT_LIBRARY minisat)
 set(STDCXXFS_LIBRARY stdc++fs)
 set(XERCES_LIBRARY xerces-c)
@@ -20,10 +20,10 @@ set(Z3_LIBRARY z3)
 
 # The project requires flex/bison.
 find_package(FLEX REQUIRED)
-find_package(BISON REQUIRED)
+find_package(BISON 3.0.0)
 
 # Add mlir subproject
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/hls/model/mlir)
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/hls/model/mlir)
 
 # The configuration file w/ the project version.
 configure_file(config.h.in config.h)
@@ -58,11 +58,11 @@ set(CMAKE_CXX_CLANG_TIDY
 add_compile_options(-g3 -Wall -Wignored-qualifiers -DYYERROR_VERBOSE)
 
 # The HLS lexer and parser.
-add_custom_command(OUTPUT hls/parser/hil COMMAND ${CMAKE_COMMAND} -E make_directory hls/parser/hil)
-add_custom_target(HlsHilParserDir DEPENDS hls/parser/hil)
-bison_target(HlsHilParser hls/parser/hil/parser.y ${CMAKE_CURRENT_BINARY_DIR}/hls/parser/hil/parser.tab.cpp)
-flex_target(HlsHilLexer hls/parser/hil/lexer.l ${CMAKE_CURRENT_BINARY_DIR}/hls/parser/hil/lexer.yy.cpp)
-add_flex_bison_dependency(HlsHilLexer HlsHilParser)
+#add_custom_command(OUTPUT hls/parser/hil COMMAND ${CMAKE_COMMAND} -E make_directory hls/parser/hil)
+#add_custom_target(HlsHilParserDir DEPENDS hls/parser/hil)
+#bison_target(HlsHilParser hls/parser/hil/parser.y ${CMAKE_CURRENT_BINARY_DIR}/hls/parser/hil/parser.tab.cpp)
+#flex_target(HlsHilLexer hls/parser/hil/lexer.l ${CMAKE_CURRENT_BINARY_DIR}/hls/parser/hil/lexer.yy.cpp)
+#add_flex_bison_dependency(HlsHilLexer HlsHilParser)
 
 # The RTL lexer and parser.
 add_custom_command(OUTPUT rtl/parser/ril COMMAND ${CMAKE_COMMAND} -E make_directory rtl/parser/ril)
@@ -86,42 +86,42 @@ add_library(${MAIN_LIBRARY}
   gate/model/hMetis_formatter.cpp
   gate/model/signal.cpp
   gate/simulator/simulator.cpp
-  hls/compiler/compiler.cpp
-  hls/debugger/debugger.cpp
-  hls/library/element_generator.cpp
-  hls/library/element_core.cpp
-  hls/library/element_internal.cpp
-  hls/library/internal/cast.cpp
-  hls/library/internal/clip.cpp
-  hls/library/internal/const.cpp
-  hls/library/internal/default.cpp
-  hls/library/internal/delay.cpp
-  hls/library/internal/dup.cpp
-  hls/library/internal/merge.cpp
-  hls/library/internal/mux.cpp
-  hls/library/internal/split.cpp
-  hls/library/ipxact_parser.cpp
-  hls/library/library.cpp
-  hls/mapper/config/hwconfig.cpp
-  hls/mapper/mapper.cpp
-  hls/model/model.cpp
-  hls/model/transform.cpp
-  hls/model/printer.cpp
-  hls/parser/dfc/kernel.cpp
-  hls/parser/dfc/stream.cpp
-  hls/parser/dfc/internal/builder.cpp
-  hls/parser/hil/builder.cpp
-  hls/parser/hil/parser.cpp
-  hls/scheduler/dijkstra.h
-  hls/scheduler/flow_solver.cpp
-  hls/scheduler/latency_balancer_base.h
-  hls/scheduler/latency_solver.cpp
-  hls/scheduler/lp_helper.cpp
-  hls/scheduler/optimizers/abstract_optimizer.cpp
-  hls/scheduler/optimizers/simple_optimizer.cpp
-  hls/scheduler/optimizers/simulated_annealing_optimizer.cpp
-  hls/scheduler/param_optimizer.h
-  hls/scheduler/topological_balancer.cpp
+  #hls/compiler/compiler.cpp
+  #hls/debugger/debugger.cpp
+  #hls/library/element_generator.cpp
+  #hls/library/element_core.cpp
+  #hls/library/element_internal.cpp
+  #hls/library/internal/cast.cpp
+  #hls/library/internal/clip.cpp
+  #hls/library/internal/const.cpp
+  #hls/library/internal/default.cpp
+  #hls/library/internal/delay.cpp
+  #hls/library/internal/dup.cpp
+  #hls/library/internal/merge.cpp
+  #hls/library/internal/mux.cpp
+  #hls/library/internal/split.cpp
+  #hls/library/ipxact_parser.cpp
+  #hls/library/library.cpp
+  #hls/mapper/config/hwconfig.cpp
+  #hls/mapper/mapper.cpp
+  #hls/model/model.cpp
+  #hls/model/transform.cpp
+  #hls/model/printer.cpp
+  #hls/parser/dfc/kernel.cpp
+  #hls/parser/dfc/stream.cpp
+  #hls/parser/dfc/internal/builder.cpp
+  #hls/parser/hil/builder.cpp
+  #hls/parser/hil/parser.cpp
+  #hls/scheduler/dijkstra.h
+  #hls/scheduler/flow_solver.cpp
+  #hls/scheduler/latency_balancer_base.h
+  #hls/scheduler/latency_solver.cpp
+  #hls/scheduler/lp_helper.cpp
+  #hls/scheduler/optimizers/abstract_optimizer.cpp
+  #hls/scheduler/optimizers/simple_optimizer.cpp
+  #hls/scheduler/optimizers/simulated_annealing_optimizer.cpp
+  #hls/scheduler/param_optimizer.h
+  #hls/scheduler/topological_balancer.cpp
   rtl/compiler/compiler.cpp
   rtl/library/flibrary.cpp
   rtl/model/event.cpp
@@ -136,13 +136,14 @@ add_library(${MAIN_LIBRARY}
   util/string.cpp
 
   # Automatically generated sources.
-  "${FLEX_HlsHilLexer_OUTPUTS}"
-  "${BISON_HlsHilParser_OUTPUTS}"
+  #"${FLEX_HlsHilLexer_OUTPUTS}"
+  #"${BISON_HlsHilParser_OUTPUTS}"
   "${FLEX_RtlRilLexer_OUTPUTS}"
   "${BISON_RtlRilParser_OUTPUTS}"
 )
 
-add_dependencies(${MAIN_LIBRARY} HlsHilParserDir RtlRilParserDir)
+#add_dependencies(${MAIN_LIBRARY} HlsHilParserDir RtlRilParserDir)
+add_dependencies(${MAIN_LIBRARY} RtlRilParserDir)
 
 # The include directories.
 target_include_directories(${MAIN_LIBRARY} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -156,16 +157,21 @@ get_property(translation_libs GLOBAL PROPERTY MLIR_TRANSLATION_LIBS)
 # The libraries to link with.
 target_link_libraries(${MAIN_LIBRARY}
   ${ELPP_LIBRARY}
-  ${LPSOLVE55_LIBRARY}
-  ${DL_LIBRARY}
-  ${COLAMD_LIBRARY}
-  ${Z3_LIBRARY}
-  ${XERCES_LIBRARY}
+ # ${LPSOLVE55_LIBRARY}
+ # ${DL_LIBRARY}
+ # ${COLAMD_LIBRARY}
+ # ${Z3_LIBRARY}
+ # ${XERCES_LIBRARY}
   ${STDCXXFS_LIBRARY}
-  ${CTEMPLATE_LIBRARY}
+ # ${CTEMPLATE_LIBRARY}
   ${MINISAT_LIBRARY}
   ${dialect_libs}
   ${translation_libs}
+        cli11
+        fmt
+        json
+        infint
+        lorina
 )
 
 # The project executable.
