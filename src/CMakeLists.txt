@@ -28,10 +28,6 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/hls/model/mlir)
 # The configuration file w/ the project version.
 configure_file(config.h.in config.h)
 
-# The required C++ standard.
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-
 # The clang-tidy options.
 set(FILTER_LEXER       {"name":"lexer.yy.cpp","lines":[[999999,999999]]})
 set(FILTER_PARSER      {"name":"parser.tab.cpp","lines":[[999999,999999]]})
