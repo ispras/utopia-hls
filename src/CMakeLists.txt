@@ -9,7 +9,7 @@ project(Utopia VERSION 0.0)
 set(MAIN_TARGET umain)
 
 # The project dependencies
-set(MINISAT_LIBRARY minisat)
+set(MINISAT_LIBRARY minisat-lib-static)
 set(STDCXXFS_LIBRARY stdc++fs)
 
 # The project requires flex/bison.

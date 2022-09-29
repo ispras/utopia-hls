@@ -34,9 +34,6 @@ find_package(CTemplate REQUIRED COMPONENTS nothreads)
 include_directories(SYSTEM lib/CLI11)
 include_directories(SYSTEM lib/easyloggingpp)
 include_directories(SYSTEM lib/json)
-include_directories(SYSTEM lib/minisat)
-
-link_directories(SYSTEM ${CMAKE_CURRENT_BINARY_DIR}/lib/minisat)
 
 add_subdirectory(lib)
 add_subdirectory(src)
