@@ -48,6 +48,9 @@ set(MINISAT_LIB_SOURCES
 add_library(minisat-lib-static STATIC ${MINISAT_LIB_SOURCES})
 add_library(minisat-lib-shared SHARED ${MINISAT_LIB_SOURCES})
 
+target_include_directories(minisat-lib-shared PUBLIC .)
+target_include_directories(minisat-lib-static PUBLIC .)
+
 target_link_libraries(minisat-lib-shared ${ZLIB_LIBRARY})
 target_link_libraries(minisat-lib-static ${ZLIB_LIBRARY})
 
