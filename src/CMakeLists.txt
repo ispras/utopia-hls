@@ -9,14 +9,8 @@ project(Utopia VERSION 0.0)
 set(MAIN_TARGET umain)
 
 # The project dependencies
-set(COLAMD_LIBRARY colamd)
-set(CTEMPLATE_LIBRARY ctemplate_nothreads)
-set(DL_LIBRARY dl)
-set(LPSOLVE55_LIBRARY lpsolve55)
 set(MINISAT_LIBRARY minisat)
 set(STDCXXFS_LIBRARY stdc++fs)
-set(XERCES_LIBRARY xerces-c)
-set(Z3_LIBRARY z3)
 
 # The project requires flex/bison.
 find_package(FLEX REQUIRED)
@@ -151,17 +145,18 @@ get_property(translation_libs GLOBAL PROPERTY MLIR_TRANSLATION_LIBS)
 
 # The libraries to link with.
 target_link_libraries(${MAIN_LIBRARY}
-  ${ELPP_LIBRARY}
-  ${LPSOLVE55_LIBRARY}
-  ${DL_LIBRARY}
-  ${COLAMD_LIBRARY}
-  ${Z3_LIBRARY}
-  ${XERCES_LIBRARY}
-  ${STDCXXFS_LIBRARY}
-  ${CTEMPLATE_LIBRARY}
-  ${MINISAT_LIBRARY}
-  ${dialect_libs}
-  ${translation_libs}
+  PUBLIC
+    ${ELPP_LIBRARY}
+    ${STDCXXFS_LIBRARY}
+    ${MINISAT_LIBRARY}
+    ${dialect_libs}
+    ${translation_libs}
+
+  PRIVATE
+    Z3::Z3
+    XercesC::XercesC
+    LpSolve::LpSolve
+    CTemplate::nothreads
 )
 
 # The project executable.
