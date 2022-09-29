@@ -161,5 +161,9 @@ target_link_libraries(${MAIN_LIBRARY}
 
 # The project executable.
 add_executable(${MAIN_TARGET} main.cpp)
-add_dependencies(${MAIN_TARGET} ${MAIN_LIBRARY})
-target_link_libraries(${MAIN_TARGET} ${MAIN_LIBRARY})
+target_link_libraries(${MAIN_TARGET}
+  PRIVATE
+    ${MAIN_LIBRARY}
+    CLI
+    Json
+)
