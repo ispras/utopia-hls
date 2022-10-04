@@ -6,9 +6,6 @@ add_mlir_dialect_library(MLIRHIL
         Model.cpp
         Dumper.cpp
         Utils.cpp
-        ${PROJECT_SOURCE_DIR}/../../parser/hil/builder.cpp
-        ${PROJECT_SOURCE_DIR}/../model.cpp
-        ${PROJECT_SOURCE_DIR}/../transform.cpp
 
         ADDITIONAL_HEADER_DIRS
         ${PROJECT_SOURCE_DIR}/include/HIL
@@ -16,6 +13,20 @@ add_mlir_dialect_library(MLIRHIL
         DEPENDS
         MLIROpsIncGen
 
-	LINK_LIBS PUBLIC
-	MLIRIR
-	)
+        LINK_LIBS
+          PUBLIC
+            MLIRIR
+
+          PRIVATE
+            MLIRArithmetic
+            MLIRParser
+            MLIRRewrite
+            MLIRTransformUtils
+        )
+
+target_include_directories(MLIRHIL
+  PUBLIC
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)

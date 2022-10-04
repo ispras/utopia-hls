@@ -24,10 +24,9 @@ include(HandleLLVMOptions)
 
 include_directories(${LLVM_INCLUDE_DIRS})
 include_directories(${MLIR_INCLUDE_DIRS})
-include_directories(${PROJECT_SOURCE_DIR}/include)
-include_directories(${PROJECT_BINARY_DIR}/include)
-include_directories(${PROJECT_SOURCE_DIR}/../../..)
-link_directories(${LLVM_BUILD_LIBRARY_DIR})
+
+# FIXME resolve circular dependencies w/ model and remove the direct inclusion
+include_directories(${Utopia_SOURCE_DIR}/src)
 add_definitions(${LLVM_DEFINITIONS})
 
 add_subdirectory(include)
