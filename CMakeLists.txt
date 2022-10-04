@@ -9,8 +9,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-include(cmake/MLIR.cmake)
-
 set(MAIN_LIBRARY ueda)          # Used by {src,test}/CMakeLists.txt
 set(ELPP_LIBRARY easyloggingpp) # Used by {lib,src}/CMakeLists.txt
 
@@ -20,6 +18,12 @@ if(DEFINED ENV{UTOPIA_HOME})
 else()
   message(FATAL_ERROR "UTOPIA_HOME env var is not set!")
 endif()
+
+find_package(MLIR REQUIRED CONFIG)
+set_property(TARGET LLVMSupport APPEND
+  PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${LLVM_INCLUDE_DIRS}")
+set_property(TARGET MLIRSupport APPEND
+  PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${MLIR_INCLUDE_DIRS}")
 
 include(UtopiaFindHelper)
 set_local_from_env(CTemplate_ROOT CT_DIR)
