@@ -24,8 +24,6 @@ if(NOT TARGET gtest)
   FetchContent_MakeAvailable(googletest)
 endif()
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-
 enable_testing()
 
 add_executable(${TEST_TARGET}
@@ -51,12 +49,21 @@ add_executable(${TEST_TARGET}
   util/graph_traverse_test.cpp
   test_main.cpp
 )
+target_include_directories(${TEST_TARGET} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(${TEST_TARGET}
+  PRIVATE
+    gtest_main
+    ${MAIN_LIBRARY}
+    easyloggingpp
+)
 
 add_executable(${MULGEN_TARGET}
   hls/compiler/mulgen.cpp
 )
-
-target_link_libraries(${TEST_TARGET} PRIVATE gtest_main ${MAIN_LIBRARY})
+target_link_libraries(${MULGEN_TARGET}
+  PRIVATE
+    stdc++fs
+)
 
 include(GoogleTest)
 gtest_discover_tests(${TEST_TARGET})
