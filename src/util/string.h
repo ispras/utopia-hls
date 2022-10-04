@@ -45,7 +45,9 @@ std::string format(const std::string &format, Args... args) {
   int length = snprintf(nullptr, 0, format.c_str(), args ...);
 
   if (length < 0) {
-    throw std::runtime_error("Formatting error");
+    // FIXME temporarily disabled due to dependencies with -fno-exceptions
+    // throw std::runtime_error("Formatting error");
+    return "";
   }
 
   auto size = static_cast<size_t>(length + 1);
