@@ -152,7 +152,7 @@ template <> void ModelDumper<NodeType>::dump() {
   {
     indent_block _(os_);
     bool print_sep = false;
-    for (auto input_arg : node_.inputs) {
+    for (auto *input_arg : node_.inputs) {
       if (print_sep) {
         os_ << ", ";
       } else {
@@ -166,7 +166,7 @@ template <> void ModelDumper<NodeType>::dump() {
   {
     indent_block _(os_);
     bool print_sep = false;
-    for (auto output_arg : node_.outputs) {
+    for (auto *output_arg : node_.outputs) {
       if (print_sep) {
         os_ << ", ";
       } else {
@@ -193,7 +193,7 @@ template <> void ModelDumper<Node>::dump() {
   {
     indent_block _(os_);
     bool print_sep = false;
-    for (auto input_chan : node_.inputs) {
+    for (auto *input_chan : node_.inputs) {
       if (print_sep) {
         os_ << ", ";
       } else {
@@ -207,7 +207,7 @@ template <> void ModelDumper<Node>::dump() {
   {
     indent_block _(os_);
     bool print_sep = false;
-    for (auto output_chan : node_.outputs) {
+    for (auto *output_chan : node_.outputs) {
       if (print_sep) {
         os_ << ", ";
       } else {
@@ -227,7 +227,7 @@ template <> void ModelDumper<Graph>::dump() {
     os_ << "hil.chans {\n";
     {
       indent_block _(os_);
-      for (auto chan : node_.chans) {
+      for (auto *chan : node_.chans) {
         ModelDumper::get(*chan, os_).dump();
         os_ << '\n';
       }
@@ -236,7 +236,7 @@ template <> void ModelDumper<Graph>::dump() {
     os_ << "hil.nodes {\n";
     {
       indent_block _(os_);
-      for (auto node : node_.nodes) {
+      for (auto *node : node_.nodes) {
         ModelDumper::get(*node, os_).dump();
         os_ << '\n';
       }
@@ -253,13 +253,13 @@ template <> void ModelDumper<Model>::dump() {
     os_ << "hil.nodetypes {\n";
     {
       indent_block _(os_);
-      for (auto nodetype : node_.nodetypes) {
+      for (auto *nodetype : node_.nodetypes) {
         ModelDumper::get(*nodetype, os_).dump();
         os_ << '\n';
       }
     }
     os_ << "}\n";
-    for (auto graph : node_.graphs) {
+    for (auto *graph : node_.graphs) {
       ModelDumper::get(*graph, os_).dump();
     }
   }

@@ -39,7 +39,7 @@ public:
     if (!chans_op) {
       return failure();
     }
-    auto context = chans_op.getContext();
+    auto *context = chans_op.getContext();
     auto outer_region_ops = chans_op->getParentRegion()->getOps();
 
     // find Nodes operation
@@ -156,7 +156,7 @@ public:
       return failure();
     }
 
-    auto context = nodetypes_op.getContext();
+    auto *context = nodetypes_op.getContext();
     // Add nodetype
     auto in_attr = PortAttr::get(context, "in", chan_type.str(),
        new double{1.0}, latency_, false, 0);
@@ -308,7 +308,7 @@ struct GraphCanonicalizer : public CanonicalizerBase<GraphCanonicalizer> {
 
 namespace mlir::transforms {
 void run_pass(MLIRModule &m, RewritePattern &&pass) {
-  auto context = m.get_context();
+  auto *context = m.get_context();
   SimpleRewriter rewriter(context);
   m.get_root()->walk(
       [&](Operation *op) { (void)pass.matchAndRewrite(op, rewriter); });
@@ -316,7 +316,7 @@ void run_pass(MLIRModule &m, RewritePattern &&pass) {
 
 std::function<void(MLIRModule &)> ChanAddSourceTarget() {
   return [=](MLIRModule &m) {
-    auto context = m.get_context();
+    auto *context = m.get_context();
     ChansRewritePass pass{context};
     run_pass(m, std::move(pass));
   };
@@ -325,7 +325,7 @@ std::function<void(MLIRModule &)> ChanAddSourceTarget() {
 std::function<void(MLIRModule &)> InsertDelay(std::string chan_name,
                                               unsigned latency) {
   return [=](MLIRModule &m) {
-    auto context = m.get_context();
+    auto *context = m.get_context();
     InsertDelayPass pass{context, chan_name, latency};
     run_pass(m, std::move(pass));
   };

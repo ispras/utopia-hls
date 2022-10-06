@@ -76,6 +76,6 @@ mlir::Attribute mlir::hil::PortAttr::parse(mlir::AsmParser &parser,
     return {};
   if (parser.parseGreater())
     return {};
-  auto ctx = parser.getContext();
+  auto *ctx = parser.getContext();
   return get(ctx, name, typeName, flow, *latency, *isConst, *value);
 }

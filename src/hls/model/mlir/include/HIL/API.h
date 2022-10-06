@@ -11,10 +11,10 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
-#include <iostream>
 #include "HIL/Combine.h"
 #include "HIL/Model.h"
 #include "hls/model/model.h"
+#include <iostream>
 
 namespace mlir::transforms {
 using eda::hls::model::Model;

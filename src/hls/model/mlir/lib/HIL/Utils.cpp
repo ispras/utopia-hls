@@ -9,8 +9,8 @@
 #include "HIL/Utils.h"
 #include "util/string.h"
 
-#include "llvm/Support/Casting.h"
 #include "mlir/IR/BuiltinAttributes.h"
+#include "llvm/Support/Casting.h"
 
 #include <iostream>
 
