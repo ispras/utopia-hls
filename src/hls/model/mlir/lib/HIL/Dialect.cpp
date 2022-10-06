@@ -9,12 +9,24 @@
 #include "HIL/Dialect.h"
 #include "HIL/Ops.h"
 #include "mlir/IR/DialectImplementation.h"
+#include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/TypeSwitch.h"
 
+#include <cstring>
 #include <iostream>
 
 using namespace mlir;
 using namespace hil;
+
+namespace mlir::hil {
+
+llvm::hash_code hash_value(Flow v) {
+  uint64_t bytes;
+  memcpy(&bytes, &v, sizeof(bytes));
+  return llvm::hash_code(bytes);
+}
+
+} // namespace mlir::hil
 
 #include "HIL/OpsDialect.cpp.inc"
 #define GET_TYPEDEF_CLASSES
@@ -60,22 +72,22 @@ mlir::Attribute mlir::hil::PortAttr::parse(mlir::AsmParser &parser,
     return {};
   if (parser.parseLess())
     return {};
-  double *flow = new double{};
-  if (parser.parseFloat(*flow))
+  double flow = 0.0;
+  if (parser.parseFloat(flow))
     return {};
   if (parser.parseGreater())
     return {};
-  unsigned *latency = new unsigned{};
-  if (parser.parseInteger(*latency))
+  unsigned latency = 0;
+  if (parser.parseInteger(latency))
     return {};
-  unsigned *isConst = new unsigned{};
-  if (parser.parseInteger(*isConst))
+  unsigned isConst = 0;
+  if (parser.parseInteger(isConst))
     return {};
-  unsigned int *value = new unsigned{};
-  if (parser.parseInteger(*value))
+  unsigned value = 0;
+  if (parser.parseInteger(value))
     return {};
   if (parser.parseGreater())
     return {};
   auto *ctx = parser.getContext();
-  return get(ctx, name, typeName, flow, *latency, *isConst, *value);
+  return get(ctx, name, typeName, flow, latency, isConst, value);
 }

@@ -106,11 +106,11 @@ template <> void MLIRBuilder<mlir::hil::PortAttr>::build() {
   auto value = node_.getValue();
   if (value == 0) {
     builder_.addPort(node_.getName(), node_.getTypeName(),
-                    std::to_string(*node_.getFlow()),
+                    std::to_string(node_.getFlow()),
                     std::to_string(node_.getLatency()));
   } else {
     builder_.addPort(node_.getName(), node_.getTypeName(),
-                    std::to_string(*node_.getFlow()),
+                    std::to_string(node_.getFlow()),
                     std::to_string(node_.getLatency()),
                     std::to_string(value));
   }

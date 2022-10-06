@@ -11,6 +11,23 @@
 
 #include "mlir/IR/Dialect.h"
 
+namespace mlir::hil {
+
+struct Flow {
+  double value;
+
+  Flow(double v) : value(v) {}
+
+  Flow(const Flow &) = default;
+  Flow &operator=(const Flow &) = default;
+
+  operator double() const {
+    return value;
+  }
+};
+
+} // namespace mlir::hil
+
 #include "HIL/OpsDialect.h.inc"
 #define GET_TYPEDEF_CLASSES
 #include "HIL/OpsTypes.h.inc"

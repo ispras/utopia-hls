@@ -159,9 +159,9 @@ public:
     auto *context = nodetypes_op.getContext();
     // Add nodetype
     auto in_attr = PortAttr::get(context, "in", chan_type.str(),
-       new double{1.0}, latency_, false, 0);
+       1.0, latency_, false, 0);
     auto out_attr = PortAttr::get(context, "out", chan_type.str(),
-        new double {1.0}, latency_, false, 0);
+       1.0, latency_, false, 0);
     std::array<Attribute, 1> in_attrs{in_attr};
     std::array<Attribute, 1> out_attrs{out_attr};
     rewriter.setInsertionPointToEnd(nodetypes_op.getBody());

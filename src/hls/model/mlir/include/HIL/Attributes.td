@@ -22,7 +22,7 @@ def PortAttr : HIL_Attr<"Port"> {
   let parameters = (ins
     "std::string":$name,
     "std::string":$typeName,
-    "double*":$flow,
+    "Flow":$flow,
     "unsigned":$latency,
     "unsigned":$isConst,
     "unsigned":$value);
