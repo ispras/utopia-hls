@@ -10,12 +10,15 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <vector>
 
 namespace eda::base::model {
 
 /// Represents a connection between two nodes.
 template<typename N>
 struct Link final {
+  using List = std::vector<Link<N>>;
+
   // General link.
   Link(N source, N target, std::size_t input):
     source(source), target(target), input(input) {}
