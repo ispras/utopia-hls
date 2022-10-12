@@ -55,11 +55,11 @@ public:
   static Signal<N> always(N node)      { return Signal(ALWAYS,  node); }
   static Signal<N> delay(size_t delay) { return Signal(delay); }
 
-  Signal(Event event, const N node):
-    _event(event), _node(node) {}
+  Signal(Event event, N node):
+    _event(event), _node(node), _delay(0) {}
 
   Signal(size_t delay):
-    _event(DELAY), _delay(delay) {}
+    _event(DELAY), _node(), _delay(delay) {}
 
   Signal():
     _event(ALWAYS) {}

@@ -14,7 +14,14 @@
 
 namespace eda::base::model {
 
-/// Represents a connection between two nodes.
+//===----------------------------------------------------------------------===//
+// Link
+//===----------------------------------------------------------------------===//
+
+/**
+ * \brief Represents a connection between two nodes.
+ * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
+ */
 template<typename N>
 struct Link final {
   using List = std::vector<Link<N>>;
@@ -31,15 +38,21 @@ struct Link final {
   }
 
   bool operator ==(const Link<N> &rhs) const {
-    return source == rhs.source && target == rhs.target && input == rhs.input;
+    if (&rhs == this) {
+      return true;
+    }
+
+    return source == rhs.source
+        && target == rhs.target
+        && input  == rhs.input;
   }
 
   /// Source node.
   N source;
   /// Target node.
   N target;
-  /// Target input.
-  std::size_t input;
+  /// Target input index.
+  size_t input;
 };
 
 } // namespace eda::base::model
@@ -50,16 +63,22 @@ struct Link final {
 
 namespace std {
 
-/// Hash for the Link class.
+/**
+ * \brief Implements hash code computation for links.
+ * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
+ */
 template <typename N>
 struct hash<eda::base::model::Link<N>> {
-  std::size_t operator()(const eda::base::model::Link<N> &link) const {
-    std::size_t h = std::hash<N>()(link.source);
-    h *= 37;
-    h += std::hash<N>()(link.target);
-    h *= 37;
-    h += link.input;
-    return h;
+  size_t operator()(const eda::base::model::Link<N> &link) const {
+    const size_t prime = 37;
+
+    size_t hash = std::hash<N>()(link.source);
+    hash *= prime;
+    hash += std::hash<N>()(link.target);
+    hash *= prime;
+    hash += link.input;
+
+    return hash;
   }
 };
 
