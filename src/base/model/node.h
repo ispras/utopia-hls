@@ -55,28 +55,7 @@ public:
   //===--------------------------------------------------------------------===//
 
   Id id() const { return _id; }
-  F kind() const { return _kind; }
-/*
-  bool isSource() const {
-    return _kind == GateSymbol::NOP && _inputs.empty();
-  }
-
-  bool isValue() const {
-    return _kind == GateSymbol::ONE || _kind == GateSymbol::ZERO;
-  }
-
-  bool isTrigger() const {
-    for (const auto &input: _inputs) {
-      if (!input.isAlways())
-        return true;
-    }
-    return false;
-  }
-
-  bool isComb() const {
-    return !isSource() && !isTrigger();
-  }
-*/
+  F func() const { return _func; }
 
   //===--------------------------------------------------------------------===//
   // Connections
@@ -92,8 +71,8 @@ public:
 
 protected:
   /// Creates a node w/ the given function and the inputs.
-  Node(F kind, const SignalList inputs):
-    _id(_storage.size()), _kind(kind), _inputs(inputs) {
+  Node(F func, const SignalList inputs):
+    _id(_storage.size()), _func(func), _inputs(inputs) {
     // Register the node in the storage.
     if (_id >= _storage.size()) {
       _storage.resize(_id + 1);
@@ -102,11 +81,8 @@ protected:
     appendLinks();
   }
 
-  /// Creates a source node.
-  // FIXME: Gate(): Gate(GateSymbol::NOP, {}) {}
-
-  void setKind(F kind) {
-    _kind = kind;
+  void setFunc(F func) {
+    _func = func;
   }
 
   void setInputs(const SignalList &inputs) {
@@ -141,7 +117,7 @@ protected:
   }
 
   const Id _id;
-  F _kind;
+  F _func;
   SignalList _inputs;
   LinkList _links;
 
