@@ -69,6 +69,16 @@ public:
   const LinkList &links() const { return _links; }
   const Link &link(size_t i) const { return _links[i]; }
 
+  //===--------------------------------------------------------------------===//
+  // Signal Wrappers
+  //===--------------------------------------------------------------------===//
+
+  Signal posedge() const { return Signal::posedge(_id); }
+  Signal negedge() const { return Signal::negedge(_id); }
+  Signal level0()  const { return Signal::level0(_id); }
+  Signal level1()  const { return Signal::level1(_id); }
+  Signal always()  const { return Signal::always(_id); }
+
 protected:
   /// Creates a node w/ the given function and the inputs.
   Node(F func, const SignalList inputs):
