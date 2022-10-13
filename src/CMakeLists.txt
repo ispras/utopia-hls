@@ -49,7 +49,7 @@ set(FILTER_XALLOC      {"name":"XAlloc.h","lines":[[999999,999999]]})
 set(FILTER_OPTIONS     {"name":"Options.h","lines":[[999999,999999]]})
 
 set(CMAKE_CXX_CLANG_TIDY
-  clang-tidy;
+  /opt/homebrew/Cellar/llvm/15.0.0/bin/clang-tidy;
   -header-filter=.;
   -line-filter=[${FILTER_LEXER},${FILTER_PARSER},${FILTER_PARSEUTILS},${FILTER_SOLVER_CC},${FILTER_SOLVER_H},${FILTER_SOLVERTYPES},${FILTER_ALG},${FILTER_ALLOC},${FILTER_HEAP},${FILTER_INTTYPES},${FILTER_MAP},${FILTER_VEC},${FILTER_XALLOC},${FILTER_OPTIONS},{"name":".h"},{"name":".cpp"}];
   -checks=llvm-*,-llvm-header-guard;) # -warnings-as-errors;
@@ -77,7 +77,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 add_library(${MAIN_LIBRARY}
 
   # Manually-written sources.
-  gate/debugger/encoder.cpp
+  #gate/debugger/encoder.cpp
   gate/debugger/checker.cpp
   gate/debugger/symexec.cpp
   gate/model/gate.cpp

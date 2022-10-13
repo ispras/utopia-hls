@@ -31,10 +31,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 enable_testing()
 
 add_executable(${TEST_TARGET}
-  gate/debugger/checker_test.cpp
-  gate/model/gnet_test.cpp
+  #gate/debugger/checker_test.cpp
+  #gate/model/gnet_test.cpp
   gate/parser/parser_test.cpp
-  gate/simulator/simulator_test.cpp
+  #gate/simulator/simulator_test.cpp
   #hls/compiler/compiler_hil_test.cpp
   #hls/compiler/compiler_dfc_test.cpp
   #hls/debugger/debugger_test.cpp
@@ -48,9 +48,9 @@ add_executable(${TEST_TARGET}
   #hls/scheduler/param_optimizer_test.cpp
   #hls/scheduler/scheduler_test.cpp
   #hls/scheduler/simulated_annealing_test.cpp
-  lib/minisat/minisat_test.cpp
-  rtl/parser/ril/ril_test.cpp
-  util/fm_test.cpp
+  #lib/minisat/minisat_test.cpp
+  #rtl/parser/ril/ril_test.cpp
+  #util/fm_test.cpp
   #util/graph_traverse_test.cpp
   #test_main.cpp
 )
