@@ -12,6 +12,7 @@
 #include "base/model/signal.h"
 
 #include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <vector>
 
@@ -80,14 +81,24 @@ public:
   Signal always()  const { return Signal::always(_id); }
 
 protected:
-  /// Creates a node w/ the given function and the inputs.
-  Node(F func, const SignalList inputs):
+  /// Creates a node w/ the given function and the inputs and
+  /// allocates this node in the storage.
+  Node(F func, const SignalList &inputs):
     _id(_storage.size()), _func(func), _inputs(inputs) {
     // Register the node in the storage.
     if (_id >= _storage.size()) {
       _storage.resize(_id + 1);
       _storage[_id] = this;
     }
+    appendLinks();
+  }
+
+  /// Creates a node w/ the given function and the inputs and
+  /// stores this node in the existing position 
+  Node(Id id, F func, const SignalList &inputs):
+    _id(id), _func(func), _inputs(inputs) {
+    assert(_id < _storage.size());
+    _storage[_id] = this;
     appendLinks();
   }
 
