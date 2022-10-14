@@ -25,7 +25,7 @@ struct Type final {
        name(name), width(width) {};
 
   std::string toString() const {
-   return ((this->width != 1) ? ("<" + std::to_string(this->width) + ">") : "");
+   return ((this->name != "clock" && this->name != "reset") ? ("<" + std::to_string(this->width) + ">") : "");
   }
 };
 

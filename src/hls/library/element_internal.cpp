@@ -35,15 +35,17 @@ std::vector<Port> ElementInternal::createPorts(const NodeType &nodetype) {
   for (const auto *input: nodetype.inputs) {
     ports.push_back(Port(input->name,
                          Port::IN,
-                         16,
-                         model::Parameter(std::string("width"), 16)));
+                         input->type.size,
+                         model::Parameter(std::string("width"),
+                                          input->type.size)));
   }
 
   for (const auto *output: nodetype.outputs) {
     ports.push_back(Port(output->name,
                          Port::OUT,
-                         16,
-                         model::Parameter(std::string("width"), 16)));
+                         output->type.size,
+                         model::Parameter(std::string("width"),
+                                          output->type.size)));
   }
   return ports;
 }
