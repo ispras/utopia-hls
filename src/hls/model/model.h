@@ -176,7 +176,7 @@ struct Port final {
        float flow,
        unsigned latency,
        bool isConst,
-       unsigned value):
+       const int &value):
     name(name),
     type(type),
     flow(flow),
@@ -190,7 +190,7 @@ struct Port final {
        float flow,
        unsigned latency,
        bool isConst,
-       unsigned value):
+       const int &value):
     Port(name, Type::get(type), flow, latency, isConst, value) {}
  
   const std::string name;
@@ -198,7 +198,7 @@ struct Port final {
   const float flow;
   const unsigned latency;
   const bool isConst;
-  const unsigned value;
+  const int value;
 };
 
 //===----------------------------------------------------------------------===//

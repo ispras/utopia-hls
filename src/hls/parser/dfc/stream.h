@@ -58,7 +58,8 @@ private:
     out << std::setfill('0')
         << std::setw(sizeof(value)*2) 
         << std::hex << value;
-    return out.str(); 
+    auto result = out.str();
+    return result; 
   }
 };
 
@@ -67,7 +68,7 @@ private:
 //===----------------------------------------------------------------------===//
 
 struct wire {
-  virtual std::string type() const = 0;
+  virtual eda::hls::model::Type &type() const = 0;
   virtual ~wire() {}
 
   const std::string name;
@@ -105,12 +106,18 @@ template<typename Type>
 struct typed: public wire {
   typed(const std::string &name, wire_kind kind, wire_direct direct):
     wire(name, kind, direct) { declare(this); }
+  
+  typed(const std::string &name,
+        wire_kind kind,
+        wire_direct direct,
+        wire_value value):
+    wire(name, kind, direct, value) { declare(this); }
 
   typed(wire_kind kind, wire_direct direct):
     typed(eda::utils::unique_name("wire"), kind, direct) {}
 
-  std::string type() const override {
-    return Type::type_name();
+  eda::hls::model::Type &type() const override {
+    return Type::type_info();
   }
 
   typed(const typed<Type> &rhs, wire_direct direct):
@@ -225,7 +232,7 @@ struct var<Type, CONST, INPUT>: public typed<Type> {
 
   // Initialization from a literal.
   var(wire_value value):
-    typed<Type>(wire_name(Type::type_name(), value), CONST, INPUT) {}
+    typed<Type>(wire_name(Type::type_name(), value), CONST, INPUT, value) {}
 
   template<typename LiteralType>
   var(LiteralType value): var(wire_value(value)) {}

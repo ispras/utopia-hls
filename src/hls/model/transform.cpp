@@ -21,9 +21,9 @@ void InsertDelay::apply() {
     nodetype = new NodeType(typeName, model);
     newTypes.push_back(nodetype);
 
-    Port *input = new Port("in", chan.type, 1.0, 0, false, 0);
+    Port *input = new Port("in", chan.source.port->type, 1.0, 0, false, 0);
     newPorts.push_back(input);
-    Port *output = new Port("out", chan.type, 1.0, latency, false, 0);
+    Port *output = new Port("out", chan.target.port->type, 1.0, latency, false, 0);
     newPorts.push_back(output);
 
     nodetype->addInput(input);

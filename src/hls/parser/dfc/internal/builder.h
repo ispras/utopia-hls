@@ -56,7 +56,7 @@ private:
   struct Unit;
   struct Wire final {
     Wire(const std::string &name,
-         const std::string &type,
+         const eda::hls::model::Type &type,
          bool isInput,
          bool isOutput,
          bool isConst,
@@ -79,7 +79,7 @@ private:
     }
 
     const std::string name;
-    const std::string type;
+    const eda::hls::model::Type type;
 
     const bool isInput;
     const bool isOutput;

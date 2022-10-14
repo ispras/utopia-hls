@@ -28,6 +28,11 @@ std::string Builder::Unit::fullName() const {
 
   fullname << opcode << "_" << in.size() << "x" << out.size();
 
+  // Temporal solution
+  if (opcode == "CAST") {
+    fullname << "_" << in[0]->type.size << "_" << out[0]->type.size;
+  }
+  //****************************************************************************
   for (auto *wire : out) {
     if (wire->isConst) {
       fullname << "_" << wire->value;
@@ -35,9 +40,14 @@ std::string Builder::Unit::fullName() const {
   }
 
   auto result = fullname.str();
+
   std::replace_if(result.begin(), result.end(),
     [](char c) { return c == '<' || c == '>' || c == ','; }, '_');
 
+   // For debug purposes.
+  std::cout << result << std::endl;
+  //****************************************************************************
+  
   return result;
 }
 
@@ -64,13 +74,15 @@ Builder::Wire* Builder::Kernel::getWire(const ::dfc::wire *wire, Mode mode) {
       ? eda::utils::unique_name(wire->name)
       : wire->name;
 
-  const std::string type = wire->type();
+  const auto type = wire->type();
 
   const bool isInput  = (wire->direct != ::dfc::OUTPUT);
   const bool isOutput = (wire->direct != ::dfc::INPUT);
   const bool isConst  = (wire->kind == ::dfc::CONST);
 
   const std::string value = wire->value.to_string();
+
+  //std::cout << value << std::endl;
 
   auto *result = new Wire(name, type, isInput, isOutput, isConst, value);
 
@@ -238,19 +250,19 @@ void Builder::connectWires(const std::string &opcode,
 }
 
 Port* Builder::getPort(const Wire *wire, unsigned latency) {
-  return new Port(wire->name,    // Name
-                  wire->type,    // Type
-                  1.0,           // Flow
-                  latency,       // Latency
-                  wire->isConst, // Constant
-                  0);            // Value 
+  return new Port(wire->name,                              // Name
+                  wire->type,                              // Type
+                  1.0,                                     // Flow
+                  latency,                                 // Latency
+                  wire->isConst,                           // Constant
+                  stoi(wire->value, nullptr, 16));         // Value 
 }
 
 Chan* Builder::getChan(const Wire *wire, Graph *graph) {
   auto *chan = graph->findChan(wire->name);
 
   if (!chan) {
-    chan = new Chan(wire->name, wire->type, *graph);
+    chan = new Chan(wire->name, wire->type.name, *graph);
     graph->addChan(chan);
   }
 

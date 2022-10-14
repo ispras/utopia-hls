@@ -39,6 +39,7 @@ add_executable(${TEST_TARGET}
   hls/model/mlir/transform_test.cpp
   hls/parser/dfc/dfc_dot_test.cpp
   hls/parser/dfc/dfc_idct_test.cpp
+  hls/parser/dfc/dfc_model_types_test.cpp
   hls/parser/hil/hil_test.cpp
   hls/scheduler/param_optimizer_test.cpp
   hls/scheduler/scheduler_test.cpp

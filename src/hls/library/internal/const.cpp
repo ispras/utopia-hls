@@ -119,7 +119,7 @@ std::unique_ptr<Element> Const::construct(const Parameters &params) const {
       if (port.direction == Port::OUT) {
         ifaceWires += std::string("output ") + portDeclr;
         ir += std::string("assign ") + replaceSomeChars(port.name) + " = " 
-                                     + "'h" + std::to_string(value) + ";\n";
+                                     + std::to_string(value) + ";\n";
       }
       outputs += outputType + portDeclr;
     }

@@ -30,14 +30,14 @@ void ExternalModule::addInputs(const std::vector<model::Port*> &inputs) {
   addInput(Port("reset", Port::Direction::IN, Type("reset", 1)));
   for (const auto *input : inputs) {
       addInput(Port(replaceSomeChars(input->name),
-          Port::Direction::IN, Type("sint", 16)));
+          Port::Direction::IN, Type("sint", input->type.size)));
   }
 }
 
 void ExternalModule::addOutputs(const std::vector<model::Port*> &outputs) {
   for (const auto *output : outputs) {
       addOutput(Port(replaceSomeChars(output->name),
-          Port::Direction::OUT, Type("sint", 16)));
+          Port::Direction::OUT, Type("sint", output->type.size)));
   }
 }
 
@@ -45,7 +45,7 @@ void FirrtlModule::addInputs(const model::Node *node,
                              const std::vector<model::Chan*> &outputs) {
   for (const auto *output : outputs) {
     addInput(Port::createFirrtlPort(node, output->source.port,
-       Port::Direction::IN, Type("sint", 16)));
+       Port::Direction::IN, Type("sint", output->source.port->type.size)));
   }
 }
 
@@ -53,7 +53,7 @@ void FirrtlModule::addOutputs(const model::Node *node,
                               const std::vector<model::Chan*> &inputs) {
   for (const auto *input : inputs) {
     addOutput(Port::createFirrtlPort(node, input->target.port,
-       Port::Direction::OUT, Type("sint", 16)));
+       Port::Direction::OUT, Type("sint", input->target.port->type.size)));
   }
 }
 
@@ -62,14 +62,14 @@ void Instance::addModuleInputs(const std::vector<model::Port*> &inputs) {
   addModuleInput(Port("reset", Port::Direction::IN, Type("reset", 1)));
   for (const auto *input : inputs) {
     addModuleInput(Port(replaceSomeChars(input->name), Port::Direction::IN,
-      Type("sint", 16)));
+      Type("sint", input->type.size)));
   }
 }
 
 void Instance::addModuleOutputs(const std::vector<model::Port*> &outputs) {
   for (const auto *output : outputs) {
     addModuleOutput(Port(replaceSomeChars(output->name), Port::Direction::OUT,
-      Type("sint", 16)));
+      Type("sint", output->type.size)));
   }
 }
 
@@ -121,13 +121,14 @@ FirrtlModule::FirrtlModule(const eda::hls::model::Model &model,
       instance.addInput(resetPort);
       instance.addBinding(topResetPort, resetPort);
       for (const auto *input : node->inputs) {
-        Port inputPort = Port::createFirrtlPort(node,
-          input->target.port, Port::Direction::IN, Type("sint", 16));
+        Port inputPort = Port::createFirrtlPort(node, input->target.port,
+            Port::Direction::IN, Type("sint", input->source.port->type.size));
         instance.addInput(inputPort);
 
         if (input->source.node->isSource()) {
           Port connectsFrom = Port::createFirrtlPort(input->source.node,
-            input->source.port, Port::Direction::OUT, Type("sint", 16));
+              input->source.port, Port::Direction::OUT, 
+              Type("sint", input->source.port->type.size));
           instance.addBinding(connectsFrom, inputPort);
         }
       }
@@ -135,13 +136,15 @@ FirrtlModule::FirrtlModule(const eda::hls::model::Model &model,
       instance.addModuleInputs(node->type.inputs);
 
       for (const auto *output : node->outputs) {
-        Port outputPort = Port::createFirrtlPort(node,
-          output->source.port, Port::Direction::OUT, Type("sint", 16));
+        Port outputPort = Port::createFirrtlPort(node, output->source.port,
+            Port::Direction::OUT, Type("sint", output->target.port->type.size));
         instance.addOutput(outputPort);
+
 
         if (!node->type.isSink()) {
           Port connectsTo = Port::createFirrtlPort(output->target.node,
-            output->target.port, Port::Direction::IN, Type("sint", 16));
+              output->target.port, Port::Direction::IN,
+              Type("sint", output->target.port->type.size));
           instance.addBinding(outputPort, connectsTo);
         }
       }
@@ -422,9 +425,10 @@ void FirrtlCircuit::printRndVlogTest(const Model       &model,
 
     ctemplate::TemplateDictionary *inDict = dict->AddSectionDictionary("INS");
     if (inputs[i].isClock() || inputs[i].isReset()) {
-      inDict->SetValue("IN_TYPE", ""); // TODO: set type when implemented
+      inDict->SetValue("IN_TYPE", "");
     } else {
-      inDict->SetValue("IN_TYPE", "[15:0]"); // TODO: set type when implemented
+      inDict->SetValue("IN_TYPE", 
+          "[" + std::to_string(inputs[i].type.width - 1) + ":0]");
     }
 
     const std::string iName = replaceSomeChars(inputs[i].name);
@@ -437,7 +441,8 @@ void FirrtlCircuit::printRndVlogTest(const Model       &model,
 
   for (size_t i = 0; i < outputs.size(); i++) {
     ctemplate::TemplateDictionary *outDict = dict->AddSectionDictionary("OUTS");
-    outDict->SetValue("OUT_TYPE", "[15:0]"); // TODO: set type when implemented
+    outDict->SetValue("OUT_TYPE", 
+        "[" + std::to_string(outputs[i].type.width - 1) + ":0]");
     const std::string oName = replaceSomeChars(outputs[i].name);
     outDict->SetValue("OUT_NAME", oName);
     bndNames.push_back(oName);

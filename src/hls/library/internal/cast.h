@@ -19,9 +19,9 @@ struct Cast final : public ElementInternal {
   static constexpr const char *stages = "stages";
 
   Cast(const std::string &name,
-      const std::string &library, 
-      const Parameters &params,
-      const std::vector<Port> &ports) :
+       const std::string &library, 
+       const Parameters &params,
+       const std::vector<Port> &ports) :
   ElementInternal(name, library, params, ports) {}
   virtual ~Cast() = default;
 
