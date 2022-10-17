@@ -287,7 +287,8 @@ using compatible = typename std::enable_if<std::is_arithmetic_v<T>, T>::type;
 
 template<typename Type>
 typed<Type>& operator+(const typed<Type> &lhs, const typed<Type> &rhs) {
-  auto &out = create<Type>(lhs.kind);
+  auto &out = create<Type>((lhs.kind == CONST && rhs.kind == CONST)
+                              ? CONST : STREAM);
   connect("ADD", { &lhs, &rhs }, { &out });
   return out;
 }
@@ -306,7 +307,8 @@ typed<Type>& operator+(T lhs, const typed<Type> &rhs) {
 
 template<typename Type>
 typed<Type>& operator-(const typed<Type> &lhs, const typed<Type> &rhs) {
-  auto &out = create<Type>(lhs.kind);
+  auto &out = create<Type>((lhs.kind == CONST && rhs.kind == CONST)
+                              ? CONST : STREAM);
   connect("SUB", { &lhs, &rhs }, { &out });
   return out;
 }
@@ -325,7 +327,8 @@ typed<Type>& operator-(T lhs, const typed<Type> &rhs) {
 
 template<typename Type>
 typed<Type>& operator*(const typed<Type> &lhs, const typed<Type> &rhs) {
-  auto &out = create<Type>(lhs.kind);
+  auto &out = create<Type>((lhs.kind == CONST && rhs.kind == CONST)
+                              ? CONST : STREAM);
   connect("MUL", { &lhs, &rhs }, { &out });
   return out;
 }
@@ -344,7 +347,8 @@ typed<Type>& operator*(T lhs, const typed<Type> &rhs) {
 
 template<typename Type>
 typed<Type>& operator/(const typed<Type> &lhs, const typed<Type> &rhs) {
-  auto &out = create<Type>(lhs.kind);
+  auto &out = create<Type>((lhs.kind == CONST && rhs.kind == CONST)
+                            ? CONST : STREAM);
   connect("DIV", { &lhs, &rhs }, { &out });
   return out;
 }
@@ -381,7 +385,8 @@ typed<Type>& operator<<(const typed<Type> &lhs, std::size_t rhs) {
 
 template<typename Type>
 typed<bit>& operator==(const typed<Type> &lhs, const typed<Type> &rhs) {
-  auto &out = create<bit>(lhs.kind);
+  auto &out = create<bit>((lhs.kind == CONST && rhs.kind == CONST)
+                            ? CONST : STREAM);
   connect("EQ", { &lhs, &rhs }, { &out });
   return out;
 }
@@ -400,7 +405,8 @@ typed<bit>& operator==(T lhs, const typed<Type> &rhs) {
 
 template<typename Type>
 typed<bit>& operator!=(const typed<Type> &lhs, const typed<Type> &rhs) {
-  auto &out = create<bit>(lhs.kind);
+  auto &out = create<bit>((lhs.kind == CONST && rhs.kind == CONST)
+                            ? CONST : STREAM);
   connect("NE", { &lhs, &rhs }, { &out });
   return out;
 }
@@ -419,7 +425,8 @@ typed<bit>& operator!=(T lhs, const typed<Type> &rhs) {
 
 template<typename Type>
 typed<bit>& operator>(const typed<Type> &lhs, const typed<Type> &rhs) {
-  auto &out = create<bit>(lhs.kind);
+  auto &out = create<bit>((lhs.kind == CONST && rhs.kind == CONST)
+                            ? CONST : STREAM);
   connect("GT", { &lhs, &rhs }, { &out });
   return out;
 }
@@ -438,7 +445,8 @@ typed<bit>& operator>(T lhs, const typed<Type> &rhs) {
 
 template<typename Type>
 typed<bit>& operator>=(const typed<Type> &lhs, const typed<Type> &rhs) {
-  auto &out = create<bit>(lhs.kind);
+  auto &out = create<bit>((lhs.kind == CONST && rhs.kind == CONST)
+                            ? CONST : STREAM);
   connect("GE", { &lhs, &rhs }, { &out });
   return out;
 }
@@ -457,7 +465,8 @@ typed<bit>& operator>=(T lhs, const typed<Type> &rhs) {
 
 template<typename Type>
 typed<bit>& operator<(const typed<Type> &lhs, const typed<Type> &rhs) {
-  auto &out = create<bit>(lhs.kind);
+  auto &out = create<bit>((lhs.kind == CONST && rhs.kind == CONST)
+                            ? CONST : STREAM);
   connect("LT", { &lhs, &rhs }, { &out });
   return out;
 }
@@ -476,7 +485,8 @@ typed<bit>& operator<(T lhs, const typed<Type> &rhs) {
 
 template<typename Type>
 typed<bit>& operator<=(const typed<Type> &lhs, const typed<Type> &rhs) {
-  auto &out = create<bit>(lhs.kind);
+  auto &out = create<bit>((lhs.kind == CONST && rhs.kind == CONST)
+                            ? CONST : STREAM);
   connect("LE", { &lhs, &rhs }, { &out });
   return out;
 }

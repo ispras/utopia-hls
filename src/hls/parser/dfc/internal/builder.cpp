@@ -32,19 +32,17 @@ std::string Builder::Unit::fullName() const {
   if (opcode == "CAST") {
     fullname << "_" << in[0]->type.size << "_" << out[0]->type.size;
   }
-  //****************************************************************************
-  for (auto *wire : out) {
-    if (wire->isConst) {
-      fullname << "_" << wire->value;
-    }
+  if (opcode == "const") {
+    fullname << "_" << out[0]->value;
   }
+  //****************************************************************************
 
   auto result = fullname.str();
 
   std::replace_if(result.begin(), result.end(),
     [](char c) { return c == '<' || c == '>' || c == ','; }, '_');
 
-   // For debug purposes.
+  // For debug purposes.
   std::cout << result << std::endl;
   //****************************************************************************
   
@@ -81,8 +79,6 @@ Builder::Wire* Builder::Kernel::getWire(const ::dfc::wire *wire, Mode mode) {
   const bool isConst  = (wire->kind == ::dfc::CONST);
 
   const std::string value = wire->value.to_string();
-
-  //std::cout << value << std::endl;
 
   auto *result = new Wire(name, type, isInput, isOutput, isConst, value);
 
