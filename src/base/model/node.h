@@ -8,12 +8,13 @@
 
 #pragma once
 
+#include "base/model/hash.h"
 #include "base/model/link.h"
 #include "base/model/signal.h"
 
 #include <algorithm>
 #include <cassert>
-#include <iostream>
+#include <unordered_map>
 #include <vector>
 
 namespace eda::base::model {
@@ -22,41 +23,42 @@ namespace eda::base::model {
  * \brief Represents a net node (a gate or a higher-level unit).
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
-template <typename F>
+template <typename Func, bool StructHash = true>
 class Node {
 public:
   //===--------------------------------------------------------------------===//
-  // Types
+  // Constants and Types
   //===--------------------------------------------------------------------===//
 
-  using Id = unsigned;
-  using List = std::vector<Node<F>*>;
+  /// Node identifier.
+  using Id = uint32_t;
+  static constexpr Id INVALID = -1u;
+
+  using List = std::vector<Node<Func, StructHash>*>;
   using Link = eda::base::model::Link<Id>;
   using LinkList = Link::List;
   using Signal = eda::base::model::Signal<Id>;
   using SignalList = Signal::List;
-
-  //===--------------------------------------------------------------------===//
-  // Constants
-  //===--------------------------------------------------------------------===//
-
-  static constexpr Id INVALID = -1u;
+  using StructHashKey = NodeHashKey<Func, Id>;
+  using StructHashMap = std::unordered_map<StructHashKey, Id>;
 
   //===--------------------------------------------------------------------===//
   // Accessor
   //===--------------------------------------------------------------------===//
 
   /// Returns the node w/ the given id from the storage.
-  static Node<F> *get(Id id) { return _storage[id]; }
+  static Node<Func, StructHash> *get(Id id) { return _storage[id]; }
   /// Returns the next node identifier.
   static Id nextId() { return _storage.size(); }
+  /// Returns the node w/ the given function/inputs from the storage.
+  static Node<Func, StructHash> *get(Func func, const SignalList &inputs);
 
   //===--------------------------------------------------------------------===//
   // Properties
   //===--------------------------------------------------------------------===//
 
   Id id() const { return _id; }
-  F func() const { return _func; }
+  Func func() const { return _func; }
 
   //===--------------------------------------------------------------------===//
   // Connections
@@ -81,9 +83,9 @@ public:
   Signal always()  const { return Signal::always(_id); }
 
 protected:
-  /// Creates a node w/ the given function and the inputs and
+  /// Creates a node w/ the given function/inputs and
   /// allocates this node in the storage.
-  Node(F func, const SignalList &inputs):
+  Node(Func func, const SignalList &inputs):
     _id(_storage.size()), _func(func), _inputs(inputs) {
     // Register the node in the storage.
     if (_id >= _storage.size()) {
@@ -93,16 +95,16 @@ protected:
     appendLinks();
   }
 
-  /// Creates a node w/ the given function and the inputs and
-  /// stores this node in the existing position 
-  Node(Id id, F func, const SignalList &inputs):
+  /// Creates a node w/ the given function/inputs and
+  /// stores this node in the existing position.
+  Node(Id id, Func func, const SignalList &inputs):
     _id(id), _func(func), _inputs(inputs) {
     assert(_id < _storage.size());
     _storage[_id] = this;
     appendLinks();
   }
 
-  void setFunc(F func) {
+  void setFunc(Func func) {
     _func = func;
   }
 
@@ -125,32 +127,61 @@ protected:
 
   void appendLinks() {
     for (size_t i = 0; i < _inputs.size(); i++) {
-      auto *node = Node<F>::get(_inputs[i].node());
+      auto *node = Node<Func, StructHash>::get(_inputs[i].node());
       node->appendLink(_id, i);
     }
   }
 
   void removeLinks() {
     for (size_t i = 0; i < _inputs.size(); i++) {
-      auto *node = Node<F>::get(_inputs[i].node());
+      auto *node = Node<Func, StructHash>::get(_inputs[i].node());
       node->removeLink(_id, i);
     }
   }
 
   const Id _id;
-  F _func;
+  Func _func;
   SignalList _inputs;
   LinkList _links;
 
   /// Node storage.
   static List _storage;
+  /// Structural hashing.
+  static StructHashMap _hashing;
 };
 
-template <typename F>
-typename Node<F>::List Node<F>::_storage = []{
-  Node<F>::List storage;
+template <typename Func, bool StructHash>
+Node<Func, StructHash> *Node<Func, StructHash>::get(Func func, const SignalList &inputs) {
+  if constexpr(!StructHash) {
+    return nullptr;
+  }
+
+  // FIXME: Reorder inputs for commutative operations.
+  StructHashKey key(func, inputs);
+  auto i = _hashing.find(key);
+
+  if (i == _hashing.end()) {
+    return nullptr;
+  }
+
+  // FIXME: Check that the gate to be returned have the same inputs.
+  return get(i->second);
+}
+
+template <typename Func, bool StructHash>
+typename Node<Func, StructHash>::List Node<Func, StructHash>::_storage = []{
+  Node<Func, StructHash>::List storage;
   storage.reserve(1024*1024);
   return storage;
 }();
 
+template <typename Func, bool StructHash>
+typename Node<Func, StructHash>::StructHashMap Node<Func, StructHash>::_hashing = []{
+  Node<Func, StructHash>::StructHashMap hashing;
+  hashing.reserve(1024*1024);
+  return hashing;
+}();
+
 } // namespace eda::base::model
+
+
