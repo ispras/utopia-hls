@@ -171,7 +171,6 @@ template <> void ModelDumper<NodeType>::dump() {
         os_ << ", ";
       } else {
         os_ << '\n';
-        print_sep = true;
       }
       print_sep = true;
       ModelDumper::get(*output_arg, os_).dump();
