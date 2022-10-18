@@ -11,33 +11,57 @@
 #include "base/model/signal.h"
 
 #include <algorithm>
+#include <cstdint>
 
 namespace eda::base::model {
 
+/**
+ * \brief Represents an inexact (loosy) key for hashing net nodes.
+ * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
+ */
 template <typename F, typename N>
 struct NodeHashKey final {
   using Signal = eda::base::model::Signal<N>;
   using SignalList = typename Signal::List;
- 
+
+  /// Constructs a key from the given node signature.
   NodeHashKey(F func, const SignalList &inputs):
       func(static_cast<uint16_t>(func)),
       arity(static_cast<uint16_t>(inputs.size())) {
-    ihash = 0;
-    for (const auto &input : inputs) {
-      ihash *= 37;
-      ihash += input.node();
+    const uint64_t prime = 37;
+
+    std::vector<size_t> hashes(inputs.size());
+    for (size_t i = 0; i < inputs.size(); i++) {
+      hashes[i] = std::hash<N>()(inputs[i].node());
+    }
+
+    if (func.isCommutative()) {
+      std::sort(hashes.begin(), hashes.end());
+    }
+
+    hash2 = hash1 = 0;
+    for (const auto hash : hashes) {
+      hash1 ^= hash;
+      hash2 *= prime;
+      hash2 += hash;
     }
   }
 
+  /// Compares this key w/ the given one.
   constexpr bool operator ==(const NodeHashKey &rhs) const {
     return func == rhs.func
         && arity == rhs.arity
-        && ihash == rhs.ihash;
+        && hash1 == rhs.hash1
+        && hash2 == rhs.hash2;
   }
 
+  /// Functional symbol (exact).
   uint16_t func;
+  /// Node arity (exact).
   uint16_t arity;
-  uint64_t ihash;
+  /// Hash code(s) of node inputs.
+  uint32_t hash1;
+  uint64_t hash2;
 };
 
 } // namespace eda::base::model
@@ -61,7 +85,9 @@ struct hash<eda::base::model::NodeHashKey<F, N>> {
     hash *= prime;
     hash += key.arity;
     hash *= prime;
-    hash += key.ihash;
+    hash += key.hash1;
+    hash *= prime;
+    hash += key.hash2;
 
     return hash;
   }

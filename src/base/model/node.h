@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cassert>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace eda::base::model {
@@ -59,6 +60,20 @@ public:
 
   Id id() const { return _id; }
   Func func() const { return _func; }
+
+  bool hasSignature(Func func, const SignalList &inputs) {
+    if (func != _func || inputs.size() != _inputs.size()) {
+      return false;
+    }
+
+    std::unordered_set<Id> inputSet;
+    for (size_t i = 0; i < inputs.size(); i++) {
+      inputSet.insert(inputs[i].node());
+      inputSet.insert(_inputs[i].node());
+    }
+
+    return inputSet.size() == inputs.size();
+  }
 
   //===--------------------------------------------------------------------===//
   // Connections
@@ -156,7 +171,11 @@ Node<Func, StructHash> *Node<Func, StructHash>::get(Func func, const SignalList 
     return nullptr;
   }
 
-  // FIXME: Reorder inputs for commutative operations.
+  if (func.isIdentity()) {
+    assert(inputs.size() == 1);
+    return get(inputs[0].node());
+  }
+
   StructHashKey key(func, inputs);
   auto i = _hashing.find(key);
 
@@ -164,8 +183,12 @@ Node<Func, StructHash> *Node<Func, StructHash>::get(Func func, const SignalList 
     return nullptr;
   }
 
-  // FIXME: Check that the gate to be returned have the same inputs.
-  return get(i->second);
+  auto *node = get(i->second);
+  if (node->hasSignature(func, inputs)) {
+    return node;
+  }
+
+  return nullptr;
 }
 
 template <typename Func, bool StructHash>
