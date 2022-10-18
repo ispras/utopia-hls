@@ -167,25 +167,27 @@ protected:
 
 template <typename Func, bool StructHash>
 Node<Func, StructHash> *Node<Func, StructHash>::get(Func func, const SignalList &inputs) {
+  // Structural hashing is disabled.
   if constexpr(!StructHash) {
     return nullptr;
   }
 
+  // Ignore identity nodes.
   if (func.isIdentity()) {
     assert(inputs.size() == 1);
     return get(inputs[0].node());
   }
 
+  // Search for the same node.
   StructHashKey key(func, inputs);
   auto i = _hashing.find(key);
 
-  if (i == _hashing.end()) {
-    return nullptr;
-  }
-
-  auto *node = get(i->second);
-  if (node->hasSignature(func, inputs)) {
-    return node;
+  // If the same node exists, return it.
+  if (i != _hashing.end()) {
+    auto *node = get(i->second);
+    if (node->hasSignature(func, inputs)) {
+      return node;
+    }
   }
 
   return nullptr;
