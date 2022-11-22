@@ -70,6 +70,7 @@ void LatencyLpSolver::insertBuffers(Model &model) {
     double latency = latencies[position];
     uassert(latency >= 0, "Delta for channel " + buf->channel->name + " < 0");
     if (latency != 0) {
+      buf->channel->latency = (unsigned)latency;
       model.insertDelay(*(buf->channel), (unsigned)latency);
       bufsInserted++;
       totalDelta+=(unsigned)latency;

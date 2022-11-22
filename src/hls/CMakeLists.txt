@@ -7,15 +7,36 @@ add_library(HLS OBJECT
   library/element_generator.cpp
   library/element_core.cpp
   library/element_internal.cpp
-  library/internal/cast.cpp
-  library/internal/clip.cpp
-  library/internal/const.cpp
-  library/internal/default.cpp
-  library/internal/delay.cpp
-  library/internal/dup.cpp
-  library/internal/merge.cpp
-  library/internal/mux.cpp
-  library/internal/split.cpp
+  library/internal/verilog/add.cpp
+  library/internal/verilog/cast.cpp
+  library/internal/verilog/clip.cpp
+  library/internal/verilog/const.cpp
+  library/internal/verilog/default.cpp
+  library/internal/verilog/delay.cpp
+  library/internal/verilog/dup.cpp
+  library/internal/verilog/element_internal_verilog.cpp
+  library/internal/verilog/eq.cpp
+  library/internal/verilog/ge.cpp
+  library/internal/verilog/gt.cpp
+  library/internal/verilog/le.cpp
+  library/internal/verilog/lt.cpp
+  library/internal/verilog/merge.cpp
+  library/internal/verilog/mul.cpp
+  library/internal/verilog/mux.cpp
+  library/internal/verilog/ne.cpp
+  library/internal/verilog/sink.cpp
+  library/internal/verilog/shl8.cpp
+  library/internal/verilog/shl11.cpp
+  library/internal/verilog/shr3.cpp
+  library/internal/verilog/shr8.cpp
+  library/internal/verilog/shr14.cpp
+  library/internal/verilog/source.cpp
+  library/internal/verilog/split.cpp
+  library/internal/verilog/sub.cpp
+  library/internal/ril/element_internal_ril.cpp
+  library/internal/ril/add.cpp
+  library/internal/ril/mul.cpp
+  library/internal/ril/sub.cpp
   library/ipxact_parser.cpp
   library/library.cpp
   mapper/config/hwconfig.cpp

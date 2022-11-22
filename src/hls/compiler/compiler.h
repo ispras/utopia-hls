@@ -25,7 +25,9 @@ struct Type final {
        name(name), width(width) {};
 
   std::string toString() const {
-   return ((this->name != "clock" && this->name != "reset") ? ("<" + std::to_string(this->width) + ">") : "");
+    return (((this->name != "clock") && (this->name != "reset")) ?
+                  ("<" + std::to_string(this->width) + ">") : 
+                  "");
   }
 };
 
@@ -45,8 +47,9 @@ struct Port final {
                                const Port::Direction dir,
                                const Type type) {
     return Port(replaceSomeChars(node->name) +
-                                         "_" + replaceSomeChars(port->name),
-        dir, type);
+                  "_" +
+                  replaceSomeChars(port->name),
+                dir, type);
   }
 
   bool isClock() const {
@@ -251,6 +254,6 @@ struct Compiler final {
    }
 };
 
-std::ostream& operator <<(std::ostream &out, const FirrtlCircuit &firCircuit);
+//std::ostream& operator <<(std::ostream &out, const FirrtlCircuit &firCircuit);
 
 } // namespace eda::hls::compiler

@@ -252,8 +252,10 @@ template <> void ModelDumper<Model>::dump() {
     os_ << "hil.nodetypes {\n";
     {
       indent_block _(os_);
-      for (auto *nodetype : node_.nodetypes) {
-        ModelDumper::get(*nodetype, os_).dump();
+      for (auto nodeTypeIterator = node_.nodetypes.begin();
+           nodeTypeIterator != node_.nodetypes.end();
+           nodeTypeIterator++) {
+        ModelDumper::get(*(nodeTypeIterator->second), os_).dump();
         os_ << '\n';
       }
     }

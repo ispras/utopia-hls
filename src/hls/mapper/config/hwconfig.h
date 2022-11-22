@@ -19,7 +19,9 @@ namespace eda::hls::mapper {
 class HWConfig {
 public:
   // TODO: there will be more classes for different FPGA families.
-  HWConfig(const std::string &name, const std::string &family, const std::string &vendor);
+  HWConfig(const std::string &name,
+           const std::string &family,
+           const std::string &vendor);
 
   std::string getName();
   std::string getFamily();

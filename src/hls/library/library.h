@@ -21,60 +21,37 @@ using namespace eda::hls::model;
 using namespace eda::util;
 
 namespace eda::hls::library {
-/// Key for MetaElement / nodetype.
-struct ElementKey {
-  ElementKey(const NodeType &nodetype);
-  ElementKey(const std::shared_ptr<MetaElement> metaElement);
-  bool operator==(const ElementKey &elementKey) const;
-  std::string name;
-  std::set<std::string> inputs;
-  std::set<std::string> outputs;
-};
-} // namespace eda::hls::library
 
-namespace std {
-template<>
-struct hash<eda::hls::library::ElementKey> {
-  size_t operator()(const eda::hls::library::ElementKey &element) const {
-    size_t hash = std::hash<std::string>()(element.name);
-    for (const auto &input : element.inputs) {
-      hash = hash * 13 + std::hash<std::string>()(input);
-    }
-    for (const auto &output : element.outputs) {
-      hash = hash * 13 + std::hash<std::string>()(output);
-    }
-    return hash;
-  }
-};
-} // namespace std
-
-namespace eda::hls::library {
-
-/// RTL port with name, direction, and width.
+/// RTL port with name, direction, and width
 struct Port {
   enum Direction { IN, OUT, INOUT };
+  enum Type { DATA, CLOCK, RESET };
 
   Port(const std::string &name,
-       const Direction &direction,
+       const Direction direction,
        const unsigned width,
-       const Parameter param):
+       const Parameter &param,
+       const Type type = Type::DATA):
     name(name),
     direction(direction),
     width(width),
-    param(param) {}
+    param(param),
+    type(type) {}
   Port(const Port &port):
     name(port.name),
     direction(port.direction),
     width(port.width),
-    param(port.param) {}
+    param(port.param),
+    type(port.type) {}
 
   const std::string name;
   const Direction direction;
   const unsigned width;
   const Parameter param;
+  const Type type;
 };
 
-/// Description of a constructed element (module).
+/// Description of a constructed element (module)
 struct Element final {
   // TODO: Code, Path, etc.
   explicit Element(const std::vector<Port> &ports): ports(ports) {}
@@ -82,43 +59,36 @@ struct Element final {
   // TODO add mutual relation between spec ports and impl ports
   const std::vector<Port> ports;
 
-  // TODO there should be different IRs: MLIR FIRRTL or Verilog|VHDL described in FIRRTL
+  // TODO there should be different IRs: MLIR FIRRTL or Verilog|VHDL
   std::string ir;
-
-  // TODO path
+  /// Path to the constructed file
   std::string path;
 };
 
-/// Description of a parameterized constructor of elements.
+/// Description of a parameterized constructor of elements
 struct MetaElement {
   MetaElement(const std::string &name,
-              const std::string &library,
+              const std::string &libraryName,
               const Parameters &params,
               const std::vector<Port> &ports):
       name(name),
-      library(library),
-      libName(toLibName(name)),
+      libraryName(libraryName),
       params(params),
       ports(ports) {}
 
-  // TODO: discuss naming conventions
-  static const std::string toLibName(const std::string &name) {
-    return name.substr(0, name.find("_"));
-  }
-
-  /// Estimates the indicators the given set of parameters.
+  /// Estimates the indicators with the given set of parameters
   virtual void estimate(const Parameters &params,
                         Indicators &indicators) const = 0;
 
-  virtual std::unique_ptr<Element> construct(const Parameters &params) const = 0;
+  virtual std::unique_ptr<Element> construct() const = 0;
 
   virtual ~MetaElement() = default;
 
   bool supports(const HWConfig &hwconfig);
+  Signature getSignature();
 
   const std::string name;
-  const std::string library;
-  const std::string libName;
+  const std::string libraryName;
   const Parameters params;
   const std::vector<Port> ports;
 };
@@ -126,7 +96,7 @@ struct MetaElement {
 /// Entry in cache of MetaElements
 struct StorageEntry {
   StorageEntry(const std::shared_ptr<MetaElement> metaElement,
-               const bool isEnabled,
+               const bool isEnabled = true,
                const unsigned int priority = 0):
       metaElement(metaElement), isEnabled(isEnabled), priority(priority) {}
   
@@ -221,8 +191,7 @@ private:
   using LibraryToStorageEntry = std::unordered_map<std::string, StorageEntry>;
 
   /// Stored meta-elements (second level is for from different libraries)
-  std::unordered_map<ElementKey, LibraryToStorageEntry> groupedMetaElements;
+  std::unordered_map<Signature, LibraryToStorageEntry> groupedMetaElements;
 };
-
 } // namespace eda::hls::library
 

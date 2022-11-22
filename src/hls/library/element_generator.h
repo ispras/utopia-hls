@@ -18,17 +18,15 @@ namespace eda::hls::library {
 
 struct ElementGenerator final : public MetaElement {
   ElementGenerator(const std::string &name,
-                   const std::string &library,
+                   const std::string &libraryName,
                    const Parameters &params,
                    const std::vector<Port> &ports,
                    const std::string &genPath) :
-    MetaElement { name, library, params, ports }, genPath { genPath } {}
+    MetaElement { name, libraryName, params, ports }, genPath { genPath } {}
   virtual ~ElementGenerator() = default;
-  virtual void estimate(
-      const Parameters &params, Indicators &indicators) const override;
-  virtual std::unique_ptr<Element> construct(
-      const Parameters &params) const override;
+  virtual void estimate(const Parameters &params,
+                        Indicators &indicators) const override;
+  virtual std::unique_ptr<Element> construct() const override;
   const std::string genPath;
 };
-
 } // namespace eda::hls::library

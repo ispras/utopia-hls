@@ -38,7 +38,6 @@ public:
    */
   std::vector<std::shared_ptr<MetaElement>> getDelivery(
       const std::string &libraryPath, const std::string &catalogPath);
-    
   /**
    * @brief Parses an IP-XACT catalog to get the components' filenames.
    *
@@ -72,7 +71,6 @@ public:
    */
   std::shared_ptr<MetaElement> parseComponent(const std::string &libraryPath,
                                               const std::string &componentPath);
-
 private:
   IPXACTParser() {
     // Initializes XMLPlatformUtils
@@ -88,6 +86,10 @@ private:
 
     // Tags and attributes initialization
     ipxPortTag       = XMLString::transcode("ipxact:port");
+    ipxQualifierTag  = XMLString::transcode("ipxact:qualifier");
+    ipxIsDataTag     = XMLString::transcode("ipxact:isData");
+    ipxIsClockTag    = XMLString::transcode("ipxact:isClock");
+    ipxIsResetTag    = XMLString::transcode("ipxact:isReset");
     ipxNameTag       = XMLString::transcode("ipxact:name");
     ipxModuleNameTag = XMLString::transcode("ipxact:moduleName");
     ipxLibTag        = XMLString::transcode("ipxact:library");
@@ -110,6 +112,7 @@ private:
 
     nameAttr         = XMLString::transcode("name");
   }
+
   /**
    * @brief Tries to parse an XML file and to construct a DOM document.
    *
@@ -140,6 +143,18 @@ private:
    */
   int         getIntValueFromTag(const DOMElement *element,
                                  const XMLCh      *tagName);
+  
+  /**
+   * @brief Parses a tag to get a bool value from the given attribute.
+   *
+   * @param element DOMElement in which tag is located.
+   * @param tagName Tag name.
+   * @param attributeName Attribute name.
+   * 
+   * @returns Attribute value.
+   */
+  bool       getBoolValueFromTag(const DOMElement *element,
+                                 const XMLCh      *tagName);
 
   /**
    * @brief Parses a tag to get a string value from the given attribute.
@@ -157,13 +172,18 @@ private:
 public:
   virtual ~IPXACTParser() {
     delete(ipxPortTag);
+    delete(ipxQualifierTag);
+    delete(ipxIsDataTag);
+    delete(ipxIsClockTag);
+    delete(ipxIsResetTag);
+    delete(ipxLeftTag);
+    delete(ipxRightTag);
+
     delete(ipxNameTag);
     delete(ipxModuleNameTag);
     delete(ipxVlnvTag);
     delete(ipxDirectTag);
     delete(ipxVectTag);
-    delete(ipxLeftTag);
-    delete(ipxRightTag);
     delete(ipxCompGensTag);
     delete(ipxGenExeTag);
     delete(ipxIpxFileTag);
@@ -189,8 +209,9 @@ private:
   /// Attributes
   XMLCh *nameAttr;
   /// IP-XACT common tags
-  XMLCh *ipxPortTag, *ipxNameTag, *ipxVlnvTag,  *ipxDirectTag,
-        *ipxVectTag, *ipxLeftTag, *ipxRightTag, *ipxLibTag;
+  XMLCh *ipxPortTag, *ipxQualifierTag, *ipxIsDataTag, *ipxIsClockTag, 
+        *ipxIsResetTag, *ipxNameTag, *ipxVlnvTag, *ipxDirectTag, *ipxVectTag, 
+        *ipxLeftTag, *ipxRightTag, *ipxLibTag;
   /// IP-XACT vendor extensions tags (kactus2)
   XMLCh *k2ParamTag, *k2NameTag, *k2ValueTag, *k2LeftTag, *k2RightTag;
   /// For catalog

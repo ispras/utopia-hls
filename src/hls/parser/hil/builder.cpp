@@ -17,7 +17,10 @@ namespace eda::hls::parser::hil {
 std::shared_ptr<Model> Builder::create() {
   assert(currentModel != nullptr && "No model found");
 
-  for (const NodeType *nodetype: currentModel->nodetypes) {
+  for (auto nodeTypeIterator = currentModel->nodetypes.begin();
+       nodeTypeIterator != currentModel->nodetypes.end();
+       nodeTypeIterator++) {
+    const auto *nodetype = nodeTypeIterator->second;
     assert(nodetype != nullptr);
 
     // The nodetype allows consuming or producing data.

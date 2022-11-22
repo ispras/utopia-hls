@@ -23,27 +23,39 @@ namespace eda::hls::parser::dfc {
 // Unit
 //===----------------------------------------------------------------------===//
 
-std::string Builder::Unit::fullName() const {
-  std::stringstream fullname;
+std::string Builder::Unit::getFullName() const {
+  std::stringstream fullName;
 
-  fullname << opcode << "_" << in.size() << "x" << out.size();
+  fullName << opcode << "_" << in.size() << "x" << out.size();
 
   // Temporal solution
   if (opcode == "CAST") {
-    fullname << "_" << in[0]->type.size << "_" << out[0]->type.size;
+    fullName << "_" << in[0]->type.size << "_" << out[0]->type.size;
   }
   if (opcode == "const") {
-    fullname << "_" << out[0]->value;
+    fullName << "_" << out[0]->value;
   }
   //****************************************************************************
 
-  auto result = fullname.str();
+  auto result = fullName.str();
 
   std::replace_if(result.begin(), result.end(),
     [](char c) { return c == '<' || c == '>' || c == ','; }, '_');
 
-  // For debug purposes.
+  // For debug purposes
+  /*std::cout << "***********************************************" << std::endl;
+
   std::cout << result << std::endl;
+
+  for (const auto *input : in) {
+    std::cout << input->name << std::endl;
+  }
+
+  for (const auto *output : out) {
+    std::cout << output->name << std::endl;
+  }
+
+  std::cout << "***********************************************" << std::endl;*/
   //****************************************************************************
   
   return result;
@@ -246,12 +258,12 @@ void Builder::connectWires(const std::string &opcode,
 }
 
 Port* Builder::getPort(const Wire *wire, unsigned latency) {
-  return new Port(wire->name,                              // Name
-                  wire->type,                              // Type
-                  1.0,                                     // Flow
-                  latency,                                 // Latency
-                  wire->isConst,                           // Constant
-                  stoi(wire->value, nullptr, 16));         // Value 
+  return new Port(wire->name,                                       // Name
+                  wire->type,                                       // Type
+                  1.0,                                              // Flow
+                  latency,                                          // Latency
+                  wire->isConst,                                    // Constant
+                  ((~stoull(wire->value, nullptr, 16)) + 1) * -1);  // Value 
 }
 
 Chan* Builder::getChan(const Wire *wire, Graph *graph) {
@@ -268,8 +280,7 @@ Chan* Builder::getChan(const Wire *wire, Graph *graph) {
 NodeType* Builder::getNodetype(const Kernel *kernel,
                                const Unit *unit,
                                Model *model) {
-  auto *nodetype = new NodeType(unit->fullName(), *model);
-
+  auto *nodetype = new NodeType(unit->getFullName(), *model);
   for (auto *wire : unit->in) {
     nodetype->addInput(getPort(wire, 0));
   }
@@ -285,29 +296,32 @@ Node* Builder::getNode(const Kernel *kernel,
                        Graph *graph,
                        Model *model) {
   static unsigned id = 0;
-
-  auto *nodetype = model->findNodetype(unit->fullName());
-
-  if (!nodetype) {
+  Signature signature = unit->getSignature();
+  auto *nodetype = model->findNodetype(signature);
+  if (nodetype == nullptr) {
     nodetype = getNodetype(kernel, unit, model);
-    model->addNodetype(nodetype);
+    model->addNodetype(signature, nodetype);
   }
-
-  const std::string nodeName = unit->opcode + std::to_string(id++);
+  std::string nodeName = unit->opcode;
+  if (unit->opcode == "source") {
+    nodeName = nodeName + "_" + unit->out[0]->name;
+  } else if (unit->opcode == "sink") {
+    nodeName = nodeName + "_" + unit->in[0]->name;
+  } else {
+    nodeName = nodeName + std::to_string(id);
+  }
+  id++;
   auto *node = new Node(nodeName, *nodetype, *graph);
-
   for (auto *wire : unit->in) {
     auto *input = getChan(wire, graph);
     input->target = { node, node->type.inputs[node->inputs.size()] };
     node->addInput(input);
   }
-
   for (auto *wire : unit->out) {
     auto *output = getChan(wire, graph);
     output->source = { node, node->type.outputs[node->outputs.size()] };
     node->addOutput(output);
   }
-
   return node;
 }
 

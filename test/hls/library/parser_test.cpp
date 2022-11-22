@@ -29,7 +29,7 @@ int parserComponentTest(const std::string &libraryPath,
   auto metaElement = IPXACTParser::get().parseComponent(libraryPath,
                                                         componentPath);
   std::cout << "MetaElement: " << metaElement->name << " " << std::endl;
-  std::cout << "Library: " << metaElement->library << std::endl;
+  std::cout << "Library: " << metaElement->libraryName << std::endl;
   std::cout << "Ports:" << std::endl;
   for (const auto &port : metaElement->ports) {
     std::cout << (port.direction ? "out " : "in ") << port.name << " ";

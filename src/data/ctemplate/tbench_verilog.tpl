@@ -48,7 +48,7 @@ module {{MODULE_NAME}}_tb;
 		{{#TESTS}}
 		@(posedge clock);
 		{{#ST}}
-		{{NAME}} = 1;{{/ST}}
+		{{NAME}} = 0;{{/ST}}
 		{{/TESTS}}
 		#({{MODULE_NAME}}_latency * 240);
 

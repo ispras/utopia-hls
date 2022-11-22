@@ -12,6 +12,7 @@
 #include "util/string.h"
 
 #include <filesystem>
+#include <regex>
 #include <xercesc/dom/DOM.hpp>
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/util/PlatformUtils.hpp>
@@ -23,19 +24,24 @@ using namespace xercesc;
 
 namespace eda::hls::library {
 
-bool stringIsInteger(std::string str) {
-  size_t startIndex = (str.at(0) == '-' || str.at(0) == '+') ? 1 : 0;
-  for (size_t i = startIndex; i < str.length(); i++) {
-    if (!isdigit(str.at(i))) {
-      return false;
-    }
-  }
-  return true;
+bool stringIsInteger(std::string &inputString) {
+  return std::regex_match(inputString, std::regex("[(-|\\+)]?[0-9]+"));
+}
+
+bool stringIsId(std::string &inputString) {
+  return std::regex_match(inputString, std::regex("[A-Za-z][A-Za-z0-9]*"));
+}
+
+bool stringIsBool(std::string &inputString) {
+  return (inputString == "true" || inputString == "false");
+}
+
+bool stringToBool(std::string &inputString) {
+  return inputString == "true" ? true : false;
 }
 
 std::vector<std::shared_ptr<MetaElement>> IPXACTParser::getDelivery(
     const std::string &libraryPath, const std::string &catalogPath) {
-
   const auto &fileNames = parseCatalog(libraryPath, catalogPath);
   const auto &metaElements = parseComponents(libraryPath, fileNames);
   return metaElements;
@@ -81,7 +87,6 @@ bool IPXACTParser::tryToParseXML(const char* fileName) {
 
 std::string IPXACTParser::getStrValueFromTag(const DOMElement *element,
                                              const XMLCh      *tagName) {
-
   size_t tagCount = element->getElementsByTagName(tagName)->getLength();
   std::string tagNameStr = XMLString::transcode(tagName);
   uassert(tagCount >= 1, "Cannot find tag " + tagNameStr + "!\n");
@@ -96,7 +101,6 @@ std::string IPXACTParser::getStrValueFromTag(const DOMElement *element,
 
 int IPXACTParser::getIntValueFromTag(const DOMElement *element,
                                      const XMLCh      *tagName) {
-
   std::string tagValueStr = getStrValueFromTag(element, tagName);
   std::string tagNameStr = XMLString::transcode(tagName);
   uassert(stringIsInteger(tagValueStr), tagNameStr + 
@@ -105,10 +109,20 @@ int IPXACTParser::getIntValueFromTag(const DOMElement *element,
   return tagValueInt;
 }
 
+bool IPXACTParser::getBoolValueFromTag(const DOMElement *element,
+                                       const XMLCh      *tagName) {
+  std::string tagValueStr = getStrValueFromTag(element, tagName);
+  std::string tagNameStr = XMLString::transcode(tagName);
+  uassert(stringIsBool(tagValueStr), tagNameStr + 
+          " value must be bool!\n");
+  bool tagValueBool = stringToBool(tagValueStr);
+  return tagValueBool;
+}
+
+
 std::string IPXACTParser::getStrAttributeFromTag(const DOMElement *element,
                                                  const XMLCh *tagName,
                                                  const XMLCh *attributeName) {
-
   size_t tagCount = element->getElementsByTagName(tagName)->getLength();
   std::string tagNameStr = XMLString::transcode(tagName);
   uassert(tagCount >= 1, "Cannot find tag " + tagNameStr + "!\n");
@@ -124,7 +138,6 @@ std::string IPXACTParser::getStrAttributeFromTag(const DOMElement *element,
 std::vector<std::string> IPXACTParser::parseCatalog(
     const std::string &libraryPath,
     const std::string &catalogPath) {
-
   // Calculate path to IP-XACT catalog
   std::filesystem::path path = libraryPath;
   path /= catalogPath;
@@ -162,7 +175,6 @@ std::vector<std::string> IPXACTParser::parseCatalog(
 std::vector<std::shared_ptr<MetaElement>> IPXACTParser::parseComponents(
     const std::string              &libraryPath,
     const std::vector<std::string> &componentPaths) {
-
   std::vector<std::shared_ptr<MetaElement>> metaElements;
   for (const auto &componentPath : componentPaths) {
     metaElements.push_back(parseComponent(libraryPath, componentPath));
@@ -173,7 +185,6 @@ std::vector<std::shared_ptr<MetaElement>> IPXACTParser::parseComponents(
 std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
     const std::string &libraryPath,
     const std::string &componentPath) {
-
   Parameters params;
   std::vector<Port> ports;
 
@@ -193,7 +204,7 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
   const DOMElement *comp = (const DOMElement*)(
       doc->getElementsByTagName(ipxCompTag)->item(0));
   const std::string name = getStrValueFromTag(comp, ipxModuleNameTag);
-  const std::string library = getStrValueFromTag(comp, ipxLibTag);
+  const std::string libraryName = getStrValueFromTag(comp, ipxLibTag);
 
   // Parse ports
   size_t portCount = doc->getElementsByTagName(ipxPortTag)->getLength();
@@ -204,15 +215,52 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
     // Parse tags
     std::string name = getStrValueFromTag(port, ipxNameTag);
     std::string direction = getStrValueFromTag(port, ipxDirectTag);
+    // Default port type is DATA 
+    Port::Type type = Port::Type::DATA;
 
-    // TODO: This is a temporal solution. Any HW language may be used
     uassert(direction == "in" || direction == "out" || direction == "inout",
         "Direction of the port " + name + "must be 'in', 'out' or 'inout'!\n");
 
     size_t vectorCount = port->getElementsByTagName(ipxVectTag)->getLength();
     std::string leftStr = vectorCount ? getStrValueFromTag(port, ipxLeftTag)
                                       : "";
-
+    
+    // Port can be of special type: clock or reset
+    size_t qualifierTagCount = port->getElementsByTagName(
+      ipxQualifierTag)->getLength();
+    if (qualifierTagCount != 0) {
+      size_t ipxIsDataTagCount = port->getElementsByTagName(
+          ipxIsDataTag)->getLength();
+      size_t ipxIsClockTagCount = port->getElementsByTagName(
+          ipxIsClockTag)->getLength();
+      size_t ipxIsResetTagCount = port->getElementsByTagName(
+          ipxIsResetTag)->getLength();
+      if (ipxIsDataTagCount  == 1 &&
+          ipxIsClockTagCount == 0 &&
+          ipxIsResetTagCount == 0) {
+        bool isDataType = getBoolValueFromTag(port, ipxIsDataTag);
+        uassert(isDataType, "Value of " + 
+            std::string(XMLString::transcode(ipxIsDataTag)) + 
+            "must be 'true'!\n");
+        type = Port::Type::DATA;
+      } else if (ipxIsDataTagCount  == 0 &&
+                 ipxIsClockTagCount == 1 &&
+                 ipxIsResetTagCount == 0) {
+        bool isClockType = getBoolValueFromTag(port, ipxIsClockTag);
+        uassert(isClockType, "Value of " + 
+            std::string(XMLString::transcode(ipxIsClockTag)) + 
+            "must be 'true'!\n");
+        type = Port::Type::CLOCK;
+      } else if (ipxIsDataTagCount  == 0 &&
+                 ipxIsClockTagCount == 0 &&
+                 ipxIsResetTagCount == 1) {
+        bool isResetType = getBoolValueFromTag(port, ipxIsClockTag);
+        uassert(isResetType, "Value of " + 
+            std::string(XMLString::transcode(ipxIsDataTag)) + 
+            "must be 'true'!\n");
+        type = Port::Type::RESET;
+      }
+    }      
     // Create port and adding it to multitude of ports
     int leftInt = 0;
     if (leftStr == "") {
@@ -220,12 +268,14 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
                                     direction == "in" ? Port::IN : Port::OUT,
                                     leftInt + 1,
                                     model::Parameter(std::string("WIDTH"),
-                                                     leftInt + 1)));
-    } else if (isalpha(leftStr.c_str()[0])) {
+                                                     leftInt + 1),
+                                    type));
+    } else if (stringIsId(leftStr)) {
       ports.push_back(library::Port(name,
                                     direction == "in" ? Port::IN : Port::OUT,
                                     leftInt,
-                                    model::Parameter(std::string(leftStr))));
+                                    model::Parameter(std::string(leftStr)),
+                                    type));
     } else if (stringIsInteger(leftStr)) {
       leftInt = std::stoi(leftStr);
       uassert(leftInt >= 0, "Port width margin value cannot be negative!\n");
@@ -233,13 +283,13 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
                                     direction == "in" ? Port::IN : Port::OUT,
                                     leftInt + 1,
                                     model::Parameter(std::string("WIDTH"),
-                                                     leftInt + 1)));
+                                                     leftInt + 1),
+                                    type));
     }
   }
 
   // Parse vendor extensions
-  size_t parameterCount = doc->getElementsByTagName(
-    k2ParamTag)->getLength();
+  size_t parameterCount = doc->getElementsByTagName(k2ParamTag)->getLength();
   for (size_t i = 0; i < parameterCount; i++) {
     const DOMElement *parameter = (const DOMElement*)(
       doc->getElementsByTagName(k2ParamTag)->item(i));
@@ -263,7 +313,7 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
   // Check if component is generator
   std::shared_ptr<MetaElement> metaElement;
   size_t generatorTagCount = doc->getElementsByTagName(
-    ipxCompGensTag)->getLength();
+      ipxCompGensTag)->getLength();
   if (generatorTagCount != 0) {
     // Parse tag
     const DOMElement *ipxCompGens = (const DOMElement*)(
@@ -275,7 +325,7 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
 
     // Create metaElement
     metaElement = std::shared_ptr<MetaElement>(new ElementGenerator(name,
-                                                                    library,
+                                                                    libraryName,
                                                                     params,
                                                                     ports,
                                                                     path));
@@ -294,7 +344,7 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
 
     // Create metaElement
     metaElement = std::shared_ptr<MetaElement>(new ElementCore(name,
-                                                               library,
+                                                               libraryName,
                                                                params,
                                                                ports,
                                                                path));
@@ -304,5 +354,4 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
   
   return metaElement;
 }
-
 } // namespace eda::hls::library

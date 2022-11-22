@@ -14,22 +14,16 @@
 #include <string>
 #include <vector>
 
-using namespace eda::hls::mapper;
-
-namespace eda::hls::library {
+namespace eda::hls::library::internal {
 
 struct ElementInternal : public MetaElement {
   ElementInternal(const std::string &name,
-                  const std::string &library,
+                  const std::string &libraryName,
                   const Parameters &params,
                   const std::vector<Port> &ports) :
-  MetaElement(name, library, params, ports) {}
+  MetaElement(name, libraryName, params, ports) {}
   virtual ~ElementInternal() = default;
-  static std::shared_ptr<MetaElement> create(const NodeType &nodetype,
-                                             const HWConfig &hwconfig);
-  static std::vector<std::shared_ptr<MetaElement>> createDefaultElements();
   protected:
     static std::vector<Port> createPorts(const NodeType &nodetype);
 };
-
-} // namespace eda::hls::library
+} // namespace eda::hls::library::internal

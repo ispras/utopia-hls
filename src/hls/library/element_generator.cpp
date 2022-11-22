@@ -10,9 +10,8 @@
 
 namespace eda::hls::library {
 
-//FIXME
-std::unique_ptr<Element> ElementGenerator::construct(
-    const Parameters &params) const {
+// TODO: Realize TGI
+std::unique_ptr<Element> ElementGenerator::construct() const {
   system((genPath +
               " " +
               "." +
@@ -26,9 +25,8 @@ std::unique_ptr<Element> ElementGenerator::construct(
   return element;
 }
 
-void ElementGenerator::estimate(
-    const Parameters &params, Indicators &indicators) const {
-
+void ElementGenerator::estimate(const Parameters &params,
+                                Indicators &indicators) const {
   //TODO
   indicators.ticks = 1;
   indicators.power = 100;
@@ -46,5 +44,4 @@ void ElementGenerator::estimate(
     }
   }
 }
-
 } // namespace eda::hls::library

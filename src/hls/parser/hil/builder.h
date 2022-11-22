@@ -57,8 +57,8 @@ public:
 
   void endNodetype() {
     assert(currentNodetype != nullptr && "Nodetype has not been started");
-
-    currentModel->addNodetype(currentNodetype);
+    Signature signature = currentNodetype->getSignature();
+    currentModel->addNodetype(signature, currentNodetype);
     currentNodetype = nullptr;
   }
 

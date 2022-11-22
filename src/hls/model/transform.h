@@ -34,7 +34,7 @@ struct InsertDelay: public Transform {
 
   virtual void apply() override;
   virtual void undo() override;
-
+  
   Chan &chan;
   unsigned latency;
 

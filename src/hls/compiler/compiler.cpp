@@ -25,7 +25,6 @@ namespace fs = std::filesystem;
 namespace eda::hls::compiler {
 
 void ExternalModule::addInputs(const std::vector<model::Port*> &inputs) {
-  // Will be removed in the near future
   addInput(Port("clock", Port::Direction::IN, Type("clock", 1)));
   addInput(Port("reset", Port::Direction::IN, Type("reset", 1)));
   for (const auto *input : inputs) {
@@ -45,7 +44,7 @@ void FirrtlModule::addInputs(const model::Node *node,
                              const std::vector<model::Chan*> &outputs) {
   for (const auto *output : outputs) {
     addInput(Port::createFirrtlPort(node, output->source.port,
-       Port::Direction::IN, Type("sint", output->source.port->type.size)));
+        Port::Direction::IN, Type("sint", output->source.port->type.size)));
   }
 }
 
@@ -53,7 +52,7 @@ void FirrtlModule::addOutputs(const model::Node *node,
                               const std::vector<model::Chan*> &inputs) {
   for (const auto *input : inputs) {
     addOutput(Port::createFirrtlPort(node, input->target.port,
-       Port::Direction::OUT, Type("sint", input->target.port->type.size)));
+        Port::Direction::OUT, Type("sint", input->target.port->type.size)));
   }
 }
 
@@ -81,10 +80,8 @@ ExternalModule::ExternalModule(const model::NodeType *nodetype) :
   auto metaElements = Library::get().find(*nodetype, HWConfig("", "", ""));
   uassert(!metaElements.empty(), "No elements have been found!");
   auto metaElement = metaElements[0];
-  //----------------------------------------------------------------------------
-  // TODO: what if the element in not found?
-
-  auto element = metaElement->construct(metaElement->params);
+  //****************************************************************************
+  auto element = metaElement->construct();
   setBody(element->ir);
   setPath(element->path);
 }
@@ -107,7 +104,6 @@ FirrtlModule::FirrtlModule(const eda::hls::model::Model &model,
     } else if (node->isSink()) {
       addOutputs(node, node->inputs);
     } else {
-
       Instance instance(replaceSomeChars(node->name),
                         replaceSomeChars(node->type.name));
       Port clockPort = Port(instance.instanceName + "_clock",
@@ -157,7 +153,7 @@ FirrtlModule::FirrtlModule(const eda::hls::model::Model &model,
 
 void ExternalModule::addPrologueToDict(ctemplate::TemplateDictionary *dict)
     const {
-  // set generation time
+  // Set generation time
   auto time = std::time(nullptr);
   auto *localTime = std::localtime(&time);
   dict->SetFormattedValue("GEN_TIME",
@@ -335,10 +331,11 @@ void FirrtlCircuit::printFirrtl(std::ostream &out) const {
   std::string output;
   const char* basePath = std::getenv("UTOPIA_HOME");
   const char* verilogTemplate = "/src/data/ctemplate/top_firrtl.tpl";
-  ctemplate::ExpandTemplate(std::string(basePath) +
+  ctemplate::ExpandTemplate(std::string(basePath) + 
                             std::string(verilogTemplate),
                             ctemplate::DO_NOT_STRIP,
-                            dict, &output);
+                            dict,
+                            &output);
   out << output;
 }
 
@@ -350,13 +347,19 @@ void FirrtlCircuit::dumpVerilogLibrary(const std::string &outPath,
     } else {
       pair.second.printVerilogModule(out);
     }
-}
+  }
 }
 
 FirrtlCircuit::FirrtlCircuit(const Model &model, const std::string &name) :
     name(name), latency(model.ind.ticks), resetInitialValue(0) {
-  for (const auto *nodetype : model.nodetypes) {
+  // deprecated
+  /*for (const auto *nodetype : model.nodetypes) {
     addExternalModule(nodetype);
+  }*/
+  for (auto nodeTypeIterator = model.nodetypes.begin();
+       nodeTypeIterator != model.nodetypes.end();
+       nodeTypeIterator++) {
+    addExternalModule(nodeTypeIterator->second);
   }
   addFirrtlModule(FirrtlModule(model, name));
 };
@@ -402,7 +405,7 @@ void FirrtlCircuit::printRndVlogTest(const Model       &model,
 
   ctemplate::TemplateDictionary *dict = new ctemplate::TemplateDictionary("tb");
 
-  // set generation time
+  // Set generation time
   auto time = std::time(nullptr);
   auto *localTime = std::localtime(&time);
   dict->SetFormattedValue("GEN_TIME",
@@ -418,7 +421,7 @@ void FirrtlCircuit::printRndVlogTest(const Model       &model,
 
   dict->SetValue("MODULE_NAME", main.name);
 
-  // set registers for device inputs
+  // Set registers for device inputs
   std::vector<Port> inputs = main.inputs;
   std::vector<std::string> bndNames;
   for (size_t i = 0; i < inputs.size(); i++) {
@@ -436,7 +439,7 @@ void FirrtlCircuit::printRndVlogTest(const Model       &model,
     bndNames.push_back(iName);
   }
 
-  // set registers for device outputs
+  // Set registers for device outputs
   std::vector<Port> outputs = main.outputs;
 
   for (size_t i = 0; i < outputs.size(); i++) {
@@ -448,11 +451,11 @@ void FirrtlCircuit::printRndVlogTest(const Model       &model,
     bndNames.push_back(oName);
   }
 
-  // calculate model's latency and store it
+  // Calculate model's latency and store it
   dict->SetIntValue("LATENCY", latency);
 
 
-  // set bindings to device under test
+  // Set bindings to device under test
   for (size_t i = 0; i < bndNames.size(); i++) {
     ctemplate::TemplateDictionary *bndDict = dict->AddSectionDictionary("BIND");
     bndDict->SetValue("WNAME", bndNames[i]);
@@ -460,7 +463,7 @@ void FirrtlCircuit::printRndVlogTest(const Model       &model,
   }
   bndNames.clear();
 
-  // set resets
+  // Set resets
   for (size_t i = 0; i < inputs.size(); i++) {
     if (inputs[i].isReset()) {
       auto *resetDict = dict->AddSectionDictionary("RESETS");
@@ -469,7 +472,7 @@ void FirrtlCircuit::printRndVlogTest(const Model       &model,
     }
   }
 
-  // generate random stimuli
+  // Generate random stimuli
   for (size_t i = 0; i < testCount; i++) {
     ctemplate ::TemplateDictionary *tDict = dict->AddSectionDictionary("TESTS");
     for (size_t j = 0; j < inputs.size(); j++) {
@@ -483,7 +486,7 @@ void FirrtlCircuit::printRndVlogTest(const Model       &model,
     }
   }
 
-  // use the template to store testbench to file
+  // Use the template to store testbench to file
   std::string output;
   const char* basePath = std::getenv("UTOPIA_HOME");
   const char* verilogTemplate = "/src/data/ctemplate/tbench_verilog.tpl";

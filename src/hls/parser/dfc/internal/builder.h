@@ -33,6 +33,7 @@ class Builder final: public eda::util::Singleton<Builder> {
   friend class eda::util::Singleton<Builder>;
 
 public:
+
   /// Creates a model that contains all defined kernels (graphs).
   std::shared_ptr<Model> create(const std::string &modelName);
 
@@ -54,6 +55,7 @@ private:
   Builder(): common("<common>") {}
 
   struct Unit;
+
   struct Wire final {
     Wire(const std::string &name,
          const eda::hls::model::Type &type,
@@ -104,7 +106,7 @@ private:
       }
     }
 
-    std::string fullName() const;
+    std::string getFullName() const;
 
     void addInput(Wire *wire) {
       in.push_back(wire);
@@ -114,6 +116,20 @@ private:
     void addOutput(Wire *wire) {
       out.push_back(wire);
       wire->setProducer(this);
+    }
+
+    Signature getSignature() const {
+      std::vector<std::string> inputTypeNames;
+      std::vector<std::string> outputTypeNames;
+      for (const auto *input : in) {
+        inputTypeNames.push_back(input->type.name);
+      }
+      for (const auto *output : out) {
+        outputTypeNames.push_back(output->type.name);
+      }
+      return Signature(getFullName(),
+                       inputTypeNames,
+                       outputTypeNames);
     }
 
     const std::string opcode;

@@ -10,12 +10,61 @@
 #include <cassert>
 #include <unordered_map>
 
-#include "hls/library/internal/delay.h"
+#include "hls/library/internal/verilog/delay.h"
 #include "hls/mapper/mapper.h"
 #include "hls/model/model.h"
 #include "hls/model/transform.h"
 
 namespace eda::hls::model {
+//===----------------------------------------------------------------------===//
+// Signature
+//===----------------------------------------------------------------------===//
+
+bool Signature::operator==(const Signature &signature) const {
+  if (name != signature.name) {
+    return false;
+  }
+
+  if (inputTypeNames.size() != signature.inputTypeNames.size() ||
+      outputTypeNames.size() != signature.outputTypeNames.size()) {
+    return false;
+  }
+
+  for (size_t i = 0; i < inputTypeNames.size(); i++) {
+    if (inputTypeNames[i] != signature.inputTypeNames[i]) {
+      return false;
+    }
+  }
+  for (size_t i = 0; i < outputTypeNames.size(); i++) {
+    if (outputTypeNames[i] != signature.outputTypeNames[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+Signature::Signature(const NodeType &nodeType) {
+  name = nodeType.name;
+  for (const auto *input : nodeType.inputs) {
+    inputTypeNames.push_back(input->type.name);
+  }
+  for (const auto *output : nodeType.outputs) {
+    outputTypeNames.push_back(output->type.name);
+  }
+}
+
+Signature::Signature(const std::string &name, 
+                     const std::vector<std::string> &inputTypeNames,
+                     const std::vector<std::string> &outputTypeNames) {
+  this->name = name;
+  for (const auto &inputTypeName : inputTypeNames) {
+    this->inputTypeNames.push_back(inputTypeName);
+  }
+  for (const auto &outputTypeName : outputTypeNames) {
+    this->outputTypeNames.push_back(outputTypeName);
+  }
+}
 
 //===----------------------------------------------------------------------===//
 // Type
@@ -147,7 +196,7 @@ void Model::insertDelay(Chan &chan, unsigned latency) {
 
   // Set the latency parameter.
   Parameters params(delay->map->params);
-  params.setValue(library::Delay::depth, latency);
+  params.setValue(library::internal::verilog::Delay::depth, latency);
 
   // Apply the parameters to the node.
   mapper::Mapper::get().apply(*delay, params);
@@ -218,8 +267,15 @@ std::ostream& operator<<(std::ostream &out, const Graph &graph) {
 std::ostream& operator<<(std::ostream &out, const Model &model) {
   out << "model " << model.name << "{" << std::endl;
 
-  for (const auto *nodetype: model.nodetypes)
-    out << *nodetype << std::endl;
+  // deprecated
+  /*for (const auto *nodetype: model.nodetypes)
+    out << *nodetype << std::endl;*/
+  
+  for (auto nodeTypeIterator = model.nodetypes.begin();
+       nodeTypeIterator != model.nodetypes.end();
+       nodeTypeIterator++) {
+    out << *nodeTypeIterator->second << std::endl;
+  }
 
   for (const auto *graph: model.graphs)
     out << *graph << std::endl;

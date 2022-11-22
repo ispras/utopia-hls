@@ -9,6 +9,7 @@
 #pragma once
 
 #include <algorithm>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <ostream>
@@ -27,11 +28,46 @@ struct MetaElement;
 } // namespace eda::hls::library
 
 namespace eda::hls::model {
+struct NodeType;
+} // namespace eda::hls::model
+
+namespace eda::hls::model {
+/// Key for MetaElement / Nodetype / Unit 
+struct Signature {
+  Signature(const std::string &name, 
+            const std::vector<std::string> &inputTypeNames,
+            const std::vector<std::string> &outputTypeNames);
+  Signature(const eda::hls::model::NodeType &nodeType);
+  bool operator==(const Signature &signature) const;
+  std::string name;
+  std::vector<std::string> inputTypeNames;
+  std::vector<std::string> outputTypeNames;
+};
+} // namespace eda::hls::model
+
+namespace std {
+template<>
+struct hash<eda::hls::model::Signature> {
+  size_t operator()(const eda::hls::model::Signature &signature) const {
+    size_t hash = std::hash<std::string>()(signature.name);
+    for (const auto &inputTypeName : signature.inputTypeNames) {
+      hash = hash * 13 + std::hash<std::string>()(inputTypeName);
+    }
+    for (const auto &outputTypeName : signature.outputTypeNames) {
+      hash = hash * 13 + std::hash<std::string>()(outputTypeName);
+    }
+    return hash;
+  }
+};
+} // namespace std
+
+namespace eda::hls::model {
 
 struct Graph;
 struct Model;
 struct Node;
 struct Transform;
+
 
 //===----------------------------------------------------------------------===//
 // Type
@@ -176,7 +212,7 @@ struct Port final {
        float flow,
        unsigned latency,
        bool isConst,
-       const int &value):
+       const long long &value):
     name(name),
     type(type),
     flow(flow),
@@ -190,7 +226,7 @@ struct Port final {
        float flow,
        unsigned latency,
        bool isConst,
-       const int &value):
+       const long long &value):
     Port(name, Type::get(type), flow, latency, isConst, value) {}
  
   const std::string name;
@@ -198,7 +234,7 @@ struct Port final {
   const float flow;
   const unsigned latency;
   const bool isConst;
-  const int value;
+  const long long value;
 };
 
 //===----------------------------------------------------------------------===//
@@ -229,6 +265,20 @@ struct NodeType final {
     return i != outputs.end() ? *i : nullptr;
   }
 
+  Signature getSignature() const {
+    std::vector<std::string> inputTypeNames;
+    std::vector<std::string> outputTypeNames;
+    for (const auto *input : inputs) {
+      inputTypeNames.push_back(input->type.name);
+    }
+    for (const auto *output : outputs) {
+      outputTypeNames.push_back(output->type.name);
+    }
+    return Signature(name,
+                     inputTypeNames,
+                     outputTypeNames);
+  }
+
   bool isConst() const {
     if (!inputs.empty())
       return false;
@@ -247,13 +297,7 @@ struct NodeType final {
 
   bool isMux() const {
     return outputs.size() == 1
-        && starts_with(name, "mux");
-  }
-
-  bool isCast() const {
-    return inputs.size()  == 1 
-        && outputs.size() == 1 
-        && starts_with(name, "cast");
+        && starts_with(name, "MUX");
   }
 
   bool isSink() const {
@@ -280,22 +324,7 @@ struct NodeType final {
         && outputs.size() == 1
         && starts_with(name, "delay");
   }
-
-  // FIXME:
-  bool isClip() const {
-    return starts_with(name, "clip");
-  }
-
-  bool isKernel() const {
-    return !isConst()
-        && !isSource()
-        && !isSink()
-        && !isMerge()
-        && !isSplit()
-        && !isDup()
-        && !isDelay();
-  }
-
+  
   const std::string name;
   std::vector<Port*> inputs;
   std::vector<Port*> outputs;
@@ -326,17 +355,20 @@ struct Binding final {
 //===----------------------------------------------------------------------===//
 
 struct Chan final {
-  Chan(const std::string &name, const std::string &type, Graph &graph):
-    name(name), type(type), graph(graph) {}
+  Chan(const std::string &name, const std::string &type, Graph &graph, 
+       const size_t latency = 0):
+    name(name), type(type), graph(graph), latency(latency) {}
 
-  const std::string name;
+  std::string name;
   const std::string type;
-
+  
   Binding source;
   Binding target;
 
   /// Reference to the parent.
   Graph &graph;
+
+  size_t latency = 0;
 
   /// Indicators.
   ChanInd ind;
@@ -377,7 +409,6 @@ struct Node final {
   bool isSplit()  const { return type.isSplit();  }
   bool isDup()    const { return type.isDup();    }
   bool isDelay()  const { return type.isDelay();  }
-  bool isKernel() const { return type.isKernel(); }
 
   const std::string name;
   const NodeType &type;
@@ -484,18 +515,48 @@ struct Model final {
   Model(const std::string &name):
     name(name) {}
 
-  void addNodetype(NodeType *nodetype) {
-    nodetypes.push_back(nodetype);
+  void addNodetype(const Signature &signature, NodeType *nodetype) {
+    /*std::cout << signature.name << std::endl;
+    std::cout << "Inputs:" << std::endl;
+    std::cout << "***********************************************" << std::endl;
+    for (const auto &inputTypeName : signature.inputTypeNames) {
+      std::cout << inputTypeName << std::endl;
+    }
+    std::cout << "***********************************************" << std::endl;
+    std::cout << "Outputs:" << std::endl;
+    std::cout << "***********************************************" << std::endl;
+    for (const auto &outputTypeName : signature.outputTypeNames) {
+      std::cout << outputTypeName << std::endl;
+    }
+    std::cout << "*********************************************" << std::endl;*/
+    nodetypes.insert({ signature, nodetype });
   }
 
   void addGraph(Graph *graph) {
     graphs.push_back(graph);
   }
- 
-  NodeType* findNodetype(const std::string &name) const {
-    auto i = std::find_if(nodetypes.begin(), nodetypes.end(),
+  
+  NodeType* findNodetype(const Signature &signature) const {
+    /*std::cout << signature.name << std::endl;
+    std::cout << "Inputs:" << std::endl;
+    std::cout << "***********************************************" << std::endl;
+    for (const auto &inputTypeName : signature.inputTypeNames) {
+      std::cout << inputTypeName << std::endl;
+    }
+    std::cout << "***********************************************" << std::endl;
+    std::cout << "Outputs:" << std::endl;
+    std::cout << "***********************************************" << std::endl;
+    for (const auto &outputTypeName : signature.outputTypeNames) {
+      std::cout << outputTypeName << std::endl;
+    }
+    std::cout << "*********************************************" << std::endl;*/
+    auto nodeTypeIterator = nodetypes.find(signature);
+    return nodeTypeIterator != nodetypes.end() ? nodeTypeIterator->second :
+                                                 nullptr;
+    // deprecated
+    /*auto i = std::find_if(nodetypes.begin(), nodetypes.end(),
       [&name](NodeType *nodetype) { return nodetype->name == name; });
-    return i != nodetypes.end() ? *i : nullptr;
+    return i != nodetypes.end() ? *i : nullptr;*/
   }
 
   Graph* findGraph(const std::string &name) const {
@@ -514,7 +575,9 @@ struct Model final {
   void insertDelay(Chan &chan, unsigned latency);
 
   const std::string name;
-  std::vector<NodeType*> nodetypes;
+  // deprecated
+  //std::vector<NodeType*> nodetypes;
+  std::unordered_map<Signature, NodeType*> nodetypes;
   std::vector<Graph*> graphs;
 
   std::vector<Transform*> transforms;

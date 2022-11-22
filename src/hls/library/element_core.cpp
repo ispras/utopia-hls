@@ -10,17 +10,15 @@
 
 namespace eda::hls::library {
 
-std::unique_ptr<Element> ElementCore::construct(
-      const Parameters &params) const {
+std::unique_ptr<Element> ElementCore::construct() const {
   std::unique_ptr<Element> element = std::make_unique<Element>(ports);
   element->ir = "";
   element->path = path;
   return element;
 }
 
-void ElementCore::estimate(
-    const Parameters &params, Indicators &indicators) const {
-  //TODO
+void ElementCore::estimate(const Parameters &params, Indicators &indicators) const {
+  // TODO
   indicators.ticks = 1;
   indicators.power = 100;
   indicators.area  = 100;

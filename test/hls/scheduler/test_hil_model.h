@@ -30,13 +30,6 @@ public:
     NodeType *merge   = new NodeType("merge",   *model);
     NodeType *sink    = new NodeType("sink",    *model);
 
-    model->addNodetype(source);
-    model->addNodetype(split);
-    model->addNodetype(kernel1);
-    model->addNodetype(kernel2);
-    model->addNodetype(merge);
-    model->addNodetype(sink);
-
     // Create ports.
     eda::hls::model::Port *srcX = new eda::hls::model::Port("x", Type::get("X"), 1.0, 0, false, 0);
     eda::hls::model::Port *srcY = new eda::hls::model::Port("y", Type::get("Y"), 1.0, 0, false, 0);
@@ -75,6 +68,20 @@ public:
 
     eda::hls::model::Port *sinkZ = new eda::hls::model::Port("z", Type::get("Z"), 1.0, 1, false, 0);
     sink->addInput(sinkZ);
+
+    Signature sourceSignature = source->getSignature();
+    Signature splitSignature = split->getSignature();
+    Signature kernel1Signature = kernel1->getSignature();
+    Signature kernel2Signature = kernel2->getSignature();
+    Signature mergeSignature = merge->getSignature();
+    Signature sinkSignature = sink->getSignature();
+
+    model->addNodetype(sourceSignature, source);
+    model->addNodetype(splitSignature, split);
+    model->addNodetype(kernel1Signature, kernel1);
+    model->addNodetype(kernel2Signature, kernel2);
+    model->addNodetype(mergeSignature, merge);
+    model->addNodetype(sinkSignature, sink);
 
     // Create channels.
     Chan *x1 = new Chan("x1", "X", *graph);

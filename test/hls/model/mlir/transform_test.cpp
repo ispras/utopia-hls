@@ -18,6 +18,7 @@ using eda::hls::model::Model;
 using eda::hls::model::Node;
 using eda::hls::model::NodeType;
 using eda::hls::model::Port;
+using eda::hls::model::Signature;
 
 class SimpleModel : public ::testing::Test {
 protected:
@@ -48,20 +49,24 @@ protected:
     auto source_nt = new NodeType{"source", *model_};
     source_nt->addOutput(new Port{port_x});
     source_nt->addOutput(new Port{port_y});
+    Signature source_nt_signature = source_nt->getSignature();
     auto fst_nt = new NodeType{"fst", *model_};
     fst_nt->addInput(new Port{port_x});
     fst_nt->addOutput(new Port{port_z});
+    Signature fst_nt_signature = fst_nt->getSignature();
     auto snd_nt = new NodeType{"snd", *model_};
     snd_nt->addInput(new Port{port_y});
     snd_nt->addOutput(new Port{port_w});
+    Signature snd_nt_signature = snd_nt->getSignature();
     auto sink_nt = new NodeType("sink", *model_);
     sink_nt->addInput(new Port{port_z});
     sink_nt->addInput(new Port{port_w});
+    Signature sink_nt_signature = sink_nt->getSignature();
     // add nodetypes
-    model_->addNodetype(source_nt);
-    model_->addNodetype(fst_nt);
-    model_->addNodetype(snd_nt);
-    model_->addNodetype(sink_nt);
+    model_->addNodetype(source_nt_signature, source_nt);
+    model_->addNodetype(fst_nt_signature, fst_nt);
+    model_->addNodetype(snd_nt_signature, snd_nt);
+    model_->addNodetype(sink_nt_signature, sink_nt);
     // create nodes
     auto n1 = new Node{"n1", *source_nt, *graph};
     auto n2 = new Node{"n2", *fst_nt, *graph};
@@ -113,7 +118,10 @@ protected:
       }
       delete graph;
     }
-    for (auto nodetype : model_->nodetypes) {
+    for (auto nodeTypeIterator = model_->nodetypes.begin();
+         nodeTypeIterator != model_->nodetypes.end();
+         nodeTypeIterator++) {
+      const auto *nodetype = nodeTypeIterator->second;
       for (auto input_port : nodetype->inputs) {
         delete input_port;
       }

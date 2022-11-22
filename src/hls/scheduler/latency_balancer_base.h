@@ -84,6 +84,7 @@ protected:
         uassert(delta >= 0,  
           "Delta for channel " + currentChan->name + " < 0!\n");
         if (delta > 0 && !currentChan->source.node->isConst()) {
+          currentChan->latency = delta;
           model.insertDelay(*currentChan, delta);
           bufsInserted++;
           totalDelta+=delta;

@@ -44,8 +44,8 @@ DFC_KERNEL(VectorSum) {
   }
 };
 
-DFC_KERNEL(VectorMul) {
-  DFC_KERNEL_CTOR(VectorMul) {
+DFC_KERNEL(ScalarMul) {
+  DFC_KERNEL_CTOR(ScalarMul) {
     static const int SIZE = 3;
 
     std::array<dfc::stream<dfc::sint16>, SIZE> lhs;
@@ -70,13 +70,11 @@ DFC_KERNEL(IDCT) {
   DFC_KERNEL_CTOR(IDCT) {
     std::array<dfc::stream<dfc::sint16>, 64> blk;
 
-    // FIXME:
-    for (std::size_t i = 0; i < 1/*8*/; i++)
+    for (std::size_t i = 0; i < 8; i++)
       idctrow(blk, i);
 
-    // FIXME:
-    //for (std::size_t i = 0; i < 8; i++)
-    //  idctcol(blk, i);
+    for (std::size_t i = 0; i < 8; i++)
+      idctcol(blk, i);
   }
 
   /* row (horizontal) IDCT
@@ -224,7 +222,7 @@ int compilerDfcTest(const dfc::kernel &kernel,
   const std::string funcName = kernel.name;
   const fs::path homePath = std::string(getenv("UTOPIA_HOME"));
 
-  // Optimization criterion and constraints.
+  // Optimization criterion and constraints
   eda::hls::model::Criteria criteria(
     PERF,
     // Frequency (kHz)
@@ -239,7 +237,10 @@ int compilerDfcTest(const dfc::kernel &kernel,
     eda::hls::model::Constraint<unsigned>(1, 10000000));
 
   auto &builder = eda::hls::parser::dfc::Builder::get();
+
   std::shared_ptr<Model> model = builder.create(funcName, funcName);
+
+  uassert(model != nullptr, "Could not build model for kernel " + funcName);
 
   std::ofstream output("dfc_" + toLower(funcName) + "_test.dot");
   eda::hls::model::printDot(output, *model);
@@ -258,21 +259,27 @@ int compilerDfcTest(const dfc::kernel &kernel,
   TopologicalBalancer::get().balance(*model);
 
   auto compiler = std::make_unique<Compiler>();
+  
+  uassert(compiler != nullptr, "Could not build hls compiler!");
+
+  // Construct FIRRTL IR Circuit from the model
   auto circuit = compiler->constructFirrtlCircuit(*model, funcName);
+
+  uassert(circuit != nullptr, "Could not build FIRRTL circuit from model " +
+                              funcName + "!");
 
   const fs::path fsOutPath = homePath / outSubPath;
   const std::string outPath = fsOutPath;
 
   circuit->printFiles(outFirName, outVlogLibName, outVlogTopName, outPath);
 
-  // Generate random test of the specified length in ticks.
+  // Generate random test of the specified length in ticks
   const int testLength = 1;
   circuit->printRndVlogTest(*model, outPath, outTestName, testLength);
 
   std::string pathToOutVlogFiles = fsOutPath / "*.v";
 
-  bool isCompiled = system(("iverilog "
-                            + pathToOutVlogFiles).c_str());
+  bool isCompiled = system(("iverilog " + pathToOutVlogFiles).c_str());
 
   Library::get().finalize();
 
@@ -307,16 +314,16 @@ TEST(CompilerDfcTest, CompilerDfcTestVectorSum) {
                             "vectorSumTestbench.v"), 0);
 }
 
-TEST(CompilerDfcTest, CompilerDfcTestVectorMul) {
+TEST(CompilerDfcTest, CompilerDfcTestScalarMul) {
   dfc::params args;
-  VectorMul kernel(args);
+  ScalarMul kernel(args);
 
   EXPECT_EQ(compilerDfcTest(kernel,
                             "test/data/ipx/ispras/ip.hw",
                             "catalog/1.0/catalog.1.0.xml",
-                            "vectorMulFir.mlir",
-                            "vectorMulLib.v",
-                            "vectorMulTop.v",
-                            "output/test/dfc/vector_mul/",
-                            "vectorMulTestbench.v"), 0);
+                            "scalarMulFir.mlir",
+                            "scalarMulLib.v",
+                            "scalarMulTop.v",
+                            "output/test/dfc/scalar_mul/",
+                            "scalarMulTestbench.v"), 0);
 }
