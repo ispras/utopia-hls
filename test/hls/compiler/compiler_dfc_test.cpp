@@ -242,7 +242,12 @@ int compilerDfcTest(const dfc::kernel &kernel,
 
   uassert(model != nullptr, "Could not build model for kernel " + funcName);
 
-  std::ofstream output("dfc_" + toLower(funcName) + "_test.dot");
+  const fs::path fsOutPath = homePath / outSubPath;
+  fs::create_directories(fsOutPath);
+
+  const std::string outDotFileName = "dfc_" + toLower(funcName) + "_test.dot";
+
+  std::ofstream output(fsOutPath / outDotFileName);
   eda::hls::model::printDot(output, *model);
   output.close();
 
@@ -268,7 +273,6 @@ int compilerDfcTest(const dfc::kernel &kernel,
   uassert(circuit != nullptr, "Could not build FIRRTL circuit from model " +
                               funcName + "!");
 
-  const fs::path fsOutPath = homePath / outSubPath;
   const std::string outPath = fsOutPath;
 
   circuit->printFiles(outFirName, outVlogLibName, outVlogTopName, outPath);

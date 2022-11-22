@@ -56,7 +56,8 @@ DFC_KERNEL(IDCT) {
     x6 = dfc::cast<dfc::sint32>(blk[8*i+5]);
     x7 = dfc::cast<dfc::sint32>(blk[8*i+3]);
 
-    x0 = (dfc::cast<dfc::sint32>(blk[0])<<11) + 128; /* for proper rounding in the fourth stage */
+    /* for proper rounding in the fourth stage */
+    x0 = (dfc::cast<dfc::sint32>(blk[8*i+0])<<11) + 128;
 
     /* first stage */
     x8 = W7*(x4+x5);
@@ -86,14 +87,14 @@ DFC_KERNEL(IDCT) {
     x4 = (181*(x4-x5)+128)>>8;
 
     /* fourth stage */
-    blk[0] = dfc::cast<dfc::sint16>((x7+x1)>>8);
-    blk[1] = dfc::cast<dfc::sint16>((x3+x2)>>8);
-    blk[2] = dfc::cast<dfc::sint16>((x0+x4)>>8);
-    blk[3] = dfc::cast<dfc::sint16>((x8+x6)>>8);
-    blk[4] = dfc::cast<dfc::sint16>((x8-x6)>>8);
-    blk[5] = dfc::cast<dfc::sint16>((x0-x4)>>8);
-    blk[6] = dfc::cast<dfc::sint16>((x3-x2)>>8);
-    blk[7] = dfc::cast<dfc::sint16>((x7-x1)>>8);
+    blk[0+i*8] = dfc::cast<dfc::sint16>((x7+x1)>>8);
+    blk[1+i*8] = dfc::cast<dfc::sint16>((x3+x2)>>8);
+    blk[2+i*8] = dfc::cast<dfc::sint16>((x0+x4)>>8);
+    blk[3+i*8] = dfc::cast<dfc::sint16>((x8+x6)>>8);
+    blk[4+i*8] = dfc::cast<dfc::sint16>((x8-x6)>>8);
+    blk[5+i*8] = dfc::cast<dfc::sint16>((x0-x4)>>8);
+    blk[6+i*8] = dfc::cast<dfc::sint16>((x3-x2)>>8);
+    blk[7+i*8] = dfc::cast<dfc::sint16>((x7-x1)>>8);
   }
 
   /* column (vertical) IDCT
@@ -126,7 +127,7 @@ DFC_KERNEL(IDCT) {
     x8 = W3*(x6+x7) + 4;
     x6 = (x8-(W3-W5)*x6)>>3;
     x7 = (x8-(W3+W5)*x7)>>3;
-    
+
     /* second stage */
     x8 = x0 + x1;
     x0 -= x1;
@@ -137,7 +138,7 @@ DFC_KERNEL(IDCT) {
     x4 -= x6;
     x6 = x5 + x7;
     x5 -= x7;
-    
+
     /* third stage */
     x7 = x8 + x3;
     x8 -= x3;
@@ -145,7 +146,7 @@ DFC_KERNEL(IDCT) {
     x0 -= x2;
     x2 = (181*(x4+x5)+128)>>8;
     x4 = (181*(x4-x5)+128)>>8;
-    
+
     /* fourth stage */
     blk[8*0+i] = iclp((x7+x1)>>14);
     blk[8*1+i] = iclp((x3+x2)>>14);
@@ -162,7 +163,9 @@ DFC_KERNEL(IDCT) {
     dfc::value<dfc::sint32> Cm256(-256);
     dfc::value<dfc::sint32> Cp255(+255);
 
-    return dfc::cast<dfc::sint16>(dfc::mux(i < Cm256, Cm256, mux(i > Cp255, Cp255, i)));
+    return dfc::cast<dfc::sint16>(dfc::mux(i < Cm256,
+                                           mux(i > Cp255, i, Cp255),
+                                           Cm256));
   }
 };
 

@@ -14,8 +14,11 @@
 #include "gtest/gtest.h"
 
 #include <array>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+
+namespace fs = std::filesystem;
 
 DFC_KERNEL(SumFix64) {
 
@@ -77,13 +80,22 @@ DFC_KERNEL(SumBits8) {
   }
 };
 
-void dfcModelTypesTest(const dfc::kernel &kernel) {
+void dfcModelTypesTest(const dfc::kernel &kernel,
+                       const std::string &outSubPath) {
   const auto funcName = kernel.name;
   auto &builder = eda::hls::parser::dfc::Builder::get();
   std::shared_ptr<Model> model = builder.create(funcName, funcName);
   std::cout << *model << std::endl;
 
-  std::ofstream output("dfc_" + toLower(funcName) + "_test.dot");
+  const fs::path homePath = std::string(getenv("UTOPIA_HOME"));
+  const fs::path fsOutPath = homePath / outSubPath;
+  fs::create_directories(fsOutPath);
+
+  const std::string outDotFileName = "dfc_" + toLower(funcName) + "_test.dot";
+
+  fs::create_directories(fsOutPath);
+
+  std::ofstream output(fsOutPath / outDotFileName);
   eda::hls::model::printDot(output, *model);
   output.close();
 }
@@ -92,33 +104,38 @@ TEST(DfcTest, DfcModelTypesSumFix64Test) {
   dfc::params args;
   SumFix64 kernel(args);
   
-  dfcModelTypesTest(kernel);
+  dfcModelTypesTest(kernel,
+                    "output/test/dfc_model_types_test/sum_fix64/");
 }
 
 TEST(DfcTest, DfcModelTypesSumReal16Test) {
   dfc::params args;
   SumReal16 kernel(args);
   
-  dfcModelTypesTest(kernel);
+  dfcModelTypesTest(kernel,
+                    "output/test/dfc_model_types_test/sum_real16/");
 }
 
 TEST(DfcTest, DfcModelTypesMulComplexReal32Test) {
   dfc::params args;
   MulComplexReal32 kernel(args);
   
-  dfcModelTypesTest(kernel);
+  dfcModelTypesTest(kernel,
+                    "output/test/dfc_model_types_test/mul_complex_real32");
 }
 
 TEST(DfcTest, DfcModelTypesSumTensor2x2Fix32Test) {
   dfc::params args;
   SumTensor2x2Fix32 kernel(args);
   
-  dfcModelTypesTest(kernel);
+  dfcModelTypesTest(kernel,
+                    "output/test/dfc_model_types_test/sum_tensor2x2fix32");
 }
 
 TEST(DfcTest, DfcModelTypesSumBits8Test) {
   dfc::params args;
   SumBits8 kernel(args);
   
-  dfcModelTypesTest(kernel);
+  dfcModelTypesTest(kernel,
+                    "output/test/dfc_model_types_test/sum_bits8/");
 }
