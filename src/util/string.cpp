@@ -14,7 +14,7 @@ namespace eda::utils {
 
 std::string unique_name(const std::string &prefix) {
   static int i = 0;
-  return utils::format("%s$%d", prefix.c_str(), i++);
+  return utils::format("%s_%d", prefix.c_str(), i++);
 }
 
 } // namespace eda::utils

@@ -13,8 +13,11 @@
 
 #include "gtest/gtest.h"
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+
+namespace fs = std::filesystem;
 
 DFC_KERNEL(DotProduct) {
   static const std::size_t N = 8;
@@ -30,7 +33,7 @@ DFC_KERNEL(DotProduct) {
   }
 };
 
-void dfcDotTest() {
+void dfcDotTest(const std::string &outSubPath) {
   dfc::params args;
   DotProduct kernel(args);
 
@@ -38,11 +41,18 @@ void dfcDotTest() {
     eda::hls::parser::dfc::Builder::get().create("DotModel");
   std::cout << *model << std::endl;
 
-  std::ofstream output("dfc_dot_test.dot");
+  const fs::path homePath = std::string(getenv("UTOPIA_HOME"));
+  const fs::path fsOutPath = homePath / outSubPath;
+  fs::create_directories(fsOutPath);
+
+  const std::string outDotFileName = "dfc_dot_test.dot";
+
+  std::ofstream output(fsOutPath / outDotFileName);
+
   eda::hls::model::printDot(output, *model);
   output.close();
 }
 
 TEST(DfcTest, DfcDotTest) {
-  dfcDotTest();
+  dfcDotTest("output/test/dfc_dot_test/");
 }

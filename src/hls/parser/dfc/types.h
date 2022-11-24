@@ -221,4 +221,3 @@ template<typename Type, std::size_t Rows, std::size_t Cols>
 using matrix = tensor<Type, Rows, Cols>;
 
 } // namespace dfc
-

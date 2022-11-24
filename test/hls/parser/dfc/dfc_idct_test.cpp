@@ -14,8 +14,11 @@
 #include "gtest/gtest.h"
 
 #include <array>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+
+namespace fs = std::filesystem;
 
 DFC_KERNEL(IDCT) {
   static const int W1 = 2841; // 2048*sqrt(2)*cos(1*pi/16)
@@ -169,7 +172,7 @@ DFC_KERNEL(IDCT) {
   }
 };
 
-void dfcIdctTest() {
+void dfcIdctTest(const std::string &outSubPath) {
   dfc::params args;
   IDCT kernel(args);
 
@@ -177,11 +180,17 @@ void dfcIdctTest() {
     eda::hls::parser::dfc::Builder::get().create("IDCT");
   std::cout << *model << std::endl;
 
-  std::ofstream output("dfc_idct_test.dot");
+  const fs::path homePath = std::string(getenv("UTOPIA_HOME"));
+  const fs::path fsOutPath = homePath / outSubPath;
+  fs::create_directories(fsOutPath);
+
+  const std::string outDotFileName = "dfc_idct_test.dot";
+
+  std::ofstream output(fsOutPath / outDotFileName);
   eda::hls::model::printDot(output, *model);
   output.close();
 }
 
 TEST(DfcTest, DfcIdctTest) {
-  dfcIdctTest();
+  dfcIdctTest("output/test/dfc_idct_test/");
 }

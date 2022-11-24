@@ -114,7 +114,7 @@ struct typed: public wire {
     wire(name, kind, direct, value) { declare(this); }
 
   typed(wire_kind kind, wire_direct direct):
-    typed(eda::utils::unique_name("wire"), kind, direct) {}
+    typed(eda::utils::unique_name("_dfc_wire"), kind, direct) {}
 
   eda::hls::model::Type &type() const override {
     return Type::type_info();
