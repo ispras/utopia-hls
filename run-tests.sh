@@ -3,4 +3,4 @@
 # SPDX-License-Identifier: Apache-2.0
 
 rm -rf $UTOPIA_HOME/output
-./build/test/utest --gtest_filter=-*GNetRandTestValid*
+./build/test/utest
