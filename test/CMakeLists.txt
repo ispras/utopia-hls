@@ -29,6 +29,7 @@ enable_testing()
 add_executable(${TEST_TARGET}
   gate/debugger/checker_test.cpp
   gate/model/gnet_test.cpp
+  gate/parser/parser_test.cpp
   gate/simulator/simulator_test.cpp
   hls/compiler/compiler_hil_test.cpp
   hls/compiler/compiler_dfc_test.cpp

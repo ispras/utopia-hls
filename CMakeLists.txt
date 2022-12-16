@@ -35,6 +35,9 @@ find_package(Z3 REQUIRED)
 find_package(XercesC REQUIRED)
 find_package(CTemplate REQUIRED COMPONENTS nothreads)
 
+include_directories(SYSTEM lib/lorina/include)
+include_directories(SYSTEM lib/lorina/lib/fmt)
+
 add_subdirectory(lib)
 add_subdirectory(src)
 

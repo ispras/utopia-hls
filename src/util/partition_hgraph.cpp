@@ -112,3 +112,33 @@ void HyperGraph::printArea(const std::vector<bool> &sides) const {
   std::cout << "Area[1] = " << area[1] << " number[1] = " << number[1]
             << std::endl;
 }
+
+bool HyperGraph::graphOutput(const std::string &filename) const {
+  std::ofstream fout(filename);
+  if (fout.is_open()) {
+    dotOutput(fout);
+    fout.close();
+    return true;
+  }
+  return false;
+}
+
+void HyperGraph::dotOutput(std::ofstream &fout) const {
+  fout << "graph not_partitioned {\n";
+  for (size_t i = 0; i < weights.size(); ++i) {
+    fout << "\tnode" << i;
+    fout << ";\n";
+  }
+  for (size_t i = 0; i < eptr.size() - 1; ++i) {
+    fout << "\tedges" << i << "[shape=point];\n";
+    for (size_t j = eptr[i]; j < eptr[i + 1]; ++j) {
+      int nodet = eind[j];
+      if (nodet & 1) {
+        fout << "\tedges" << i << " -- node" << nodet << ";\n";
+      } else {
+        fout << "\tnode" << nodet << " -- edges" << i << ";\n";
+      }
+    }
+  }
+  fout<<"}\n";
+}
