@@ -53,6 +53,8 @@ public:
   static Id nextId() { return _storage.size(); }
   /// Returns the node w/ the given function/inputs from the storage.
   static Node<Func, StructHash> *get(Func func, const SignalList &inputs);
+  /// Saves the node w/ the given function/inputs to the hash table.
+  static void add(Node<Func, StructHash> *node);
 
   //===--------------------------------------------------------------------===//
   // Properties
@@ -172,6 +174,11 @@ Node<Func, StructHash> *Node<Func, StructHash>::get(Func func, const SignalList 
     return nullptr;
   }
 
+  // Source nodes look identical, but they are not.
+  if (!func.isConstant() && inputs.empty()) {
+    return nullptr;
+  }
+
   // Ignore identity nodes.
   if (func.isIdentity()) {
     assert(inputs.size() == 1);
@@ -191,6 +198,17 @@ Node<Func, StructHash> *Node<Func, StructHash>::get(Func func, const SignalList 
   }
 
   return nullptr;
+}
+
+template <typename Func, bool StructHash>
+void Node<Func, StructHash>::add(Node<Func, StructHash> *node) {
+  // Structural hashing is disabled.
+  if constexpr(!StructHash) {
+    return;
+  }
+
+  StructHashKey key(node->func(), node->inputs());
+  _hashing.insert({key, node->id()});
 }
 
 template <typename Func, bool StructHash>
