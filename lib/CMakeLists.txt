@@ -8,3 +8,4 @@ target_include_directories(Json INTERFACE json)
 
 add_subdirectory(easyloggingpp)
 add_subdirectory(minisat)
+add_subdirectory(lorina)

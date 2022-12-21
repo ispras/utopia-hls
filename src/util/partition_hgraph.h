@@ -71,7 +71,7 @@ public:
    * @return cutset(number of edges that have its nodesIDs more than in 1 partition).
    */
   int countCutSet(const std::vector<std::vector<int>> &distrib) const;
- 
+
   template<typename T>
   int countCutSet(const T &sides) const {
     int cutset = 0;
@@ -79,7 +79,7 @@ public:
       auto side = sides[eind[eptr[i]]];
       for (size_t j = eptr[i]; j < eptr[i + 1]; ++j) {
         int node = eind[j];
-        if(sides[node]!=side) {
+        if (sides[node] != side) {
           ++cutset;
           break;
         }
@@ -96,6 +96,19 @@ public:
   void print(const std::vector<bool> &sides) const;
 
   void printArea(const std::vector<bool> &sides) const;
+  /**
+  * Outputs graph in dot format to the file with given path.
+  * Uses method dotOutput for the task.
+  * @param filename path the the file to ouput to.
+  * @return false if file can not be opened, true in case of success.
+  */
+  bool graphOutput(const std::string &filename) const;
+
+  /**
+  * Outputs partitioned graph in dot format to the file.
+  * @param fout stream to output graph to.
+  */
+  void dotOutput(std::ofstream &fout) const;
 
   /**
    * Outputs partitioned graph in dot format to the file with given path.
