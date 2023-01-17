@@ -25,10 +25,10 @@ struct NodeHashKey final {
   using SignalList = typename Signal::List;
 
   /// Constructs a key from the given node signature.
-  NodeHashKey(F func, const SignalList &inputs):
+  NodeHashKey(uint32_t netId, F func, const SignalList &inputs):
+      netId(netId),
       func(static_cast<uint16_t>(func)),
       arity(static_cast<uint16_t>(inputs.size())) {
-    const uint64_t prime = 37;
 
     std::vector<size_t> hashes(inputs.size());
     for (size_t i = 0; i < inputs.size(); i++) {
@@ -39,29 +39,31 @@ struct NodeHashKey final {
       std::sort(hashes.begin(), hashes.end());
     }
 
-    hash2 = hash1 = 0;
+    const uint64_t prime = 37;
+
+    ihash = 0;
     for (const auto hash : hashes) {
-      hash1 ^= hash;
-      hash2 *= prime;
-      hash2 += hash;
+      ihash *= prime;
+      ihash += hash;
     }
   }
 
   /// Compares this key w/ the given one.
   constexpr bool operator ==(const NodeHashKey &rhs) const {
-    return func == rhs.func
+    return netId == rhs.netId
+        && func  == rhs.func
         && arity == rhs.arity
-        && hash1 == rhs.hash1
-        && hash2 == rhs.hash2;
+        && ihash == rhs.ihash;
   }
 
+  /// Network identifier (exact).
+  uint32_t netId;
   /// Functional symbol (exact).
   uint16_t func;
   /// Node arity (exact).
   uint16_t arity;
   /// Hash code(s) of node inputs.
-  uint32_t hash1;
-  uint64_t hash2;
+  uint64_t ihash;
 };
 
 } // namespace eda::base::model
@@ -81,13 +83,13 @@ struct hash<eda::base::model::NodeHashKey<F, N>> {
   size_t operator()(const eda::base::model::NodeHashKey<F, N> &key) const {
     const size_t prime = 37;
 
-    size_t hash = key.func;
+    size_t hash = key.netId;
+    hash *= prime;
+    hash += key.func;
     hash *= prime;
     hash += key.arity;
     hash *= prime;
-    hash += key.hash1;
-    hash *= prime;
-    hash += key.hash2;
+    hash += key.ihash;
 
     return hash;
   }
