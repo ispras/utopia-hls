@@ -16,8 +16,7 @@ namespace eda::hls::debugger {
 
 std::unique_ptr<EqChecker> EqChecker::instance = nullptr;
 
-bool EqChecker::equivalent(mlir::hil::Model &lhs,
-                           mlir::hil::Model &rhs) const {
+bool EqChecker::equivalent(mlir::hil::Model &lhs, mlir::hil::Model &rhs) const {
 
   z3::context ctx;
   z3::expr_vector nodes(ctx);
@@ -293,14 +292,12 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
   }
 }
 
-z3::sort EqChecker::getSort(mlir::hil::Node &node,
-                            z3::context &ctx) const {
+z3::sort EqChecker::getSort(mlir::hil::Node &node, z3::context &ctx) const {
 
   return ctx.uninterpreted_sort(node.nodeTypeName().str().c_str());
 }
 
-z3::sort EqChecker::getSort(mlir::hil::PortAttr port,
-                            z3::context &ctx) const {
+z3::sort EqChecker::getSort(mlir::hil::PortAttr port, z3::context &ctx) const {
 
   return ctx.uninterpreted_sort(port.getTypeName().c_str());
 }
@@ -319,8 +316,7 @@ z3::expr EqChecker::toConst(mlir::hil::Chan &ch,
   return ctx.constant(constName.c_str(), fInSort);
 }
 
-z3::expr EqChecker::toConst(mlir::hil::Node &node,
-                            z3::context &ctx) const {
+z3::expr EqChecker::toConst(mlir::hil::Node &node, z3::context &ctx) const {
 
   const z3::sort fInSort = getSort(node, ctx);
   const std::string modelName = getModelName(node);
@@ -329,8 +325,7 @@ z3::expr EqChecker::toConst(mlir::hil::Node &node,
   return ctx.constant(constName.c_str(), fInSort);
 }
 
-z3::expr EqChecker::toConst(mlir::hil::Chan &ch,
-                            z3::context &ctx) const {
+z3::expr EqChecker::toConst(mlir::hil::Chan &ch, z3::context &ctx) const {
 
   const auto fromPort = ch.nodeFrom().getPort();
   const auto toPort = ch.nodeTo().getPort();

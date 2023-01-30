@@ -38,8 +38,7 @@ public:
   }
 
   // Checks if models are equivalent.
-  bool equivalent(mlir::hil::Model &lhs,
-                  mlir::hil::Model &rhs) const;
+  bool equivalent(mlir::hil::Model &lhs, mlir::hil::Model &rhs) const;
 
 private:
   EqChecker() {}
@@ -65,12 +64,10 @@ private:
                    z3::context &ctx) const;
 
   /// Creates constant expression for the node.
-  z3::expr toConst(mlir::hil::Node &node,
-                   z3::context &ctx) const;
+  z3::expr toConst(mlir::hil::Node &node, z3::context &ctx) const;
 
   /// Creates constant expression for the channel.
-  z3::expr toConst(mlir::hil::Chan &ch,
-                   z3::context &ctx) const;
+  z3::expr toConst(mlir::hil::Chan &ch, z3::context &ctx) const;
 
   /// Creates input function call for the node-chan pair.
   z3::expr toInFunc(mlir::hil::Node &node,
@@ -78,19 +75,15 @@ private:
                     z3::context &ctx) const;
 
   /// Calculates sort of the node.
-  z3::sort getSort(mlir::hil::Node &node,
-                   z3::context &ctx) const;
+  z3::sort getSort(mlir::hil::Node &node, z3::context &ctx) const;
 
   /// Calculates sort of the named port.
-  z3::sort getSort(mlir::hil::PortAttr port,
-                   z3::context &ctx) const;
+  z3::sort getSort(mlir::hil::PortAttr port, z3::context &ctx) const;
 
   /// Returns sorts of the node's inputs.
-  z3::sort_vector getInSorts(mlir::hil::Node &node,
-                             z3::context &ctx) const;
+  z3::sort_vector getInSorts(mlir::hil::Node &node, z3::context &ctx) const;
 
   /// Returns arguments for function call that is constructed from the node.
-  z3::expr_vector getFuncArgs(mlir::hil::Node &node,
-                              z3::context &ctx) const;
+  z3::expr_vector getFuncArgs(mlir::hil::Node &node, z3::context &ctx) const;
 };
 } // namespace eda::hls::debugger
