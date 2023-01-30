@@ -19,7 +19,7 @@
 
 using namespace mlir::hil;
 
-namespace eda::hls::debugger {
+namespace eda::hls::eqchecker {
 
 class EqChecker final {
 
@@ -86,4 +86,4 @@ private:
   /// Returns arguments for function call that is constructed from the node.
   z3::expr_vector getFuncArgs(mlir::hil::Node &node, z3::context &ctx) const;
 };
-} // namespace eda::hls::debugger
+} // namespace eda::hls::eqchecker

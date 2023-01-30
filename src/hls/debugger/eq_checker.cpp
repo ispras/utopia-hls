@@ -12,7 +12,7 @@
 
 #include <iostream>
 
-namespace eda::hls::debugger {
+namespace eda::hls::eqchecker {
 
 std::unique_ptr<EqChecker> EqChecker::instance = nullptr;
 
@@ -377,4 +377,4 @@ z3::expr_vector EqChecker::getFuncArgs(mlir::hil::Node &node,
   return args;
 }
 
-} // namespace eda::hls::debugger
+} // namespace eda::hls::eqchecker

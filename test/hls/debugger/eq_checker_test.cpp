@@ -13,7 +13,7 @@
 #include "gtest/gtest.h"
 
 using namespace eda::hls::parser::hil;
-using namespace eda::hls::debugger;
+using namespace eda::hls::eqchecker;
 using namespace mlir::hil;
 
 bool eqCheckTest(const std::string &fileM, const std::string &fileM2) {
