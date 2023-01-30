@@ -8,7 +8,7 @@
 
 #include "HIL/Model.h"
 #include "hls/parser/hil/parser.h"
-#include "hls/debugger/debugger.h"
+#include "hls/debugger/eq_checker.h"
 
 #include "gtest/gtest.h"
 
@@ -38,7 +38,7 @@ bool eqCheckTest(const std::string &fileM, const std::string &fileM2) {
 /* Equivalence checker tests for model-vs-model_clone pairs. */
 
 // Test for source->sink graph example
-TEST(DebuggerTest, SolveSrcSink) {
+TEST(EqCheckerTestSuite, SolveSrcSinkTest) {
   EXPECT_EQ(
       eqCheckTest(
           "/test/data/hil/source_sink.hil",
@@ -47,7 +47,7 @@ TEST(DebuggerTest, SolveSrcSink) {
 }
 
 // Test for one-kernel example
-TEST(DebuggerTest, SolveOneKernel) {
+TEST(EqCheckerTestSuite, SolveOneKernelTest) {
   EXPECT_EQ(
       eqCheckTest(
           "/test/data/hil/one_kernel.hil",
@@ -56,7 +56,7 @@ TEST(DebuggerTest, SolveOneKernel) {
 }
 
 // Test for split-merge HIL example
-TEST(DebuggerTest, SolveTest) {
+TEST(EqCheckerTestSuite, SolveTest) {
   EXPECT_EQ(
       eqCheckTest(
           "/test/data/hil/test.hil",

@@ -8,7 +8,7 @@
 
 #include "HIL/Ops.h"
 #include "HIL/Utils.h"
-#include "hls/debugger/debugger.h"
+#include "hls/debugger/eq_checker.h"
 
 #include <iostream>
 

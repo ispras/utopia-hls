@@ -34,7 +34,7 @@ add_executable(${TEST_TARGET}
   hls/compiler/compiler_hil_test.cpp
   hls/compiler/compiler_dfc_test.cpp
   hls/compiler/compiler_dfc_to_ril_test.cpp
-  hls/debugger/debugger_test.cpp
+  hls/debugger/eq_checker_test.cpp
   #hls/library/library_test.cpp
   hls/library/parser_test.cpp
   hls/model/mlir/dump_test.cpp
