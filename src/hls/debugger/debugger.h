@@ -24,6 +24,12 @@ namespace eda::hls::debugger {
 class EqChecker final {
 
 public:
+
+  using ChanVector = std::vector<mlir::hil::Chan>;
+  using NodePairList = std::list<std::pair<mlir::hil::Node, mlir::hil::Node>>;
+  using NodeVector = std::vector<mlir::hil::Node>;
+  using OptionalGraph = std::optional<mlir::hil::Graph>;
+
   static EqChecker& get() {
     if (instance == nullptr) {
       instance = std::unique_ptr<EqChecker>(new EqChecker());
@@ -43,9 +49,8 @@ private:
   /* Methods that implement equivalence checking sub-tasks. */
 
   /// Checks if collections contain nodes with same names.
-  bool match(const std::vector<mlir::hil::Node> &left,
-      const std::vector<mlir::hil::Node> &right,
-      std::list<std::pair<mlir::hil::Node, mlir::hil::Node>> &matched) const;
+  bool match(const NodeVector &left, const NodeVector &right,
+      NodePairList &matched) const;
 
   /* Methods for model-to-solver interaction. */
 
