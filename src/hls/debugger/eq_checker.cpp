@@ -194,7 +194,7 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
 
   for (auto &node_op : gNodes) {
 
-    mlir::hil::Node node = mlir::cast<Node>(node_op);
+    mlir::hil::Node node = mlir::cast<mlir::hil::Node>(node_op);
 
     if (isDelay(node)) {
 
@@ -211,7 +211,7 @@ void EqChecker::createExprs(mlir::hil::Graph &graph,
 
     } else if (isKernel(node)) {
 
-      std::vector<Chan> nodeOuts = getOutputs(node);
+      std::vector<mlir::hil::Chan> nodeOuts = getOutputs(node);
 
       // create equation for every output port of kernel node
       for (auto &nOut : nodeOuts) {

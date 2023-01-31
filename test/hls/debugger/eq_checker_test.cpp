@@ -12,23 +12,19 @@
 
 #include "gtest/gtest.h"
 
-using namespace eda::hls::parser::hil;
-using namespace eda::hls::eqchecker;
-using namespace mlir::hil;
-
 bool eqCheckTest(const std::string &fileM, const std::string &fileM2) {
 
   // Get first model
   const std::string pathM = getenv("UTOPIA_HOME") + fileM;
-  mlir::model::MLIRModule modelM = parseToMlir(pathM);
+  mlir::model::MLIRModule modelM = eda::hls::parser::hil::parseToMlir(pathM);
   mlir::hil::Model model = modelM.get_root();
 
   // Get second model
   const std::string pathM2 = getenv("UTOPIA_HOME") + fileM2;
-  mlir::model::MLIRModule modelM2 = parseToMlir(pathM2);
+  mlir::model::MLIRModule modelM2 = eda::hls::parser::hil::parseToMlir(pathM2);
   mlir::hil::Model model2 = modelM2.get_root();
 
-  EqChecker checker = EqChecker::get();
+  eda::hls::eqchecker::EqChecker checker = eda::hls::eqchecker::EqChecker::get();
 
   bool result = checker.equivalent(model, model2);
 

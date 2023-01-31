@@ -17,8 +17,6 @@
 #include <list>
 #include <memory>
 
-using namespace mlir::hil;
-
 namespace eda::hls::eqchecker {
 
 class EqChecker final {
