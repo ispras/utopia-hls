@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -14,16 +14,17 @@
 
 bool eqCheckTest(const std::string &fileM, const std::string &fileM2) {
 
-  // Get first model
+  // Get first model for equivalence checking.
   const std::string pathM = getenv("UTOPIA_HOME") + fileM;
   mlir::model::MLIRModule modelM = eda::hls::parser::hil::parseToMlir(pathM);
   mlir::hil::Model model = modelM.get_root();
 
-  // Get second model
+  // Get second model for equivalence checking.
   const std::string pathM2 = getenv("UTOPIA_HOME") + fileM2;
   mlir::model::MLIRModule modelM2 = eda::hls::parser::hil::parseToMlir(pathM2);
   mlir::hil::Model model2 = modelM2.get_root();
 
+  // Perform checking itself.
   eda::hls::eqchecker::EqChecker checker = eda::hls::eqchecker::EqChecker::get();
 
   bool result = checker.equivalent(model, model2);
@@ -33,7 +34,7 @@ bool eqCheckTest(const std::string &fileM, const std::string &fileM2) {
 
 /* Equivalence checker tests for model-vs-model_clone pairs. */
 
-// Test for source->sink graph example
+// Test for source->sink graph example.
 TEST(EqCheckerTestSuite, SolveSrcSinkTest) {
   EXPECT_EQ(
       eqCheckTest(
@@ -42,7 +43,7 @@ TEST(EqCheckerTestSuite, SolveSrcSinkTest) {
       false);
 }
 
-// Test for one-kernel example
+// Test for one-kernel example.
 TEST(EqCheckerTestSuite, SolveOneKernelTest) {
   EXPECT_EQ(
       eqCheckTest(
@@ -51,7 +52,7 @@ TEST(EqCheckerTestSuite, SolveOneKernelTest) {
       false);
 }
 
-// Test for split-merge HIL example
+// Test for split-merge HIL example.
 TEST(EqCheckerTestSuite, SolveTest) {
   EXPECT_EQ(
       eqCheckTest(

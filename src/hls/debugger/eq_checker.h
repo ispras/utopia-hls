@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -19,6 +19,14 @@
 
 namespace eda::hls::eqchecker {
 
+/**
+ * \brief Equivalence checker for high-level models.
+ *
+ * The checker is based on uninterpreted functions formalism,
+ * and uses Z3 solver to check program models.
+ *
+ * \author <a href="mailto:smolov@ispras.ru">Sergey Smolov</a>
+ */
 class EqChecker final {
 
 public:
@@ -35,7 +43,7 @@ public:
     return *instance;
   }
 
-  // Checks if models are equivalent.
+  /// Checks if models are equivalent.
   bool equivalent(mlir::hil::Model &lhs, mlir::hil::Model &rhs) const;
 
 private:
