@@ -18,10 +18,13 @@
 #include <vector>
 
 class HyperGraph {
+
+  using BoolVector = std::vector<bool>;
+  using DistributionMap = std::vector<std::vector<int>>;
+
   std::vector<int> weights;
   std::vector<size_t> eptr;
   std::vector<unsigned int> eind;
-
 
 public:
   explicit HyperGraph(std::ifstream &fin);
@@ -70,7 +73,7 @@ public:
    * value is number of its nodesIDs in the partition.
    * @return cutset(number of edges that have its nodesIDs more than in 1 partition).
    */
-  int countCutSet(const std::vector<std::vector<int>> &distrib) const;
+  int countCutSet(const DistributionMap &distrib) const;
 
   template<typename T>
   int countCutSet(const T &sides) const {
@@ -93,9 +96,9 @@ public:
    * For each partition prints total area according to node weights.
    * @param sides nodesIDs distribution among their parts.
    */
-  void print(const std::vector<bool> &sides) const;
+  void print(const BoolVector &sides) const;
 
-  void printArea(const std::vector<bool> &sides) const;
+  void printArea(const BoolVector &sides) const;
   /**
   * Outputs graph in dot format to the file with given path.
   * Uses method dotOutput for the task.
