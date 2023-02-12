@@ -1,11 +1,11 @@
 
 After optimization
 Parameters values
-0.770583 0.31035 0.79458 0.492589 
-Freq: 394011
-Perf: 394011
-Ticks: 187
-Power: 336
-Area: 336
-Target function: 9999.66
-Limitation: 394011
+0.0925587 0.0141273 0.993543 0.654319 
+Freq: 47582
+Perf: 47582
+Ticks: 111
+Power: 400
+Area: 400
+Target function: 9999.6
+Limitation: 47582
