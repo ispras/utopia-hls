@@ -7,3 +7,7 @@ src/build
 .project
 .vscode
 CMakeLists.txt.user
+a.out
+annealing.txt
+estimation.txt
+output/test/dfc/*
