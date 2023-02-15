@@ -21,9 +21,6 @@
 
 #include <memory>
 
-using namespace eda::hls::model;
-using namespace eda::util;
-
 namespace eda::hls::scheduler {
 
 struct Buffer final {
@@ -35,24 +32,26 @@ struct Buffer final {
   int position;
 };
 
-class LatencyLpSolver final : public LatencyBalancerBase, public Singleton<LatencyLpSolver> {
+class LatencyLpSolver final : 
+    public LatencyBalancerBase, public util::Singleton<LatencyLpSolver> {
 
 public:
 
-  friend Singleton<LatencyLpSolver>;
+  friend util::Singleton<LatencyLpSolver>;
 
   ~LatencyLpSolver();
 
   void balance(model::Model &model, Verbosity verbosity);
 
-  void balance(Model &model) override { 
+  void balance(model::Model &model) override { 
     balance(model, Verbosity::Neutral); 
   }
 
   int getStatus() const { return lastStatus; }
 
 private:
-  LatencyLpSolver() : helper(LpSolverHelper::get()), lastStatus(helper.getStatus()) {}
+  LatencyLpSolver() : 
+      helper(LpSolverHelper::get()), lastStatus(helper.getStatus()) {}
   void deleteBuffers();
   void reset();
 
@@ -77,7 +76,8 @@ private:
   /// Generates the constraint for input.
   void synchronizeInput(const std::string &varName);
 
-  inline std::shared_ptr<double[]> makeCoeffs(const std::vector<std::string> &sinks) {
+  inline std::shared_ptr<double[]> makeCoeffs(
+      const std::vector<std::string> &sinks) {
     std::shared_ptr<double[]> sinkCoeffs(new double[sinks.size()]);
       for (unsigned int i = 0; i < sinks.size(); i++) {
         sinkCoeffs[i] = 1.0;

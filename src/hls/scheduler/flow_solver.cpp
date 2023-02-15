@@ -21,9 +21,9 @@ void FlowLpSolver::reset() {
   sinks = std::vector<std::string>();
 }
 
-void FlowLpSolver::balance(Model &model, FlowBalanceMode mode, 
+void FlowLpSolver::balance(model::Model &model, FlowBalanceMode mode, 
     Verbosity verbosity) {
-  const Graph *graph = model.main();
+  const model::Graph *graph = model.main();
   helper.setVerbosity(verbosity);
 
   balanceFlows(mode, graph);
@@ -41,7 +41,8 @@ void FlowLpSolver::balance(Model &model, FlowBalanceMode mode,
   reset();
 }
 
-void FlowLpSolver::balanceFlows(FlowBalanceMode mode, const Graph *graph) {
+void FlowLpSolver::balanceFlows(FlowBalanceMode mode, 
+    const model::Graph *graph) {
   
   for (const auto *node : graph->nodes) {
     checkFlows(node);
@@ -79,10 +80,11 @@ void FlowLpSolver::genNodeConstraints(const std::string &nodeName) {
   helper.addConstraint(names, valOne, OperationType::LessOrEqual, 1);
 }
 
-void FlowLpSolver::genFlowConstraints(const Graph *graph, OperationType type) {
+void FlowLpSolver::genFlowConstraints(const model::Graph *graph, 
+    OperationType type) {
   for (const auto* channel : graph->chans) {
-    const Binding src = channel->source;
-    const Binding dst = channel->target;
+    const model::Binding src = channel->source;
+    const model::Binding dst = channel->target;
     std::vector<std::string> names{src.node->name, dst.node->name};
     std::vector<double> values{src.port->flow, -1.0 * dst.port->flow};
 
@@ -90,7 +92,7 @@ void FlowLpSolver::genFlowConstraints(const Graph *graph, OperationType type) {
   }
 }
 
-void FlowLpSolver::checkFlows(const Node *node) {
+void FlowLpSolver::checkFlows(const model::Node *node) {
   if (node->isMerge() || node->isSplit()) {
     assert((sumFlows(node->type.inputs) == sumFlows(node->type.outputs))
       && ("Input & output flows for " + node->name + " do not match!").c_str());

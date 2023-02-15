@@ -22,9 +22,6 @@
 #include <iostream>
 #include <queue>
 
-using namespace eda::hls::model;
-using namespace eda::util;
-
 namespace eda::hls::scheduler {
 
 enum LatencyBalanceMode {
@@ -36,16 +33,19 @@ enum LatencyBalanceMode {
 };
 
 class CompareChan final {
-  std::unordered_map<const Node*, int> &nodeMap;
+  std::unordered_map<const model::Node*, int> &nodeMap;
 public:
-  CompareChan(std::unordered_map<const Node*, int> &nodeMap) : nodeMap(nodeMap) { }
+  CompareChan(std::unordered_map<const model::Node*, int> &nodeMap) : 
+      nodeMap(nodeMap) { }
 
-  bool operator() (const Chan *lhs, const Chan *rhs) {
-    return (nodeMap[lhs->source.node] + lhs->ind.ticks) < (nodeMap[rhs->source.node] + rhs->ind.ticks);
+  bool operator() (const model::Chan *lhs, const model::Chan *rhs) {
+    return (nodeMap[lhs->source.node] + lhs->ind.ticks) < 
+        (nodeMap[rhs->source.node] + rhs->ind.ticks);
   }
 };
 
-template <typename ElementType, typename Container, typename Comparator = std::less<>>
+template <typename ElementType, typename Container, 
+    typename Comparator = std::less<>>
 class Queue {
 public:
 
@@ -78,8 +78,10 @@ public:
   Container *container;
 };
 
-using StdPriorityQueue = std::priority_queue<const Chan*, std::vector<const Chan*>, CompareChan>;
-using GenericChanQueue = Queue<const Chan*, StdPriorityQueue, CompareChan>;
+using StdPriorityQueue = std::priority_queue<const Chan*, 
+    std::vector<const model::Chan*>, CompareChan>;
+using GenericChanQueue = Queue<const model::Chan*, 
+    StdPriorityQueue, CompareChan>;
 
 template <typename Container, typename Comparator = std::less<>>
 class DijkstraBalancer final : public TraverseBalancerBase, 
@@ -91,50 +93,50 @@ public:
     delete toVisit;
   }
 
-  void balance(Model &model) override {
+  void balance(model::Model &model) override {
     balance(model, LatencyBalanceMode::ASAP);
   }
   
-  void balance(Model &model, LatencyBalanceMode mode);
+  void balance(model::Model &model, LatencyBalanceMode mode);
 
 private:
   DijkstraBalancer() : mode(LatencyBalanceMode::ASAP) {}
 
-  void init(const Graph *graph);
+  void init(const model::Graph *graph);
 
   void initQueue();
 
   /// Visits the specified channel and updates the destination's time.
-  void visitChan(const Chan *chan) override;
+  void visitChan(const model::Chan *chan) override;
 
-  void visitNode(const Node *node) override;
+  void visitNode(const model::Node *node) override;
   
   /// Returns the next node depending on the exploration direction: 
   /// ASAP - top->down
   /// ALAP - down->top
-  const Node* getNextNode(const Chan *chan);
+  const model::Node* getNextNode(const model::Chan *chan);
 
   /// Adds the connections of the node to the specified vector depending on 
   /// the exploration direction:
   /// ASAP - outputs
   /// ALAP - inputs
-  const std::vector<Chan*>& getConnections(const Node *next);
+  const std::vector<model::Chan*>& getConnections(const model::Node *next);
 
   /// Visits the sources of the specified graph.
-  void visitSources(const Graph *graph);
+  void visitSources(const model::Graph *graph);
 
   /// Visits the sinks of the specified graph.
-  void visitSinks(const Graph *graph);
+  void visitSinks(const model::Graph *graph);
   
-  int getDelta(int curTime, const Chan* curChan) override;
+  int getDelta(int curTime, const model::Chan* curChan) override;
 
-  void start(const std::vector<Node*> &startNodes);
+  void start(const std::vector<model::Node*> &startNodes);
 
-  void traverse(const std::vector<Node*> &startNodes);
+  void traverse(const std::vector<model::Node*> &startNodes);
 
-  Queue<const Chan*, Container, Comparator> *toVisit = nullptr;
+  Queue<const model::Chan*, Container, Comparator> *toVisit = nullptr;
   LatencyBalanceMode mode;
-  const Node *currentNode;
+  const model::Node *currentNode;
 };
 
 #include "hls/scheduler/dijkstra_impl.h"

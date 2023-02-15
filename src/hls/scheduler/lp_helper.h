@@ -26,8 +26,6 @@
 #include <string>
 #include <vector>
 
-using namespace eda::util;
-
 namespace eda::hls::scheduler {
 
 // Values from lp_lib.h
@@ -51,11 +49,11 @@ enum Verbosity {
 struct SolverVariable;
 struct SolverConstraint;
 
-class LpSolverHelper final : public Singleton<LpSolverHelper> {
+class LpSolverHelper final : public util::Singleton<LpSolverHelper> {
 
 public:
 
-  friend Singleton<LpSolverHelper>;
+  friend util::Singleton<LpSolverHelper>;
 
   ~LpSolverHelper();
 

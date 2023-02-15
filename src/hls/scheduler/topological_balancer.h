@@ -18,30 +18,27 @@
 
 #include <unordered_set>
 
-using namespace eda::hls::model;
-using namespace eda::util;
-
 namespace eda::hls::scheduler {
 
 class TopologicalBalancer final : public TraverseBalancerBase, 
-    public Singleton<TopologicalBalancer> {
+    public util::Singleton<TopologicalBalancer> {
 
 public:
-  friend Singleton<TopologicalBalancer>;
+  friend util::Singleton<TopologicalBalancer>;
   ~TopologicalBalancer() {}
-  void balance(Model &model) override;
+  void balance(model::Model &model) override;
 
 private:
   TopologicalBalancer() {}
 
-  void init(const Graph *graph);
-  void visitNode(const Node *node) override;
-  void visitChan(const Chan *chan) override;
-  int getDelta(int curTime, const Chan* curChan) override;
+  void init(const model::Graph *graph);
+  void visitNode(const model::Node *node) override;
+  void visitChan(const model::Chan *chan) override;
+  int getDelta(int curTime, const model::Chan* curChan) override;
 
-  std::unordered_set<const Node*> visited;
-  std::unordered_set<const Chan*> backEdges;
-  const Node *currentNode;
+  std::unordered_set<const model::Node*> visited;
+  std::unordered_set<const model::Chan*> backEdges;
+  const model::Node *currentNode;
 };
 
 
