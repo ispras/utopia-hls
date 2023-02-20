@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -14,11 +14,7 @@
 #include <fstream>
 #include <string>
 
-using namespace eda::hls::mapper;
-using namespace eda::hls::model;
-using namespace eda::hls::scheduler;
-using namespace eda::hls::library;
-using namespace eda::utils;
+using Library = eda::hls::library::Library;
 
 namespace fs = std::filesystem;
 

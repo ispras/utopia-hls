@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -17,10 +17,11 @@ struct Add final : public ElementInternalRil {
   static constexpr const char *stages = "stages";
 
   Add(const std::string &name,
-      const std::string &libraryName, 
+      const std::string &libraryName,
+      const bool isCombinational,
       const Parameters &params,
       const std::vector<Port> &ports) :
-  ElementInternalRil(name, libraryName, params, ports) {}
+  ElementInternalRil(name, libraryName, isCombinational, params, ports) {}
   virtual ~Add() = default;
 
   virtual void estimate(const Parameters &params,

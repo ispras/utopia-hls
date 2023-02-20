@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -20,9 +20,10 @@ namespace eda::hls::library::internal::verilog {
 struct ElementInternalVerilog : public ElementInternal {
   ElementInternalVerilog(const std::string &name,
                          const std::string &libraryName,
+                         const bool isCombinational,
                          const Parameters &params,
                          const std::vector<Port> &ports) :
-  ElementInternal(name, libraryName, params, ports) {}
+  ElementInternal(name, libraryName, isCombinational, params, ports) {}
   virtual ~ElementInternalVerilog() = default;
   static std::shared_ptr<MetaElement> create(const NodeType &nodetype,
                                              const HWConfig &hwconfig);

@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -89,7 +89,7 @@ SharedMetaElement ElementInternalVerilog::create(const NodeType &nodeType,
   } else if (Sink::isSink(nodeType)) {
     metaElement = Sink::create(nodeType, hwconfig);
   } else {
-    std::cout << "Waring: Default MetaElement is created for: " << 
+    std::cout << "Warning: Default MetaElement is created for: " << 
         nodeType.name << std::endl;
     metaElement = Default::create(nodeType, hwconfig);
   }

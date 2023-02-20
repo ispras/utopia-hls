@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -16,9 +16,10 @@
 #include <string>
 #include <unordered_map>
 
-using namespace eda::hls::mapper;
 using namespace eda::hls::model;
 using namespace eda::util;
+
+using HWConfig = eda::hls::mapper::HWConfig;
 
 namespace eda::hls::library {
 
@@ -30,7 +31,7 @@ struct Port {
   Port(const std::string &name,
        const Direction direction,
        const unsigned width,
-       const Parameter &param,
+       const model::Parameter &param,
        const Type type = Type::DATA):
     name(name),
     direction(direction),
@@ -69,10 +70,12 @@ struct Element final {
 struct MetaElement {
   MetaElement(const std::string &name,
               const std::string &libraryName,
+              const bool isCombinational,
               const Parameters &params,
               const std::vector<Port> &ports):
       name(name),
       libraryName(libraryName),
+      isCombinational(isCombinational),
       params(params),
       ports(ports) {}
 
@@ -89,6 +92,7 @@ struct MetaElement {
 
   const std::string name;
   const std::string libraryName;
+  const bool isCombinational;
   const Parameters params;
   const std::vector<Port> ports;
 };
@@ -105,8 +109,8 @@ struct StorageEntry {
   unsigned int priority;
 };
 
-class Library final : public Singleton<Library> {
-  friend class Singleton<Library>;
+class Library final : public eda::util::Singleton<Library> {
+  friend class eda::util::Singleton<Library>;
 
 public:
   /**

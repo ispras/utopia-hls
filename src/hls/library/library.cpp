@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -12,9 +12,8 @@
 #include "hls/mapper/config/hwconfig.h"
 #include "util/assert.h"
 
-using namespace eda::hls::mapper;
-using namespace eda::hls::library;
-using namespace eda::hls::library::internal::verilog;
+using ElementInternalVerilog = 
+    eda::hls::library::internal::verilog::ElementInternalVerilog;
 
 namespace eda::hls::library {
 
@@ -161,6 +160,14 @@ std::vector<std::shared_ptr<MetaElement>> Library::find(
     groupIterator->second.insert({"std", StorageEntry(metaElement)});
     metaElements.push_back(metaElement);
   }
+  // For debug.
+  /*std::cout << metaElements[0]->name << " is ";
+  if (metaElements[0]->isCombinational) {
+    std::cout << "combinational." << std::endl; 
+  } else {
+    std::cout << "sequential." << std::endl;
+  }*/
+  //----------------------------------------------------------------------------
   return metaElements;
 }
 } // namespace eda::hls::library

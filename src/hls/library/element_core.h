@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -18,10 +18,12 @@ namespace eda::hls::library {
 struct ElementCore final : public MetaElement {
   ElementCore(const std::string &name,
               const std::string &libraryName,
+              const bool isCombinational,
               const Parameters &params,
               const std::vector<Port> &ports,
               const std::string &path) :
-    MetaElement { name, libraryName, params, ports }, path { path } {}
+    MetaElement { name, libraryName, isCombinational, params, ports },
+        path { path } {}
   virtual ~ElementCore() = default;
   virtual void estimate(const Parameters &params, 
                         Indicators &indicators) const override;

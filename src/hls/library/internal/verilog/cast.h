@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -17,10 +17,11 @@ struct Cast final : public ElementInternalVerilog {
   static constexpr const char *stages = "stages";
 
   Cast(const std::string &name,
-       const std::string &libraryName, 
+       const std::string &libraryName,
+       const bool isCombinational, 
        const Parameters &params,
        const std::vector<Port> &ports) :
-  ElementInternalVerilog(name, libraryName, params, ports) {}
+  ElementInternalVerilog(name, libraryName, isCombinational, params, ports) {}
   virtual ~Cast() = default;
 
   virtual void estimate(const Parameters &params,

@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -32,7 +32,7 @@ void Cast::estimate(const Parameters &params, Indicators &indicators) const {
 
   double S = params.getValue(stages);
   double Fmax = 500000.0;
-  double F = Fmax * (1 - std::exp(-S/20.0));
+  double F = Fmax * ((1 - std::exp(-S/20.0)) + 0.1);
   double Sa = 100.0 * ((double)std::rand() / RAND_MAX) + 1;
   double A = 100.0 * (1.0 - std::exp(-(S - Sa) * (S - Sa) / 4.0));
   double P = A;
@@ -67,12 +67,13 @@ std::shared_ptr<MetaElement> Cast::create(const NodeType &nodetype,
       i++;
     }
     Parameters params;
-    params.add(Parameter(stages, Constraint<unsigned>(1, 100), 10));
+    params.add(Parameter(stages, Constraint<unsigned>(1, 100), 20));
 
     metaElement = std::shared_ptr<MetaElement>(new Cast(lowerCaseName,
-                                                         "std",
-                                                         params,
-                                                         ports));
+                                                        "std",
+                                                        false,
+                                                        params,
+                                                        ports));
   return metaElement;
 };
 

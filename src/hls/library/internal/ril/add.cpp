@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -34,7 +34,7 @@ void Add::estimate(const Parameters &params,
 
   double S = params.getValue(stages);
   double Fmax = 500000.0;
-  double F = Fmax * (1 - std::exp(-S/20.0));
+  double F = Fmax * ((1 - std::exp(-S/20.0)) + 0.1);
   double Sa = 100.0 * ((double)std::rand() / RAND_MAX) + 1;
   double A = 100.0 * (1.0 - std::exp(-(S - Sa) * (S - Sa) / 4.0));
   double P = A;
@@ -73,6 +73,7 @@ SharedMetaElement Add::create(const NodeType &nodetype,
 
     metaElement = std::shared_ptr<MetaElement>(new Add(lowerCaseName,
                                                        "std",
+                                                       false,
                                                        params,
                                                        ports));
   return metaElement;

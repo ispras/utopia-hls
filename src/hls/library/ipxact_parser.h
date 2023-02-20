@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -12,15 +12,23 @@
 #include "hls/library/library.h"
 #include "util/singleton.h"
 
+#include <iostream>
 #include <xercesc/dom/DOM.hpp>
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/sax/HandlerBase.hpp>
 #include <xercesc/util/XMLString.hpp>
 
-#include <iostream>
-
-using namespace eda::hls::mapper;
-using namespace xercesc;
+using DOMElement = xercesc::DOMElement;
+using DOMException = xercesc::DOMException;
+using DOMDocument = xercesc::DOMDocument;
+using DOMParser = xercesc::ErrorHandler;
+using ErrorHandler = xercesc::ErrorHandler;
+using HandlerBase = xercesc::HandlerBase;
+using SAXException = xercesc::SAXException;
+using XercesDOMParser = xercesc::XercesDOMParser;
+using XMLException = xercesc::XMLException;
+using XMLPlatformUtils = xercesc::XMLPlatformUtils;
+using XMLString = xercesc::XMLString;
 
 namespace eda::hls::library {
 
@@ -85,32 +93,32 @@ private:
     parser->setErrorHandler(errorHandler);
 
     // Tags and attributes initialization
-    ipxPortTag       = XMLString::transcode("ipxact:port");
-    ipxQualifierTag  = XMLString::transcode("ipxact:qualifier");
-    ipxIsDataTag     = XMLString::transcode("ipxact:isData");
-    ipxIsClockTag    = XMLString::transcode("ipxact:isClock");
-    ipxIsResetTag    = XMLString::transcode("ipxact:isReset");
-    ipxNameTag       = XMLString::transcode("ipxact:name");
+    ipxPortTag = XMLString::transcode("ipxact:port");
+    ipxQualifierTag = XMLString::transcode("ipxact:qualifier");
+    ipxIsDataTag = XMLString::transcode("ipxact:isData");
+    ipxIsClockTag = XMLString::transcode("ipxact:isClock");
+    ipxIsResetTag = XMLString::transcode("ipxact:isReset");
+    ipxNameTag = XMLString::transcode("ipxact:name");
     ipxModuleNameTag = XMLString::transcode("ipxact:moduleName");
-    ipxLibTag        = XMLString::transcode("ipxact:library");
-    ipxVlnvTag       = XMLString::transcode("ipxact:vlnv");
-    ipxDirectTag     = XMLString::transcode("ipxact:direction");
-    ipxVectTag       = XMLString::transcode("ipxact:vector");
-    ipxLeftTag       = XMLString::transcode("ipxact:left");
-    ipxRightTag      = XMLString::transcode("ipxact:right");
-    ipxCompGensTag   = XMLString::transcode("ipxact:componentGenerators");
-    ipxGenExeTag     = XMLString::transcode("ipxact:generatorExe");
-    ipxIpxFileTag    = XMLString::transcode("ipxact:ipxactFile");
-    ipxFileTag       = XMLString::transcode("ipxact:file");
-    ipxCompTag       = XMLString::transcode("ipxact:component");
+    ipxLibTag = XMLString::transcode("ipxact:library");
+    ipxVlnvTag = XMLString::transcode("ipxact:vlnv");
+    ipxDirectTag = XMLString::transcode("ipxact:direction");
+    ipxVectTag = XMLString::transcode("ipxact:vector");
+    ipxLeftTag = XMLString::transcode("ipxact:left");
+    ipxRightTag = XMLString::transcode("ipxact:right");
+    ipxCompGensTag = XMLString::transcode("ipxact:componentGenerators");
+    ipxGenExeTag = XMLString::transcode("ipxact:generatorExe");
+    ipxIpxFileTag = XMLString::transcode("ipxact:ipxactFile");
+    ipxFileTag = XMLString::transcode("ipxact:file");
+    ipxCompTag = XMLString::transcode("ipxact:component");
 
-    k2ParamTag       = XMLString::transcode("kactus2:parameter");
-    k2NameTag        = XMLString::transcode("kactus2:name");
-    k2ValueTag       = XMLString::transcode("kactus2:value");
-    k2LeftTag        = XMLString::transcode("kactus2:left");
-    k2RightTag       = XMLString::transcode("kactus2:right");
+    k2ParamTag = XMLString::transcode("kactus2:parameter");
+    k2NameTag = XMLString::transcode("kactus2:name");
+    k2ValueTag = XMLString::transcode("kactus2:value");
+    k2LeftTag = XMLString::transcode("kactus2:left");
+    k2RightTag = XMLString::transcode("kactus2:right");
 
-    nameAttr         = XMLString::transcode("name");
+    nameAttr = XMLString::transcode("name");
   }
 
   /**
@@ -131,7 +139,7 @@ private:
    * @returns Tag value.
    */
   std::string getStrValueFromTag(const DOMElement *element,
-                                 const XMLCh      *tagName);
+                                 const XMLCh *tagName);
                                  
   /**
    * @brief Parses a tag to get an integer value.
@@ -142,7 +150,7 @@ private:
    * @returns Tag value.
    */
   int         getIntValueFromTag(const DOMElement *element,
-                                 const XMLCh      *tagName);
+                                 const XMLCh *tagName);
   
   /**
    * @brief Parses a tag to get a bool value from the given attribute.
@@ -154,7 +162,7 @@ private:
    * @returns Attribute value.
    */
   bool       getBoolValueFromTag(const DOMElement *element,
-                                 const XMLCh      *tagName);
+                                 const XMLCh *tagName);
 
   /**
    * @brief Parses a tag to get a string value from the given attribute.
@@ -165,9 +173,9 @@ private:
    * 
    * @returns Attribute value.
    */
-  std::string getStrAttributeFromTag(const DOMElement *element,
-                                     const XMLCh      *tagName,
-                                     const XMLCh      *attributeName);
+  std::string getStrAttrFromTag(const DOMElement *element,
+                                const XMLCh *tagName,
+                                const XMLCh *attributeName);
 
 public:
   virtual ~IPXACTParser() {
