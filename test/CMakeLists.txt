@@ -61,7 +61,7 @@ target_link_libraries(${TEST_TARGET}
 )
 
 add_executable(${MULGEN_TARGET}
-  hls/compiler/mulgen.cpp
+  hls/library/mulgen.cpp
 )
 target_link_libraries(${MULGEN_TARGET}
   PRIVATE

@@ -13,7 +13,7 @@
 #include "hls/library/library.h"
 #include "hls/library/ipxact_parser.h"
 
-using namespace eda::hls::library;
+using IPXACTParser = eda::hls::library::IPXACTParser;
 
 int parserCatalogTest(const std::string &libraryPath,
                       const std::string &catalogPath) {

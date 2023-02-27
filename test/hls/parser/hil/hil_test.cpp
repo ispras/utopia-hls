@@ -16,11 +16,12 @@
 #include "hls/model/printer.h"
 #include "hls/parser/hil/parser.h"
 
-using namespace eda::hls::model;
-using namespace eda::hls::parser::hil;
+namespace hilParser = eda::hls::parser::hil;
+
+using Model = eda::hls::model::Model;
 
 int hilTest(const std::string &filename) {
-  std::shared_ptr<Model> model = parse(filename);
+  std::shared_ptr<Model> model = hilParser::parse(filename);
 
   if (!model)
     return -1;
@@ -35,11 +36,11 @@ int hilTest(const std::string &filename) {
 }
 
 int hilTestNodeTypes(const std::string &filename) {
-  return (parse(filename))->nodetypes.size();
+  return (hilParser::parse(filename))->nodetypes.size();
 }
 
 int hilTestGraphs(const std::string &filename) {
-  return (parse(filename))->graphs.size();
+  return (hilParser::parse(filename))->graphs.size();
 }
 
 TEST(HilTest, SimpleTest) {

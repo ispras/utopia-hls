@@ -15,9 +15,6 @@
 #include "hls/model/printer.h"
 #include "hls/parser/hil/parser.h"
 
-using namespace eda::hls::library;
-using namespace eda::hls::parser::hil;
-
 int callLibraryElementTest(const std::string &name) {
   Parameters params;
   auto metaElement = Library::get().find(name);

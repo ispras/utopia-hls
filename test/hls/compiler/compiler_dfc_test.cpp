@@ -23,12 +23,14 @@
 #include <filesystem>
 #include <fstream>
 
-using namespace eda::hls::compiler;
-using namespace eda::hls::library;
-using namespace eda::hls::mapper;
-using namespace eda::hls::scheduler;
-
 namespace fs = std::filesystem;
+
+using Compiler = eda::hls::compiler::Compiler;
+using Library = eda::hls::library::Library;
+using Mapper = eda::hls::mapper::Mapper;
+template<typename T>
+using ParametersOptimizer = eda::hls::scheduler::ParametersOptimizer<T>;
+using TopologicalBalancer = eda::hls::scheduler::TopologicalBalancer;
 
 DFC_KERNEL(VectorSum) {
   DFC_KERNEL_CTOR(VectorSum) {

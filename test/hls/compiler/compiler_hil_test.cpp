@@ -21,13 +21,15 @@
 #include <fstream>
 #include <memory>
 
-using namespace eda::hls::compiler;
-using namespace eda::hls::parser::hil;
-using namespace eda::hls::library;
-using namespace eda::hls::scheduler;
-using namespace eda::hls::mapper;
-
 namespace fs = std::filesystem;
+namespace hilParser = eda::hls::parser::hil;
+
+using Compiler = eda::hls::compiler::Compiler;
+using Library = eda::hls::library::Library;
+using Mapper = eda::hls::mapper::Mapper;
+template<typename T>
+using ParametersOptimizer = eda::hls::scheduler::ParametersOptimizer<T>;
+using TopologicalBalancer = eda::hls::scheduler::TopologicalBalancer;
 
 int compilerHilTest(const std::string &inHilSubPath,
                     const std::string &inLibSubPath,
@@ -56,7 +58,7 @@ int compilerHilTest(const std::string &inHilSubPath,
 
   const std::string inHilPath = homePath / inHilSubPath;
 
-  std::shared_ptr<Model> model = parse(inHilPath);
+  std::shared_ptr<Model> model = hilParser::parse(inHilPath);
 
   const std::string inLibPath = homePath / inLibSubPath;
 

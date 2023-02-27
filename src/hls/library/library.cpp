@@ -63,9 +63,7 @@ void Library::importLibrary(const std::string &libraryPath,
                                                              catalogPath);
   for (const auto &metaElement : metaElements) {
     std::string name;
-    std::vector<std::string> inputTypeNames;
-    std::vector<std::string> outputTypeNames;
-    Signature signature =  metaElement->getSignature();
+    Signature signature = metaElement->getSignature();
     auto iterator = groupedMetaElements.find(signature);
     if (iterator == groupedMetaElements.end()) {
       LibraryToStorageEntry metaElementsEntries;

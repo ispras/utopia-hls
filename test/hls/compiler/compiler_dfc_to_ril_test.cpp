@@ -24,11 +24,7 @@
 #include <filesystem>
 #include <fstream>
 
-using namespace eda::hls::compiler;
-using namespace eda::hls::library;
-using namespace eda::hls::mapper;
-using namespace eda::hls::model;
-using namespace eda::hls::scheduler;
+using ElementInternalRil = eda::hls::library::internal::ril::ElementInternalRil;
 
 namespace fs = std::filesystem;
 
@@ -92,8 +88,8 @@ int compilerDfcToRilTest(const dfc::kernel &kernel,
                                " not found!\n");
 
   auto hwConfing = HWConfig("", "", "");
-  auto metaElement = internal::ril::ElementInternalRil::create(*nodeType,
-                                                                hwConfing);
+  auto metaElement = ElementInternalRil::create(*nodeType,
+                                                hwConfing);
 
   uassert(metaElement != nullptr, "MetaElement " + 
                                   nodeTypeSignature.name + 
