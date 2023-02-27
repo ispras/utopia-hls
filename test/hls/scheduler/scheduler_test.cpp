@@ -36,7 +36,7 @@ namespace {
 mdl::Indicators indicators;
 // Optimization criterion and constraints.
 mdl::Criteria criteria(
-  PERF,
+  Indicator::PERF,
   mdl::Constraint<unsigned>(40000, 500000),       // Frequency (kHz)
   mdl::Constraint<unsigned>(1000,  500000),       // Performance (=frequency)
   mdl::Constraint<unsigned>(0,     1000),         // Latency (cycles)

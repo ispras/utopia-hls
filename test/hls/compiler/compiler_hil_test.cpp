@@ -40,7 +40,7 @@ int compilerHilTest(const std::string &inHilSubPath,
   Indicators indicators;
   // Optimization criterion and constraints.
   eda::hls::model::Criteria criteria(
-    PERF,
+    Indicator::PERF,
     // Frequency (kHz)
     eda::hls::model::Constraint<unsigned>(40000, 500000),
     // Performance (=frequency)

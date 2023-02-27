@@ -16,10 +16,21 @@
 #include <string>
 #include <unordered_map>
 
-using namespace eda::hls::model;
-using namespace eda::util;
-
+using ChanInd = eda::hls::model::ChanInd;
+using Chan = eda::hls::model::Chan;
+template<typename T>
+using Constraint = eda::hls::model::Constraint<T>;
 using HWConfig = eda::hls::mapper::HWConfig;
+using Indicators = eda::hls::model::Indicators;
+using Indicator = eda::hls::model::Indicator;
+using NodeType = eda::hls::model::NodeType;
+using Node = eda::hls::model::Node;
+using Parameters = eda::hls::model::Parameters;
+using Parameter = eda::hls::model::Parameter;
+using Signature = eda::hls::model::Signature;
+template<typename T>
+using Singleton = eda::util::Singleton<T>;
+using Type = eda::hls::model::Type;
 
 namespace eda::hls::library {
 

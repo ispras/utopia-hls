@@ -23,7 +23,7 @@ namespace sched = tool::scheduler;
 void paramOptimizerTest(const std::string &filename) {
   // Optimization criterion and constraints.
   mdl::Criteria criteria(
-    PERF,
+    Indicator::PERF,
     mdl::Constraint<unsigned>(1000, 500000),  // Frequency (kHz)
     mdl::Constraint<unsigned>(1000, 500000),  // Performance (=frequency)
     mdl::Constraint<unsigned>(0,    100),     // Latency (cycles)

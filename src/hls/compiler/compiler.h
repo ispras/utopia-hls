@@ -14,6 +14,8 @@
 
 #include <ctemplate/template.h>
 
+using Model = eda::hls::model::Model;
+
 namespace eda::hls::compiler {
 
 struct Type final {
