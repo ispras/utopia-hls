@@ -33,9 +33,9 @@ void Default::estimate(const Parameters &params,
 
   double S = params.getValue(stages);
   double Fmax = 500000.0;
-  double F = Fmax * ((1 - std::exp(-S/20.0)) + 0.1);
+  double F = Fmax * ((1 - std::exp(-S)) + 0.1);
   double Sa = 100.0 * ((double)std::rand() / RAND_MAX) + 1;
-  double A = 100.0 * (1.0 - std::exp(-(S - Sa) * (S - Sa) / 4.0));
+  double A = 100.0 * (1.0 - std::exp(-(S - Sa) * (S - Sa) / 50));
   double P = A;
   double D = 1000000000.0 / F;
 

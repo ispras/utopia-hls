@@ -15,6 +15,7 @@ namespace eda::hls::library::internal::verilog {
 
 struct Eq final : public ElementInternalVerilog {
   static constexpr const char *stages = "stages";
+  static constexpr const char *width = "width";
 
   Eq(const std::string &name,
      const std::string &libraryName,

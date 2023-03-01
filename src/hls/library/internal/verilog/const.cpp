@@ -14,26 +14,11 @@
 namespace eda::hls::library::internal::verilog {
 
 void Const::estimate(const Parameters &params, Indicators &indicators) const {
-  unsigned inputCount = 0;
-  unsigned latencySum = 0;
-  unsigned widthSum = 0;
-
-  const auto latency = params.getValue(stages);
-
-  const auto width = 1u;
-
-  for (const auto &port : ports) {
-    widthSum += width;
-    if (port.direction == Port::IN)
-      inputCount++;
-    else
-      latencySum += latency;
-  }
-
   double S = params.getValue(stages);
   double Fmax = 500000.0;
-  double F = Fmax * ((1 - std::exp(-S/20.0)) + 0.1);
+  double F = Fmax * ((1 - std::exp(-S / 10.0)) + 0.1);
   double Sa = 100.0 * ((double)std::rand() / RAND_MAX) + 1;
+  //double W = params.getValue(width);
   double A = 100.0 * (1.0 - std::exp(-(S - Sa) * (S - Sa) / 4.0));
   double P = A;
   double D = 1000000000.0 / F;
@@ -55,8 +40,8 @@ void Const::estimate(const Parameters &params, Indicators &indicators) const {
   }
 }
 
-static int getConstValueFromOutputs(std::vector<eda::hls::model::Port*> outputs) {
-  return outputs[0]->value;
+static int getValueFromOutputs(std::vector<eda::hls::model::Port*> outputs) {
+  return outputs.back()->value;
 }
 
 std::shared_ptr<MetaElement> Const::create(const NodeType &nodetype,
@@ -72,13 +57,14 @@ std::shared_ptr<MetaElement> Const::create(const NodeType &nodetype,
   }
   Parameters params;
   params.add(Parameter(stages, Constraint<unsigned>(1, 100), 0));
+  //params.add(Parameter(width, Constraint<unsigned>(1, 128), 16));
 
   metaElement = std::shared_ptr<MetaElement>(new Const(lowerCaseName,
                                                        "std",
                                                        true,
                                                        params,
                                                        ports,
-                                                       getConstValueFromOutputs(
+                                                       getValueFromOutputs(
                                                            nodetype.outputs)));
   return metaElement;
 };

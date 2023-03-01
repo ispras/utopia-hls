@@ -14,21 +14,11 @@
 namespace eda::hls::library::internal::verilog {
 
 void Delay::estimate(const Parameters &params, Indicators &indicators) const {
-  unsigned inputCount = 0;
-  unsigned latencySum = 0;
   unsigned widthSum = 0;
-
-  unsigned latency = params.getValue(depth);
 
   unsigned width_value = params.getValue(width);
 
-  for (const auto &port : ports) {
-    widthSum += width_value;
-    if (port.direction == Port::IN)
-      inputCount++;
-    else
-      latencySum += latency;
-  }
+  widthSum += width_value * ports.size();
 
   double S = params.getValue(depth);
   double Areg = 16.0;

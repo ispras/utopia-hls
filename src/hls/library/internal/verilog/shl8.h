@@ -15,6 +15,7 @@ namespace eda::hls::library::internal::verilog {
 
 struct Shl8 final : public ElementInternalVerilog {
   static constexpr const char *stages = "stages";
+  static constexpr const char *width = "width";
 
   Shl8(const std::string &name,
        const std::string &libraryName,

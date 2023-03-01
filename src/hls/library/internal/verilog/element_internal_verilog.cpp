@@ -101,8 +101,7 @@ SharedMetaElement ElementInternalVerilog::create(const NodeType &nodeType,
 }
 
 SharedMetaElements ElementInternalVerilog::createDefaultElements() {
-  SharedMetaElements defaultElements; 
-  defaultElements.push_back(Clip::createDefaultElement());
+  SharedMetaElements defaultElements;
   defaultElements.push_back(Merge::createDefaultElement());
   defaultElements.push_back(Split::createDefaultElement());
   defaultElements.push_back(Dup::createDefaultElement());

@@ -57,7 +57,7 @@ public:
   }
 
   void setValue(unsigned newValue) {
-    assert(constraint.check(newValue));
+    //assert(constraint.check(newValue));
     value = newValue;
     known = true;
   }
