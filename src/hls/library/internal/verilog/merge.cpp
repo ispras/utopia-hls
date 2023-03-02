@@ -117,8 +117,9 @@ std::unique_ptr<Element> Merge::construct() const {
     }
 
     std::string portDeclr =
-      (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) + ":0] " :
-                        std::string("")) + replaceSomeChars(port.name) + ";\n";
+      (port.width > 1 ? std::string("[") + std::to_string(port.width - 1)
+                                         + ":0] " : std::string(""))
+                                         + replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -168,4 +169,5 @@ std::unique_ptr<Element> Merge::construct() const {
 bool Merge::isMerge(const NodeType &nodeType) {
    return nodeType.isMerge();
 }
+
 } // namespace eda::hls::library::internal::verilog

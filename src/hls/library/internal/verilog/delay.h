@@ -23,13 +23,19 @@ struct Delay final : public ElementInternalVerilog {
         const Parameters &params,
         const std::vector<Port> &ports) :
   ElementInternalVerilog(name, libraryName, isCombinational, params, ports) {}
+
   virtual ~Delay() = default;
 
   virtual void estimate(const Parameters &params,
                         Indicators &indicators) const override;
+
   virtual std::unique_ptr<Element> construct() const override;
+
   static std::shared_ptr<MetaElement> create(const NodeType &nodetype,
                                              const HWConfig &hwconfig);
+
   static bool isDelay(const NodeType &nodeType);
+
 };
+
 } // namespace eda::hls::library::internal::verilog

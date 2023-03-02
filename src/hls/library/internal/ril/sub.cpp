@@ -123,4 +123,5 @@ bool Sub::isSub(const NodeType &nodeType) {
   return nodeType.outputs.size() == 1 
       && starts_with(nodeType.name, "SUB");
 }
+
 } // namespace eda::hls::library::internal::ril

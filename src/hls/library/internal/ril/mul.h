@@ -22,14 +22,21 @@ struct Mul final : public ElementInternalRil {
       const Parameters &params,
       const std::vector<Port> &ports) :
   ElementInternalRil(name, libraryName, isCombinational, params, ports) {}
+
   virtual ~Mul() = default;
 
   virtual void estimate(const Parameters &params,
                         Indicators &indicators) const override;
+
   virtual std::unique_ptr<Element> construct() const override;
+
   static std::shared_ptr<MetaElement> create(const NodeType &nodetype,
                                              const HWConfig &hwconfig);
+
   static std::shared_ptr<MetaElement> createDefaultElement();
+
   static bool isMul(const NodeType &nodeType);
+
 };
+
 } // namespace eda::hls::library::internal::ril

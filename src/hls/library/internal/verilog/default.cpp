@@ -43,11 +43,7 @@ void Default::estimate(const Parameters &params,
   indicators.power = static_cast<unsigned>(P);
   indicators.area  = static_cast<unsigned>(A);
   indicators.delay = static_cast<unsigned>(D);
-  /*
-  std::cout << "Node: " << name << std::endl;
-  std::cout << "ticks: " << indicators.ticks << " delay: " << indicators.delay;
-  std::cout << " freq: " << F << std::endl;
-  */
+
   ChanInd chanInd;
   chanInd.ticks = indicators.ticks;
   chanInd.delay = indicators.delay;
@@ -111,10 +107,9 @@ std::unique_ptr<Element> Default::construct() const {
       continue;
     }
 
-    std::string portDeclr = ((port.width) > 1 ? 
+    std::string portDeclr = ((port.width) > 1 ?
         (std::string("[") + std::to_string(port.width - 1) + ":0] ") :
-        (std::string(""))) + 
-        replaceSomeChars(port.name) + ";\n";
+        (std::string(""))) + replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -200,4 +195,5 @@ std::unique_ptr<Element> Default::construct() const {
       assigns;
   return element;
 }
+
 } // namespace eda::hls::library::internal::verilog

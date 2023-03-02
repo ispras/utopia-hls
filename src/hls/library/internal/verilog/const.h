@@ -27,14 +27,19 @@ struct Const final : public ElementInternalVerilog {
         const int value) :
   ElementInternalVerilog(name, libraryName, isCombinational, params, ports),
       value(value) {}
+
   virtual ~Const() = default;
 
   virtual void estimate(const Parameters &params,
                         Indicators &indicators) const override;
+
   virtual std::unique_ptr<Element> construct() const override;
+
   static std::shared_ptr<MetaElement> create(const NodeType &nodetype,
                                              const HWConfig &hwconfig);
+
   static bool isConst(const NodeType &nodeType);
+
 };
 
 } // namespace eda::hls::library::internal::verilog

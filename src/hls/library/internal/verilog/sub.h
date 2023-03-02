@@ -27,9 +27,14 @@ struct Sub final : public ElementInternalVerilog {
 
   virtual void estimate(const Parameters &params, 
                         Indicators &indicators) const override;
+
   virtual std::unique_ptr<Element> construct() const override;
+
   static std::shared_ptr<MetaElement> create(const NodeType &nodetype,
                                              const HWConfig &hwconfig);
+
   static bool isSub(const NodeType &nodeType);
+
 };
+
 } // namespace eda::hls::library::internal::verilog

@@ -22,13 +22,17 @@ struct Default final : public ElementInternalVerilog {
           const Parameters &params,
           const std::vector<Port> &ports) :
   ElementInternalVerilog(name, library, isCombinational, params, ports) {}
+
   virtual ~Default() = default;
 
   virtual void estimate(const Parameters &params,
                         Indicators &indicators) const override;
+
   virtual std::unique_ptr<Element> construct() const override;
+
   static std::shared_ptr<MetaElement> create(const NodeType &nodetype,
                                              const HWConfig &hwconfig);
+
 };
 
 } // namespace eda::hls::library::internal::verilog

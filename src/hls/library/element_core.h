@@ -24,13 +24,16 @@ struct ElementCore final : public MetaElement {
               const std::string &path) :
     MetaElement { name, libraryName, isCombinational, params, ports },
         path { path } {}
+
   virtual ~ElementCore() = default;
+
   virtual void estimate(const Parameters &params, 
                         Indicators &indicators) const override;
 
   virtual std::unique_ptr<Element> construct() const override;
 
-  // Path to the element implementation
+  /// Path to the element implementation
   const std::string path;
 };
+
 } // namespace eda::hls::library

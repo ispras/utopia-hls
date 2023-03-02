@@ -17,8 +17,8 @@ std::unique_ptr<Element> ElementCore::construct() const {
   return element;
 }
 
-void ElementCore::estimate(const Parameters &params, Indicators &indicators) const {
-  // TODO
+void ElementCore::estimate(const Parameters &params,
+                           Indicators &indicators) const {
   indicators.ticks = 1;
   indicators.power = 100;
   indicators.area  = 100;

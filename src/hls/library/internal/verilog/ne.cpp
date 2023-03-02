@@ -141,4 +141,5 @@ bool Ne::isNe(const NodeType &nodetype) {
     && nodetype.outputs.size() == 1
     && starts_with(nodetype.name, "NE");
 }
+
 } // namespace eda::hls::library::internal::verilog

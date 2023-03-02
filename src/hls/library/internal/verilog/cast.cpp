@@ -79,8 +79,9 @@ std::unique_ptr<Element> Cast::construct() const {
     }
 
     std::string portDeclr =
-      (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) + ":0] " :
-                        std::string("")) + replaceSomeChars(port.name) + ";\n";
+      (port.width > 1 ? std::string("[") + std::to_string(port.width - 1)
+                                         + ":0] " : std::string(""))
+                                         + replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -141,4 +142,5 @@ std::unique_ptr<Element> Cast::construct() const {
 bool Cast::isCast(const NodeType &nodeType) {
    return starts_with(nodeType.name, "CAST");
 }
+
 } // namespace eda::hls::library::internal::verilog

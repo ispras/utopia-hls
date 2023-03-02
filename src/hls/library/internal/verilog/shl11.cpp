@@ -124,4 +124,5 @@ bool Shl11::isShl11(const NodeType &nodeType) {
       && nodeType.inputs.size()  == 1
       && starts_with(nodeType.name, "SHL11");
 }
+
 } // namespace eda::hls::library::internal::verilog

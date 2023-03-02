@@ -111,4 +111,5 @@ std::unique_ptr<Element> Source::construct() const {
 bool Source::isSource(const NodeType &nodeType) {
   return nodeType.isSource();
 }
+
 } // namespace eda::hls::library::internal::verilog

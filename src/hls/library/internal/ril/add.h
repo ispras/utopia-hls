@@ -22,13 +22,19 @@ struct Add final : public ElementInternalRil {
       const Parameters &params,
       const std::vector<Port> &ports) :
   ElementInternalRil(name, libraryName, isCombinational, params, ports) {}
+
   virtual ~Add() = default;
 
   virtual void estimate(const Parameters &params,
                         Indicators &indicators) const override;
+
   virtual std::unique_ptr<Element> construct() const override;
+
   static SharedMetaElement create(const NodeType &nodetype,
                                   const HWConfig &hwconfig);
+
   static bool isAdd(const NodeType &nodeType);
+
 };
+
 } // namespace eda::hls::library::internal::ril

@@ -86,8 +86,8 @@ std::unique_ptr<Element> Const::construct() const {
     }
 
     std::string portDeclr =
-      (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) 
-                                         + ":0] " : std::string("")) 
+      (port.width > 1 ? std::string("[") + std::to_string(port.width - 1)
+                                         + ":0] " : std::string(""))
                                          + replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
@@ -115,4 +115,5 @@ std::unique_ptr<Element> Const::construct() const {
 bool Const::isConst(const NodeType &nodeType) {
    return nodeType.isConst();
 }
+
 } // namespace eda::hls::library::internal::verilog

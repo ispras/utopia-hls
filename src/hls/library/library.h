@@ -34,7 +34,10 @@ using Type = eda::hls::model::Type;
 
 namespace eda::hls::library {
 
-/// RTL port with name, direction, and width
+/**
+ * @brief RTL port with name, direction, and width.
+ * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>.
+ */
 struct Port {
   enum Direction { IN, OUT, INOUT };
   enum Type { DATA, CLOCK, RESET };
@@ -49,6 +52,7 @@ struct Port {
     width(width),
     param(param),
     type(type) {}
+
   Port(const Port &port):
     name(port.name),
     direction(port.direction),
@@ -63,7 +67,10 @@ struct Port {
   const Type type;
 };
 
-/// Description of a constructed element (module)
+/**
+ * @brief Description of a constructed element (module).
+ * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>.
+ */
 struct Element final {
   // TODO: Code, Path, etc.
   explicit Element(const std::vector<Port> &ports): ports(ports) {}
@@ -73,11 +80,14 @@ struct Element final {
 
   // TODO there should be different IRs: MLIR FIRRTL or Verilog|VHDL
   std::string ir;
-  /// Path to the constructed file
+  /// Path to the constructed file.
   std::string path;
 };
 
-/// Description of a parameterized constructor of elements
+/**
+ * @brief Description of a parameterized constructor of elements.
+ * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>.
+ */
 struct MetaElement {
   MetaElement(const std::string &name,
               const std::string &libraryName,
@@ -89,16 +99,31 @@ struct MetaElement {
       isCombinational(isCombinational),
       params(params),
       ports(ports) {}
-
-  /// Estimates the indicators with the given set of parameters
-  virtual void estimate(const Parameters &params,
-                        Indicators &indicators) const = 0;
-
-  virtual std::unique_ptr<Element> construct() const = 0;
-
+  
   virtual ~MetaElement() = default;
 
+  /**
+    * @brief Estimates the indicators with the given set of parameters.
+    *
+    * @param params Input set of parameters.
+    * @param indicators Indicators to be estimated.
+    * 
+    * @returns Nothing, but estimates the indicators.
+    */
+  virtual void estimate(const Parameters &params,
+                        Indicators &indicators) const = 0;
+  
+  /**
+   * @brief Constructs an element for the given parameters.
+   *
+   * @returns The constructed element.
+   */
+  virtual std::unique_ptr<Element> construct() const = 0;
+
+  // TODO: Needs to be implemented
   bool supports(const HWConfig &hwconfig);
+
+  // TODO: Add types for MetaElement Ports
   Signature getSignature();
 
   const std::string name;
@@ -108,7 +133,10 @@ struct MetaElement {
   const std::vector<Port> ports;
 };
 
-/// Entry in cache of MetaElements
+/**
+ * @brief Entry in the cache of MetaElements.
+ * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>.
+ */
 struct StorageEntry {
   StorageEntry(const std::shared_ptr<MetaElement> metaElement,
                const bool isEnabled = true,
@@ -120,9 +148,12 @@ struct StorageEntry {
   unsigned int priority;
 };
 
+/**
+ * @brief High-level synthesis library.
+ * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>.
+ */
 class Library final : public eda::util::Singleton<Library> {
   friend class eda::util::Singleton<Library>;
-
 public:
   /**
    * @brief Initializes the library by creating standard internal elements.
@@ -205,8 +236,8 @@ private:
 
   using LibraryToStorageEntry = std::unordered_map<std::string, StorageEntry>;
 
-  /// Stored meta-elements (second level is for from different libraries)
+  /// Stored meta-elements (second level is for from different libraries).
   std::unordered_map<Signature, LibraryToStorageEntry> groupedMetaElements;
 };
-} // namespace eda::hls::library
 
+} // namespace eda::hls::library

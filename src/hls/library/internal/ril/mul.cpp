@@ -121,4 +121,5 @@ bool Mul::isMul(const NodeType &nodeType) {
   return nodeType.outputs.size() == 1 
       && starts_with(nodeType.name, "MUL");
 }
+
 } // namespace eda::hls::library::internal::ril

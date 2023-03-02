@@ -111,4 +111,5 @@ std::unique_ptr<Element> Sink::construct() const {
 bool Sink::isSink(const NodeType &nodeType) {
   return nodeType.isSink();
 }
+
 } // namespace eda::hls::library::internal::verilog

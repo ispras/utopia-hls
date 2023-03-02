@@ -31,6 +31,7 @@ struct Type final {
                   ("<" + std::to_string(this->width) + ">") : 
                   "");
   }
+
 };
 
 struct Port final {
@@ -48,9 +49,8 @@ struct Port final {
                                const model::Port *port,
                                const Port::Direction dir,
                                const Type type) {
-    return Port(replaceSomeChars(node->name) +
-                  "_" +
-                  replaceSomeChars(port->name),
+    return Port(replaceSomeChars(node->name) 
+                + "_" + replaceSomeChars(port->name),
                 dir, type);
   }
 
@@ -61,6 +61,7 @@ struct Port final {
   bool isReset() const {
     return type.name == "reset";
   }
+
 };
 
 struct Instance final {
@@ -98,6 +99,7 @@ struct Instance final {
   }
 
   void addModuleInputs(const std::vector<model::Port*> &inputs);
+
   void addModuleOutputs(const std::vector<model::Port*> &outputs);
 };
 
@@ -136,42 +138,71 @@ struct Module {
 };
 
 struct FirrtlModule final : Module {
-  std::vector<Instance> instances;
   FirrtlModule(const model::Model &model, const std::string &topName);
+
+  /**
+   * @brief Prints the FIRRTL module to the given stream.
+   * 
+   * @param out The stream to be printed to. 
+   * 
+   * @returns Nothing, but outputs the FIRRTL module to the stream.
+   */
   void printFirrtlModule(std::ostream &out) const;
+
   void addInstance(const Instance &inInstance) {
     instances.push_back(inInstance);
   }
+
+  std::vector<Instance> instances;
+
 private:
   void addInputs(const model::Node *node,
                  const std::vector<model::Chan*> &outputs);
+
   void addOutputs(const model::Node *node,
                   const std::vector<model::Chan*> &inputs);
+
 };
 
 struct ExternalModule final : Module {
   ExternalModule(const model::NodeType *nodetype);
+
+  /**
+   * @brief Prints the external module to the given stream.
+   * 
+   * @param out The stream to be printed to. 
+   * 
+   * @returns Nothing, but outputs the external module to the stream.
+   */
   void printVerilogModule(std::ostream &out) const;
+
+  /**
+   * @brief Moves the generated Verilog module to the given destination.
+   * 
+   * @param outPath Destination path. 
+   * 
+   * @returns Nothing, but moves the Verilog module to the destination.
+   */
   void moveVerilogModule(const std::string &outPath) const;
+
 private:
   void addInputs(const std::vector<model::Port*>  &inputs);
+
   void addOutputs(const std::vector<model::Port*> &outputs);
+
   void addPortsToDict(ctemplate::TemplateDictionary *dict,
                       const std::vector<Port> &ports,
                       const std::string &tagSectName,
                       const std::string &tagPortName,
                       const std::string &tagSepName,
                       const size_t portCount) const;
+
   void addPrologueToDict(ctemplate::TemplateDictionary *dict) const;
+
 };
 
 class FirrtlCircuit final {
 private:
-  const std::string name;
-  const int latency;
-  int resetInitialValue;
-  std::map<std::string, FirrtlModule> firModules;
-  std::map<std::string, ExternalModule> extModules;
   void addPortsToDict(ctemplate::TemplateDictionary *dict,
                       const std::vector<Port> &ports,
                       const std::string &tagSectName,
@@ -179,25 +210,40 @@ private:
                       const std::string &tagTypeName,
                       const std::string &tagSepName,
                       const size_t portCount) const;
+
   void addPrologueToDict(ctemplate::TemplateDictionary *dict) const;
+
   void addInstancesToDict(ctemplate::TemplateDictionary *dict,
                           const std::vector<Instance> &instances) const;
+
   void addExtModulesToDict(ctemplate::TemplateDictionary *dict,
       const std::map<std::string, ExternalModule> &extModules) const;
+
   void dumpVerilogOptFile(const std::string &inFirName) const {
     system((std::string(FirrtlCircuit::circt) +
            inFirName +
            std::string(FirrtlCircuit::circtOptions)).c_str());
   }
+
   void dumpVerilogLibrary(const std::string &outPath,
                           std::ostream &out) const;
+
   void printFirrtl(std::ostream &out) const;
+
   void addFirrtlModule(const FirrtlModule &firModule) {
     firModules.insert({firModule.getName(), firModule});
   }
+
   void addExternalModule(const ExternalModule &extModule) {
     extModules.insert({extModule.getName(), extModule});
   }
+
+  const std::string name;
+  const int latency;
+  int resetInitialValue;
+  std::map<std::string, FirrtlModule> firModules;
+  std::map<std::string, ExternalModule> extModules;
+
 public:
   static constexpr const char* indent        = "    ";
   static constexpr const char* opPrefix      = "firrtl.";
@@ -207,6 +253,7 @@ public:
   static constexpr const char* circtOptions  = " --lower-firrtl-to-hw \
                                                  --export-split-verilog";
   FirrtlCircuit(const Model &model, const std::string &name);
+
   /**
    * @brief Constructs output files and moves them to the given directory.
    *
@@ -221,6 +268,7 @@ public:
                   const std::string& outVlogLibName,
                   const std::string& outVlogTopName,
                   const std::string& outPath) const;
+
   /**
    * @brief Generates a Verilog random testbench for the input model.
    *
@@ -254,8 +302,7 @@ struct Compiler final {
       const std::string &name = "main") const {
     return std::make_shared<FirrtlCircuit>(model, name);
    }
-};
 
-//std::ostream& operator <<(std::ostream &out, const FirrtlCircuit &firCircuit);
+};
 
 } // namespace eda::hls::compiler

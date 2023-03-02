@@ -25,10 +25,16 @@ struct ElementGenerator final : public MetaElement {
                    const std::string &genPath) :
     MetaElement { name, libraryName, isCombinational, params, ports },
         genPath { genPath } {}
+
   virtual ~ElementGenerator() = default;
+
   virtual void estimate(const Parameters &params,
                         Indicators &indicators) const override;
+
   virtual std::unique_ptr<Element> construct() const override;
+
+  /// Path to the generator.
   const std::string genPath;
 };
+
 } // namespace eda::hls::library

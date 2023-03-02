@@ -124,4 +124,5 @@ bool Shr8::isShr8(const NodeType &nodeType) {
       && nodeType.inputs.size()  == 1
       && starts_with(nodeType.name, "SHR8");
 }
+
 } // namespace eda::hls::library::internal::verilog

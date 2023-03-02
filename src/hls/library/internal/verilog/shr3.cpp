@@ -124,4 +124,5 @@ bool Shr3::isShr3(const NodeType &nodeType) {
       && nodeType.inputs.size()  == 1
       && starts_with(nodeType.name, "SHR3");
 }
+
 } // namespace eda::hls::library::internal::verilog

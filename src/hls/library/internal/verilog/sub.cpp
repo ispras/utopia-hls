@@ -79,7 +79,7 @@ std::unique_ptr<Element> Sub::construct() const {
 
     std::string portDeclr =
       (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) +
-             ":0] " : std::string("")) + replaceSomeChars(port.name) + ";\n";
+               ":0] " : std::string("")) + replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -140,4 +140,5 @@ bool Sub::isSub(const NodeType &nodeType) {
   return nodeType.outputs.size() == 1 
       && starts_with(nodeType.name, "SUB");
 }
+
 } // namespace eda::hls::library::internal::verilog

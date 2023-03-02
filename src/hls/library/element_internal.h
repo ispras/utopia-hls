@@ -23,8 +23,12 @@ struct ElementInternal : public MetaElement {
                   const Parameters &params,
                   const std::vector<Port> &ports) :
   MetaElement(name, libraryName, isCombinational, params, ports) {}
+
   virtual ~ElementInternal() = default;
+
   protected:
     static std::vector<Port> createPorts(const NodeType &nodetype);
+
 };
+
 } // namespace eda::hls::library::internal

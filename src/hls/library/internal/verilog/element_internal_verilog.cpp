@@ -89,8 +89,8 @@ SharedMetaElement ElementInternalVerilog::create(const NodeType &nodeType,
   } else if (Sink::isSink(nodeType)) {
     metaElement = Sink::create(nodeType, hwconfig);
   } else {
-    std::cout << "Warning: Default MetaElement is created for: " << 
-        nodeType.name << std::endl;
+    std::cout << "Warning: Default MetaElement is created for: "
+              << nodeType.name << std::endl;
     metaElement = Default::create(nodeType, hwconfig);
   }
   //TODO: discuss whether default MetaElement is needed
@@ -108,4 +108,5 @@ SharedMetaElements ElementInternalVerilog::createDefaultElements() {
   defaultElements.push_back(Mux::createDefaultElement());
   return defaultElements;
 }
+
 } // namespace eda::hls::library::internal::verilog

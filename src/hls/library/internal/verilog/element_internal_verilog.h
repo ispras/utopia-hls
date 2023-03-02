@@ -24,10 +24,14 @@ struct ElementInternalVerilog : public ElementInternal {
                          const Parameters &params,
                          const std::vector<Port> &ports) :
   ElementInternal(name, libraryName, isCombinational, params, ports) {}
+
   virtual ~ElementInternalVerilog() = default;
+
   static std::shared_ptr<MetaElement> create(const NodeType &nodetype,
                                              const HWConfig &hwconfig);
+
   static std::vector<std::shared_ptr<MetaElement>> createDefaultElements();
+
 };
 
 } // namespace eda::hls::library::internal::verilog

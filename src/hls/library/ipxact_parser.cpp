@@ -352,4 +352,5 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
   
   return metaElement;
 }
+
 } // namespace eda::hls::library

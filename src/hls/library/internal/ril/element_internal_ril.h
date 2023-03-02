@@ -26,9 +26,12 @@ struct ElementInternalRil : public ElementInternal {
                      const Parameters &params,
                      const std::vector<Port> &ports) :
   ElementInternal(name, libraryName, isCombinational, params, ports) {}
+
   virtual ~ElementInternalRil() = default;
+
   static SharedMetaElement create(const NodeType &nodetype,
                                   const HWConfig &hwconfig);
+
 };
 
 } // namespace eda::hls::library::internal::ril

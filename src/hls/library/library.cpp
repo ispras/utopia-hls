@@ -158,14 +158,7 @@ std::vector<std::shared_ptr<MetaElement>> Library::find(
     groupIterator->second.insert({"std", StorageEntry(metaElement)});
     metaElements.push_back(metaElement);
   }
-  // For debug.
-  /*std::cout << metaElements[0]->name << " is ";
-  if (metaElements[0]->isCombinational) {
-    std::cout << "combinational." << std::endl; 
-  } else {
-    std::cout << "sequential." << std::endl;
-  }*/
-  //----------------------------------------------------------------------------
   return metaElements;
 }
+
 } // namespace eda::hls::library

@@ -26,4 +26,5 @@ SharedMetaElement ElementInternalRil::create(const NodeType &nodeType,
   }
   return metaElement;
 }
+
 } // namespace eda::hls::library::internal::ril

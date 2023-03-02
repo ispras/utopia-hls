@@ -139,4 +139,5 @@ bool Add::isAdd(const NodeType &nodeType) {
   return nodeType.outputs.size() == 1 
       && starts_with(nodeType.name, "ADD");
 }
+
 } // namespace eda::hls::library::internal::verilog

@@ -27,7 +27,6 @@ std::unique_ptr<Element> ElementGenerator::construct() const {
 
 void ElementGenerator::estimate(const Parameters &params,
                                 Indicators &indicators) const {
-  //TODO
   indicators.ticks = 1;
   indicators.power = 100;
   indicators.area  = 100;
@@ -44,4 +43,5 @@ void ElementGenerator::estimate(const Parameters &params,
     }
   }
 }
+
 } // namespace eda::hls::library
