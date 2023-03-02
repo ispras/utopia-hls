@@ -14,8 +14,6 @@
 namespace eda::hls::library::internal::verilog {
 
 struct Default final : public ElementInternalVerilog {
-  static constexpr const char *stages = "stages";
-
   Default(const std::string &name,
           const std::string &library,
           const bool isCombinational,
@@ -32,6 +30,8 @@ struct Default final : public ElementInternalVerilog {
 
   static std::shared_ptr<MetaElement> create(const NodeType &nodetype,
                                              const HWConfig &hwconfig);
+
+  static constexpr const char *stages = "stages";
 
 };
 

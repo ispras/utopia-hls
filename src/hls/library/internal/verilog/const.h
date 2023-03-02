@@ -14,11 +14,6 @@
 namespace eda::hls::library::internal::verilog {
 
 struct Const final : public ElementInternalVerilog {
-  static constexpr const char *stages = "stages";
-  static constexpr const char *width = "width";
-
-  const int value;
-
   Const(const std::string &name,
         const std::string &libraryName, 
         const bool isCombinational,
@@ -39,6 +34,11 @@ struct Const final : public ElementInternalVerilog {
                                              const HWConfig &hwconfig);
 
   static bool isConst(const NodeType &nodeType);
+
+  const int value;
+
+  static constexpr const char *stages = "stages";
+  static constexpr const char *width = "width";
 
 };
 

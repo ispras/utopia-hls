@@ -14,9 +14,6 @@
 namespace eda::hls::library::internal::verilog {
 
 struct Sub final : public ElementInternalVerilog {
-  static constexpr const char *stages = "stages";
-  static constexpr const char *width = "width";
-
   Sub(const std::string &name,
       const std::string &libraryName,
       const bool isCombinational, 
@@ -34,6 +31,9 @@ struct Sub final : public ElementInternalVerilog {
                                              const HWConfig &hwconfig);
 
   static bool isSub(const NodeType &nodeType);
+
+  static constexpr const char *stages = "stages";
+  static constexpr const char *width = "width";
 
 };
 

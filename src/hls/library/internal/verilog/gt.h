@@ -14,9 +14,6 @@
 namespace eda::hls::library::internal::verilog {
 
 struct Gt final : public ElementInternalVerilog {
-  static constexpr const char *stages = "stages";
-  static constexpr const char *width = "width";
-
   Gt(const std::string &name,
      const std::string &libraryName,
      const bool isCombinational,
@@ -35,6 +32,9 @@ struct Gt final : public ElementInternalVerilog {
                                              const HWConfig &hwconfig);
 
   static bool isGt(const NodeType &nodetype);
+
+  static constexpr const char *stages = "stages";
+  static constexpr const char *width = "width";
 
 };
 

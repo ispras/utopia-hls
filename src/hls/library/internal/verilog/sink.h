@@ -14,9 +14,6 @@
 namespace eda::hls::library::internal::verilog {
 
 struct Sink final : public ElementInternalVerilog {
-  static constexpr const char *stages = "stages";
-  static constexpr const char *width = "width";
-
   Sink(const std::string &name,
       const std::string &libraryName,
       const bool isCombinational, 
@@ -35,6 +32,9 @@ struct Sink final : public ElementInternalVerilog {
                                              const HWConfig &hwconfig);
 
   static bool isSink(const NodeType &nodeType);
+
+  static constexpr const char *stages = "stages";
+  static constexpr const char *width = "width";
 
 };
 

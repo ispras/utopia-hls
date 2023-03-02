@@ -14,12 +14,11 @@
 #include <string>
 #include <vector>
 
+using SharedMetaElement = std::shared_ptr<eda::hls::library::MetaElement>;
+
 namespace eda::hls::library::internal::ril {
 
-using SharedMetaElement = std::shared_ptr<MetaElement>;
-
 struct ElementInternalRil : public ElementInternal {
-
   ElementInternalRil(const std::string &name,
                      const std::string &libraryName,
                      const bool isCombinational,

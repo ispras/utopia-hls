@@ -14,9 +14,6 @@
 namespace eda::hls::library::internal::verilog {
 
 struct Dup final : public ElementInternalVerilog {
-  static constexpr const char *stages = "stages";
-  static constexpr const char *width = "width";
-
   Dup(const std::string &name,
       const std::string &libraryName,
       const bool isCombinational,
@@ -38,6 +35,9 @@ struct Dup final : public ElementInternalVerilog {
 
   static bool isDup(const NodeType &nodeType);
 
+  static constexpr const char *stages = "stages";
+  static constexpr const char *width = "width";
+  
 };
 
 } // namespace eda::hls::library::internal::verilog

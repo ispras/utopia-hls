@@ -7,8 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/library/internal/verilog/add.h"
-#include "hls/library/internal/verilog/cast.h" 
-#include "hls/library/internal/verilog/clip.h" 
+#include "hls/library/internal/verilog/cast.h"
+#include "hls/library/internal/verilog/clip.h"
 #include "hls/library/internal/verilog/const.h"
 #include "hls/library/internal/verilog/default.h"
 #include "hls/library/internal/verilog/delay.h"
@@ -21,22 +21,23 @@
 #include "hls/library/internal/verilog/lt.h"
 #include "hls/library/internal/verilog/merge.h"
 #include "hls/library/internal/verilog/mul.h"
-#include "hls/library/internal/verilog/mux.h" 
+#include "hls/library/internal/verilog/mux.h"
 #include "hls/library/internal/verilog/ne.h"
 #include "hls/library/internal/verilog/shl11.h"
 #include "hls/library/internal/verilog/shl8.h"
-#include "hls/library/internal/verilog/shr14.h" 
-#include "hls/library/internal/verilog/shr3.h"  
+#include "hls/library/internal/verilog/shr14.h"
+#include "hls/library/internal/verilog/shr3.h"
 #include "hls/library/internal/verilog/shr8.h"
 #include "hls/library/internal/verilog/sink.h"
 #include "hls/library/internal/verilog/source.h"
-#include "hls/library/internal/verilog/split.h"  
-#include "hls/library/internal/verilog/sub.h" 
+#include "hls/library/internal/verilog/split.h"
+#include "hls/library/internal/verilog/sub.h"
+
+using MetaElement = eda::hls::library::MetaElement;
+using SharedMetaElement = std::shared_ptr<MetaElement>;
+using SharedMetaElements = std::vector<SharedMetaElement>;
 
 namespace eda::hls::library::internal::verilog {
-
-using SharedMetaElements = std::vector<std::shared_ptr<MetaElement>>;
-using SharedMetaElement = std::shared_ptr<MetaElement>;
 
 SharedMetaElement ElementInternalVerilog::create(const NodeType &nodeType,
                                                  const HWConfig &hwconfig) {

@@ -14,9 +14,6 @@
 namespace eda::hls::library::internal::verilog {
 
 struct Split final : public ElementInternalVerilog {
-  static constexpr const char *stages = "stages";
-  static constexpr const char *width = "width";
-
   Split(const std::string &name,
         const std::string &libraryName,
         const bool isCombinational,
@@ -37,6 +34,9 @@ struct Split final : public ElementInternalVerilog {
   static std::shared_ptr<MetaElement> createDefaultElement();
 
   static bool isSplit(const NodeType &nodeType);
+
+  static constexpr const char *stages = "stages";
+  static constexpr const char *width = "width";
 
 };
 

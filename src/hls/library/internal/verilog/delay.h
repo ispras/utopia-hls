@@ -14,9 +14,6 @@
 namespace eda::hls::library::internal::verilog {
 
 struct Delay final : public ElementInternalVerilog {
-  static constexpr const char *width = "width";
-  static constexpr const char *depth = "depth";
-
   Delay(const std::string &name,
         const std::string &libraryName,
         const bool isCombinational,
@@ -35,6 +32,9 @@ struct Delay final : public ElementInternalVerilog {
                                              const HWConfig &hwconfig);
 
   static bool isDelay(const NodeType &nodeType);
+
+  static constexpr const char *width = "width";
+  static constexpr const char *depth = "depth";
 
 };
 

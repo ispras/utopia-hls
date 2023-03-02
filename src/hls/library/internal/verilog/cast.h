@@ -14,9 +14,6 @@
 namespace eda::hls::library::internal::verilog {
 
 struct Cast final : public ElementInternalVerilog {
-  static constexpr const char *stages = "stages";
-  static constexpr const char *width = "width";
-
   Cast(const std::string &name,
        const std::string &libraryName,
        const bool isCombinational, 
@@ -36,6 +33,9 @@ struct Cast final : public ElementInternalVerilog {
 
   static bool isCast(const NodeType &nodeType);
 
+  static constexpr const char *stages = "stages";
+  static constexpr const char *width = "width";
+  
 };
 
 } // namespace eda::hls::library::internal::verilog

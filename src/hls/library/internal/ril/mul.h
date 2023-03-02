@@ -14,8 +14,6 @@
 namespace eda::hls::library::internal::ril {
 
 struct Mul final : public ElementInternalRil {
-  static constexpr const char *stages = "stages";
-
   Mul(const std::string &name,
       const std::string &libraryName,
       const bool isCombinational,
@@ -36,6 +34,9 @@ struct Mul final : public ElementInternalRil {
   static std::shared_ptr<MetaElement> createDefaultElement();
 
   static bool isMul(const NodeType &nodeType);
+
+  static constexpr const char *stages = "stages";
+  static constexpr const char *width = "width";
 
 };
 
