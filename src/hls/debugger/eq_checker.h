@@ -16,6 +16,7 @@
 
 #include <list>
 #include <memory>
+#include <optional>
 
 namespace eda::hls::eqchecker {
 
