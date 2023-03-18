@@ -16,35 +16,35 @@
 
 namespace eda::hls::scheduler {
 
-  void TopologicalBalancer::init(const Graph *graph) {
+  void TopologicalBalancer::init(const model::Graph *graph) {
     TraverseBalancerBase::init(*graph);
     visited.clear();
     currentNode = nullptr;
   }
 
-  void TopologicalBalancer::balance(Model &model) {
-    Graph *graph = model.main();
+  void TopologicalBalancer::balance(model::Model &model) {
+    model::Graph *graph = model.main();
     uassert(graph, "Graph 'main' not found!\n");
     init(graph);
 
-    auto handleNode = [this](const Node *node) { visitNode(node); };
-    auto handleEdge = [this](const Chan *chan) { visitChan(chan); };
+    auto handleNode = [this](const model::Node *node) { visitNode(node); };
+    auto handleEdge = [this](const model::Chan *chan) { visitChan(chan); };
 
-    graph::traverseTopologicalOrder<Graph>(*graph, handleNode, handleEdge);
+    graph::traverseTopologicalOrder<model::Graph>(*graph, handleNode, handleEdge);
     insertBuffers(model);
     printGraphTime();
   }
 
-  void TopologicalBalancer::visitNode(const Node *node) {
+  void TopologicalBalancer::visitNode(const model::Node *node) {
     uassert(node, "Nullptr node found!\n");
     currentNode = node;
     visited.insert(currentNode);
   }
 
-  void TopologicalBalancer::visitChan(const Chan *chan) {
+  void TopologicalBalancer::visitChan(const model::Chan *chan) {
     uassert(chan, "Nullptr chan found!\n");
     if (currentNode) {
-      const Node *targetNode = chan->target.node;
+      const model::Node *targetNode = chan->target.node;
       if (visited.find(targetNode) != visited.end()) {
         backEdges.insert(chan);
       } else {
@@ -55,7 +55,7 @@ namespace eda::hls::scheduler {
     }
   }
 
-  int TopologicalBalancer::getDelta(int curTime, const Chan* curChan) {
+  int TopologicalBalancer::getDelta(int curTime, const model::Chan* curChan) {
     // FIXME: feedback buffer size
     return (backEdges.find(curChan) == backEdges.end()) ? 
       curTime - (nodeMap[curChan->source.node] + (int)curChan->ind.ticks) : 0;

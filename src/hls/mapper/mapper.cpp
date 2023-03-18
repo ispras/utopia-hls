@@ -34,6 +34,8 @@ void Mapper::map(model::Node &node, library::Library &library) {
   auto metaElements = library.find(node.type, HWConfig("", "", ""));
   uassert(!metaElements.empty(), "No elements have been found!");
   //TODO: Temportal solution.
+  /*std::cout << "The number of elements for node " << node.type.name << " is "
+            << metaElements.size() << std::endl;*/
   auto metaElement = metaElements[0];
   //assert(metaElement);
   map(node, metaElement);

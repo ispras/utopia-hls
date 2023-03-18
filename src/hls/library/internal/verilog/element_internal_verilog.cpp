@@ -2,13 +2,13 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
 #include "hls/library/internal/verilog/add.h"
-#include "hls/library/internal/verilog/cast.h" 
-#include "hls/library/internal/verilog/clip.h" 
+#include "hls/library/internal/verilog/cast.h"
+#include "hls/library/internal/verilog/clip.h"
 #include "hls/library/internal/verilog/const.h"
 #include "hls/library/internal/verilog/default.h"
 #include "hls/library/internal/verilog/delay.h"
@@ -21,22 +21,23 @@
 #include "hls/library/internal/verilog/lt.h"
 #include "hls/library/internal/verilog/merge.h"
 #include "hls/library/internal/verilog/mul.h"
-#include "hls/library/internal/verilog/mux.h" 
+#include "hls/library/internal/verilog/mux.h"
 #include "hls/library/internal/verilog/ne.h"
 #include "hls/library/internal/verilog/shl11.h"
 #include "hls/library/internal/verilog/shl8.h"
-#include "hls/library/internal/verilog/shr14.h" 
-#include "hls/library/internal/verilog/shr3.h"  
+#include "hls/library/internal/verilog/shr14.h"
+#include "hls/library/internal/verilog/shr3.h"
 #include "hls/library/internal/verilog/shr8.h"
 #include "hls/library/internal/verilog/sink.h"
 #include "hls/library/internal/verilog/source.h"
-#include "hls/library/internal/verilog/split.h"  
-#include "hls/library/internal/verilog/sub.h" 
+#include "hls/library/internal/verilog/split.h"
+#include "hls/library/internal/verilog/sub.h"
+
+using MetaElement = eda::hls::library::MetaElement;
+using SharedMetaElement = std::shared_ptr<MetaElement>;
+using SharedMetaElements = std::vector<SharedMetaElement>;
 
 namespace eda::hls::library::internal::verilog {
-
-using SharedMetaElements = std::vector<std::shared_ptr<MetaElement>>;
-using SharedMetaElement = std::shared_ptr<MetaElement>;
 
 SharedMetaElement ElementInternalVerilog::create(const NodeType &nodeType,
                                                  const HWConfig &hwconfig) {
@@ -89,8 +90,8 @@ SharedMetaElement ElementInternalVerilog::create(const NodeType &nodeType,
   } else if (Sink::isSink(nodeType)) {
     metaElement = Sink::create(nodeType, hwconfig);
   } else {
-    std::cout << "Waring: Default MetaElement is created for: " << 
-        nodeType.name << std::endl;
+    std::cout << "Warning: Default MetaElement is created for: "
+              << nodeType.name << std::endl;
     metaElement = Default::create(nodeType, hwconfig);
   }
   //TODO: discuss whether default MetaElement is needed
@@ -101,12 +102,12 @@ SharedMetaElement ElementInternalVerilog::create(const NodeType &nodeType,
 }
 
 SharedMetaElements ElementInternalVerilog::createDefaultElements() {
-  SharedMetaElements defaultElements; 
-  defaultElements.push_back(Clip::createDefaultElement());
+  SharedMetaElements defaultElements;
   defaultElements.push_back(Merge::createDefaultElement());
   defaultElements.push_back(Split::createDefaultElement());
   defaultElements.push_back(Dup::createDefaultElement());
   defaultElements.push_back(Mux::createDefaultElement());
   return defaultElements;
 }
+
 } // namespace eda::hls::library::internal::verilog

@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -17,10 +17,6 @@
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/util/XMLString.hpp>
-
-using namespace eda::hls::mapper;
-using namespace eda::utils;
-using namespace xercesc;
 
 namespace eda::hls::library {
 
@@ -86,7 +82,7 @@ bool IPXACTParser::tryToParseXML(const char* fileName) {
 }
 
 std::string IPXACTParser::getStrValueFromTag(const DOMElement *element,
-                                             const XMLCh      *tagName) {
+                                             const XMLCh *tagName) {
   size_t tagCount = element->getElementsByTagName(tagName)->getLength();
   std::string tagNameStr = XMLString::transcode(tagName);
   uassert(tagCount >= 1, "Cannot find tag " + tagNameStr + "!\n");
@@ -100,7 +96,7 @@ std::string IPXACTParser::getStrValueFromTag(const DOMElement *element,
 }
 
 int IPXACTParser::getIntValueFromTag(const DOMElement *element,
-                                     const XMLCh      *tagName) {
+                                     const XMLCh *tagName) {
   std::string tagValueStr = getStrValueFromTag(element, tagName);
   std::string tagNameStr = XMLString::transcode(tagName);
   uassert(stringIsInteger(tagValueStr), tagNameStr + 
@@ -110,7 +106,7 @@ int IPXACTParser::getIntValueFromTag(const DOMElement *element,
 }
 
 bool IPXACTParser::getBoolValueFromTag(const DOMElement *element,
-                                       const XMLCh      *tagName) {
+                                       const XMLCh *tagName) {
   std::string tagValueStr = getStrValueFromTag(element, tagName);
   std::string tagNameStr = XMLString::transcode(tagName);
   uassert(stringIsBool(tagValueStr), tagNameStr + 
@@ -120,9 +116,9 @@ bool IPXACTParser::getBoolValueFromTag(const DOMElement *element,
 }
 
 
-std::string IPXACTParser::getStrAttributeFromTag(const DOMElement *element,
-                                                 const XMLCh *tagName,
-                                                 const XMLCh *attributeName) {
+std::string IPXACTParser::getStrAttrFromTag(const DOMElement *element,
+                                            const XMLCh *tagName,
+                                            const XMLCh *attributeName) {
   size_t tagCount = element->getElementsByTagName(tagName)->getLength();
   std::string tagNameStr = XMLString::transcode(tagName);
   uassert(tagCount >= 1, "Cannot find tag " + tagNameStr + "!\n");
@@ -326,6 +322,7 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
     // Create metaElement
     metaElement = std::shared_ptr<MetaElement>(new ElementGenerator(name,
                                                                     libraryName,
+                                                                    false,
                                                                     params,
                                                                     ports,
                                                                     path));
@@ -345,6 +342,7 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
     // Create metaElement
     metaElement = std::shared_ptr<MetaElement>(new ElementCore(name,
                                                                libraryName,
+                                                               false,
                                                                params,
                                                                ports,
                                                                path));
@@ -354,4 +352,5 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
   
   return metaElement;
 }
+
 } // namespace eda::hls::library

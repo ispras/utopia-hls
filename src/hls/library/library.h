@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -16,13 +16,28 @@
 #include <string>
 #include <unordered_map>
 
-using namespace eda::hls::mapper;
-using namespace eda::hls::model;
-using namespace eda::util;
+using ChanInd = eda::hls::model::ChanInd;
+using Chan = eda::hls::model::Chan;
+template<typename T>
+using Constraint = eda::hls::model::Constraint<T>;
+using HWConfig = eda::hls::mapper::HWConfig;
+using Indicators = eda::hls::model::Indicators;
+using Indicator = eda::hls::model::Indicator;
+using NodeType = eda::hls::model::NodeType;
+using Node = eda::hls::model::Node;
+using Parameters = eda::hls::model::Parameters;
+using Parameter = eda::hls::model::Parameter;
+using Signature = eda::hls::model::Signature;
+template<typename T>
+using Singleton = eda::util::Singleton<T>;
+using Type = eda::hls::model::Type;
 
 namespace eda::hls::library {
 
-/// RTL port with name, direction, and width
+/**
+ * @brief RTL port with name, direction, and width.
+ * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>.
+ */
 struct Port {
   enum Direction { IN, OUT, INOUT };
   enum Type { DATA, CLOCK, RESET };
@@ -30,13 +45,14 @@ struct Port {
   Port(const std::string &name,
        const Direction direction,
        const unsigned width,
-       const Parameter &param,
+       const model::Parameter &param,
        const Type type = Type::DATA):
     name(name),
     direction(direction),
     width(width),
     param(param),
     type(type) {}
+
   Port(const Port &port):
     name(port.name),
     direction(port.direction),
@@ -51,7 +67,10 @@ struct Port {
   const Type type;
 };
 
-/// Description of a constructed element (module)
+/**
+ * @brief Description of a constructed element (module).
+ * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>.
+ */
 struct Element final {
   // TODO: Code, Path, etc.
   explicit Element(const std::vector<Port> &ports): ports(ports) {}
@@ -61,39 +80,63 @@ struct Element final {
 
   // TODO there should be different IRs: MLIR FIRRTL or Verilog|VHDL
   std::string ir;
-  /// Path to the constructed file
+  /// Path to the constructed file.
   std::string path;
 };
 
-/// Description of a parameterized constructor of elements
+/**
+ * @brief Description of a parameterized constructor of elements.
+ * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>.
+ */
 struct MetaElement {
   MetaElement(const std::string &name,
               const std::string &libraryName,
+              const bool isCombinational,
               const Parameters &params,
               const std::vector<Port> &ports):
       name(name),
       libraryName(libraryName),
+      isCombinational(isCombinational),
       params(params),
       ports(ports) {}
-
-  /// Estimates the indicators with the given set of parameters
-  virtual void estimate(const Parameters &params,
-                        Indicators &indicators) const = 0;
-
-  virtual std::unique_ptr<Element> construct() const = 0;
-
+  
   virtual ~MetaElement() = default;
 
+  /**
+    * @brief Estimates the indicators with the given set of parameters.
+    *
+    * @param params Input set of parameters.
+    * @param indicators Indicators to be estimated.
+    * 
+    * @returns Nothing, but estimates the indicators.
+    */
+  virtual void estimate(const Parameters &params,
+                        Indicators &indicators) const = 0;
+  
+  /**
+   * @brief Constructs an element for the given parameters.
+   *
+   * @returns The constructed element.
+   */
+  virtual std::unique_ptr<Element> construct() const = 0;
+
+  // TODO: Needs to be implemented
   bool supports(const HWConfig &hwconfig);
+
+  // TODO: Add types for MetaElement Ports
   Signature getSignature();
 
   const std::string name;
   const std::string libraryName;
+  const bool isCombinational;
   const Parameters params;
   const std::vector<Port> ports;
 };
 
-/// Entry in cache of MetaElements
+/**
+ * @brief Entry in the cache of MetaElements.
+ * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>.
+ */
 struct StorageEntry {
   StorageEntry(const std::shared_ptr<MetaElement> metaElement,
                const bool isEnabled = true,
@@ -105,9 +148,12 @@ struct StorageEntry {
   unsigned int priority;
 };
 
-class Library final : public Singleton<Library> {
-  friend class Singleton<Library>;
-
+/**
+ * @brief High-level synthesis library.
+ * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>.
+ */
+class Library final : public eda::util::Singleton<Library> {
+  friend class eda::util::Singleton<Library>;
 public:
   /**
    * @brief Initializes the library by creating standard internal elements.
@@ -190,8 +236,8 @@ private:
 
   using LibraryToStorageEntry = std::unordered_map<std::string, StorageEntry>;
 
-  /// Stored meta-elements (second level is for from different libraries)
+  /// Stored meta-elements (second level is for from different libraries).
   std::unordered_map<Signature, LibraryToStorageEntry> groupedMetaElements;
 };
-} // namespace eda::hls::library
 
+} // namespace eda::hls::library

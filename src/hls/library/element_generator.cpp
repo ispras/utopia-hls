@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -27,7 +27,6 @@ std::unique_ptr<Element> ElementGenerator::construct() const {
 
 void ElementGenerator::estimate(const Parameters &params,
                                 Indicators &indicators) const {
-  //TODO
   indicators.ticks = 1;
   indicators.power = 100;
   indicators.area  = 100;
@@ -44,4 +43,5 @@ void ElementGenerator::estimate(const Parameters &params,
     }
   }
 }
+
 } // namespace eda::hls::library

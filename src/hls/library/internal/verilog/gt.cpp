@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -14,27 +14,12 @@
 namespace eda::hls::library::internal::verilog {
 
 void Gt::estimate(const Parameters &params, Indicators &indicators) const {
-  unsigned inputCount = 0;
-  unsigned latencySum = 0;
-  unsigned widthSum = 0;
-
-  const auto latency = params.getValue(stages);
-
-  const auto width = 1u;
-
-  for (const auto &port : ports) {
-    widthSum += width;
-    if (port.direction == Port::IN)
-      inputCount++;
-    else
-      latencySum += latency;
-  }
-
   double S = params.getValue(stages);
   double Fmax = 500000.0;
-  double F = Fmax * (1 - std::exp(-S/20.0));
+  double F = Fmax * ((1 - std::exp(-S / 20.0)) + 0.1);
   double Sa = 100.0 * ((double)std::rand() / RAND_MAX) + 1;
-  double A = 100.0 * (1.0 - std::exp(-(S - Sa) * (S - Sa) / 4.0));
+  double W = params.getValue(width);
+  double A = 100.0 * (1.0 - std::exp(5 * -(S - Sa) * (S - Sa) / 4.0)) * W;
   double P = A;
   double D = 1000000000.0 / F;
 
@@ -56,7 +41,7 @@ void Gt::estimate(const Parameters &params, Indicators &indicators) const {
 }
 
 std::shared_ptr<MetaElement> Gt::create(const NodeType &nodetype,
-                                         const HWConfig &hwconfig) {
+                                        const HWConfig &hwconfig) {
   std::string name = nodetype.name;
     std::shared_ptr<MetaElement> metaElement;
     auto ports = createPorts(nodetype);
@@ -67,12 +52,14 @@ std::shared_ptr<MetaElement> Gt::create(const NodeType &nodetype,
       i++;
     }
     Parameters params;
-    params.add(Parameter(stages, Constraint<unsigned>(1, 100), 10));
+    params.add(Parameter(stages, Constraint<unsigned>(1, 100), 3));
+    params.add(Parameter(width, Constraint<unsigned>(1, 128), 16));
 
     metaElement = std::shared_ptr<MetaElement>(new Gt(lowerCaseName,
-                                                       "std",
-                                                       params,
-                                                       ports));
+                                                      "std",
+                                                      false,
+                                                      params,
+                                                      ports));
   return metaElement;
 };
 
@@ -92,7 +79,7 @@ std::unique_ptr<Element> Gt::construct() const {
 
     std::string portDeclr =
       (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) +
-             ":0] " : std::string("")) + replaceSomeChars(port.name) + ";\n";
+               ":0] " : std::string("")) + replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -154,4 +141,5 @@ bool Gt::isGt(const NodeType &nodetype) {
     && nodetype.outputs.size() == 1
     && starts_with(nodetype.name, "GT");
 }
+
 } // namespace eda::hls::library::internal::verilog

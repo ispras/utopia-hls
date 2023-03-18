@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -14,27 +14,12 @@
 namespace eda::hls::library::internal::verilog {
 
 void Split::estimate(const Parameters &params, Indicators &indicators) const {
-  unsigned inputCount = 0;
-  unsigned latencySum = 0;
-  unsigned widthSum = 0;
-
-  const auto latency = params.getValue(stages);
-
-  const auto width = 1u;
-
-  for (const auto &port : ports) {
-    widthSum += width;
-    if (port.direction == Port::IN)
-      inputCount++;
-    else
-      latencySum += latency;
-  }
-
   double S = params.getValue(stages);
   double Fmax = 500000.0;
-  double F = Fmax * (1 - std::exp(-S/20.0));
+  double F = Fmax * ((1 - std::exp(-S / 10.0)) + 0.1);
   double Sa = 100.0 * ((double)std::rand() / RAND_MAX) + 1;
-  double A = 100.0 * (1.0 - std::exp(-(S - Sa) * (S - Sa) / 4.0));
+  double W = params.getValue(width);
+  double A = 100.0 * (1.0 - std::exp(-(S - Sa) * (S - Sa) / 4.0)) * W;
   double P = A;
   double D = 1000000000.0 / F;
 
@@ -67,10 +52,12 @@ std::shared_ptr<MetaElement> Split::create(const NodeType &nodetype,
       i++;
     }
     Parameters params;
-    params.add(Parameter(stages, Constraint<unsigned>(1, 100), 10));
+    params.add(Parameter(stages, Constraint<unsigned>(1, 100), 0));
+    params.add(Parameter(width, Constraint<unsigned>(1, 128), 16));
 
     metaElement = std::shared_ptr<MetaElement>(new Split(lowerCaseName,
                                                          "std",
+                                                         true,
                                                          params,
                                                          ports));
   return metaElement;
@@ -109,6 +96,7 @@ std::shared_ptr<MetaElement> Split::createDefaultElement() {
 
   metaElement = std::shared_ptr<MetaElement>(new Split("split",
                                                        "std",
+                                                       true,
                                                        params,
                                                        ports));
   return metaElement;
@@ -129,8 +117,9 @@ std::unique_ptr<Element> Split::construct() const {
     }
 
     std::string portDeclr =
-      (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) + ":0] " :
-                        std::string("")) + replaceSomeChars(port.name) + ";\n";
+      (port.width > 1 ? std::string("[") + std::to_string(port.width - 1)
+                                         + ":0] " : std::string(""))
+                                         + replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -153,7 +142,8 @@ std::unique_ptr<Element> Split::construct() const {
   std::vector<std::string> portNames;
   std::string portName;
   ir += std::string("reg [31:0] state;\n");
-  ir += std::string("always @(posedge clock) begin\nif (!reset) begin\n  state <= 0; end\nelse");
+  ir += std::string("always @(posedge clock) begin\nif (!reset) begin\n");
+  ir += std::string("state <= 0; end\nelse");
 
   for (auto port : ports) {
     if (port.name == "clock" || port.name == "reset") {
@@ -181,4 +171,5 @@ std::unique_ptr<Element> Split::construct() const {
 bool Split::isSplit(const NodeType &nodeType) {
   return nodeType.isSplit();
 }
+
 } // namespace eda::hls::library::internal::verilog

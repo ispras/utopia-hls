@@ -77,8 +77,7 @@ void HyperGraph::addLinkedEdges(size_t step) {
   }
 }
 
-int
-HyperGraph::countCutSet(const std::vector<std::vector<int>> &distrib) const {
+int HyperGraph::countCutSet(const DistributionMap &distrib) const {
   int cutset = 0;
 
   for (size_t i = 0; i < distrib[0].size(); ++i) {
@@ -87,7 +86,7 @@ HyperGraph::countCutSet(const std::vector<std::vector<int>> &distrib) const {
   return cutset;
 }
 
-void HyperGraph::print(const std::vector<bool> &sides) const {
+void HyperGraph::print(const BoolVector &sides) const {
   for (int side = 0; side < 2; ++side) {
     std::cout << side << " : {";
     for (size_t i = 0; i < sides.size(); ++i) {
@@ -100,7 +99,7 @@ void HyperGraph::print(const std::vector<bool> &sides) const {
   std::cout << std::endl;
 }
 
-void HyperGraph::printArea(const std::vector<bool> &sides) const {
+void HyperGraph::printArea(const BoolVector &sides) const {
   int area[2]{};
   int number[2]{};
 

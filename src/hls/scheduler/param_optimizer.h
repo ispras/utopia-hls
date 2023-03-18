@@ -27,20 +27,19 @@
 #include <string>
 #include <vector>
 
-using namespace eda::hls::model;
-using namespace eda::util;
-
 namespace eda::hls::scheduler {
 
 template<typename T>
-class ParametersOptimizer final : public Singleton<ParametersOptimizer<T>> {
-  friend class Singleton<ParametersOptimizer<T>>;
+class ParametersOptimizer final : 
+    public util::Singleton<ParametersOptimizer<T>> {
+  
+  friend class util::Singleton<ParametersOptimizer<T>>;
 
 public:
-  std::map<std::string, Parameters> optimize(
-      const Criteria &criteria,
+  std::map<std::string, model::Parameters> optimize(
+      const model::Criteria &criteria,
       model::Model &model,
-      Indicators &indicators
+      model::Indicators &indicators
   ) const;
 
   template <typename O>
@@ -51,11 +50,13 @@ public:
 private:
   ParametersOptimizer() = default;
 
-  void estimate(model::Model &model, std::map<std::string, Parameters> &params,
-                Indicators &indicators,
+  void estimate(model::Model &model, std::map<std::string, 
+                model::Parameters> &params,
+                model::Indicators &indicators,
                 const std::vector<float> &optimized_params) const;
 
-  void init(const Graph *graph, std::map<std::string, Parameters> &parameters,
+  void init(const model::Graph *graph, 
+            std::map<std::string, model::Parameters> &parameters,
             std::vector<float> &parameterValues, std::vector<float> &minValues,
             std::vector<float> &maxValues) const;
 

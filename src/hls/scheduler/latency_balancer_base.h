@@ -22,8 +22,6 @@
 #include <unordered_map>
 #include <vector>
 
-using namespace eda::hls::model;
-
 namespace eda::hls::scheduler {
 
 class LatencyBalancerBase {
@@ -31,7 +29,7 @@ public:
   virtual ~LatencyBalancerBase() {}
 
   /// Schedules the specified model.
-  virtual void balance(eda::hls::model::Model &model) = 0;
+  virtual void balance(model::Model &model) = 0;
 
   /// Returns the maximum latency of the main graph.
   unsigned getGraphLatency() const { return graphTime; }
@@ -44,7 +42,7 @@ protected:
   }
 
   /// Inserts the balancing buffers into the model.
-  virtual void insertBuffers(eda::hls::model::Model &model) = 0;
+  virtual void insertBuffers(model::Model &model) = 0;
 
   void printGraphTime() {
     std::cout << "Max time: " << graphTime << std::endl;
@@ -62,12 +60,13 @@ public:
 protected:
   TraverseBalancerBase() {}
 
-  virtual void visitNode(const Node* node) = 0;
-  virtual void visitChan(const Chan* chan) = 0;
-  virtual int getDelta(int currentTime, const Chan *currentChan) = 0;
+  virtual void visitNode(const model::Node *node) = 0;
+  virtual void visitChan(const model::Chan *chan) = 0;
+  virtual int getDelta(int currentTime, 
+      const model::Chan *currentChan) = 0;
 
   // Init the elements
-  void init(const Graph &graph) {
+  void init(const model::Graph &graph) {
     LatencyBalancerBase::init();
     nodeMap.clear();
     for (const auto *node : graph.nodes) {
@@ -75,7 +74,7 @@ protected:
     }
   }
 
-  void insertBuffers(Model &model) override {
+  void insertBuffers(model::Model &model) override {
     int bufsInserted = 0;
     int totalDelta = 0;
     for (const auto &[node, time] : nodeMap) {
@@ -95,7 +94,7 @@ protected:
     std::cout << "Total buffers capacity: " << totalDelta << std::endl;
   }
 
-  std::unordered_map<const Node*, int> nodeMap;
+  std::unordered_map<const model::Node*, int> nodeMap;
 };
 
 } // namespace eda::hls::scheduler

@@ -10,71 +10,70 @@
 
 #include "hls/model/model.h"
 
-using namespace eda::hls::model;
-
+namespace mdl = eda::hls::model;
 class TestHilModel final {
 public:
 
-  static Model* get() {
+  static mdl::Model* get() {
 
-    Model *model = new Model("test");
-    Graph *graph = new Graph("main", *model);
+    mdl::Model *model = new mdl::Model("test");
+    mdl::Graph *graph = new mdl::Graph("main", *model);
 
     model->addGraph(graph);
 
     // Create node types.
-    NodeType *source  = new NodeType("source",  *model);
-    NodeType *split   = new NodeType("split",   *model);
-    NodeType *kernel1 = new NodeType("kernel1", *model);
-    NodeType *kernel2 = new NodeType("kernel2", *model);
-    NodeType *merge   = new NodeType("merge",   *model);
-    NodeType *sink    = new NodeType("sink",    *model);
+    mdl::NodeType *source  = new mdl::NodeType("source",  *model);
+    mdl::NodeType *split   = new mdl::NodeType("split",   *model);
+    mdl::NodeType *kernel1 = new mdl::NodeType("kernel1", *model);
+    mdl::NodeType *kernel2 = new mdl::NodeType("kernel2", *model);
+    mdl::NodeType *merge   = new mdl::NodeType("merge",   *model);
+    mdl::NodeType *sink    = new mdl::NodeType("sink",    *model);
 
     // Create ports.
-    eda::hls::model::Port *srcX = new eda::hls::model::Port("x", Type::get("X"), 1.0, 0, false, 0);
-    eda::hls::model::Port *srcY = new eda::hls::model::Port("y", Type::get("Y"), 1.0, 0, false, 0);
+    mdl::Port *srcX = new mdl::Port("x", Type::get("X"), 1.0, 0, false, 0);
+    mdl::Port *srcY = new mdl::Port("y", Type::get("Y"), 1.0, 0, false, 0);
     source->addOutput(srcX);
     source->addOutput(srcY);
 
-    eda::hls::model::Port   *splInX = new eda::hls::model::Port("x",  Type::get("X"), 1.0, 0, false, 0);
-    eda::hls::model::Port *splOutX1 = new eda::hls::model::Port("x1", Type::get("X"), 0.5, 1, false, 0);
-    eda::hls::model::Port *splOutX2 = new eda::hls::model::Port("x2", Type::get("X"), 0.5, 1, false, 0);
+    mdl::Port   *splInX = new mdl::Port("x",  mdl::Type::get("X"), 1.0, 0, false, 0);
+    mdl::Port *splOutX1 = new mdl::Port("x1", mdl::Type::get("X"), 0.5, 1, false, 0);
+    mdl::Port *splOutX2 = new mdl::Port("x2", mdl::Type::get("X"), 0.5, 1, false, 0);
     split->addInput(splInX);
     split->addOutput(splOutX1);
     split->addOutput(splOutX2);
 
-    eda::hls::model::Port  *kern1InX = new eda::hls::model::Port("x", Type::get("X"), 1.0,  0, false, 0);
-    eda::hls::model::Port  *kern1InY = new eda::hls::model::Port("y", Type::get("Y"), 0.5,  0, false, 0);
-    eda::hls::model::Port *kern1OutZ = new eda::hls::model::Port("z", Type::get("Z"), 0.25, 1, false, 0);
-    eda::hls::model::Port *kern1OutW = new eda::hls::model::Port("w", Type::get("W"), 1.0,  2, false, 0);
+    mdl::Port  *kern1InX = new mdl::Port("x", mdl::Type::get("X"), 1.0,  0, false, 0);
+    mdl::Port  *kern1InY = new mdl::Port("y", mdl::Type::get("Y"), 0.5,  0, false, 0);
+    mdl::Port *kern1OutZ = new mdl::Port("z", mdl::Type::get("Z"), 0.25, 1, false, 0);
+    mdl::Port *kern1OutW = new mdl::Port("w", mdl::Type::get("W"), 1.0,  2, false, 0);
     kernel1->addInput(kern1InX);
     kernel1->addInput(kern1InY);
     kernel1->addOutput(kern1OutZ);
     kernel1->addOutput(kern1OutW);
 
-    eda::hls::model::Port  *kern2InX = new eda::hls::model::Port("x", Type::get("X"), 0.5,  0, false, 0);
-    eda::hls::model::Port  *kern2InW = new eda::hls::model::Port("w", Type::get("W"), 0.5,  0, false, 0);
-    eda::hls::model::Port *kern2OutZ = new eda::hls::model::Port("z", Type::get("Z"), 0.25, 1, false, 0);
+    mdl::Port  *kern2InX = new mdl::Port("x", mdl::Type::get("X"), 0.5,  0, false, 0);
+    mdl::Port  *kern2InW = new mdl::Port("w", mdl::Type::get("W"), 0.5,  0, false, 0);
+    mdl::Port *kern2OutZ = new mdl::Port("z", mdl::Type::get("Z"), 0.25, 1, false, 0);
     kernel2->addInput(kern2InX);
     kernel2->addInput(kern2InW);
     kernel2->addOutput(kern2OutZ);
     
-    eda::hls::model::Port *mrgInZ1 = new eda::hls::model::Port("z1", Type::get("Z"), 0.5, 0, false, 0);
-    eda::hls::model::Port *mrgInZ2 = new eda::hls::model::Port("z2", Type::get("Z"), 0.5, 0, false, 0);
-    eda::hls::model::Port *mrgOutZ = new eda::hls::model::Port("z",  Type::get("Z"), 1.0, 1, false, 0);
+    mdl::Port *mrgInZ1 = new mdl::Port("z1", mdl::Type::get("Z"), 0.5, 0, false, 0);
+    mdl::Port *mrgInZ2 = new mdl::Port("z2", mdl::Type::get("Z"), 0.5, 0, false, 0);
+    mdl::Port *mrgOutZ = new mdl::Port("z",  mdl::Type::get("Z"), 1.0, 1, false, 0);
     merge->addInput(mrgInZ1);
     merge->addInput(mrgInZ2);
     merge->addOutput(mrgOutZ);
 
-    eda::hls::model::Port *sinkZ = new eda::hls::model::Port("z", Type::get("Z"), 1.0, 1, false, 0);
+    mdl::Port *sinkZ = new mdl::Port("z", mdl::Type::get("Z"), 1.0, 1, false, 0);
     sink->addInput(sinkZ);
 
-    Signature sourceSignature = source->getSignature();
-    Signature splitSignature = split->getSignature();
-    Signature kernel1Signature = kernel1->getSignature();
-    Signature kernel2Signature = kernel2->getSignature();
-    Signature mergeSignature = merge->getSignature();
-    Signature sinkSignature = sink->getSignature();
+    mdl::Signature sourceSignature = source->getSignature();
+    mdl::Signature splitSignature = split->getSignature();
+    mdl::Signature kernel1Signature = kernel1->getSignature();
+    mdl::Signature kernel2Signature = kernel2->getSignature();
+    mdl::Signature mergeSignature = merge->getSignature();
+    mdl::Signature sinkSignature = sink->getSignature();
 
     model->addNodetype(sourceSignature, source);
     model->addNodetype(splitSignature, split);
@@ -84,14 +83,14 @@ public:
     model->addNodetype(sinkSignature, sink);
 
     // Create channels.
-    Chan *x1 = new Chan("x1", "X", *graph);
-    Chan *x2 = new Chan("x2", "X", *graph);
-    Chan  *x = new Chan( "x", "X", *graph);
-    Chan  *y = new Chan( "y", "Y", *graph);
-    Chan *z1 = new Chan("z1", "Z", *graph);
-    Chan *z2 = new Chan("z2", "Z", *graph);
-    Chan  *z = new Chan( "z", "Z", *graph);
-    Chan  *w = new Chan( "w", "W", *graph);
+    mdl::Chan *x1 = new mdl::Chan("x1", "X", *graph);
+    mdl::Chan *x2 = new mdl::Chan("x2", "X", *graph);
+    mdl::Chan  *x = new mdl::Chan( "x", "X", *graph);
+    mdl::Chan  *y = new mdl::Chan( "y", "Y", *graph);
+    mdl::Chan *z1 = new mdl::Chan("z1", "Z", *graph);
+    mdl::Chan *z2 = new mdl::Chan("z2", "Z", *graph);
+    mdl::Chan  *z = new mdl::Chan( "z", "Z", *graph);
+    mdl::Chan  *w = new mdl::Chan( "w", "W", *graph);
 
     x->ind  = {0, 0};
     y->ind  = {0, 0};
@@ -112,12 +111,12 @@ public:
     graph->addChan(w);
 
     // Create nodes.
-    Node *n1 = new Node("n1", *source, *graph);
-    Node *n2 = new Node("n2", *split, *graph);
-    Node *n3 = new Node("n3", *kernel1, *graph);
-    Node *n4 = new Node("n4", *kernel2, *graph);
-    Node *n5 = new Node("n5", *merge, *graph);
-    Node *n6 = new Node("n6", *sink, *graph);
+    mdl::Node *n1 = new mdl::Node("n1", *source, *graph);
+    mdl::Node *n2 = new mdl::Node("n2", *split, *graph);
+    mdl::Node *n3 = new mdl::Node("n3", *kernel1, *graph);
+    mdl::Node *n4 = new mdl::Node("n4", *kernel2, *graph);
+    mdl::Node *n5 = new mdl::Node("n5", *merge, *graph);
+    mdl::Node *n6 = new mdl::Node("n6", *sink, *graph);
 
     n1->addOutput(x);
     n1->addOutput(y);

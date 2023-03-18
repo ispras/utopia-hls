@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -12,9 +12,8 @@
 #include "hls/mapper/config/hwconfig.h"
 #include "util/assert.h"
 
-using namespace eda::hls::mapper;
-using namespace eda::hls::library;
-using namespace eda::hls::library::internal::verilog;
+using ElementInternalVerilog = 
+    eda::hls::library::internal::verilog::ElementInternalVerilog;
 
 namespace eda::hls::library {
 
@@ -64,9 +63,7 @@ void Library::importLibrary(const std::string &libraryPath,
                                                              catalogPath);
   for (const auto &metaElement : metaElements) {
     std::string name;
-    std::vector<std::string> inputTypeNames;
-    std::vector<std::string> outputTypeNames;
-    Signature signature =  metaElement->getSignature();
+    Signature signature = metaElement->getSignature();
     auto iterator = groupedMetaElements.find(signature);
     if (iterator == groupedMetaElements.end()) {
       LibraryToStorageEntry metaElementsEntries;
@@ -163,4 +160,5 @@ std::vector<std::shared_ptr<MetaElement>> Library::find(
   }
   return metaElements;
 }
+
 } // namespace eda::hls::library

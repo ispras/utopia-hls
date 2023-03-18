@@ -20,9 +20,6 @@
 
 #include <memory>
 
-using namespace eda::hls::model;
-using namespace eda::util;
-
 namespace eda::hls::scheduler {
 
 enum FlowBalanceMode {
@@ -33,39 +30,41 @@ enum FlowBalanceMode {
   Blocking,
 };
 
-class FlowLpSolver final : public Singleton<FlowLpSolver> {
+class FlowLpSolver final : public util::Singleton<FlowLpSolver> {
 
 public:
 
-  friend Singleton<FlowLpSolver>;
+  friend util::Singleton<FlowLpSolver>;
 
   ~FlowLpSolver();
 
-  void balance(Model &model, FlowBalanceMode mode, Verbosity verbosity);
+  void balance(model::Model &model, FlowBalanceMode mode, Verbosity verbosity);
 
-  void balance(Model &model, FlowBalanceMode mode) { 
+  void balance(model::Model &model, FlowBalanceMode mode) { 
     balance(model, mode, Verbosity::Full); 
   }
 
   int getStatus() const { return lastStatus; }
 
 private:
-  FlowLpSolver() : helper(LpSolverHelper::get()), lastStatus(helper.getStatus()) {}
+  FlowLpSolver() : 
+      helper(LpSolverHelper::get()), lastStatus(helper.getStatus()) {}
   void reset();
 
   /// Checks the sum input & output flows of a split/merge node to be equal.
-  void checkFlows(const Node *node);
+  void checkFlows(const model::Node *node);
 
   /// Balances the flows of the graph.
-  void balanceFlows(FlowBalanceMode mode, const Graph *graph);
+  void balanceFlows(FlowBalanceMode mode, const model::Graph *graph);
 
   /// Generates the constraints for node's flow.
   void genNodeConstraints(const std::string &nodeName);
 
   /// Generates the constraints for inter-node flows.
-  void genFlowConstraints(const Graph *graph, OperationType type);
+  void genFlowConstraints(const model::Graph *graph, OperationType type);
   
-  inline std::shared_ptr<double[]> makeCoeffs(const std::vector<std::string> &sinks) {
+  inline std::shared_ptr<double[]> makeCoeffs(
+      const std::vector<std::string> &sinks) {
     std::shared_ptr<double[]> sinkCoeffs(new double[sinks.size()]);
       for (unsigned int i = 0; i < sinks.size(); i++) {
         sinkCoeffs[i] = 1.0;
@@ -73,7 +72,7 @@ private:
     return sinkCoeffs;
   }
 
-  inline float sumFlows(const std::vector<Port*> &ports) {
+  inline float sumFlows(const std::vector<model::Port*> &ports) {
     float sum = 0;
     for (const auto *port : ports) {
       sum += port->flow;

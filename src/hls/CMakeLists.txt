@@ -3,7 +3,7 @@ add_subdirectory(model/mlir)
 
 add_library(HLS OBJECT
   compiler/compiler.cpp
-  debugger/debugger.cpp
+  debugger/eq_checker.cpp
   library/element_generator.cpp
   library/element_core.cpp
   library/element_internal.cpp

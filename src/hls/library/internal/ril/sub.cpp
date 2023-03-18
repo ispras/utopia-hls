@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -16,27 +16,12 @@ namespace eda::hls::library::internal::ril {
 
 void Sub::estimate(const Parameters &params,
                    Indicators &indicators) const {
-  unsigned inputCount = 0;
-  unsigned latencySum = 0;
-  unsigned widthSum = 0;
-
-  const auto latency = params.getValue(stages);
-
-  const auto width = 1u;
-
-  for (const auto &port : ports) {
-    widthSum += width;
-    if (port.direction == Port::IN)
-      inputCount++;
-    else
-      latencySum += latency;
-  }
-
   double S = params.getValue(stages);
   double Fmax = 500000.0;
-  double F = Fmax * (1 - std::exp(-S/20.0));
+  double F = Fmax * ((1 - std::exp(-S / 60.0)) + 0.1);
   double Sa = 100.0 * ((double)std::rand() / RAND_MAX) + 1;
-  double A = 100.0 * (1.0 - std::exp(-(S - Sa) * (S - Sa) / 4.0));
+  double W = params.getValue(width);
+  double A = 100.0 * (1.0 - std::exp(15 * -(S - Sa) * (S - Sa) / 4.0)) * W;
   double P = A;
   double D = 1000000000.0 / F;
 
@@ -69,10 +54,11 @@ SharedMetaElement Sub::create(const NodeType &nodetype,
       i++;
     }
     Parameters params;
-    params.add(Parameter(stages, Constraint<unsigned>(1, 100), 10));
+    params.add(Parameter(stages, Constraint<unsigned>(1, 100), 20));
 
     metaElement = std::shared_ptr<MetaElement>(new Sub(lowerCaseName,
                                                        "std",
+                                                       false,
                                                        params,
                                                        ports));
   return metaElement;
@@ -122,4 +108,5 @@ bool Sub::isSub(const NodeType &nodeType) {
   return nodeType.outputs.size() == 1 
       && starts_with(nodeType.name, "SUB");
 }
+
 } // namespace eda::hls::library::internal::ril

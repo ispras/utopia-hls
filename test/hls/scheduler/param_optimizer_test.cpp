@@ -16,34 +16,33 @@
 
 #include <limits>
 
-using namespace eda::hls::library;
-using namespace eda::hls::mapper;
-using namespace eda::hls::model;
-using namespace eda::hls::parser::hil;
-using namespace eda::hls::scheduler;
+namespace tool = eda::hls;
+namespace mdl = tool::model;
+namespace sched = tool::scheduler;
 
 void paramOptimizerTest(const std::string &filename) {
   // Optimization criterion and constraints.
-  Criteria criteria(
-    PERF,
-    Constraint<unsigned>(1000, 500000),  // Frequency (kHz)
-    Constraint<unsigned>(1000, 500000),  // Performance (=frequency)
-    Constraint<unsigned>(0,    100),     // Latency (cycles)
-    Constraint<unsigned>(),              // Power (does not matter)
-    Constraint<unsigned>(1,    150000)); // Area (number of LUTs)
+  mdl::Criteria criteria(
+    Indicator::PERF,
+    mdl::Constraint<unsigned>(1000, 500000),  // Frequency (kHz)
+    mdl::Constraint<unsigned>(1000, 500000),  // Performance (=frequency)
+    mdl::Constraint<unsigned>(0,    100),     // Latency (cycles)
+    mdl::Constraint<unsigned>(),              // Power (does not matter)
+    mdl::Constraint<unsigned>(1,    150000)); // Area (number of LUTs)
 
   // Model whose parameters need to be optimized.
-  std::shared_ptr<Model> model = parse(filename);
+  std::shared_ptr<mdl::Model> model = tool::parser::hil::parse(filename);
 
   // Map model nodes to meta elements.
-  Mapper::get().map(*model, Library::get());
+  tool::mapper::Mapper::get().map(*model, tool::library::Library::get());
 
   // Integral indicators of the optimized model (output).
-  Indicators indicators;
+  mdl::Indicators indicators;
 
   // Optimize parameters.
-  std::map<std::string, Parameters> params =
-    ParametersOptimizer<TopologicalBalancer>::get().optimize(criteria, *model, indicators);
+  std::map<std::string, mdl::Parameters> params 
+    = sched::ParametersOptimizer<sched::TopologicalBalancer>::get()
+      .optimize(criteria, *model, indicators);
 
   // Check the constrains.
   EXPECT_TRUE(criteria.check(indicators));

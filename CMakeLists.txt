@@ -38,6 +38,10 @@ find_package(CTemplate REQUIRED COMPONENTS nothreads)
 include_directories(SYSTEM lib/lorina/include)
 include_directories(SYSTEM lib/lorina/lib/fmt)
 
+set(Cudd_ROOT $ENV{CUDD_DIR})
+
+find_package(Cudd REQUIRED)
+
 add_subdirectory(lib)
 add_subdirectory(src)
 

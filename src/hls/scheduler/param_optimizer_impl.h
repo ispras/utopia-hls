@@ -7,14 +7,15 @@
 //===----------------------------------------------------------------------===//
 
 template<typename T>
-std::map<std::string, Parameters> ParametersOptimizer<T>::optimize(
-    const Criteria &criteria, Model &model, Indicators &indicators) const {
+std::map<std::string, model::Parameters> ParametersOptimizer<T>::optimize(
+    const model::Criteria &criteria, model::Model &model, 
+    model::Indicators &indicators) const {
   float initialTemperature = 100.0; // TODO: Why this value?
   float finalTemperature = 1.5;
 
   std::ofstream ostrm("real.txt");
 
-  std::map<std::string, Parameters> parameters;
+  std::map<std::string, model::Parameters> parameters;
 
   // Get the main dataflow graph.
   auto *graph = model.main();
@@ -66,7 +67,7 @@ std::map<std::string, Parameters> ParametersOptimizer<T>::optimize(
 
   init(graph, parameters, parameterValues, minValues, maxValues);
 
-  eda::hls::scheduler::optimizers::SimulatedAnnealingOptimizer optimizer(
+  optimizers::SimulatedAnnealingOptimizer optimizer(
       initialTemperature, finalTemperature, targetFunction, constraintFunction,
       stepFunction, temperatureFunction);
 
@@ -96,8 +97,8 @@ std::map<std::string, Parameters> ParametersOptimizer<T>::optimize(
 }
 
 template<typename T>
-void ParametersOptimizer<T>::init(const Graph *graph, 
-    std::map<std::string, Parameters> &parameters, 
+void ParametersOptimizer<T>::init(const model::Graph *graph, 
+    std::map<std::string, model::Parameters> &parameters, 
     std::vector<float> &parameterValues, std::vector<float> &minValues, 
     std::vector<float> &maxValues) const {
 
@@ -119,8 +120,9 @@ void ParametersOptimizer<T>::init(const Graph *graph,
 }
 
 template<typename T>
-void ParametersOptimizer<T>::estimate(Model &model, 
-    std::map<std::string, Parameters> &parameters, Indicators &indicators,
+void ParametersOptimizer<T>::estimate(model::Model &model, 
+    std::map<std::string, model::Parameters> &parameters, 
+    model::Indicators &indicators,
     const std::vector<float> &parameterValues) const {
   std::ofstream ostrm("estimation.txt", std::ios_base::app);
   // Update the values of the parameters & apply to nodes.

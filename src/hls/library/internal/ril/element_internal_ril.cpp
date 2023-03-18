@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -26,4 +26,5 @@ SharedMetaElement ElementInternalRil::create(const NodeType &nodeType,
   }
   return metaElement;
 }
+
 } // namespace eda::hls::library::internal::ril

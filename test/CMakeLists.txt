@@ -29,12 +29,14 @@ enable_testing()
 add_executable(${TEST_TARGET}
   gate/debugger/checker_test.cpp
   gate/model/gnet_test.cpp
+  gate/optimizer/optimizer_test.cpp
   gate/parser/parser_test.cpp
   gate/simulator/simulator_test.cpp
+  gate/transformer/bdd_test.cpp
   hls/compiler/compiler_hil_test.cpp
   hls/compiler/compiler_dfc_test.cpp
   hls/compiler/compiler_dfc_to_ril_test.cpp
-  hls/debugger/debugger_test.cpp
+  hls/debugger/eq_checker_test.cpp
   #hls/library/library_test.cpp
   hls/library/parser_test.cpp
   hls/model/mlir/dump_test.cpp
@@ -61,7 +63,7 @@ target_link_libraries(${TEST_TARGET}
 )
 
 add_executable(${MULGEN_TARGET}
-  hls/compiler/mulgen.cpp
+  hls/library/mulgen.cpp
 )
 target_link_libraries(${MULGEN_TARGET}
   PRIVATE

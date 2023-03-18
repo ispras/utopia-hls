@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -14,27 +14,12 @@
 namespace eda::hls::library::internal::verilog {
 
 void Shl11::estimate(const Parameters &params, Indicators &indicators) const {
-  unsigned inputCount = 0;
-  unsigned latencySum = 0;
-  unsigned widthSum = 0;
-
-  const auto latency = params.getValue(stages);
-
-  const auto width = 1u;
-
-  for (const auto &port : ports) {
-    widthSum += width;
-    if (port.direction == Port::IN)
-      inputCount++;
-    else
-      latencySum += latency;
-  }
-
   double S = params.getValue(stages);
   double Fmax = 500000.0;
-  double F = Fmax * (1 - std::exp(-S/20.0));
+  double F = Fmax * ((1 - std::exp(-S / 10.0)) + 0.1);
   double Sa = 100.0 * ((double)std::rand() / RAND_MAX) + 1;
-  double A = 100.0 * (1.0 - std::exp(-(S - Sa) * (S - Sa) / 4.0));
+  double W = params.getValue(width);
+  double A = 100.0 * (1.0 - std::exp(-(S - Sa) * (S - Sa) / 4.0)) * W;
   double P = A;
   double D = 1000000000.0 / F;
 
@@ -56,7 +41,7 @@ void Shl11::estimate(const Parameters &params, Indicators &indicators) const {
 }
 
 std::shared_ptr<MetaElement> Shl11::create(const NodeType &nodetype,
-                                         const HWConfig &hwconfig) {
+                                           const HWConfig &hwconfig) {
   std::string name = nodetype.name;
     std::shared_ptr<MetaElement> metaElement;
     auto ports = createPorts(nodetype);
@@ -67,12 +52,14 @@ std::shared_ptr<MetaElement> Shl11::create(const NodeType &nodetype,
       i++;
     }
     Parameters params;
-    params.add(Parameter(stages, Constraint<unsigned>(1, 100), 10));
+    params.add(Parameter(stages, Constraint<unsigned>(1, 100), 0));
+    params.add(Parameter(width, Constraint<unsigned>(1, 128), 16));
 
     metaElement = std::shared_ptr<MetaElement>(new Shl11(lowerCaseName,
-                                                       "std",
-                                                       params,
-                                                       ports));
+                                                         "std",
+                                                         true,
+                                                         params,
+                                                         ports));
   return metaElement;
 };
 
@@ -137,4 +124,5 @@ bool Shl11::isShl11(const NodeType &nodeType) {
       && nodeType.inputs.size()  == 1
       && starts_with(nodeType.name, "SHL11");
 }
+
 } // namespace eda::hls::library::internal::verilog

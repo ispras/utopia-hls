@@ -30,9 +30,9 @@ void LatencyLpSolver::reset() {
   sinks.clear();
 }
 
-void LatencyLpSolver::balance(Model &model, Verbosity verbosity) {
+void LatencyLpSolver::balance(model::Model &model, Verbosity verbosity) {
   LatencyBalancerBase::init();
-  const Graph *graph = model.main();
+  const model::Graph *graph = model.main();
   helper.setVerbosity(verbosity);
 
   balanceLatency(graph);
@@ -59,7 +59,7 @@ void LatencyLpSolver::balance(Model &model, Verbosity verbosity) {
   reset();
 }
 
-void LatencyLpSolver::insertBuffers(Model &model) {
+void LatencyLpSolver::insertBuffers(model::Model &model) {
   std::vector<double> latencies = helper.getResults();
   unsigned bufsInserted = 0;
   unsigned totalDelta = 0;
@@ -80,7 +80,7 @@ void LatencyLpSolver::insertBuffers(Model &model) {
   std::cout << "Total buffers capacity: " << totalDelta << std::endl;
 }
 
-void LatencyLpSolver::collectGraphTime(const Graph &graph) {
+void LatencyLpSolver::collectGraphTime(const model::Graph &graph) {
   std::vector<SolverVariable*> sinkVars = helper.getVariables(sinks);
   std::vector<double> latencies = helper.getResults();
   for (const auto *sink : sinkVars) {
@@ -89,7 +89,7 @@ void LatencyLpSolver::collectGraphTime(const Graph &graph) {
   }
 }
 
-void LatencyLpSolver::balanceLatency(const Graph *graph) { 
+void LatencyLpSolver::balanceLatency(const model::Graph *graph) { 
 
   for (const auto *node : graph->nodes) {
     std::string varName = TimePrefix + node->name;
@@ -153,7 +153,7 @@ void LatencyLpSolver::genDeltaConstraint(const std::string &dstName,
 }
 
 void LatencyLpSolver::genBufferConstraint(const std::string &dstName, 
-    const std::string &srcName, unsigned srcLatency, Chan *channel) {
+    const std::string &srcName, unsigned srcLatency, model::Chan *channel) {
   std::vector<double> values{1.0, -1.0, 1.0};
   const std::string bufName = BufferPrefix + dstName + "_" + srcName;
   std::vector<std::string> constrNames{bufName, TimePrefix + dstName, 

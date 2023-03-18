@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -14,27 +14,12 @@
 namespace eda::hls::library::internal::verilog {
 
 void Clip::estimate(const Parameters &params, Indicators &indicators) const {
-  unsigned inputCount = 0;
-  unsigned latencySum = 0;
-  unsigned widthSum = 0;
-
-  const auto latency = params.getValue(stages);
-
-  const auto width = 1u;
-
-  for (const auto &port : ports) {
-    widthSum += width;
-    if (port.direction == Port::IN)
-      inputCount++;
-    else
-      latencySum += latency;
-  }
-
   double S = params.getValue(stages);
   double Fmax = 500000.0;
-  double F = Fmax * (1 - std::exp(-S/20.0));
+  double F = Fmax * ((1 - std::exp(-S / 80.0)) + 0.1);
   double Sa = 100.0 * ((double)std::rand() / RAND_MAX) + 1;
-  double A = 100.0 * (1.0 - std::exp(-(S - Sa) * (S - Sa) / 4.0));
+  double W = params.getValue(width);
+  double A = 100.0 * (1.0 - std::exp(20 * -(S - Sa) * (S - Sa) / 4.0)) * W;
   double P = A;
   double D = 1000000000.0 / F;
 
@@ -67,44 +52,14 @@ std::shared_ptr<MetaElement> Clip::create(const NodeType &nodetype,
       i++;
     }
     Parameters params;
-    params.add(Parameter(stages, Constraint<unsigned>(1, 100), 10));
+    params.add(Parameter(stages, Constraint<unsigned>(1, 100), 40));
+    params.add(Parameter(width, Constraint<unsigned>(1, 128), 16));
 
     metaElement = std::shared_ptr<MetaElement>(new Clip(lowerCaseName,
                                                         "std",
+                                                        false,
                                                         params,
                                                         ports));
-  return metaElement;
-};
-
-std::shared_ptr<MetaElement> Clip::createDefaultElement() {
-  std::shared_ptr<MetaElement> metaElement;
-  std::vector<Port> ports;
-
-  ports.push_back(Port("clock",
-                       Port::IN,
-                       1,
-                       model::Parameter(std::string("width"), 1)));
-
-  ports.push_back(Port("reset",
-                       Port::IN,
-                       1,
-                       model::Parameter(std::string("width"), 1)));
-
-  ports.push_back(Port("x",
-                      Port::IN,
-                      16,
-                      model::Parameter(std::string("width"), 16)));
-  ports.push_back(Port("z",
-                      Port::OUT,
-                      16,
-                      model::Parameter(std::string("width"), 16)));
-  Parameters params;
-  params.add(Parameter(stages, Constraint<unsigned>(1, 100), 10));
-
-  metaElement = std::shared_ptr<MetaElement>(new Clip("clip",
-                                                      "std",
-                                                      params,
-                                                      ports));
   return metaElement;
 };
 
@@ -122,8 +77,9 @@ std::unique_ptr<Element> Clip::construct() const {
     }
 
     std::string portDeclr =
-      (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) + ":0] " :
-                        std::string("")) + replaceSomeChars(port.name) + ";\n";
+      (port.width > 1 ? std::string("[") + std::to_string(port.width - 1)
+                                         + ":0] " : std::string(""))
+                                         + replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -174,4 +130,5 @@ std::unique_ptr<Element> Clip::construct() const {
 bool Clip::isClip(const NodeType &nodeType) {
    return starts_with(nodeType.name, "CLIP");
 }
+
 } // namespace eda::hls::library::internal::verilog

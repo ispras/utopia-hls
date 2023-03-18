@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -14,24 +14,32 @@
 namespace eda::hls::library::internal::verilog {
 
 struct Const final : public ElementInternalVerilog {
-  static constexpr const char *stages = "stages";
-
-  const int value;
-
   Const(const std::string &name,
         const std::string &libraryName, 
+        const bool isCombinational,
         const Parameters &params,
         const std::vector<Port> &ports,
         const int value) :
-  ElementInternalVerilog(name, libraryName, params, ports), value(value) {}
+  ElementInternalVerilog(name, libraryName, isCombinational, params, ports),
+      value(value) {}
+
   virtual ~Const() = default;
 
   virtual void estimate(const Parameters &params,
                         Indicators &indicators) const override;
+
   virtual std::unique_ptr<Element> construct() const override;
+
   static std::shared_ptr<MetaElement> create(const NodeType &nodetype,
                                              const HWConfig &hwconfig);
+
   static bool isConst(const NodeType &nodeType);
+
+  const int value;
+
+  static constexpr const char *stages = "stages";
+  static constexpr const char *width = "width";
+
 };
 
 } // namespace eda::hls::library::internal::verilog
