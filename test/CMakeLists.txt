@@ -31,6 +31,8 @@ add_executable(${TEST_TARGET}
   gate/model/gnet_test.cpp
   gate/optimizer/optimizer_test.cpp
   gate/parser/parser_test.cpp
+  gate/premapper/xagmapper/xag_test.cpp
+  gate/premapper/xagmapper/xag_verilog_test.cpp
   gate/simulator/simulator_test.cpp
   gate/transformer/bdd_test.cpp
   hls/compiler/compiler_hil_test.cpp
