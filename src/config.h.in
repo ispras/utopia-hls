@@ -9,3 +9,6 @@
 // The configured options and settings for Utopia EDA
 #define VERSION_MAJOR @Utopia_VERSION_MAJOR@
 #define VERSION_MINOR @Utopia_VERSION_MINOR@
+
+#define YEAR_STARTED 2021
+#define YEAR_CURRENT 2023
