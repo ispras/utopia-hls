@@ -30,12 +30,13 @@ add_executable(${TEST_TARGET}
   gate/debugger/checker_test.cpp
   gate/model/gnet_test.cpp
   gate/optimizer/optimizer_test.cpp
+  gate/optimizer/rwdatabase_test.cpp
   gate/parser/parser_test.cpp
   gate/premapper/migmapper/migmapper_test.cpp
   gate/simulator/simulator_test.cpp
+  gate/transformer/bdd_test.cpp
   hls/compiler/compiler_hil_test.cpp
   hls/compiler/compiler_dfc_test.cpp
-  hls/compiler/compiler_dfc_to_ril_test.cpp
   hls/debugger/eq_checker_test.cpp
   #hls/library/library_test.cpp
   hls/library/parser_test.cpp
