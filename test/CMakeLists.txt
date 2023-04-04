@@ -33,6 +33,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer/rwdatabase_test.cpp
   gate/parser/parser_test.cpp
   gate/premapper/migmapper/migmapper_test.cpp
+  gate/premapper/xmgmapper/xmgmapper_test.cpp
   gate/simulator/simulator_test.cpp
   gate/transformer/bdd_test.cpp
   hls/compiler/compiler_hil_test.cpp
