@@ -1,4 +1,7 @@
 {
+  "rtl": {
+    "premap-lib"  : "abc"
+  },
   "hls": {
     "output-dir"  : "./output/",
     "output-dot"  : "test.dot",

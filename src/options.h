@@ -121,8 +121,14 @@ protected:
 struct RtlOptions final : public AppOptions {
   static constexpr const char *ID = "rtl";
 
+  static constexpr const char *PREMAP_LIB  = "premap-lib";
+
   RtlOptions(AppOptions &parent):
       AppOptions(parent, ID, "Logical synthesis") {
+
+    // Named options.
+    options->add_option(cli(PREMAP_LIB),  preLib,  "Premapper library")
+           ->expected(1);
 
     // Input file(s).
     options->allow_extras();
@@ -131,6 +137,12 @@ struct RtlOptions final : public AppOptions {
   std::vector<std::string> files() const {
     return options->remaining();
   }
+
+  void fromJson(Json json) override {
+    get(json, PREMAP_LIB, preLib);
+  }
+
+  std::string preLib;
 };
 
 struct HlsOptions final : public AppOptions {
