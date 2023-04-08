@@ -31,6 +31,7 @@ add_executable(${TEST_TARGET}
   gate/model/gnet_test.cpp
   gate/optimizer/optimizer_test.cpp
   gate/optimizer/rwdatabase_test.cpp
+  gate/optimizer/ttbuilder_test.cpp
   gate/parser/parser_test.cpp
   gate/premapper/migmapper/migmapper_test.cpp
   gate/premapper/xagmapper/xag_test.cpp
