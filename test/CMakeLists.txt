@@ -29,9 +29,15 @@ enable_testing()
 add_executable(${TEST_TARGET}
   gate/debugger/checker_test.cpp
   gate/model/gnet_test.cpp
+  gate/optimizer/benchmark_optimizer_test.cpp
+  gate/optimizer/examples.cpp
+  gate/optimizer/find_cone_test.cpp
+  gate/optimizer/optimization_count_test.cpp
   gate/optimizer/optimizer_test.cpp
   gate/optimizer/rwdatabase_test.cpp
+  gate/optimizer/substitute_test.cpp
   gate/optimizer/truthtable_test.cpp
+  gate/optimizer/ttbuilder_test.cpp
   gate/parser/parser_test.cpp
   gate/premapper/migmapper/migmapper_test.cpp
   gate/premapper/xagmapper/xag_test.cpp
@@ -39,8 +45,8 @@ add_executable(${TEST_TARGET}
   gate/premapper/xmgmapper/xmgmapper_test.cpp
   gate/simulator/simulator_test.cpp
   gate/transformer/bdd_test.cpp
-  hls/compiler/compiler_hil_test.cpp
   hls/compiler/compiler_dfc_test.cpp
+  hls/compiler/compiler_hil_test.cpp
   hls/debugger/eq_checker_test.cpp
   #hls/library/library_test.cpp
   hls/library/parser_test.cpp
@@ -55,9 +61,9 @@ add_executable(${TEST_TARGET}
   hls/scheduler/simulated_annealing_test.cpp
   lib/minisat/minisat_test.cpp
   rtl/parser/ril/ril_test.cpp
+  test_main.cpp
   util/fm_test.cpp
   util/graph_traverse_test.cpp
-  test_main.cpp
 )
 target_include_directories(${TEST_TARGET} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${TEST_TARGET}
