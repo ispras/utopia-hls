@@ -2,13 +2,14 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
 #pragma once
 
 #include "CLI/CLI.hpp"
+#include "gate/premapper/premapper.h"
 #include "nlohmann/json.hpp"
 
 #include <fstream>
@@ -17,6 +18,13 @@
 #include <vector>
 
 using Json = nlohmann::json;
+
+NLOHMANN_JSON_SERIALIZE_ENUM( eda::gate::premapper::PreBasis, {
+    {eda::gate::premapper::AIG, "aig"},
+    {eda::gate::premapper::MIG, "mig"},
+    {eda::gate::premapper::XAG, "xag"},
+    {eda::gate::premapper::XMG, "xmg"},
+})
 
 class AppOptions {
 public:
@@ -82,6 +90,13 @@ protected:
     }
   }
 
+  template<class T>
+  static void get(Json json, const std::string &key, T &value) {
+    if (json.contains(key)) {
+      value = json[key].get<T>();
+    }
+  }
+
   Json toJson(const CLI::App *app) const {
     Json json;
 
@@ -119,15 +134,29 @@ protected:
 };
 
 struct RtlOptions final : public AppOptions {
+
+  using PreBasis = eda::gate::premapper::PreBasis;
+
   static constexpr const char *ID = "rtl";
 
-  static constexpr const char *PREMAP_LIB  = "premap-lib";
+  static constexpr const char *PREMAP_BASIS  = "premap-basis";
+  static constexpr const char *PREMAP_LIB    = "premap-lib";
+
+  const std::map<std::string, PreBasis> preBasisMap {
+    {"aig", PreBasis::AIG},
+    {"mig", PreBasis::MIG},
+    {"xag", PreBasis::XAG},
+    {"xmg", PreBasis::XMG}
+  };
 
   RtlOptions(AppOptions &parent):
       AppOptions(parent, ID, "Logical synthesis") {
 
     // Named options.
-    options->add_option(cli(PREMAP_LIB),  preLib,  "Premapper library")
+    options->add_option(cli(PREMAP_BASIS), preBasis, "Premapper basis")
+           ->expected(1)
+           ->transform(CLI::CheckedTransformer(preBasisMap, CLI::ignore_case));
+    options->add_option(cli(PREMAP_LIB), preLib, "Premapper library")
            ->expected(1);
 
     // Input file(s).
@@ -139,9 +168,11 @@ struct RtlOptions final : public AppOptions {
   }
 
   void fromJson(Json json) override {
+    get(json, PREMAP_BASIS, preBasis);
     get(json, PREMAP_LIB, preLib);
   }
 
+  eda::gate::premapper::PreBasis preBasis = PreBasis::AIG;
   std::string preLib;
 };
 
