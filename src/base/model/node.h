@@ -117,8 +117,8 @@ protected:
 
   /// Creates a node w/ the given function/inputs and
   /// stores this node in the existing position.
-  Node(Id id, Func func, const SignalList &inputs):
-    _id(id), _func(func), _inputs(inputs) {
+  Node(Id id, Func func, const SignalList &inputs, const LinkList &links):
+    _id(id), _func(func), _inputs(inputs), _links(links) {
     assert(_id < _storage.size());
     _storage[_id] = this;
     appendLinks();
