@@ -11,7 +11,7 @@
 // {{GEN_TIME}}
 {{#MODULES}}module {{MODULE_NAME}} (
   // outputs
-{{#OUTS}}  output	{{OUTPUT}}{{SEP}}
+{{#OUTS}}  output {{OUTPUT}}{{SEP}}
 {{/OUTS}}
   // inputs
 {{#INS}}  input {{INPUT}}{{SEP}}
