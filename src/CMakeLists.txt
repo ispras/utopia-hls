@@ -1,8 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-# The project executable
-set(MAIN_TARGET umain)
-
 # The project dependencies
 set(MINISAT_LIBRARY minisat-lib-static)
 set(STDCXXFS_LIBRARY stdc++fs)
@@ -36,34 +33,28 @@ add_compile_options(-g3 -Wall -Wignored-qualifiers -DYYERROR_VERBOSE)
 
 add_subdirectory(util)
 add_subdirectory(hls)
-add_subdirectory(gate)
-add_subdirectory(rtl)
 
 # The project library.
-add_library(${MAIN_LIBRARY})
+add_library(ueda)
 
 # The libraries to link with.
-target_link_libraries(${MAIN_LIBRARY}
+target_link_libraries(ueda
   Utopia::Util
   Utopia::HLS
   Utopia::HILParser
-  Utopia::Gate
-  Utopia::RTL
-  Utopia::RILParser
 )
 
-# The project executable.
-add_executable(${MAIN_TARGET} main.cpp)
+add_executable(umain main.cpp)
 
-target_include_directories(${MAIN_TARGET}
+target_include_directories(umain
   PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-target_link_libraries(${MAIN_TARGET}
+target_link_libraries(umain
   PRIVATE
-    ${MAIN_LIBRARY}
-    ${ELPP_LIBRARY}
+    ueda
+    easyloggingpp
     CLI
     Json
 )

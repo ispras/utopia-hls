@@ -9,7 +9,6 @@
 #pragma once
 
 #include "CLI/CLI.hpp"
-#include "gate/premapper/premapper.h"
 #include "nlohmann/json.hpp"
 
 #include <fstream>
@@ -18,13 +17,6 @@
 #include <vector>
 
 using Json = nlohmann::json;
-
-NLOHMANN_JSON_SERIALIZE_ENUM( eda::gate::premapper::PreBasis, {
-    {eda::gate::premapper::AIG, "aig"},
-    {eda::gate::premapper::MIG, "mig"},
-    {eda::gate::premapper::XAG, "xag"},
-    {eda::gate::premapper::XMG, "xmg"},
-})
 
 class AppOptions {
 public:
@@ -133,49 +125,6 @@ protected:
   CLI::App *options;
 };
 
-struct RtlOptions final : public AppOptions {
-
-  using PreBasis = eda::gate::premapper::PreBasis;
-
-  static constexpr const char *ID = "rtl";
-
-  static constexpr const char *PREMAP_BASIS  = "premap-basis";
-  static constexpr const char *PREMAP_LIB    = "premap-lib";
-
-  const std::map<std::string, PreBasis> preBasisMap {
-    {"aig", PreBasis::AIG},
-    {"mig", PreBasis::MIG},
-    {"xag", PreBasis::XAG},
-    {"xmg", PreBasis::XMG}
-  };
-
-  RtlOptions(AppOptions &parent):
-      AppOptions(parent, ID, "Logical synthesis") {
-
-    // Named options.
-    options->add_option(cli(PREMAP_BASIS), preBasis, "Premapper basis")
-           ->expected(1)
-           ->transform(CLI::CheckedTransformer(preBasisMap, CLI::ignore_case));
-    options->add_option(cli(PREMAP_LIB), preLib, "Premapper library")
-           ->expected(1);
-
-    // Input file(s).
-    options->allow_extras();
-  }
-
-  std::vector<std::string> files() const {
-    return options->remaining();
-  }
-
-  void fromJson(Json json) override {
-    get(json, PREMAP_BASIS, preBasis);
-    get(json, PREMAP_LIB, preLib);
-  }
-
-  eda::gate::premapper::PreBasis preBasis = PreBasis::AIG;
-  std::string preLib;
-};
-
 struct HlsOptions final : public AppOptions {
   static constexpr const char *ID = "hls";
 
@@ -231,7 +180,7 @@ struct HlsOptions final : public AppOptions {
 struct Options final : public AppOptions {
   Options(const std::string &title,
           const std::string &version):
-      AppOptions(title, version), rtl(*this), hls(*this) {
+      AppOptions(title, version), hls(*this) {
 
     // Top-level options.
     options->set_help_all_flag("-H,--help-all", "Print the extended help message and exit");
@@ -250,10 +199,8 @@ struct Options final : public AppOptions {
   }
 
   void fromJson(Json json) override {
-    rtl.fromJson(json[RtlOptions::ID]);
     hls.fromJson(json[HlsOptions::ID]);
   }
 
-  RtlOptions rtl;
   HlsOptions hls;
 };

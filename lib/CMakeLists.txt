@@ -8,6 +8,3 @@ target_include_directories(Json INTERFACE json)
 
 add_subdirectory(easyloggingpp)
 add_subdirectory(minisat)
-add_subdirectory(lorina)
-add_subdirectory(sqlite3)
-include_directories(SYSTEM lib/lorina/lib/fmt)
