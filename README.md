@@ -183,8 +183,8 @@ you want and set `CT_DIR` environment variable to it too.
 ```
 cd <workdir>
 git clone --recursive https://github.com/ispras/utopia-hls
-cd utopia
-export UTOPIA_HOME=<workdir>/utopia
+cd utopia-hls
+export UTOPIA_HOME=<workdir>/utopia-hls
 ```
 Please keep `UTOPIA_HOME` variable and its value in your system permanently.
 ### Building Project
