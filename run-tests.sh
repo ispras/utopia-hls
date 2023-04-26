@@ -2,6 +2,6 @@
 
 # SPDX-License-Identifier: Apache-2.0
 
-rm -rf $UTOPIA_HOME/output
+rm -rf $UTOPIA_HLS_HOME/output
 
-${UTOPIA_HOME}/build/test/utest
+${UTOPIA_HLS_HOME}/build/test/utest

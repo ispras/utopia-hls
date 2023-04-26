@@ -183,7 +183,7 @@ void ExternalModule::printVerilogModule(std::ostream &out) const {
   dict->SetValue("BODY", body);
 
   std::string output;
-  const char* basePath = std::getenv("UTOPIA_HOME");
+  const char* basePath = std::getenv("UTOPIA_HLS_HOME");
   const char* verilogTemplate = "/src/data/ctemplate/ext_verilog.tpl";
   ctemplate::ExpandTemplate(std::string(basePath) +
                             std::string(verilogTemplate),
@@ -325,7 +325,7 @@ void FirrtlCircuit::printFirrtl(std::ostream &out) const {
   addExtModulesToDict(dict, extModules);
   // Use template to store result to file
   std::string output;
-  const char* basePath = std::getenv("UTOPIA_HOME");
+  const char* basePath = std::getenv("UTOPIA_HLS_HOME");
   const char* verilogTemplate = "/src/data/ctemplate/top_firrtl.tpl";
   ctemplate::ExpandTemplate(std::string(basePath) + 
                             std::string(verilogTemplate),
@@ -484,7 +484,7 @@ void FirrtlCircuit::printRndVlogTest(const Model       &model,
 
   // Use the template to store testbench to file
   std::string output;
-  const char* basePath = std::getenv("UTOPIA_HOME");
+  const char* basePath = std::getenv("UTOPIA_HLS_HOME");
   const char* verilogTemplate = "/src/data/ctemplate/tbench_verilog.tpl";
   ctemplate::ExpandTemplate(std::string(basePath) + 
                             std::string(verilogTemplate),

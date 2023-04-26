@@ -180,7 +180,7 @@ void dfcIdctTest(const std::string &outSubPath) {
     eda::hls::parser::dfc::Builder::get().create("IDCT");
   std::cout << *model << std::endl;
 
-  const fs::path homePath = std::string(getenv("UTOPIA_HOME"));
+  const fs::path homePath = std::string(getenv("UTOPIA_HLS_HOME"));
   const fs::path fsOutPath = homePath / outSubPath;
   fs::create_directories(fsOutPath);
 

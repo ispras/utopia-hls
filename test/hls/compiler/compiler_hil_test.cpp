@@ -54,7 +54,7 @@ int compilerHilTest(const std::string &inHilSubPath,
     // Area (number of LUTs)
     eda::hls::model::Constraint<unsigned>(1,     10000000));
 
-  const fs::path homePath = std::string(getenv("UTOPIA_HOME"));
+  const fs::path homePath = std::string(getenv("UTOPIA_HLS_HOME"));
 
   const std::string inHilPath = homePath / inHilSubPath;
 

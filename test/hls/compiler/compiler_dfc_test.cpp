@@ -222,7 +222,7 @@ int compilerDfcTest(const dfc::kernel &kernel,
                     const std::string &outSubPath,
                     const std::string &outTestName) {
   const std::string funcName = kernel.name;
-  const fs::path homePath = std::string(getenv("UTOPIA_HOME"));
+  const fs::path homePath = std::string(getenv("UTOPIA_HLS_HOME"));
 
   // Optimization criterion and constraints
   eda::hls::model::Criteria criteria(

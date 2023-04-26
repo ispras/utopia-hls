@@ -9,11 +9,11 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Check if UTOPIA_HOME env var is set
-if(DEFINED ENV{UTOPIA_HOME})
-  message(STATUS "UTOPIA_HOME: $ENV{UTOPIA_HOME}")
+# Check if UTOPIA_HLS_HOME env var is set
+if(DEFINED ENV{UTOPIA_HLS_HOME})
+  message(STATUS "UTOPIA_HLS_HOME: $ENV{UTOPIA_HLS_HOME}")
 else()
-  message(FATAL_ERROR "UTOPIA_HOME env var is not set!")
+  message(FATAL_ERROR "UTOPIA_HLS_HOME env var is not set!")
 endif()
 
 find_package(MLIR REQUIRED CONFIG)

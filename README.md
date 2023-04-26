@@ -184,9 +184,9 @@ you want and set `CT_DIR` environment variable to it too.
 cd <workdir>
 git clone --recursive https://github.com/ispras/utopia-hls
 cd utopia-hls
-export UTOPIA_HOME=<workdir>/utopia-hls
+export UTOPIA_HLS_HOME=<workdir>/utopia-hls
 ```
-Please keep `UTOPIA_HOME` variable and its value in your system permanently.
+Please keep `UTOPIA_HLS_HOME` variable and its value in your system permanently.
 ### Building Project
 
 ```
@@ -203,7 +203,7 @@ for incremental build.
 ### Running Utopia EDA
 
 ```
-rm -rf $UTOPIA_HOME/output
+rm -rf $UTOPIA_HLS_HOME/output
 ./build/src/umain hls <file(s)>
 ```
 
@@ -212,8 +212,8 @@ rm -rf $UTOPIA_HOME/output
 #### Run All Tests
 
 ```
-rm -rf $UTOPIA_HOME/output
-$UTOPIA_HOME/build/test/utest
+rm -rf $UTOPIA_HLS_HOME/output
+$UTOPIA_HLS_HOME/build/test/utest
 ```
 or
 ```
@@ -254,6 +254,6 @@ Test pattern accepts ```*``` and ```?``` wildcards.
 
 * Clone project repository (see above)
 * Click on the `File` and `Open Folder...` menu items
-  * Select the `<UTOPIA_HOME>/src` directory (or `<UTOPIA_HOME>`)
+  * Select the `<UTOPIA_HLS_HOME>/src` directory (or `<UTOPIA_HLS_HOME>`)
   * Press the `I trust the authors` button
 * Click on the `Build` text in the status bar

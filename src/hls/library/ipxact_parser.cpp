@@ -315,7 +315,7 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
     const DOMElement *ipxCompGens = (const DOMElement*)(
       doc->getElementsByTagName(ipxCompGensTag)->item(0));
     
-    std::string path = std::string(std::getenv("UTOPIA_HOME"));
+    std::string path = std::string(std::getenv("UTOPIA_HLS_HOME"));
     std::string genPath = getStrValueFromTag(ipxCompGens, ipxGenExeTag);
     path = path + "/" + genPath;
 
