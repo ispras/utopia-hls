@@ -36,7 +36,7 @@ namespace eda::hls::library {
 
 /**
  * @brief RTL port with name, direction, and width.
- * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>.
+ * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>
  */
 struct Port {
   enum Direction { IN, OUT, INOUT };
@@ -69,16 +69,16 @@ struct Port {
 
 /**
  * @brief Description of a constructed element (module).
- * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>.
+ * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>
  */
 struct Element final {
-  // TODO: Code, Path, etc.
+  /// TODO: Code, Path, etc.
   explicit Element(const std::vector<Port> &ports): ports(ports) {}
 
-  // TODO add mutual relation between spec ports and impl ports
+  /// TODO: add mutual relation between spec ports and impl ports.
   const std::vector<Port> ports;
 
-  // TODO there should be different IRs: MLIR FIRRTL or Verilog|VHDL
+  /// TODO: there should be different IRs: MLIR FIRRTL or Verilog|VHDL.
   std::string ir;
   /// Path to the constructed file.
   std::string path;
@@ -86,7 +86,7 @@ struct Element final {
 
 /**
  * @brief Description of a parameterized constructor of elements.
- * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>.
+ * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>
  */
 struct MetaElement {
   MetaElement(const std::string &name,
@@ -120,10 +120,10 @@ struct MetaElement {
    */
   virtual std::unique_ptr<Element> construct() const = 0;
 
-  // TODO: Needs to be implemented
+  /// TODO: Needs to be implemented
   bool supports(const HWConfig &hwconfig);
 
-  // TODO: Add types for MetaElement Ports
+  /// TODO: Add types for MetaElement Ports.
   Signature getSignature();
 
   const std::string name;
@@ -135,7 +135,7 @@ struct MetaElement {
 
 /**
  * @brief Entry in the cache of MetaElements.
- * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>.
+ * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>
  */
 struct StorageEntry {
   StorageEntry(const std::shared_ptr<MetaElement> metaElement,

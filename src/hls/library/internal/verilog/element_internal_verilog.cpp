@@ -5,6 +5,7 @@
 // Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+#include "hls/library/internal/verilog/element_internal_verilog.h"
 
 #include "hls/library/internal/verilog/add.h"
 #include "hls/library/internal/verilog/cast.h"
@@ -13,7 +14,6 @@
 #include "hls/library/internal/verilog/default.h"
 #include "hls/library/internal/verilog/delay.h"
 #include "hls/library/internal/verilog/dup.h"
-#include "hls/library/internal/verilog/element_internal_verilog.h"
 #include "hls/library/internal/verilog/eq.h"
 #include "hls/library/internal/verilog/ge.h"
 #include "hls/library/internal/verilog/gt.h"
@@ -94,7 +94,7 @@ SharedMetaElement ElementInternalVerilog::create(const NodeType &nodeType,
               << nodeType.name << std::endl;
     metaElement = Default::create(nodeType, hwconfig);
   }
-  //TODO: discuss whether default MetaElement is needed
+  /// TODO: discuss whether default MetaElement is needed
   /*uassert(metaElement != nullptr, "Unsupported MetaElement for NodeType: " +
                                     nodeType.name);*/
 

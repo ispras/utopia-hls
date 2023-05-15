@@ -15,6 +15,7 @@
 #include <ctemplate/template.h>
 
 using Model = eda::hls::model::Model;
+using TemplateDictionary = ctemplate::TemplateDictionary;
 
 namespace eda::hls::compiler {
 
@@ -101,6 +102,7 @@ struct Instance final {
   void addModuleInputs(const std::vector<model::Port*> &inputs);
 
   void addModuleOutputs(const std::vector<model::Port*> &outputs);
+
 };
 
 struct Module {
@@ -135,6 +137,7 @@ struct Module {
   std::string getName() const {
     return name;
   };
+
 };
 
 struct FirrtlModule final : Module {
@@ -186,24 +189,24 @@ struct ExternalModule final : Module {
   void moveVerilogModule(const std::string &outPath) const;
 
 private:
-  void addInputs(const std::vector<model::Port*>  &inputs);
+  void addInputs(const std::vector<model::Port*> &inputs);
 
   void addOutputs(const std::vector<model::Port*> &outputs);
 
-  void addPortsToDict(ctemplate::TemplateDictionary *dict,
+  void addPortsToDict(TemplateDictionary *dict,
                       const std::vector<Port> &ports,
                       const std::string &tagSectName,
                       const std::string &tagPortName,
                       const std::string &tagSepName,
                       const size_t portCount) const;
 
-  void addPrologueToDict(ctemplate::TemplateDictionary *dict) const;
+  void addPrologueToDict(TemplateDictionary *dict) const;
 
 };
 
 class FirrtlCircuit final {
 private:
-  void addPortsToDict(ctemplate::TemplateDictionary *dict,
+  void addPortsToDict(TemplateDictionary *dict,
                       const std::vector<Port> &ports,
                       const std::string &tagSectName,
                       const std::string &tagPortName,
@@ -211,12 +214,12 @@ private:
                       const std::string &tagSepName,
                       const size_t portCount) const;
 
-  void addPrologueToDict(ctemplate::TemplateDictionary *dict) const;
+  void addPrologueToDict(TemplateDictionary *dict) const;
 
-  void addInstancesToDict(ctemplate::TemplateDictionary *dict,
+  void addInstancesToDict(TemplateDictionary *dict,
                           const std::vector<Instance> &instances) const;
 
-  void addExtModulesToDict(ctemplate::TemplateDictionary *dict,
+  void addExtModulesToDict(TemplateDictionary *dict,
       const std::map<std::string, ExternalModule> &extModules) const;
 
   void dumpVerilogOptFile(const std::string &inFirName) const {
@@ -253,7 +256,7 @@ public:
    * @param outFirFileName Name of output FIRRTL file.
    * @param outVlogLibName Name of output file that contains library modules.
    * @param outVlogTopName Name of top verilog file.
-   * @param outPath        Path to store output files.
+   * @param outPath Path to store output files.
    *
    * @returns Nothing, but output files should be created.
    */
@@ -265,17 +268,17 @@ public:
   /**
    * @brief Generates a Verilog random testbench for the input model.
    *
-   * @param model           Input model.
-   * @param outPath         Path to store output testbench.
+   * @param model Input model.
+   * @param outPath Path to store output testbench.
    * @param outTestFileName Filename for output testbench.
-   * @param testCount       Number of test stimuli at random sequence.
+   * @param testCount Number of test stimuli at random sequence.
    *
    * @returns Nothing, but Verilog testbench should be created.
    */
-  void printRndVlogTest(const Model       &model,
+  void printRndVlogTest(const Model &model,
                         const std::string &outPath,
                         const std::string &outTestFileName,
-                        const size_t       testCount) const;
+                        const size_t testCount) const;
 
   static constexpr const char* indent        = "    ";
   static constexpr const char* opPrefix      = "firrtl.";
@@ -284,6 +287,7 @@ public:
   static constexpr const char* circt         = "circt-opt ";
   static constexpr const char* circtOptions  = " --lower-firrtl-to-hw \
                                                  --export-split-verilog";
+
 };
 
 struct Compiler final {
@@ -294,7 +298,7 @@ struct Compiler final {
    * @brief Generates a FIRRTL IR for the input model.
    *
    * @param model Input model.
-   * @param name  Name of top module in FIRRTL circuit to be constructed.
+   * @param name Name of top module in FIRRTL circuit to be constructed.
    * 
    * @returns Constructed FIRRTL circuit.
    */

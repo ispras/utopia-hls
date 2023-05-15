@@ -1,22 +1,32 @@
-//===- Dumper.cpp - HIL-to-mlir printer ---------------*- C++ -*-----------===//
+//===----------------------------------------------------------------------===//
 //
 // This file is licensed under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+//
+// HIL-to-mlir printer.
+//
+//===----------------------------------------------------------------------===//
 
+#include "HIL/Dumper.h"
+
+#include "HIL/Dialect.h"
+#include "HIL/Ops.h"
+#include "hls/model/model.h"
+#include "hls/parser/hil/builder.h"
 #include "mlir/InitAllDialects.h"
 
 #include <cassert>
 #include <fstream>
 #include <iomanip>
-
-#include "HIL/Dialect.h"
-#include "HIL/Dumper.h"
-#include "HIL/Ops.h"
-#include "hls/model/model.h"
-#include "hls/parser/hil/builder.h"
 
 using eda::hls::model::Chan;
 using eda::hls::model::Graph;
@@ -138,11 +148,18 @@ private:
 template <> void ModelDumper<Port>::dump() {
   os_ << "#hil.port<" << quoted(node_.name) << ' ' << quoted(node_.type.name)
       << ' ' << curly_braced(node_.flow) << ' ' << node_.latency << ' '
-      << node_.isConst << ' ' << node_.value << '>';
+      << node_.isConst << ' ' << node_.value.getIntValue() << '>';
 }
 
 template <> void ModelDumper<Binding>::dump() {
   os_ << "#hil.bnd<" << quoted((*(node_.node)).name) << ' ';
+  ModelDumper::get(*(node_.port), os_).dump();
+  os_ << '>';
+}
+
+template <> void ModelDumper<BindingGraph>::dump() {
+  os_ << "#hil.bndgraph<" << quoted((*(node_.graph)).name) << ' '
+      << quoted((*(node_.node)).name) << ' ';
   ModelDumper::get(*(node_.port), os_).dump();
   os_ << '>';
 }
@@ -219,6 +236,14 @@ template <> void ModelDumper<Node>::dump() {
   os_ << '\n' << "]";
 }
 
+template <> void ModelDumper<Con>::dump() {
+  os_ << "hil.con " << quoted(node_.type) << ' ' << quoted(node_.name)
+      << ' ';
+  ModelDumper::get(node_.source, os_).dump();
+  os_ << " == ";
+  ModelDumper::get(node_.target, os_).dump();
+}
+
 template <> void ModelDumper<Graph>::dump() {
   os_ << "hil.graph " << quoted(node_.name) << " {\n";
   {
@@ -237,6 +262,15 @@ template <> void ModelDumper<Graph>::dump() {
       indent_block _(os_);
       for (auto *node : node_.nodes) {
         ModelDumper::get(*node, os_).dump();
+        os_ << '\n';
+      }
+    }
+    os_ << "}\n";
+    os_ << "hil.cons {\n";
+    {
+      indent_block _(os_);
+      for (auto *con : node_.cons) {
+        ModelDumper::get(*con, os_).dump();
         os_ << '\n';
       }
     }
@@ -283,4 +317,5 @@ void dump_model_mlir_to_file(const eda::hls::model::Model &model,
   std::ofstream os(filename);
   dump_model_mlir(model, os);
 }
+
 } // namespace eda::hls::model

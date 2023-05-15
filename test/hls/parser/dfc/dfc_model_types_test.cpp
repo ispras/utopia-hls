@@ -23,61 +23,76 @@ namespace fs = std::filesystem;
 DFC_KERNEL(SumFix64) {
 
   DFC_KERNEL_CTOR(SumFix64) {
+    DFC_KERNEL_ACTIVATE;
 
     dfc::stream<dfc::uint64> first;
     dfc::stream<dfc::uint64> second;
     dfc::stream<dfc::uint64> sum;
 
     sum = first + second;
+    DFC_KERNEL_DEACTIVATE;
   }
+  DFC_CREATE_KERNEL_FUNCTION(SumFix64);
 };
 
 DFC_KERNEL(SumReal16) {
 
   DFC_KERNEL_CTOR(SumReal16) {
+    DFC_KERNEL_ACTIVATE;
 
     dfc::stream<dfc::float16> first;
     dfc::stream<dfc::float16> second;
     dfc::stream<dfc::float16> sum;
 
     sum = first + second;
+    DFC_KERNEL_DEACTIVATE;
   }
+  DFC_CREATE_KERNEL_FUNCTION(SumReal16);
 };
 
 DFC_KERNEL(MulComplexReal32) {
 
   DFC_KERNEL_CTOR(MulComplexReal32) {
+    DFC_KERNEL_ACTIVATE;
 
     dfc::stream<dfc::complex<dfc::float32>> first;
     dfc::stream<dfc::complex<dfc::float32>> second;
     dfc::stream<dfc::complex<dfc::float32>> sum;
 
     sum = first * second;
+    DFC_KERNEL_DEACTIVATE;
   }
+  DFC_CREATE_KERNEL_FUNCTION(MulComplexReal32);
 };
 
 DFC_KERNEL(SumTensor2x2Fix32) {
 
   DFC_KERNEL_CTOR(SumTensor2x2Fix32) {
+    DFC_KERNEL_ACTIVATE;
 
     dfc::stream<dfc::tensor<dfc::uint32, 2, 2>> first;
     dfc::stream<dfc::tensor<dfc::uint32, 2, 2>> second;
     dfc::stream<dfc::tensor<dfc::uint32, 2, 2>> sum;
 
     sum = first + second;
+    DFC_KERNEL_DEACTIVATE;
   }
+  DFC_CREATE_KERNEL_FUNCTION(SumTensor2x2Fix32);
 };
 
 DFC_KERNEL(SumBits8) {
 
   DFC_KERNEL_CTOR(SumBits8) {
+    DFC_KERNEL_ACTIVATE;
 
     dfc::stream<dfc::bits<8>> first;
     dfc::stream<dfc::bits<8>> second;
     dfc::stream<dfc::bits<8>> sum;
 
     sum = first + second;
+    DFC_KERNEL_DEACTIVATE;
   }
+  DFC_CREATE_KERNEL_FUNCTION(SumBits8)
 };
 
 void dfcModelTypesTest(const dfc::kernel &kernel,
@@ -101,41 +116,36 @@ void dfcModelTypesTest(const dfc::kernel &kernel,
 }
 
 TEST(DfcTest, DfcModelTypesSumFix64Test) {
-  dfc::params args;
-  SumFix64 kernel(args);
+  std::shared_ptr<SumFix64> kernel = DFC_CREATE_KERNEL(SumFix64);
   
-  dfcModelTypesTest(kernel,
+  dfcModelTypesTest(*kernel,
                     "output/test/dfc_model_types_test/sum_fix64/");
 }
 
 TEST(DfcTest, DfcModelTypesSumReal16Test) {
-  dfc::params args;
-  SumReal16 kernel(args);
+  std::shared_ptr<SumReal16> kernel = DFC_CREATE_KERNEL(SumReal16);
   
-  dfcModelTypesTest(kernel,
+  dfcModelTypesTest(*kernel,
                     "output/test/dfc_model_types_test/sum_real16/");
 }
 
 TEST(DfcTest, DfcModelTypesMulComplexReal32Test) {
-  dfc::params args;
-  MulComplexReal32 kernel(args);
+  std::shared_ptr<MulComplexReal32> kernel = DFC_CREATE_KERNEL(MulComplexReal32);
   
-  dfcModelTypesTest(kernel,
+  dfcModelTypesTest(*kernel,
                     "output/test/dfc_model_types_test/mul_complex_real32");
 }
 
 TEST(DfcTest, DfcModelTypesSumTensor2x2Fix32Test) {
-  dfc::params args;
-  SumTensor2x2Fix32 kernel(args);
+  std::shared_ptr<SumTensor2x2Fix32> kernel = DFC_CREATE_KERNEL(SumTensor2x2Fix32);
   
-  dfcModelTypesTest(kernel,
+  dfcModelTypesTest(*kernel,
                     "output/test/dfc_model_types_test/sum_tensor2x2fix32");
 }
 
 TEST(DfcTest, DfcModelTypesSumBits8Test) {
-  dfc::params args;
-  SumBits8 kernel(args);
+  std::shared_ptr<SumBits8> kernel = DFC_CREATE_KERNEL(SumBits8);
   
-  dfcModelTypesTest(kernel,
+  dfcModelTypesTest(*kernel,
                     "output/test/dfc_model_types_test/sum_bits8/");
 }

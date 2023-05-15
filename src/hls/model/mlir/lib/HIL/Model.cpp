@@ -1,24 +1,34 @@
-//===- Model.cpp - MLIR model ---------------*- C++ -*---------------------===//
+//===----------------------------------------------------------------------===//
 //
 // This file is licensed under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+//
+// MLIR model.
+//
+//===----------------------------------------------------------------------===//
 
+#include "HIL/Model.h"
+
+#include "HIL/Dialect.h"
+#include "HIL/Dumper.h"
+#include "HIL/Ops.h"
+#include "HIL/Utils.h"
+#include "hls/model/model.h"
+#include "hls/parser/hil/builder.h"
 #include "mlir/InitAllDialects.h"
 
 #include <fstream>
 #include <iostream>
 #include <optional>
-
-#include "HIL/Dialect.h"
-#include "HIL/Dumper.h"
-#include "HIL/Model.h"
-#include "HIL/Ops.h"
-#include "HIL/Utils.h"
-#include "hls/model/model.h"
-#include "hls/parser/hil/builder.h"
 
 using eda::hls::model::Model;
 using eda::hls::parser::hil::Builder;
@@ -103,16 +113,17 @@ MLIRBuilder<T>::build_model_from_mlir(MLIRModule &mlir_model,
 }
 
 template <> void MLIRBuilder<mlir::hil::PortAttr>::build() {
-  auto value = node_.getValue();
-  if (value == 0) {
+  auto isConst = node_.getIsConst();
+  if (isConst == 0) {
     builder_.addPort(node_.getName(), node_.getTypeName(),
-                    std::to_string(node_.getFlow()),
-                    std::to_string(node_.getLatency()));
+                     std::to_string(node_.getFlow()),
+                     std::to_string(node_.getLatency()));
   } else {
+    auto value = node_.getValue();
     builder_.addPort(node_.getName(), node_.getTypeName(),
-                    std::to_string(node_.getFlow()),
-                    std::to_string(node_.getLatency()),
-                    std::to_string(value));
+                     std::to_string(node_.getFlow()),
+                     std::to_string(node_.getLatency()),
+                     std::to_string(value));
   }
 }
 
@@ -154,8 +165,37 @@ template <> void MLIRBuilder<mlir::hil::Chans>::build() {
   }
 }
 
+template <> void MLIRBuilder<mlir::hil::Con>::build() {
+  auto nodeFrom = node_.nodeFrom();
+  auto nodeTo = node_.nodeTo();
+  auto typeName = node_.typeName().str();
+  auto varName = node_.varName().str();
+  builder_.addCon(typeName, varName, nodeFrom, nodeTo);
+}
+
+template <> void MLIRBuilder<mlir::hil::Cons>::build() {
+  for (auto &op : node_.getBody()->getOperations()) {
+    auto con_op = mlir::cast<mlir::hil::Con>(op);
+    MLIRBuilder::get(con_op, builder_).build();
+  }
+}
+
 template <> void MLIRBuilder<mlir::hil::Node>::build() {
-  builder_.startNode(node_.nodeTypeName().str(), node_.name().str());
+  // Get Signature of the Nodetype to look in Nodetype storage.
+  const auto nodeTypeName = node_.nodeTypeName().str();
+  std::vector<std::string> inputChanNames;
+  for (auto op : node_.commandArguments()) {
+    inputChanNames.push_back(op.cast<mlir::StringAttr>().getValue().str());
+  }
+  std::vector<std::string> outputChanNames;
+  for (auto op : node_.commandResults()) {
+    outputChanNames.push_back(op.cast<mlir::StringAttr>().getValue().str());
+  }
+  Signature signature = builder_.getNodeTypeSignature(nodeTypeName,
+                                                      inputChanNames,
+                                                      outputChanNames);
+
+  builder_.startNode(signature, node_.name().str());
   for (auto op : node_.commandArguments()) {
     auto chan_name = op.cast<mlir::StringAttr>().getValue().str();
     builder_.addParam(chan_name);
@@ -190,6 +230,13 @@ template <> void MLIRBuilder<mlir::hil::Graph>::build() {
     MLIRBuilder::get(*nodes_op, builder_).build();
   } else {
     std::cerr << "ERROR: `Nodes` operator not found\n";
+    exit(1);
+  }
+  auto cons_op = find_elem_by_type<mlir::hil::Cons>(ops.begin(), ops.end());
+  if (cons_op) {
+    MLIRBuilder::get(*cons_op, builder_).build();
+  } else {
+    std::cerr << "ERROR: `Cons` operator not found\n";
     exit(1);
   }
   builder_.endGraph();

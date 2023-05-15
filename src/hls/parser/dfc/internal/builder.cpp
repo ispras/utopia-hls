@@ -2,12 +2,13 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
-#include "hls/model/model.h"
 #include "hls/parser/dfc/internal/builder.h"
+
+#include "hls/model/model.h"
 
 #include <algorithm>
 #include <cassert>
@@ -15,7 +16,12 @@
 #include <sstream>
 #include <unordered_set>
 
-using namespace eda::hls::model;
+using Con = eda::hls::model::Con;
+using Graph = eda::hls::model::Graph;
+using Model = eda::hls::model::Model;
+using Node = eda::hls::model::Node;
+using Port = eda::hls::model::Port;
+using Signature = eda::hls::model::Signature;
 
 namespace eda::hls::parser::dfc {
 
@@ -28,35 +34,19 @@ std::string Builder::Unit::getFullName() const {
 
   fullName << opcode << "_" << in.size() << "x" << out.size();
 
-  // Temporal solution
-  if (opcode == "CAST") {
-    fullName << "_" << in[0]->type.size << "_" << out[0]->type.size;
-  }
+  // Temporal solution.
   if (opcode == "const") {
-    fullName << "_" << out[0]->value;
+    fullName << "_" << out.back()->value;
   }
-  //****************************************************************************
+  if (opcode == "INSTANCE") {
+    fullName << "_" << instance->kernelName;
+  }
+  //----------------------------------------------------------------------------
 
   auto result = fullName.str();
 
   std::replace_if(result.begin(), result.end(),
     [](char c) { return c == '<' || c == '>' || c == ','; }, '_');
-
-  // For debug purposes
-  /*std::cout << "***********************************************" << std::endl;
-
-  std::cout << result << std::endl;
-
-  for (const auto *input : in) {
-    std::cout << input->name << std::endl;
-  }
-
-  for (const auto *output : out) {
-    std::cout << output->name << std::endl;
-  }
-
-  std::cout << "***********************************************" << std::endl;*/
-  //****************************************************************************
   
   return result;
 }
@@ -109,6 +99,14 @@ Builder::Unit* Builder::Kernel::getUnit(const std::string &opcode,
   return unit;
 }
 
+void Builder::Kernel::createInstanceUnit(const std::string &opcode,
+                                         const std::string &instanceName,
+                                         const std::string &kernelName) {
+  auto *unit = new Unit(opcode, instanceName, kernelName);
+  units.push_back(unit);
+  instanceUnits.insert({instanceName, unit});
+}
+
 void Builder::Kernel::connect(Wire *source, Wire *target) {
   auto *consumer = source->consumer;
   auto *producer = source->producer;
@@ -132,7 +130,9 @@ void Builder::Kernel::transform() {
   std::unordered_set<Unit*> removing;
 
   for (auto *unit : units) {
-    if (unit->opcode != "dup" || unit->in.size() != 1 || unit->out.size() != 1) {
+    if (unit->opcode != "dup" ||
+        unit->in.size() != 1 ||
+        unit->out.size() != 1) {
       continue;
     }
 
@@ -143,11 +143,21 @@ void Builder::Kernel::transform() {
     input->consumer = next;
 
     if (next) {
+      // When we delete some wire we need to modify the bindings.
+      if (next->opcode == "INSTANCE") {
+        auto source = next->instance->bindingsToInputs[output];
+        next->instance->modifyBindingToInput(output, input, source);
+      }
+      //------------------------------------------------------------------------
       std::replace(next->in.begin(), next->in.end(), output, input);
+      originals.erase(output->name);
+      versions.erase(output->name);
+    } else {
+      auto *previous = input->producer;
+      std::replace(previous->out.begin(), previous->out.end(), input, output);
+      originals.erase(input->name);
+      versions.erase(input->name);
     }
-
-    originals.erase(output->name);
-    versions.erase(output->name);
 
     removing.insert(unit);
     delete unit;
@@ -161,18 +171,27 @@ void Builder::Kernel::transform() {
     if (wire->isConst && !wire->producer && wire->consumer) {
       getUnit("const", {}, { wire });
     } else if (wire->isInput && !wire->producer && wire->consumer) {
-      getUnit("source", {}, { wire });
+      auto *source = getUnit("source", {}, { wire });
+      inputNamesToSources.insert({wire->name, source});
     } else if (wire->isOutput && wire->producer && !wire->consumer) {
-      getUnit("sink", { wire }, {});
+      auto *sink = getUnit("sink", { wire }, {});
+      outputNamesToSinks.insert({wire->name, sink});
     }
   }
-
   isTransformed = true;
 }
 
 //===----------------------------------------------------------------------===//
 // Builder
 //===----------------------------------------------------------------------===//
+
+std::string Builder::getSourceName(const Unit* source) {
+  return source->opcode + "_" + source->out.front()->name;
+}
+
+std::string Builder::getSinkName(const Unit* sink) {
+  return sink->opcode + "_" + sink->in.front()->name;
+}
 
 std::shared_ptr<Model> Builder::create(const std::string &modelName) {
   auto *model = new Model(modelName);
@@ -214,13 +233,45 @@ void Builder::declareWire(const ::dfc::wire *wire) {
   kernel->getWire(wire, Kernel::CREATE_ORIGINAL);
 }
 
-void Builder::connectWires(const ::dfc::wire *in, const ::dfc::wire *out) {
+void Builder::connectWires(const ::dfc::wire *in,
+                           const ::dfc::wire *out) {
   auto *kernel = getKernel();
 
   auto *source = kernel->getWire(in,  Kernel::ACCESS_VERSION);
   auto *target = kernel->getWire(out, Kernel::CREATE_VERSION);
 
   kernel->connect(source, target);
+}
+
+void Builder::connectToInstanceInput(const std::string &instanceName,
+                                     const ::dfc::wire *wire,
+                                     const std::string &inputName) {
+  auto *kernel = getKernel();
+
+  auto *source = kernel->getWire(wire, Kernel::ACCESS_VERSION);
+  auto *target = kernel->getWire(wire, Kernel::CREATE_VERSION);
+
+  kernel->connect(source, target);
+
+  kernel->instanceUnits[instanceName]->addInput(target);
+
+  getKernel()->instanceUnits[instanceName]->instance->addBindingToInput(target,
+      inputName);
+}
+
+void Builder::connectToInstanceOutput(const std::string &instanceName,
+                                      const ::dfc::wire *wire,
+                                      const std::string &outputName) {
+  auto *kernel = getKernel();
+  auto *instanceKernel = getKernel(
+      kernel->instanceUnits[instanceName]->instance->kernelName);
+
+  auto *output = kernel->getWire(wire, Kernel::ACCESS_ORIGINAL);
+
+  kernel->instanceUnits[instanceName]->addOutput(output);
+
+  getKernel()->instanceUnits[instanceName]->instance->addBindingToOutput(output,
+      instanceKernel->versions[outputName]->name);
 }
 
 void Builder::connectWires(const std::string &opcode,
@@ -263,7 +314,7 @@ Port* Builder::getPort(const Wire *wire, unsigned latency) {
                   1.0,                                              // Flow
                   latency,                                          // Latency
                   wire->isConst,                                    // Constant
-                  ((~stoull(wire->value, nullptr, 16)) + 1) * -1);  // Value 
+                  wire->value);                                     // Value 
 }
 
 Chan* Builder::getChan(const Wire *wire, Graph *graph) {
@@ -277,8 +328,7 @@ Chan* Builder::getChan(const Wire *wire, Graph *graph) {
   return chan; 
 }
 
-NodeType* Builder::getNodetype(const Kernel *kernel,
-                               const Unit *unit,
+NodeType* Builder::getNodetype(const Unit *unit,
                                Model *model) {
   auto *nodetype = new NodeType(unit->getFullName(), *model);
   for (auto *wire : unit->in) {
@@ -299,26 +349,71 @@ Node* Builder::getNode(const Kernel *kernel,
   Signature signature = unit->getSignature();
   auto *nodetype = model->findNodetype(signature);
   if (nodetype == nullptr) {
-    nodetype = getNodetype(kernel, unit, model);
+    nodetype = getNodetype(unit, model);
     model->addNodetype(signature, nodetype);
   }
-  std::string nodeName = unit->opcode;
+  std::string nodeName;
   if (unit->opcode == "source") {
-    nodeName = nodeName + "_" + unit->out[0]->name;
+    nodeName = getSourceName(unit);
   } else if (unit->opcode == "sink") {
-    nodeName = nodeName + "_" + unit->in[0]->name;
+    nodeName = getSinkName(unit);
   } else {
-    nodeName = nodeName + std::to_string(id);
+    nodeName = unit->opcode + std::to_string(id);
   }
   id++;
-  auto *node = new Node(nodeName, *nodetype, *graph);
+  Graph *instanceGraph = nullptr;
+  if (unit->opcode == "INSTANCE") {
+    // Check whether the instance is fully connected.
+    if (!unit->instance->isFullyConnected()) {
+      std::cout << "Instance " << unit->instance->instanceName << " " <<
+                   "is not fully connected!" << std::endl;
+    }
+
+    Kernel *instanceKernel = Builder::get().getKernel(
+        unit->instance->kernelName);
+    instanceGraph = model->findGraph(instanceKernel->name);
+    if (instanceGraph == nullptr) {
+      instanceGraph = getGraph(instanceKernel, model);
+      model->addGraph(instanceGraph);
+    }
+    instanceGraph = model->findGraph(instanceKernel->name);
+  }
+  auto *node = new Node(nodeName, *nodetype, *graph, instanceGraph);
   for (auto *wire : unit->in) {
     auto *input = getChan(wire, graph);
+    if (instanceGraph != nullptr) {
+      Kernel *instanceKernel = Builder::get().getKernel(
+          unit->instance->kernelName);
+      Unit *sourceUnit = instanceKernel->inputNamesToSources[
+          unit->instance->bindingsToInputs[wire]];
+      Node *sourceNode = instanceGraph->findNode(getSourceName(sourceUnit));
+      auto* con = new Con(input->name,
+                          input->type);
+      con->source = { graph, node, node->type.inputs[node->inputs.size()] };
+      con->target = { instanceGraph,
+                      sourceNode->outputs.back()->source.node,
+                      sourceNode->outputs.back()->source.port };
+      graph->addCon(con);
+    }
     input->target = { node, node->type.inputs[node->inputs.size()] };
     node->addInput(input);
   }
   for (auto *wire : unit->out) {
     auto *output = getChan(wire, graph);
+    if (instanceGraph != nullptr) {
+      Kernel *instanceKernel = Builder::get().getKernel(
+          unit->instance->kernelName);
+      Unit *sinkUnit = instanceKernel->outputNamesToSinks[
+          unit->instance->bindingsToOutputs[wire]];
+      Node *sinkNode = instanceGraph->findNode(getSinkName(sinkUnit));
+      auto* con = new Con(output->name,
+                          output->type);
+      con->source = { instanceGraph,
+                      sinkNode->inputs.back()->target.node,
+                      sinkNode->inputs.back()->target.port };
+      con->target = { graph, node, node->type.outputs[node->outputs.size()] };
+      graph->addCon(con);
+    }
     output->source = { node, node->type.outputs[node->outputs.size()] };
     node->addOutput(output);
   }
@@ -327,6 +422,7 @@ Node* Builder::getNode(const Kernel *kernel,
 
 Graph* Builder::getGraph(const Kernel *kernel, Model *model) {
   auto *graph = new Graph(kernel->name, *model);
+
 
   for (auto *unit : kernel->units) {
     graph->addNode(getNode(kernel, unit, graph, model));

@@ -32,8 +32,8 @@ void Mapper::map(model::Model &model, library::Library &library) {
 
 void Mapper::map(model::Node &node, library::Library &library) {
   auto metaElements = library.find(node.type, HWConfig("", "", ""));
-  uassert(!metaElements.empty(), "No elements have been found!");
-  //TODO: Temportal solution.
+  uassert(!metaElements.empty(), "No elements have been found!\n");
+  /// TODO: Temportal solution.
   /*std::cout << "The number of elements for node " << node.type.name << " is "
             << metaElements.size() << std::endl;*/
   auto metaElement = metaElements[0];
@@ -43,12 +43,12 @@ void Mapper::map(model::Node &node, library::Library &library) {
 
 void Mapper::map(model::Node &node,
                  const std::shared_ptr<library::MetaElement> &metaElement) {
-  uassert_node(!node.map, node, "Node has been already mapped");
+  uassert_node(!node.map, node, "Node has been already mapped!\n");
   node.map = metaElement;
 }
 
 void Mapper::apply(model::Node &node, const model::Parameters &params) {
-  uassert_node(node.map, node, "Node has not been mapped");
+  uassert_node(node.map, node, "Node has not been mapped!\n");
 
   // Store the parameters.
   node.params = params;
@@ -59,10 +59,10 @@ void Mapper::apply(model::Node &node, const model::Parameters &params) {
 
   for (auto *output : node.outputs) {
     const auto *port = output->source.port;
-    uassert_node(port, node, "Channel has not been linked");
+    uassert_node(port, node, "Channel has not been linked!\n");
 
     auto i = node.ind.outputs.find(port->name);
-    uassert_node(i != node.ind.outputs.end(), node, "Unspecified output");
+    uassert_node(i != node.ind.outputs.end(), node, "Unspecified output!\n");
 
     output->ind = i->second;
 

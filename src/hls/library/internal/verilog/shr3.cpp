@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/library/internal/verilog/shr3.h"
+
 #include "util/string.h"
 
 #include <cmath>
@@ -42,7 +43,7 @@ void Shr3::estimate(const Parameters &params, Indicators &indicators) const {
 
 std::shared_ptr<MetaElement> Shr3::create(const NodeType &nodetype,
                                           const HWConfig &hwconfig) {
-  std::string name = nodetype.name;
+    std::string name = nodetype.name;
     std::shared_ptr<MetaElement> metaElement;
     auto ports = createPorts(nodetype);
     std::string lowerCaseName = name;

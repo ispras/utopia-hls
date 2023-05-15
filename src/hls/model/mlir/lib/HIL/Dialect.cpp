@@ -1,14 +1,26 @@
-//===- Dialect.cpp - HIL dialect ---------------*- C++ -*------------------===//
+//===----------------------------------------------------------------------===//
 //
 // This file is licensed under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+//
+// HIL dialect.
+//
+//===----------------------------------------------------------------------===//
 
 #include "HIL/Dialect.h"
+
 #include "HIL/Ops.h"
 #include "mlir/IR/DialectImplementation.h"
+
 #include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/TypeSwitch.h"
 
@@ -61,7 +73,7 @@ void mlir::hil::PortAttr::print(mlir::AsmPrinter &printer) const {
 }
 
 mlir::Attribute mlir::hil::PortAttr::parse(mlir::AsmParser &parser,
-                                                mlir::Type type) {
+                                           mlir::Type type) {
   if (parser.parseLess())
     return {};
   std::string name;

@@ -10,7 +10,7 @@
 
 namespace eda::hls::library {
 
-// TODO: Realize TGI
+/// TODO: Realize TGI
 std::unique_ptr<Element> ElementGenerator::construct() const {
   system((genPath +
               " " +

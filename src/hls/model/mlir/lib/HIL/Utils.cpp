@@ -1,20 +1,29 @@
-//===- HILOps.cpp - MLIR utils      ---------------*- C++ -*---------------===//
+//===----------------------------------------------------------------------===//
 //
 // This file is licensed under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+//
+// Utility methods.
+//
+//===----------------------------------------------------------------------===//
 
 #include "HIL/Utils.h"
-#include "util/string.h"
 
 #include "mlir/IR/BuiltinAttributes.h"
+#include "util/string.h"
+
 #include "llvm/Support/Casting.h"
 
 #include <iostream>
-
-using namespace eda::utils;
 
 namespace mlir::hil {
 
@@ -153,17 +162,17 @@ bool isConst(mlir::hil::Node &node) {
 bool isDelay(mlir::hil::Node &node) {
   return getInputs(node).size() == 1
       && getOutputs(node).size() == 1
-      && starts_with(node.nodeTypeName().str(), "delay");
+      && eda::utils::starts_with(node.nodeTypeName().str(), "delay");
 }
 
 bool isDup(mlir::hil::Node &node) {
   return getInputs(node).size() == 1
-      && starts_with(node.nodeTypeName().str(), "dup");
+      && eda::utils::starts_with(node.nodeTypeName().str(), "dup");
 }
 
 bool isMerge(mlir::hil::Node &node) {
   return getOutputs(node).size() == 1
-      && starts_with(node.nodeTypeName().str(), "merge");
+      && eda::utils::starts_with(node.nodeTypeName().str(), "merge");
 }
 
 bool isSink(mlir::hil::Node &node) {
@@ -176,7 +185,7 @@ bool isSource(mlir::hil::Node &node) {
 
 bool isSplit(mlir::hil::Node &node) {
   return getInputs(node).size() == 1
-      && starts_with(node.nodeTypeName().str(), "split");
+      && eda::utils::starts_with(node.nodeTypeName().str(), "split");
 }
 
 bool isKernel(mlir::hil::Node &node) {
@@ -188,4 +197,5 @@ bool isKernel(mlir::hil::Node &node) {
       && !isSource(node)
       && !isSplit(node);
 }
+
 } // namespace mlir::hil

@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/library/internal/verilog/default.h"
+
 #include "util/string.h"
 
 #include <cmath>
@@ -58,7 +59,7 @@ void Default::estimate(const Parameters &params,
 
 std::shared_ptr<MetaElement> Default::create(const NodeType &nodetype,
                                              const HWConfig &hwconfig) {
-  std::string name = nodetype.name;
+    std::string name = nodetype.name;
     std::shared_ptr<MetaElement> metaElement;
     auto ports = createPorts(nodetype);
     std::string lowerCaseName = name;
@@ -98,7 +99,7 @@ std::unique_ptr<Element> Default::construct() const {
     }
   }
 
-  // FSM can be create iff there is at least one input in the design
+  // FSM can be create iff there is at least one input in the design.
   bool fsmNotCreated = true;
 
   for (auto port : ports) {
@@ -119,7 +120,7 @@ std::unique_ptr<Element> Default::construct() const {
       }
       inputs += std::string("wire ") + portDeclr;
 
-      // Create the first stage of pipeline
+      // Create the first stage of pipeline.
       if (fsmNotCreated) {
         regs += std::string("reg [") + std::to_string(inputLength - 1) + 
             ":0] state_0;\n";
@@ -139,7 +140,7 @@ std::unique_ptr<Element> Default::construct() const {
       outputs += outputType + portDeclr;
 
       if (inputLength < outputLength && pos != 0) {
-        pos -= port.width; // FIXME
+        pos -= port.width;
       }
       uassert(outputLength != 0, "All the outputs have zero width!");
       assigns += std::string("assign ") + replaceSomeChars(port.name) +
@@ -156,8 +157,8 @@ std::unique_ptr<Element> Default::construct() const {
   }
 
   std::string ir;
-  // TODO: discuss conventions for sequence of parameters
-  // Finish creating the first stage of pipeline
+  /// TODO: discuss conventions for sequence of parameters.
+  // Finish creating the first stage of pipeline.
   if (!fsmNotCreated) {
     fsm += std::string("};\n");
   } else {

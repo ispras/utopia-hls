@@ -1,8 +1,18 @@
-//===- Utils.h - Utility methods -----------------*- C++ -*----------------===//
+//===----------------------------------------------------------------------===//
 //
 // This file is licensed under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+//
+// Utility methods.
 //
 //===----------------------------------------------------------------------===//
 
@@ -38,12 +48,11 @@ std::optional<T> find_elem_by_type(Iterator first, Iterator last) {
 }
 
 template <typename T, typename Container>
-std::optional<T> find_elem_by_type(Container&& c) {
+std::optional<T> find_elem_by_type(Container &&c) {
   return find_elem_by_type<T>(c.begin(), c.end());
 }
 
 /* Utility methods for MLIR-based IR */
-
 namespace mlir::hil {
 
   /// Returns parent model's name for the node.
@@ -56,25 +65,25 @@ namespace mlir::hil {
   std::optional<Graph> getGraph(Model &model, const std::string &name);
 
   /* Graph-related methods. */
-
   std::vector<Node> getInputs(Graph &graph);
   std::vector<Node> getSinks(Graph &graph);
   std::vector<Chan> getChans(Graph &graph);
+  std::vector<Con>  getCons(Graph &graph);
   mlir::Block::OpListType& getNodes(Graph &graph);
 
   /* Node-related methods. */
-
   std::vector<Chan> getInputs(Node &node);
   std::vector<Chan> getOutputs(Node &node);
 
   /* Type-checking methods. */
-
   bool isConst(Node &node);
   bool isDelay(Node &node);
   bool isDup(Node &node);
+  bool isInstance(Node &node);
   bool isKernel(Node &node);
   bool isMerge(Node &node);
   bool isSink(Node &node);
   bool isSource(Node &node);
   bool isSplit(Node &node);
+
 } // namespace mlir::hil

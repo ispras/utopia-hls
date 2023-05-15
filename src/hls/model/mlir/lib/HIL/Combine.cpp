@@ -1,17 +1,29 @@
-//===- Combine.cpp - MLIR passes -----------------*- C++ -*----------------===//
+//===----------------------------------------------------------------------===//
 //
 // This file is licensed under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+//
+// MLIR passes.
+//
+//===----------------------------------------------------------------------===//
 
 #include "HIL/Combine.h"
+
 #include "HIL/API.h"
 #include "HIL/Dialect.h"
 #include "HIL/Model.h"
 #include "HIL/Ops.h"
 #include "HIL/Utils.h"
+
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/Matchers.h"
 #include "mlir/IR/PatternMatch.h"
@@ -129,7 +141,7 @@ public:
       return failure();
     }
     auto chans_op = cast<Chans>(*chan_op->getParentOp());
-    auto model_op = cast<Model>(*chans_op->getParentOp()->getParentOp());
+    auto model_op = cast<mlir::hil::Model>(*chans_op->getParentOp()->getParentOp());
     auto &model_ops = model_op.getBody()->getOperations();
     auto nodetypes_op = find_elem_by_type<NodeTypes>(model_ops).value();
     auto graph_op = find_elem_by_type<Graph>(model_ops).value();
@@ -208,6 +220,22 @@ public:
 private:
   const std::string chan_name_;
   const unsigned latency_;
+};
+
+class UnfoldInstancePass : public RewritePattern {
+public:
+  UnfoldInstancePass(MLIRContext *context, std::string instance_name)
+      : RewritePattern(MatchAnyOpTypeTag(), /*benefit=*/1, context),
+        instance_name(instance_name) {}
+
+  /// TODO:
+  LogicalResult matchAndRewrite(Operation *op,
+                                PatternRewriter &rewriter) const override {
+    return success();
+  }
+
+private:
+  const std::string instance_name;
 };
 } // namespace
 
@@ -330,6 +358,15 @@ std::function<void(MLIRModule &)> InsertDelay(std::string chan_name,
     run_pass(m, std::move(pass));
   };
 }
+
+std::function<void(MLIRModule &)> UnfoldInstance(std::string instance_name) {
+  return [=](MLIRModule &m) {
+    auto *context = m.get_context();
+    UnfoldInstancePass pass{context, instance_name};
+    run_pass(m, std::move(pass));
+  };
+}
+
 } // namespace mlir::transforms
 
 std::unique_ptr<Pass> createGraphRewritePass() {

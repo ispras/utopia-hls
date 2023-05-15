@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -36,8 +36,26 @@ class Builder final : public Singleton<Builder> {
 public:
   std::shared_ptr<Model> create();
 
+  // Temporal solution.
+  Signature getNodeTypeSignature(const std::string nodeTypeName,
+      const std::vector<std::string> inputChanNames,
+      const std::vector<std::string> outputChanNames) {
+    std::vector<std::string> inputTypeNames;
+    std::vector<std::string> outputTypeNames;
+    for (const auto &inputChanName : inputChanNames) {
+      auto *chan = chans.find(inputChanName)->second;
+      inputTypeNames.push_back(chan->type);
+    }
+    for (const auto &outputChanName : outputChanNames) {
+      auto *chan = chans.find(outputChanName)->second;
+      outputTypeNames.push_back(chan->type);
+    }
+    return Signature(nodeTypeName, inputTypeNames, outputTypeNames);
+  }
+
   void startModel(const std::string &name) {
-    assert(currentModel == nullptr && "Model is inside another model");
+    uassert(currentModel == nullptr,
+            "Model is inside another model!\n");
 
     currentModel = new Model(name);
     nodetypes.clear();
@@ -47,17 +65,18 @@ public:
   void endModel() {}
 
   void startNodetype(const std::string &name) {
-    assert(currentModel != nullptr && "Nodetype is outside a model");
-    assert(currentNodetype == nullptr && "Previous nodetype has not been ended");
+    uassert(currentModel != nullptr, "Nodetype is outside a model!\n");
+    uassert(currentNodetype == nullptr,
+            "Previous nodetype has not been ended!\n");
 
     currentNodetype = new NodeType(name, *currentModel);
-    nodetypes.insert({ name, currentNodetype });
     outputsStarted = false;
   }
 
   void endNodetype() {
-    assert(currentNodetype != nullptr && "Nodetype has not been started");
+    uassert(currentNodetype != nullptr, "Nodetype has not been started!\n");
     Signature signature = currentNodetype->getSignature();
+    nodetypes.insert({signature, currentNodetype});
     currentModel->addNodetype(signature, currentNodetype);
     currentNodetype = nullptr;
   }
@@ -66,54 +85,53 @@ public:
     outputsStarted = true;
   }
 
-  void addPort(
-      const std::string &name,
-      const std::string &type,
-      const std::string &flow,
-      const std::string &latency,
-      const std::string &value = "") {
+  void addPort(const std::string &name,
+               const std::string &type,
+               const std::string &flow,
+               const std::string &latency,
+               const std::string &value = "") {
     auto *port = new Port(name,
                           type,
                           std::stof(flow),
                           std::stoi(latency),
                           !value.empty(),
-                          value.empty() ? -1u : std::stoi(value));
-
+                          value.empty() ? Value(-1) : Value(value));
     if (outputsStarted) {
       currentNodetype->addOutput(port);
     } else {
-      assert(!port->isConst && "Input cannot be a const");
       currentNodetype->addInput(port);
     }
   }
 
   void startGraph(const std::string &name) {
-    assert(currentModel != nullptr && "Graph is outside a model");
-    assert(currentGraph == nullptr && "Previous graph has not been finished");
+    uassert(currentModel != nullptr, "Graph is outside a model!\n");
+    uassert(currentGraph == nullptr, "Previous graph has not been finished!\n");
 
     currentGraph = new Graph(name, *currentModel);
     graphs.insert({ name, currentGraph });
 
     chans.clear();
+    cons.clear();
   }
 
   void endGraph() {
-    assert(currentGraph != nullptr);
-
+    uassert(currentGraph != nullptr, "Graph has not been started!\n");
     currentModel->addGraph(currentGraph);
     currentGraph = nullptr;
   }
 
   void addChan(const std::string &type,
-      const std::string &name,
-      const mlir::hil::BindingAttr &nodeFrom,
-      const mlir::hil::BindingAttr &nodeTo) {
+               const std::string &name,
+               const mlir::hil::BindingAttr &nodeFrom,
+               const mlir::hil::BindingAttr &nodeTo) {
 
-    assert(currentGraph != nullptr && "Chan is outside a graph");
+    uassert(currentGraph != nullptr, "Chan is outside a graph!\n");
 
     auto *chan = new Chan(name, type, *currentGraph);
-    const auto *srcNode = currentGraph->findNode(nodeFrom.getNodeName().str());
-    const auto *dstNode = currentGraph->findNode(nodeTo.getNodeName().str());
+    auto *graph = graphs.find(chan->graph.name)->second;
+    /// Why was it needed?
+    // const auto *srcNode = graph->findNode(nodeFrom.getNodeName().str());
+    // const auto *dstNode = graph->findNode(nodeTo.getNodeName().str());
     auto fPort = nodeFrom.getPort();
     const std::string fPortName = fPort.getName();
     auto tPort = nodeTo.getPort();
@@ -121,49 +139,115 @@ public:
 
     // FIXME: deprecated Type constructor is used here
     const auto *srcPort = new Port(fPortName,
-        Type::get(fPort.getTypeName()),
-        fPort.getFlow(),
-        fPort.getLatency(),
-        fPort.getIsConst(),
-        fPort.getValue());
+                                   fPort.getTypeName(),
+                                   fPort.getFlow(),
+                                   fPort.getLatency(),
+                                   fPort.getIsConst(),
+                                   fPort.getValue());
     const auto *dstPort = new Port(tPortName,
-        Type::get(tPort.getTypeName()),
-        tPort.getFlow(),
-        tPort.getLatency(),
-        tPort.getIsConst(),
-        tPort.getValue());
-
-    chan->source.node = srcNode;
+                                   tPort.getTypeName(),
+                                   tPort.getFlow(),
+                                   tPort.getLatency(),
+                                   tPort.getIsConst(),
+                                   tPort.getValue());
+    /// Why was it needed?
+    // chan->source.node = srcNode;
+    // chan->target.node = dstNode;
     chan->source.port = srcPort;
-    chan->target.node = dstNode;
     chan->target.port = dstPort;
 
     chans.insert({ name, chan });
-    currentGraph->addChan(chan);
+    graph->addChan(chan);
   }
 
   void addChan(const std::string &type, const std::string &name) {
 
-    assert(currentGraph != nullptr && "Chan is outside a graph");
+    uassert(currentGraph != nullptr, "Chan is outside a graph!\n");
 
     auto *chan = new Chan(name, type, *currentGraph);
     chans.insert({ name, chan });
     currentGraph->addChan(chan);
   }
 
-  void startNode(const std::string &type, const std::string &name) {
-    assert(currentGraph != nullptr && "Node is outside a graph");
-    assert(currentNode == nullptr && "Previous node has not been ended");
+  void addCon(const std::string &type,
+              const std::string &name,
+              const mlir::hil::BindingGraphAttr &nodeFrom,
+              const mlir::hil::BindingGraphAttr &nodeTo) {
 
-    auto i = nodetypes.find(type);
-    uassert(i != nodetypes.end(), "Nodetype is not found: " << type);
+    uassert(currentGraph != nullptr, "Con is outside a graph!\n");
+
+    auto *con = new Con(name, type);
+
+    const auto *srcGraph = graphs.find(nodeFrom.getGraphName().str())->second;
+    const auto *dstGraph = graphs.find(nodeTo.getGraphName().str())->second;
+
+    const auto *srcNode = srcGraph->findNode(nodeFrom.getNodeName().str());
+    const auto *dstNode = dstGraph->findNode(nodeTo.getNodeName().str());
+    auto fPort = nodeFrom.getPort();
+    const std::string fPortName = fPort.getName();
+    auto tPort = nodeTo.getPort();
+    const std::string tPortName = tPort.getName();
+
+    const auto *srcPort = new Port(fPortName,
+                                   Type::get(fPort.getTypeName()),
+                                   fPort.getFlow(),
+                                   fPort.getLatency(),
+                                   fPort.getIsConst(),
+                                   fPort.getValue());
+    const auto *dstPort = new Port(tPortName,
+                                   Type::get(tPort.getTypeName()),
+                                   tPort.getFlow(),
+                                   tPort.getLatency(),
+                                   tPort.getIsConst(),
+                                   tPort.getValue());
+
+    con->source.node = srcNode;
+    con->source.port = srcPort;
+    con->source.graph = srcGraph;
+    con->target.node = dstNode;
+    con->target.port = dstPort;
+    con->target.graph = dstGraph;
+
+    cons.insert({ name, con });
+    currentGraph->addCon(con);
+  }
+
+  void addCon(const std::string &type, const std::string &name) {
+
+    uassert(currentGraph != nullptr, "Con is outside a graph!\n");
+
+    auto *con = new Con(name, type);
+    cons.insert({ name, con });
+    currentGraph->addCon(con);
+  }
+
+  /// FIXME: deprecated
+  void startNode(const std::string &type, const std::string &name) {
+    uassert(currentGraph != nullptr, "Node is outside a graph!\n");
+    uassert(currentNode == nullptr, "Previous node has not been ended!\n");
+
+    auto i = nodetypesDeprecated.find(type);
+    uassert(i != nodetypesDeprecated.end(), "Nodetype is not found: "
+            << type << "!\n");
+
+    currentNode = new Node(name, *(i->second), *currentGraph);
+    outputsStarted = false;
+  }
+
+  void startNode(const Signature &typeSignature, const std::string &name) {
+    uassert(currentGraph != nullptr, "Node is outside a graph!\n");
+    uassert(currentNode == nullptr, "Previous node has not been ended!\n");
+
+    auto i = nodetypes.find(typeSignature);
+    uassert(i != nodetypes.end(), "Nodetype is not found: "
+            << typeSignature.name << "!\n");
 
     currentNode = new Node(name, *(i->second), *currentGraph);
     outputsStarted = false;
   }
 
   void endNode() {
-    assert(currentNode != nullptr);
+    uassert(currentNode != nullptr, "Node has not been started!\n");
 
     currentGraph->addNode(currentNode);
     currentNode = nullptr;
@@ -171,22 +255,24 @@ public:
 
   void addParam(const std::string &name) {
     auto i = chans.find(name);
-    uassert(i != chans.end(), "Chan is not found: " << name);
+    uassert(i != chans.end(), "Chan is not found: " << name << "!\n");
 
     auto *chan = i->second;
     if (currentInstance == nullptr) {
-      assert(currentNode != nullptr && "Param is outside a node");
+      uassert(currentNode != nullptr, "Param is outside a node!\n");
 
       // Node parameter.
       if (outputsStarted) {
-        uassert(!chan->source.isLinked(), "Chan is already linked: " << *chan);
+        uassert(!chan->source.isLinked(), "Chan is already linked: " << *chan
+                << "!\n");
         chan->source = {
           currentNode,
           currentNode->type.outputs[currentNode->outputs.size()]
         };
         currentNode->addOutput(chan);
       } else {
-        uassert(!chan->target.isLinked(), "Chan is already linked: " << *chan);
+        uassert(!chan->target.isLinked(), "Chan is already linked: " << *chan
+                << "!\n");
         chan->target = {
           currentNode,
           currentNode->type.inputs[currentNode->inputs.size()]
@@ -195,7 +281,8 @@ public:
       }
     } else {
       // Instance parameter.
-      assert(currentInstanceNode != nullptr && "Param is outside an instance node");
+      uassert(currentInstanceNode != nullptr,
+              "Param is outside an instance node!\n");
 
       if (outputsStarted) {
         // Outputs are sink inputs.
@@ -210,10 +297,11 @@ public:
   }
 
   void startInstance(const std::string &type, const std::string &name) {
-    assert(currentInstance == nullptr && "Previous instance has not been ended");
+    uassert(currentInstance == nullptr,
+            "Previous instance has not been ended!\n");
 
     auto i = graphs.find(type);
-    uassert(i != graphs.end(), "Graph is not found: " << name);
+    uassert(i != graphs.end(), "Graph is not found: " << name << "!\n");
 
     currentInstance = i->second;
     currentInstanceName = name;
@@ -225,8 +313,8 @@ public:
   }
 
   void endInstance() {
-    assert(currentGraph != nullptr && "Graph has not been setup");
-    assert(currentInstance != nullptr && "Instance graph is null");
+    uassert(currentGraph != nullptr, "Graph has not been setup!\n");
+    uassert(currentInstance != nullptr, "Instance graph is null!\n");
 
     currentGraph->instantiate(
       *currentInstance, currentInstanceName, currentInputs, currentOutputs);
@@ -234,11 +322,14 @@ public:
   }
 
   void startBinding(const std::string &name) {
-    assert(currentInstanceNode == nullptr && "Bind is outside an instance node");
-    assert(currentInstance != nullptr && "Instance node is outside an instance");
+    uassert(currentInstanceNode == nullptr,
+            "Binding is outside an instance node!\n");
+    uassert(currentInstance != nullptr,
+            "Instance node is outside an instance!\n");
 
     currentInstanceNode = currentInstance->findNode(name);
-    uassert(currentInstanceNode != nullptr, "Node is not found: " << name);
+    uassert(currentInstanceNode != nullptr, "Node is not found: " << name
+            << "!\n");
 
     currentBindings.clear();
   }
@@ -269,8 +360,10 @@ private:
   std::map<std::string, std::map<std::string, Chan*>> currentInputs;
   std::map<std::string, std::map<std::string, Chan*>> currentOutputs;
 
-  std::unordered_map<std::string, NodeType*> nodetypes;
+  std::unordered_map<Signature, NodeType*> nodetypes;
+  std::unordered_map<std::string, NodeType*> nodetypesDeprecated;
   std::unordered_map<std::string, Chan*> chans;
+  std::unordered_map<std::string, Con*> cons;
   std::unordered_map<std::string, Graph*> graphs;
 };
 

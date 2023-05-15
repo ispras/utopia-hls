@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/library/ipxact_parser.h"
+
 #include "hls/library/element_core.h"
 #include "hls/library/element_generator.h"
 #include "util/string.h"
@@ -44,12 +45,12 @@ std::vector<std::shared_ptr<MetaElement>> IPXACTParser::getDelivery(
 }
 
 bool IPXACTParser::tryToParseXML(const char* fileName) {
-  // Check wheter the file exists
+  // Check wheter the file exists.
   if (!std::filesystem::exists(fileName)) {
     std::cout << "File" << fileName << " not found!" << std::endl;
     return false;
   }
-  // Trying to parse the file
+  // Trying to parse the file.
   try {
     parser->parse(fileName);
   } 
@@ -134,35 +135,35 @@ std::string IPXACTParser::getStrAttrFromTag(const DOMElement *element,
 std::vector<std::string> IPXACTParser::parseCatalog(
     const std::string &libraryPath,
     const std::string &catalogPath) {
-  // Calculate path to IP-XACT catalog
+  // Calculate path to IP-XACT catalog.
   std::filesystem::path path = libraryPath;
   path /= catalogPath;
 
-  // Trying to parse IP-XACT catalog
+  // Trying to parse IP-XACT catalog.
   bool isParsed = tryToParseXML(path.c_str());
   uassert(isParsed, "Error while parsing an IP-XACT catalog!\n");
 
-  // Get DOM document representing IP-XACT catalog
+  // Get DOM document representing IP-XACT catalog.
   const DOMDocument *doc = parser->getDocument();
   uassert(doc != nullptr, "Cannot parse IP-XACT catalog!\n");
 
-  // Get number of IP-XACT files to be read
+  // Get number of IP-XACT files to be read.
   const size_t ipxactFileCount =
     doc->getElementsByTagName(ipxIpxFileTag)->getLength();
 
-  // Read IP-XACT files one-by-one
+  // Read IP-XACT files one-by-one.
   std::vector<std::string> fileNames;
   for (size_t i = 0; i < ipxactFileCount; i++) {
     const DOMElement *ipxactFile = (const DOMElement*)(
       doc->getElementsByTagName(ipxIpxFileTag)->item(i));
 
-    // Parse tags
+    // Parse tags.
     const std::string name = getStrValueFromTag(ipxactFile, ipxNameTag);
 
-    // Bind component's name and it's path relative to IP-XACT library path
+    // Bind component's name and it's path relative to IP-XACT library path.
     fileNames.push_back(name);
   }
-  // Reset parser for further use
+  // Reset parser for further use.
   parser->reset();
 
   return fileNames;
@@ -184,34 +185,34 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
   Parameters params;
   std::vector<Port> ports;
 
-  // Calculate path to IP-XACT component
+  // Calculate path to IP-XACT component.
   std::filesystem::path path = libraryPath;
   path /= componentPath;
 
-  // Trying to parse IP-XACT component
+  // Trying to parse IP-XACT component.
   bool isParsed = tryToParseXML(path.c_str());
   uassert(isParsed, "Error while parsing an IP-XACT component!\n");
 
-  // Get DOM document representing IP-XACT component
+  // Get DOM document representing IP-XACT component.
   const DOMDocument *doc = parser->getDocument();
   uassert(doc != nullptr, "Cannot parse IP-XACT component!\n");
 
-  // Parse tags
+  // Parse tags.
   const DOMElement *comp = (const DOMElement*)(
       doc->getElementsByTagName(ipxCompTag)->item(0));
   const std::string name = getStrValueFromTag(comp, ipxModuleNameTag);
   const std::string libraryName = getStrValueFromTag(comp, ipxLibTag);
 
-  // Parse ports
+  // Parse ports.
   size_t portCount = doc->getElementsByTagName(ipxPortTag)->getLength();
   for (size_t i = 0; i < portCount; i++) {
     const DOMElement *port = (const DOMElement*)(
       doc->getElementsByTagName(ipxPortTag)->item(i));
   
-    // Parse tags
+    // Parse tags.
     std::string name = getStrValueFromTag(port, ipxNameTag);
     std::string direction = getStrValueFromTag(port, ipxDirectTag);
-    // Default port type is DATA 
+    // Default port type is DATA.
     Port::Type type = Port::Type::DATA;
 
     uassert(direction == "in" || direction == "out" || direction == "inout",
@@ -221,7 +222,7 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
     std::string leftStr = vectorCount ? getStrValueFromTag(port, ipxLeftTag)
                                       : "";
     
-    // Port can be of special type: clock or reset
+    // Port can be of special type: clock or reset.
     size_t qualifierTagCount = port->getElementsByTagName(
       ipxQualifierTag)->getLength();
     if (qualifierTagCount != 0) {
@@ -257,7 +258,7 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
         type = Port::Type::RESET;
       }
     }      
-    // Create port and adding it to multitude of ports
+    // Create port and adding it to multitude of ports.
     int leftInt = 0;
     if (leftStr == "") {
       ports.push_back(library::Port(name,
@@ -284,12 +285,12 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
     }
   }
 
-  // Parse vendor extensions
+  // Parse vendor extensions.
   size_t parameterCount = doc->getElementsByTagName(k2ParamTag)->getLength();
   for (size_t i = 0; i < parameterCount; i++) {
     const DOMElement *parameter = (const DOMElement*)(
       doc->getElementsByTagName(k2ParamTag)->item(i));
-    // Parse tags
+    // Parse tags.
     std::string name = getStrValueFromTag(parameter, k2NameTag);
 
     int value = getIntValueFromTag(parameter, k2ValueTag);
@@ -306,12 +307,12 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
                                 value));
   }
 
-  // Check if component is generator
+  // Check if component is generator.
   std::shared_ptr<MetaElement> metaElement;
   size_t generatorTagCount = doc->getElementsByTagName(
       ipxCompGensTag)->getLength();
   if (generatorTagCount != 0) {
-    // Parse tag
+    // Parse tag.
     const DOMElement *ipxCompGens = (const DOMElement*)(
       doc->getElementsByTagName(ipxCompGensTag)->item(0));
     
@@ -319,7 +320,7 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
     std::string genPath = getStrValueFromTag(ipxCompGens, ipxGenExeTag);
     path = path + "/" + genPath;
 
-    // Create metaElement
+    // Create metaElement.
     metaElement = std::shared_ptr<MetaElement>(new ElementGenerator(name,
                                                                     libraryName,
                                                                     false,
@@ -330,16 +331,16 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
   } else {
     const auto *file = (const DOMElement*)(doc->getElementsByTagName(
       ipxFileTag)->item(0));
-    // Parse tag
+    // Parse tag.
     std::string filePath = getStrValueFromTag(file, ipxNameTag);
 
-    // Construct complete path
+    // Construct complete path.
     std::filesystem::path filesystemPath = libraryPath;
 
     filesystemPath /= filePath;
     std::string path = filesystemPath.string();
 
-    // Create metaElement
+    // Create metaElement.
     metaElement = std::shared_ptr<MetaElement>(new ElementCore(name,
                                                                libraryName,
                                                                false,
@@ -347,7 +348,7 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
                                                                ports,
                                                                path));
   }
-  // Reset parser for further use
+  // Reset parser for further use.
   parser->reset();
   
   return metaElement;

@@ -6,8 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "hls/library/element_internal.h"
 #include "hls/library/internal/ril/add.h"
+
+#include "hls/library/element_internal.h"
 #include "util/string.h"
 
 #include <cmath>

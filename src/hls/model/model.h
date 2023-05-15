@@ -2,11 +2,15 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
 #pragma once
+
+#include "hls/model/indicators.h"
+#include "hls/model/parameters.h"
+#include "util/string.h"
 
 #include <algorithm>
 #include <iostream>
@@ -16,10 +20,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include "hls/model/indicators.h"
-#include "hls/model/parameters.h"
-#include "util/string.h"
 
 using namespace eda::utils;
 
@@ -39,6 +39,7 @@ struct Signature {
             const std::vector<std::string> &outputTypeNames);
   Signature(const eda::hls::model::NodeType &nodeType);
   bool operator==(const Signature &signature) const;
+
   std::string name;
   std::vector<std::string> inputTypeNames;
   std::vector<std::string> outputTypeNames;
@@ -203,6 +204,26 @@ private:
 };
 
 //===----------------------------------------------------------------------===//
+// Value
+//===----------------------------------------------------------------------===//
+
+struct Value final {
+  Value(const std::string &value):
+    value(((~stoull(value, nullptr, 16)) + 1) * -1) {}
+  Value(const long long value): value(value) {}
+
+  long long getIntValue() const {
+    return value;
+  }
+
+  std::string getStringValue() const {
+    return std::to_string(value);
+  }
+
+  long long value;
+};
+
+//===----------------------------------------------------------------------===//
 // Port
 //===----------------------------------------------------------------------===//
 
@@ -212,7 +233,7 @@ struct Port final {
        float flow,
        unsigned latency,
        bool isConst,
-       const long long &value):
+       const Value value):
     name(name),
     type(type),
     flow(flow),
@@ -226,7 +247,7 @@ struct Port final {
        float flow,
        unsigned latency,
        bool isConst,
-       const long long &value):
+       const Value value):
     Port(name, Type::get(type), flow, latency, isConst, value) {}
  
   const std::string name;
@@ -234,7 +255,7 @@ struct Port final {
   const float flow;
   const unsigned latency;
   const bool isConst;
-  const long long value;
+  const Value value;
 };
 
 //===----------------------------------------------------------------------===//
@@ -291,6 +312,12 @@ struct NodeType final {
     return true;
   }
 
+  bool isCast() const {
+    return inputs.size() == 1
+        && outputs.size() == 1
+        && starts_with(name, "CAST");
+  }
+
   bool isSource() const {
     return inputs.empty() && !isConst();
   }
@@ -324,6 +351,10 @@ struct NodeType final {
         && outputs.size() == 1
         && starts_with(name, "delay");
   }
+
+  bool isInstance() const {
+    return starts_with(name, "INSTANCE");
+  }
   
   const std::string name;
   std::vector<Port*> inputs;
@@ -337,7 +368,7 @@ struct NodeType final {
 // Binding
 //===----------------------------------------------------------------------===//
 
-struct Binding final {
+struct Binding {
   Binding() = default;
   Binding(const Node *node, const Port *port):
     node(node), port(port) {}
@@ -348,6 +379,18 @@ struct Binding final {
 
   const Node *node = nullptr;
   const Port *port = nullptr;
+};
+
+//===----------------------------------------------------------------------===//
+// BindingGraph
+//===----------------------------------------------------------------------===//
+
+struct BindingGraph final : public Binding {
+  BindingGraph() = default;
+  BindingGraph(const Graph *graph, const Node *node, const Port *port):
+    Binding(node, port), graph(graph) {}
+
+  const Graph *graph = nullptr;
 };
 
 //===----------------------------------------------------------------------===//
@@ -375,12 +418,35 @@ struct Chan final {
 };
 
 //===----------------------------------------------------------------------===//
+// Con
+//===----------------------------------------------------------------------===//
+
+struct Con final {
+    Con(const std::string &name, const std::string &type,
+        const size_t latency = 0): name(name), type(type), latency(latency) {}
+
+  std::string name;
+  const std::string type;
+  size_t latency = 0;
+
+  BindingGraph source;
+  BindingGraph target;
+};
+
+//===----------------------------------------------------------------------===//
 // Node
 //===----------------------------------------------------------------------===//
 
 struct Node final {
+
   Node(const std::string &name, const NodeType &type, Graph &graph):
     name(name), type(type), graph(graph) {}
+
+  Node(const std::string &name,
+       const NodeType &type,
+       Graph &graph,
+       Graph *instanceGraph):
+       name(name), type(type), graph(graph), instanceGraph(instanceGraph) {}
 
   void addInput(Chan *input) {
     inputs.push_back(input);
@@ -423,6 +489,9 @@ struct Node final {
   Parameters params;
   /// Indicators.
   NodeInd ind;
+
+  /// Reference to other graph (if the node is an instance).
+  Graph *instanceGraph;
 };
 
 //===----------------------------------------------------------------------===//
@@ -445,6 +514,10 @@ struct Graph final {
     } else if (node->outputs.empty()) {
       targets.push_back(node);
     }
+  }
+
+  void addCon(Con *con) {
+    cons.push_back(con);
   }
 
   Chan* findChan(const std::string &name) const {
@@ -497,6 +570,8 @@ struct Graph final {
   const std::string name;
   std::vector<Chan*> chans;
   std::vector<Node*> nodes;
+  /// Connections to other graphs.
+  std::vector<Con*> cons;
 
   std::vector<Node*> sources;
   std::vector<Node*> targets;
@@ -516,19 +591,6 @@ struct Model final {
     name(name) {}
 
   void addNodetype(const Signature &signature, NodeType *nodetype) {
-    /*std::cout << signature.name << std::endl;
-    std::cout << "Inputs:" << std::endl;
-    std::cout << "***********************************************" << std::endl;
-    for (const auto &inputTypeName : signature.inputTypeNames) {
-      std::cout << inputTypeName << std::endl;
-    }
-    std::cout << "***********************************************" << std::endl;
-    std::cout << "Outputs:" << std::endl;
-    std::cout << "***********************************************" << std::endl;
-    for (const auto &outputTypeName : signature.outputTypeNames) {
-      std::cout << outputTypeName << std::endl;
-    }
-    std::cout << "*********************************************" << std::endl;*/
     nodetypes.insert({ signature, nodetype });
   }
 
@@ -537,26 +599,9 @@ struct Model final {
   }
   
   NodeType* findNodetype(const Signature &signature) const {
-    /*std::cout << signature.name << std::endl;
-    std::cout << "Inputs:" << std::endl;
-    std::cout << "***********************************************" << std::endl;
-    for (const auto &inputTypeName : signature.inputTypeNames) {
-      std::cout << inputTypeName << std::endl;
-    }
-    std::cout << "***********************************************" << std::endl;
-    std::cout << "Outputs:" << std::endl;
-    std::cout << "***********************************************" << std::endl;
-    for (const auto &outputTypeName : signature.outputTypeNames) {
-      std::cout << outputTypeName << std::endl;
-    }
-    std::cout << "*********************************************" << std::endl;*/
     auto nodeTypeIterator = nodetypes.find(signature);
     return nodeTypeIterator != nodetypes.end() ? nodeTypeIterator->second :
                                                  nullptr;
-    // deprecated
-    /*auto i = std::find_if(nodetypes.begin(), nodetypes.end(),
-      [&name](NodeType *nodetype) { return nodetype->name == name; });
-    return i != nodetypes.end() ? *i : nullptr;*/
   }
 
   Graph* findGraph(const std::string &name) const {
@@ -575,8 +620,6 @@ struct Model final {
   void insertDelay(Chan &chan, unsigned latency);
 
   const std::string name;
-  // deprecated
-  //std::vector<NodeType*> nodetypes;
   std::unordered_map<Signature, NodeType*> nodetypes;
   std::vector<Graph*> graphs;
 
@@ -594,6 +637,7 @@ std::ostream& operator<<(std::ostream &out, const Type &type);
 std::ostream& operator<<(std::ostream &out, const Port &port);
 std::ostream& operator<<(std::ostream &out, const NodeType &nodetype);
 std::ostream& operator<<(std::ostream &out, const Chan &chan);
+std::ostream& operator<<(std::ostream &out, const Con &con);
 std::ostream& operator<<(std::ostream &out, const Node &node);
 std::ostream& operator<<(std::ostream &out, const Graph &graph);
 std::ostream& operator<<(std::ostream &out, const Model &model);

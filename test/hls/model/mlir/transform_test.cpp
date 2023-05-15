@@ -2,13 +2,14 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
 #include "HIL/API.h"
 #include "HIL/Dumper.h"
 #include "hls/model/model.h"
+
 #include <gtest/gtest.h>
 
 using eda::hls::model::Binding;
@@ -20,7 +21,7 @@ using eda::hls::model::NodeType;
 using eda::hls::model::Port;
 using eda::hls::model::Signature;
 
-class SimpleModel : public ::testing::Test {
+class TransformTest : public ::testing::Test {
 protected:
   void SetUp() override {
     /*               n2[fst]              */
@@ -31,21 +32,21 @@ protected:
     /*            y[Y]└─┘ w[W]            */
     /*               n3[snd]              */
 
-    // create model
+    // Create model.
     model_ = std::make_unique<Model>("M");
-    // create graph
+    // Create graph.
     auto graph = new Graph{"main", *model_};
-    // create chans
+    // Create chans.
     auto chan_x = new Chan{"x", "X", *graph};
     auto chan_y = new Chan{"y", "Y", *graph};
     auto chan_z = new Chan{"z", "Z", *graph};
     auto chan_w = new Chan{"w", "W", *graph};
-    // create ports
+    // Create ports.
     auto port_x = Port{"x", chan_x->type, 1.0f, 0, false, 0};
     auto port_y = Port{"y", chan_y->type, 1.0f, 0, false, 0};
     auto port_z = Port{"z", chan_z->type, 1.0f, 0, false, 0};
     auto port_w = Port{"w", chan_w->type, 1.0f, 0, false, 0};
-    // create nodetypes
+    // Create nodetypes.
     auto source_nt = new NodeType{"source", *model_};
     source_nt->addOutput(new Port{port_x});
     source_nt->addOutput(new Port{port_y});
@@ -62,17 +63,17 @@ protected:
     sink_nt->addInput(new Port{port_z});
     sink_nt->addInput(new Port{port_w});
     Signature sink_nt_signature = sink_nt->getSignature();
-    // add nodetypes
+    // Add nodetypes.
     model_->addNodetype(source_nt_signature, source_nt);
     model_->addNodetype(fst_nt_signature, fst_nt);
     model_->addNodetype(snd_nt_signature, snd_nt);
     model_->addNodetype(sink_nt_signature, sink_nt);
-    // create nodes
+    // Create nodes.
     auto n1 = new Node{"n1", *source_nt, *graph};
     auto n2 = new Node{"n2", *fst_nt, *graph};
     auto n3 = new Node{"n3", *snd_nt, *graph};
     auto n4 = new Node{"n4", *sink_nt, *graph};
-    // tie chans to nodes
+    // Tie chans to nodes.
     n1->addOutput(chan_x);
     n1->addOutput(chan_y);
     n2->addInput(chan_x);
@@ -81,7 +82,7 @@ protected:
     n3->addOutput(chan_w);
     n4->addInput(chan_z);
     n4->addInput(chan_w);
-    // tie chans to node ports
+    // Tie chans to node ports.
     chan_x->source = {n1, new Port{port_x}};
     chan_x->target = {n2, new Port{port_x}};
     chan_y->source = {n1, new Port{port_y}};
@@ -90,17 +91,17 @@ protected:
     chan_z->target = {n4, new Port{port_z}};
     chan_w->source = {n3, new Port{port_w}};
     chan_w->target = {n4, new Port{port_w}};
-    // add nodes to graph
+    // Add nodes to graph.
     graph->addNode(n1);
     graph->addNode(n2);
     graph->addNode(n3);
     graph->addNode(n4);
-    // add chans to graph
+    // Add chans to graph.
     graph->addChan(chan_x);
     graph->addChan(chan_y);
     graph->addChan(chan_z);
     graph->addChan(chan_w);
-    // add graph to model
+    // Add graph to model.
     model_->addGraph(graph);
   }
 
@@ -108,7 +109,7 @@ protected:
     if (!model_) {
       return;
     }
-    // Free memory
+    // Free memory.
     for (auto graph : model_->graphs) {
       for (auto node : graph->nodes) {
         delete node;
@@ -135,22 +136,27 @@ protected:
   std::unique_ptr<Model> model_;
 };
 
-TEST_F(SimpleModel, CheckName) { EXPECT_EQ(model_->name, "M"); }
+TEST_F(TransformTest, CheckName) { EXPECT_EQ(model_->name, "M"); }
 
-TEST_F(SimpleModel, InsertDelay) {
+TEST_F(TransformTest, InsertDelay) {
   using namespace mlir::transforms;
+  std::cout << *model_ << std::endl;
   Transformer<Model> transformer{*model_};
   transformer.apply_transform(ChanAddSourceTarget());
   transformer.apply_transform(InsertDelay("x", 7));
   auto model_after = transformer.done();
+  std::cout << model_after << std::endl;
+  EXPECT_EQ(model_after.name, "M");
 }
 
-TEST_F(SimpleModel, InsertDelayUndo) {
+TEST_F(TransformTest, InsertDelayUndo) {
   using namespace mlir::transforms;
+  std::cout << *model_ << std::endl;
   Transformer<Model> transformer{*model_};
   transformer.apply_transform(ChanAddSourceTarget());
   transformer.apply_transform(InsertDelay("x", 7));
   transformer.undo_transforms();
   auto model_after = transformer.done();
+  std::cout << model_after << std::endl;
   EXPECT_EQ(model_after.name, "M");
 }

@@ -29,6 +29,7 @@ DFC_KERNEL(IDCT) {
   static const int W7 = 565;  // 2048*sqrt(2)*cos(7*pi/16)
 
   DFC_KERNEL_CTOR(IDCT) {
+    DFC_KERNEL_ACTIVATE;
     std::array<dfc::stream<dfc::sint16>, 64> blk;
 
     for (std::size_t i = 0; i < 8; i++)
@@ -36,6 +37,7 @@ DFC_KERNEL(IDCT) {
 
     for (std::size_t i = 0; i < 8; i++)
       idctcol(blk, i);
+    DFC_KERNEL_DEACTIVATE;
   }
 
   /* row (horizontal) IDCT
@@ -170,11 +172,11 @@ DFC_KERNEL(IDCT) {
                                            mux(i > Cp255, i, Cp255),
                                            Cm256));
   }
+  DFC_CREATE_KERNEL_FUNCTION(IDCT);
 };
 
 void dfcIdctTest(const std::string &outSubPath) {
-  dfc::params args;
-  IDCT kernel(args);
+  std::shared_ptr<IDCT> kernel = DFC_CREATE_KERNEL(IDCT);
 
   std::shared_ptr<eda::hls::model::Model> model =
     eda::hls::parser::dfc::Builder::get().create("IDCT");

@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/library/internal/verilog/const.h"
+
 #include "util/string.h"
 
 #include <cmath>
@@ -41,7 +42,7 @@ void Const::estimate(const Parameters &params, Indicators &indicators) const {
 }
 
 static int getValueFromOutputs(std::vector<eda::hls::model::Port*> outputs) {
-  return outputs.back()->value;
+  return outputs.back()->value.getIntValue();
 }
 
 std::shared_ptr<MetaElement> Const::create(const NodeType &nodetype,

@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -10,9 +10,10 @@
 #include <cassert>
 #include <unordered_map>
 
+#include "hls/model/model.h"
+
 #include "hls/library/internal/verilog/delay.h"
 #include "hls/mapper/mapper.h"
-#include "hls/model/model.h"
 #include "hls/model/transform.h"
 
 namespace eda::hls::model {
@@ -134,7 +135,7 @@ void Graph::instantiate(
       assert(!chan->target.isLinked());
       chan->target = { copy, copy->type.inputs[copy->inputs.size()] };
       copy->addInput(chan);
-    } // for inputs.
+    } // For inputs.
 
     for (const auto *output: node->outputs) {
       Chan *chan;
@@ -156,10 +157,10 @@ void Graph::instantiate(
       assert(!chan->source.isLinked());
       chan->source = { copy, copy->type.outputs[copy->outputs.size()] };
       copy->addOutput(chan);
-    } // for outputs.
+    } // For outputs.
 
     addNode(copy);
-  } // for nodes.
+  } // For nodes.
 }
 
 //===----------------------------------------------------------------------===//
@@ -214,11 +215,12 @@ std::ostream& operator<<(std::ostream &out, const Port &port) {
   out << port.type << "<" << port.flow << ">" << " ";
   out << "#" << port.latency << " " << port.name;
   if (port.isConst)
-    out << "=" << port.value;
+    out << "=" << port.value.getIntValue();
   return out;
 }
 
-static std::ostream& operator<<(std::ostream &out, const std::vector<Port*> &ports) {
+static std::ostream& operator<<(std::ostream &out,
+                                const std::vector<Port*> &ports) {
   bool comma = false;
   for (const auto *port: ports) {
     out << (comma ? ", " : "") << *port;
@@ -234,10 +236,17 @@ std::ostream& operator<<(std::ostream &out, const NodeType &nodetype) {
 }
 
 std::ostream& operator<<(std::ostream &out, const Chan &chan) {
-  return out << "chan " << chan.type << " " << chan.name << ";";
+    return out << "chan " << chan.type << " " << chan.name << ";\n"
+             << "(graph: " << chan.graph.name << " node: "
+             << chan.source.node->name << " port: "
+             << chan.source.port->name << ")"
+             << " => " << "(graph: " << chan.graph.name << " node: "
+             << chan.target.node->name << " port: "
+             << chan.target.port->name << ")";
 }
 
-static std::ostream& operator<<(std::ostream &out, const std::vector<Chan*> &chans) {
+static std::ostream& operator<<(std::ostream &out,
+                                const std::vector<Chan*> &chans) {
   bool comma = false;
   for (const auto *chan: chans) {
     out << (comma ? ", " : "") << chan->name;
@@ -245,6 +254,16 @@ static std::ostream& operator<<(std::ostream &out, const std::vector<Chan*> &cha
   }
 
   return out;
+}
+
+std::ostream& operator<<(std::ostream &out, const Con &con) {
+  return out << "con " << con.type << " " << con.name << ";\n"
+             << "(graph: " << con.source.graph->name << " node: "
+             << con.source.node->name << " port: "
+             << con.source.port->name << ")"
+             << " => " << "(graph: " << con.target.graph->name << " node: "
+             << con.target.node->name << " port: "
+             << con.target.port->name << ")";
 }
 
 std::ostream& operator<<(std::ostream &out, const Node &node) {
@@ -260,6 +279,9 @@ std::ostream& operator<<(std::ostream &out, const Graph &graph) {
 
   for (const auto *node: graph.nodes)
     out << "    " << *node << std::endl;
+
+  for (const auto *con: graph.cons)
+    out << "    " << *con << std::endl;
 
   return out << "  }";
 }

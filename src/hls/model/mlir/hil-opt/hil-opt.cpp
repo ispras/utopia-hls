@@ -1,4 +1,4 @@
-//===- hil-opt.cpp ------------------------------------------- C++ -*------===//
+//===----------------------------------------------------------------------===//
 //
 // This file is licensed under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -6,10 +6,21 @@
 //
 //===----------------------------------------------------------------------===//
 //
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+//
 // This is a command line utility that reads *.mlir file, applies graph
 // rewriting pass on the program representation and stores the result back.
 //
 //===----------------------------------------------------------------------===//
+
+#include "HIL/Combine.h"
+#include "HIL/Dialect.h"
+#include "HIL/Model.h"
+
 #include "mlir/IR/AsmState.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
@@ -24,10 +35,6 @@
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/ToolOutputFile.h"
 
-#include "HIL/Combine.h"
-#include "HIL/Dialect.h"
-#include "HIL/Model.h"
-
 namespace cl = llvm::cl;
 
 static cl::opt<std::string> inputFilename(cl::Positional,
@@ -38,8 +45,9 @@ static cl::opt<std::string> outputFilename("o", cl::desc("Output filename"),
                                            cl::value_desc("filename"),
                                            cl::init("-"));
 
-int loadMLIR(mlir::MLIRContext &context, mlir::OwningOpRef<mlir::ModuleOp> &module) {
-  // Open file
+int loadMLIR(mlir::MLIRContext &context,
+             mlir::OwningOpRef<mlir::ModuleOp> &module) {
+  // Open file.
   llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> fileOrErr =
       llvm::MemoryBuffer::getFileOrSTDIN(inputFilename);
   if (std::error_code err = fileOrErr.getError()) {

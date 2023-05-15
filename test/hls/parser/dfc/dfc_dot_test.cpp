@@ -23,6 +23,8 @@ DFC_KERNEL(DotProduct) {
   static const std::size_t N = 8;
 
   DFC_KERNEL_CTOR(DotProduct) {
+    DFC_KERNEL_ACTIVATE;
+
     std::array<dfc::input<dfc::uint32>, N> x, y;
     dfc::stream<dfc::uint32> z;
 
@@ -30,12 +32,13 @@ DFC_KERNEL(DotProduct) {
     for (std::size_t i = 1; i < N; i++) {
       z += x[i] * y[i];
     }
+    DFC_KERNEL_DEACTIVATE;
   }
+  DFC_CREATE_KERNEL_FUNCTION(DotProduct);
 };
 
 void dfcDotTest(const std::string &outSubPath) {
-  dfc::params args;
-  DotProduct kernel(args);
+  std::shared_ptr<DotProduct> kernel = DFC_CREATE_KERNEL(DotProduct);
 
   std::shared_ptr<eda::hls::model::Model> model =
     eda::hls::parser::dfc::Builder::get().create("DotModel");

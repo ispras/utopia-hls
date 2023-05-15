@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/library/internal/verilog/sub.h"
+
 #include "util/string.h"
 
 #include <cmath>
@@ -42,7 +43,7 @@ void Sub::estimate(const Parameters &params, Indicators &indicators) const {
 
 std::shared_ptr<MetaElement> Sub::create(const NodeType &nodetype,
                                          const HWConfig &hwconfig) {
-  std::string name = nodetype.name;
+    std::string name = nodetype.name;
     std::shared_ptr<MetaElement> metaElement;
     auto ports = createPorts(nodetype);
     std::string lowerCaseName = name;

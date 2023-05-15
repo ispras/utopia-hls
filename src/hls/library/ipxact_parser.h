@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "hls/library/ipxact_parser.h"
 #include "hls/library/library.h"
 #include "util/singleton.h"
 
@@ -33,17 +32,17 @@ using XMLString = xercesc::XMLString;
 namespace eda::hls::library {
 
 /**
- * @brief Parser for IP-XACT specification files
- * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>.
+ * @brief Parser for IP-XACT specification files.
+ * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>
  */
 class IPXACTParser final : public Singleton<IPXACTParser> {
   friend Singleton<IPXACTParser>;
 private:
   IPXACTParser() {
-    // Initializes XMLPlatformUtils
+    // Initializes XMLPlatformUtils.
     XMLPlatformUtils::Initialize();
 
-    // Creates Xercecs DOM Parser
+    // Creates Xercecs DOM Parser.
     parser = new XercesDOMParser();
     parser->setValidationScheme(XercesDOMParser::Val_Always);
     parser->setDoNamespaces(true);
@@ -51,7 +50,7 @@ private:
     errorHandler = (ErrorHandler*) new HandlerBase();
     parser->setErrorHandler(errorHandler);
 
-    // Tags and attributes initialization
+    // Tags and attributes initialization.
     ipxPortTag = XMLString::transcode("ipxact:port");
     ipxQualifierTag = XMLString::transcode("ipxact:qualifier");
     ipxIsDataTag = XMLString::transcode("ipxact:isData");

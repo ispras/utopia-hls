@@ -5,6 +5,12 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
 
 #ifndef HIL_OPS
 #define HIL_OPS
@@ -61,6 +67,13 @@ def HIL_Chans : HIL_Container<"chans", [HasParent<"Graph">]> {
   }];
 }
 
+def HIL_Cons : HIL_Container<"cons", [HasParent<"Graph">]> {
+  let summary = "Cons container.";
+  let description = [{
+    Container of `hil.con`
+  }];
+}
+
 def HIL_Nodes : HIL_Container<"nodes", [HasParent<"Graph">]> {
   let summary = "Nodes container.";
   let description = [{
@@ -86,7 +99,7 @@ def HIL_NodeType : HIL_Op<"nodetype", [HasParent<"NodeTypes">]> {
 def HIL_Node : HIL_Op<"node", [HasParent<"Nodes">]> {
   let summary = "Node.";
   let description = [{
-    The `hil.nodetype` operation for defining types of nodes
+    The `hil.node` operation for defining nodes
   }];
 
   let arguments = (ins
@@ -102,7 +115,7 @@ def HIL_Node : HIL_Op<"node", [HasParent<"Nodes">]> {
 def HIL_Chan : HIL_Op<"chan", [HasParent<"Chans">]> {
   let summary = "Channel.";
   let description = [{
-    The `hil.nodetype` operation for defining types of nodes
+    The `hil.chan` operation for defining channels
   }];
 
   let arguments = (ins
@@ -110,6 +123,22 @@ def HIL_Chan : HIL_Op<"chan", [HasParent<"Chans">]> {
     StrAttr:$varName,
     BindingAttr:$nodeFrom,
     BindingAttr:$nodeTo);
+  let assemblyFormat = [{
+    $typeName $varName qualified($nodeFrom) `=``=` qualified($nodeTo) attr-dict
+  }];
+}
+
+def HIL_Con : HIL_Op<"con", [HasParent<"Cons">]> {
+  let summary = "Connection.";
+  let description = [{
+    The `hil.con` operation for defining connections between graphs
+  }];
+
+  let arguments = (ins
+    StrAttr:$typeName,
+    StrAttr:$varName,
+    BindingGraphAttr:$nodeFrom,
+    BindingGraphAttr:$nodeTo);
   let assemblyFormat = [{
     $typeName $varName qualified($nodeFrom) `=``=` qualified($nodeTo) attr-dict
   }];

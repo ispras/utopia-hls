@@ -2,13 +2,16 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
 #include <iostream>
 
+#include "HIL/API.h"
 #include "HIL/Dumper.h"
+
+#include "HIL/Model.h"
 #include "hls/model/model.h"
 #include "hls/parser/hil/parser.h"
 
@@ -18,18 +21,21 @@ using namespace eda::hls::model;
 using namespace eda::hls::parser::hil;
 
 bool dumpToMlirTest(const std::string &filePath) {
-
+  // Construct a model from a '.hil' file.
   const std::string path = getenv("UTOPIA_HLS_HOME") + filePath;
   const Model model = *parse(path).get();
-  std::stringstream stream;
-  dump_model_mlir(model, stream);
+  std::cout << model << std::endl;
 
-  std::cout << stream.str() << std::endl;
-  return stream.good();
+  // Dump the model to MLIR.
+  mlir::transforms::Transformer<Model> transformer{model};
+
+  // Check whether one can reconstruct the model. 
+  auto model_after = transformer.done();
+  std::cout << model_after << std::endl;
+  return true;
 }
 
 /* Dumper tests for HIL->MLIR conversion. */
-
 TEST(DumperTest, HilFeedback) {
   EXPECT_EQ(dumpToMlirTest("/test/data/hil/feedback.hil"), true);
 }

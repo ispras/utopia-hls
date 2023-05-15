@@ -6,9 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "hls/library/library.h"
+
 #include "hls/library/internal/verilog/element_internal_verilog.h"
 #include "hls/library/ipxact_parser.h"
-#include "hls/library/library.h"
 #include "hls/mapper/config/hwconfig.h"
 #include "util/assert.h"
 
@@ -34,7 +35,7 @@ Signature MetaElement::getSignature() {
                    outputTypeNames);
 }
 
-// TODO: Discuss how we plan to describe supported config: include or exclude
+/// TODO: Discuss how we plan to describe supported config: include or exclude
 bool MetaElement::supports(const HWConfig &hwconfig) {
   return true;
 }

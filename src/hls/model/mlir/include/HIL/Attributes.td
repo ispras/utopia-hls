@@ -5,6 +5,12 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
 
 #ifndef HIL_ATTRIBUTES
 #define HIL_ATTRIBUTES
@@ -43,6 +49,22 @@ def BindingAttr : HIL_Attr<"Binding"> {
     PortAttr:$port);
 
   let assemblyFormat = "`<` $nodeName qualified($port) `>`";
+}
+
+def BindingGraphAttr : HIL_Attr<"BindingGraph"> {
+  let mnemonic = "bndgraph";
+  let summary = "BindingGraph attribute";
+
+  let description = [{
+    binding graph attr type
+  }];
+
+  let parameters = (ins
+    StringRefParameter<>:$graphName,
+    StringRefParameter<>:$nodeName,
+    PortAttr:$port);
+
+  let assemblyFormat = "`<` $graphName $nodeName qualified($port) `>`";
 }
 
 #endif // HIL_ATTRIBUTES

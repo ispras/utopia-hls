@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -81,7 +81,7 @@ protected:
        wire_kind kind,
        wire_direct direct,
        wire_value value):
-       name(name), kind(kind), direct(direct), value(value) {}
+      name(name), kind(kind), direct(direct), value(value) {}
 
   wire(const std::string &name, wire_kind kind, wire_direct direct):
       wire(name, kind, direct, 0) {}
@@ -93,9 +93,21 @@ void connect(const std::string &opcode,
              const std::vector<const wire*> &in,
              const std::vector<const wire*> &out);
 
+void connectToInstanceInput(const std::string &instanceName,
+                            const wire *in,
+                            const std::string &inputName);
+
+void connectToInstanceOutput(const std::string &instanceName,
+                             const wire *out,
+                             const std::string &outputName);
+
+void instance(const std::string &instanceName,
+              const std::string &kernelName);
+
 inline void store(wire *var) {
   static std::vector<std::unique_ptr<wire>> storage;
   storage.push_back(std::unique_ptr<wire>(var));
+
 }
 
 //===----------------------------------------------------------------------===//
@@ -519,6 +531,25 @@ typed<NewType>& cast(const wire &var) {
   auto &out = create<NewType>(var.kind);
   connect("CAST", { &var }, { &out });
   return out;
+}
+
+//===----------------------------------------------------------------------===//
+
+template<typename Type>
+void connectionToInstanceInput(const std::string &instanceName,
+                               const typed<Type> &wire,
+                               const std::string &inputName) {
+  connectToInstanceInput(instanceName, &wire, inputName);
+}
+
+//===----------------------------------------------------------------------===//
+
+template<typename Type>
+void connectionToInstanceOutput(const std::string &instanceName,
+                                const typed<Type> &wire,
+                                const std::string &outputName) {
+  auto &out = create<Type>(wire.kind);
+  connectToInstanceOutput(instanceName, &out, outputName);
 }
 
 //===----------------------------------------------------------------------===//
