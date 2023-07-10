@@ -16,8 +16,8 @@
 #include "hls/scheduler/latency_solver.h"
 #include "hls/scheduler/optimizers/abstract_optimizer.h"
 #include "hls/scheduler/optimizers/simulated_annealing_optimizer.h"
-#include "util/assert.h"
-#include "util/singleton.h"
+#include "utils/assert.h"
+#include "utils/singleton.h"
 
 #include <algorithm>
 #include <fstream>

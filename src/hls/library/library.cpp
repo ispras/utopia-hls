@@ -11,7 +11,7 @@
 #include "hls/library/internal/verilog/element_internal_verilog.h"
 #include "hls/library/ipxact_parser.h"
 #include "hls/mapper/config/hwconfig.h"
-#include "util/assert.h"
+#include "utils/assert.h"
 
 using ElementInternalVerilog = 
     eda::hls::library::internal::verilog::ElementInternalVerilog;

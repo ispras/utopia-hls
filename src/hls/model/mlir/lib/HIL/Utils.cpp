@@ -19,7 +19,7 @@
 #include "HIL/Utils.h"
 
 #include "mlir/IR/BuiltinAttributes.h"
-#include "util/string.h"
+#include "utils/string.h"
 
 #include "llvm/Support/Casting.h"
 

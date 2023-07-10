@@ -8,7 +8,7 @@
 
 #include "hls/library/internal/verilog/add.h"
 
-#include "util/string.h"
+#include "utils/string.h"
 
 #include <cmath>
 

@@ -8,7 +8,7 @@
 
 #include "hls/model/model.h"
 #include "hls/parser/hil/parser.h"
-#include "util/graph.h"
+#include "utils/graph.h"
 
 #include "gtest/gtest.h"
 
@@ -43,4 +43,3 @@ TEST(UtilTest, GraphTraverse) {
 TEST(UtilTest, IdctTraverse) {
   traverseTest("test/data/hil/idct.hil");
 }
-

@@ -7,8 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/mapper/mapper.h"
-#include "util/assert.h"
-#include "util/graph.h"
+#include "utils/assert.h"
+#include "utils/graph.h"
 
 #include <limits>
 #include <stack>

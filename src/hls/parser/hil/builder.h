@@ -18,8 +18,8 @@
 #include "HIL/Ops.h"
 #include "HIL/Utils.h"
 #include "hls/model/model.h"
-#include "util/assert.h"
-#include "util/singleton.h"
+#include "utils/assert.h"
+#include "utils/singleton.h"
 
 using Binding = eda::hls::model::Binding;
 using BindingGraph = eda::hls::model::BindingGraph;

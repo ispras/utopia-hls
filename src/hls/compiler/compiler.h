@@ -10,7 +10,7 @@
 
 #include "hls/library/library.h"
 #include "hls/model/model.h"
-#include "util/string.h"
+#include "utils/string.h"
 
 #include <ctemplate/template.h>
 

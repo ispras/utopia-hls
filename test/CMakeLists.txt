@@ -43,7 +43,7 @@ add_executable(${TEST_TARGET}
   hls/scheduler/simulated_annealing_test.cpp
   lib/minisat/minisat_test.cpp
   test_main.cpp
-  util/graph_traverse_test.cpp
+  utils/graph_traverse_test.cpp
 )
 target_include_directories(${TEST_TARGET} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${TEST_TARGET}

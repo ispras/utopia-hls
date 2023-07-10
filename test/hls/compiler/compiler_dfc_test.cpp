@@ -19,7 +19,7 @@
 #include "hls/parser/dfc/internal/builder.h"
 #include "hls/scheduler/param_optimizer.h"
 #include "hls/scheduler/topological_balancer.h"
-#include "util/string.h"
+#include "utils/string.h"
 
 #include "gtest/gtest.h"
 

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "hls/library/library.h"
-#include "util/singleton.h"
+#include "utils/singleton.h"
 
 #include <iostream>
 #include <xercesc/dom/DOM.hpp>

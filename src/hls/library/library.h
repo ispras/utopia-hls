@@ -10,7 +10,7 @@
 
 #include "hls/mapper/config/hwconfig.h"
 #include "hls/model/model.h"
-#include "util/singleton.h"
+#include "utils/singleton.h"
 
 #include <set>
 #include <string>

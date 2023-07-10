@@ -15,7 +15,7 @@
 #pragma once
 
 #include "hls/model/model.h"
-#include "util/assert.h"
+#include "utils/assert.h"
 
 #include <algorithm>
 #include <iostream>

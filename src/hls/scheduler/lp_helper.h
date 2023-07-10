@@ -16,7 +16,7 @@
 #pragma once
 
 #include "hls/model/model.h"
-#include "util/singleton.h"
+#include "utils/singleton.h"
 
 #include "lpsolve/lp_lib.h"
 

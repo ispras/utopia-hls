@@ -7,7 +7,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/parser/dfc/internal/builder.h"
-
 #include "hls/model/model.h"
 
 #include <algorithm>

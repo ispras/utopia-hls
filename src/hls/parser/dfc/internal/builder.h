@@ -9,8 +9,8 @@
 #pragma once
 
 #include "hls/parser/dfc/stream.h"
-#include "util/assert.h"
-#include "util/singleton.h"
+#include "utils/assert.h"
+#include "utils/singleton.h"
 
 #include <cassert>
 #include <memory>

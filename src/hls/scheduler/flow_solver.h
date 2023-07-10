@@ -16,7 +16,7 @@
 #pragma once
 
 #include "hls/scheduler/lp_helper.h"
-#include "util/singleton.h"
+#include "utils/singleton.h"
 
 #include <memory>
 

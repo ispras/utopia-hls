@@ -25,7 +25,7 @@
 #define TVM_RUNTIME_DEVICE_API_H_
 
 #include <c_runtime_api.h>
-#include <util/logging.h>
+#include <utils/logging.h>
 
 #include <string>
 

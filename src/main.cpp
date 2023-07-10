@@ -15,7 +15,7 @@
 #include "hls/scheduler/latency_solver.h"
 #include "hls/scheduler/param_optimizer.h"
 #include "options.h"
-#include "util/string.h"
+#include "utils/string.h"
 
 #include "easylogging++.h"
 

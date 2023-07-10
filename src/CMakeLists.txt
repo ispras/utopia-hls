@@ -31,7 +31,7 @@ set(CMAKE_CXX_CLANG_TIDY
 # The compilation options.
 add_compile_options(-g3 -Wall -Wignored-qualifiers -DYYERROR_VERBOSE)
 
-add_subdirectory(util)
+add_subdirectory(utils)
 add_subdirectory(hls)
 
 # The project library.
@@ -39,7 +39,7 @@ add_library(ueda)
 
 # The libraries to link with.
 target_link_libraries(ueda
-  Utopia::Util
+  Utopia::Utils
   Utopia::HLS
   Utopia::HILParser
 )

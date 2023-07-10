@@ -9,8 +9,8 @@
 #pragma once
 
 #include "hls/model/model.h"
-#include "util/singleton.h"
-#include "util/string.h"
+#include "utils/singleton.h"
+#include "utils/string.h"
 
 #include <cstddef>
 #include <sstream>

@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/scheduler/latency_solver.h"
-#include "util/assert.h"
+#include "utils/assert.h"
 
 #include <iostream>
 

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "hls/parser/dfc/types.h"
-#include "util/string.h"
+#include "utils/string.h"
 
 #include <iomanip>
 #include <memory>

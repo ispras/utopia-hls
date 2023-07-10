@@ -10,7 +10,7 @@
 
 #include "hls/library/element_core.h"
 #include "hls/library/element_generator.h"
-#include "util/string.h"
+#include "utils/string.h"
 
 #include <filesystem>
 #include <regex>

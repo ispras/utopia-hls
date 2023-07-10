@@ -8,7 +8,7 @@
 
 #include "hls/library/internal/verilog/shr3.h"
 
-#include "util/string.h"
+#include "utils/string.h"
 
 #include <cmath>
 

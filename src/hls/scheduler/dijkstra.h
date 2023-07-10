@@ -15,7 +15,7 @@
 #pragma once
 
 #include "hls/scheduler/latency_balancer_base.h"
-#include "util/singleton.h"
+#include "utils/singleton.h"
 
 #include <algorithm>
 #include <functional>

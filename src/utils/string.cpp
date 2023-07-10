@@ -8,7 +8,7 @@
 
 #include <string>
 
-#include "util/string.h"
+#include "utils/string.h"
 
 namespace eda::utils {
 
@@ -17,4 +17,4 @@ std::string unique_name(const std::string &prefix) {
   return utils::format("%s_%d", prefix.c_str(), i++);
 }
 
-} // namespace eda::util
+} // namespace eda::utils

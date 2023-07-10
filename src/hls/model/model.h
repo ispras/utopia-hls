@@ -10,7 +10,7 @@
 
 #include "hls/model/indicators.h"
 #include "hls/model/parameters.h"
-#include "util/string.h"
+#include "utils/string.h"
 
 #include <algorithm>
 #include <iostream>

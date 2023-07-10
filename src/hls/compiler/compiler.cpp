@@ -9,7 +9,7 @@
 #include "hls/compiler/compiler.h"
 
 #include "hls/scheduler/dijkstra.h"
-#include "util/assert.h"
+#include "utils/assert.h"
 
 #include <filesystem>
 #include <fstream>

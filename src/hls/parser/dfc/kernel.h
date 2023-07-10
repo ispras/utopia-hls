@@ -9,8 +9,8 @@
 #pragma once
 
 #include "stream.h"
-#include "util/assert.h"
-#include "util/string.h"
+#include "utils/assert.h"
+#include "utils/string.h"
 
 #include <string>
 

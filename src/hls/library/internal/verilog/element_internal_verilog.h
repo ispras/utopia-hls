@@ -10,7 +10,7 @@
 
 #include "hls/library/element_internal.h"
 #include "hls/library/library.h"
-#include "util/assert.h"
+#include "utils/assert.h"
 
 #include <string>
 #include <vector>

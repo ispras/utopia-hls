@@ -7,7 +7,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "hls/parser/dfc/kernel.h"
-
 #include "hls/parser/dfc/internal/builder.h"
 
 using Builder = eda::hls::parser::dfc::Builder;

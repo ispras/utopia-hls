@@ -9,7 +9,7 @@
 #include "hls/library/internal/ril/sub.h"
 
 #include "hls/library/element_internal.h"
-#include "util/string.h"
+#include "utils/string.h"
 
 #include <cmath>
 
