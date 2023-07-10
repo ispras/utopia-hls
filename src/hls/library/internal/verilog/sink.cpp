@@ -80,7 +80,7 @@ std::unique_ptr<Element> Sink::construct() const {
 
     std::string portDeclr =
       (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) +
-             ":0] " : std::string("")) + replaceSomeChars(port.name) + ";\n";
+             ":0] " : std::string("")) + utils::replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {

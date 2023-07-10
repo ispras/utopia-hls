@@ -142,8 +142,8 @@ TEST_F(TransformTest, InsertDelay) {
   using namespace mlir::transforms;
   std::cout << *model_ << std::endl;
   Transformer<Model> transformer{*model_};
-  transformer.apply_transform(ChanAddSourceTarget());
-  transformer.apply_transform(InsertDelay("x", 7));
+  transformer.applyTransform(ChanAddSourceTarget());
+  transformer.applyTransform(InsertDelay("x", 7));
   auto model_after = transformer.done();
   std::cout << model_after << std::endl;
   EXPECT_EQ(model_after.name, "M");
@@ -153,9 +153,9 @@ TEST_F(TransformTest, InsertDelayUndo) {
   using namespace mlir::transforms;
   std::cout << *model_ << std::endl;
   Transformer<Model> transformer{*model_};
-  transformer.apply_transform(ChanAddSourceTarget());
-  transformer.apply_transform(InsertDelay("x", 7));
-  transformer.undo_transforms();
+  transformer.applyTransform(ChanAddSourceTarget());
+  transformer.applyTransform(InsertDelay("x", 7));
+  transformer.undoTransforms();
   auto model_after = transformer.done();
   std::cout << model_after << std::endl;
   EXPECT_EQ(model_after.name, "M");

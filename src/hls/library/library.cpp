@@ -134,8 +134,8 @@ void Library::includeElementFromLibrary(const std::string &elementName,
 
 
 std::vector<std::shared_ptr<MetaElement>> Library::find(
-  const NodeType &nodeType,
-  const HWConfig &hwconfig) {
+    const NodeType &nodeType,
+    const HWConfig &hwconfig) {
   Signature signature(nodeType);
   std::vector<std::shared_ptr<MetaElement>> metaElements;
   auto groupIterator = groupedMetaElements.find(signature);

@@ -34,58 +34,61 @@ public:
   Transformer(MLIRModule &&module);
   Transformer(const Model &model);
   Transformer(Transformer &&oth);
-  void apply_transform(std::function<void(MLIRModule &)> transform);
-  void undo_transforms();
+  void applyTransform(std::function<void(MLIRModule &)> transform);
+  void undoTransforms();
   T done();
 
 private:
-  MLIRModule module_;
-  MLIRModule module_init_;
+  MLIRModule module;
+  MLIRModule moduleInitial;
 };
 
-/* Copy constructors */
+/* Copy constructors. */
 template <>
 inline Transformer<MLIRModule>::Transformer(MLIRModule &&module)
-    : module_(std::move(module)), module_init_(module_.clone()) {}
+    : module(std::move(module)), moduleInitial(module.clone()) {}
 template <>
 inline Transformer<Model>::Transformer(const Model &model)
-    : module_(MLIRModule::load_from_model(model)),
-      module_init_(module_.clone()) {}
+    : module(MLIRModule::loadFromModel(model)),
+      moduleInitial(module.clone()) {}
 template <typename T>
 Transformer<T>::Transformer(Transformer &&oth)
-    : module_(std::move(oth.module_)),
-      module_init_(std::move(oth.module_init_)) {}
+    : module(std::move(oth.module)),
+      moduleInitial(std::move(oth.moduleInitial)) {}
 
 /* Transform-related methods */
 template <typename T>
-void Transformer<T>::apply_transform(
+void Transformer<T>::applyTransform(
     std::function<void(MLIRModule &)> transform) {
-  transform(module_);
+  transform(module);
 }
 
-template <typename T> void Transformer<T>::undo_transforms() {
-  module_ = module_init_.clone();
+template <typename T> void Transformer<T>::undoTransforms() {
+  module = moduleInitial.clone();
 }
 
 /* End-of-transformation methods */
 template <> inline MLIRModule Transformer<MLIRModule>::done() {
-  (void)std::move(module_init_);
-  return std::move(module_);
+  (void)std::move(moduleInitial);
+  return std::move(module);
 }
 
 template <> inline Model Transformer<Model>::done() {
-  (void)std::move(module_init_);
+  (void)std::move(moduleInitial);
   std::string buf;
   llvm::raw_string_ostream os{buf};
-  module_.print(os);
-  auto model = std::move(*eda::hls::model::parse_model_from_mlir(buf));
+  module.print(os);
+  std::cout << buf << std::endl;
+  auto model = std::move(*eda::hls::model::parseModelFromMlir(buf));
   return model;
 }
 
 /* Transformations */
 std::function<void(MLIRModule &)> ChanAddSourceTarget();
-std::function<void(MLIRModule &)> InsertDelay(std::string chan_name,
-                                              unsigned latency);
-std::function<void(MLIRModule &)> UnfoldInstance(std::string instance_name);
+std::function<void(MLIRModule &)> InsertDelay(const std::string &chanName,
+                                              const unsigned latency);
+std::function<void(MLIRModule &)> UnfoldInstance(
+    const std::string &instanceName, const std::string &instanceGraphName,
+    const std::string &mainGraphName);
 
 } // namespace mlir::transforms

@@ -21,8 +21,20 @@
 #include "util/assert.h"
 #include "util/singleton.h"
 
-using namespace eda::hls::model;
-using namespace eda::util;
+using Binding = eda::hls::model::Binding;
+using BindingGraph = eda::hls::model::BindingGraph;
+using Chan = eda::hls::model::Chan;
+using Con = eda::hls::model::Con;
+using Graph = eda::hls::model::Graph;
+using Model = eda::hls::model::Model;
+using Node = eda::hls::model::Node;
+using NodeType = eda::hls::model::NodeType;
+using Port = eda::hls::model::Port;
+using Signature = eda::hls::model::Signature;
+template<typename T>
+using Singleton = eda::utils::Singleton<T>;
+using Value = eda::hls::model::Value;
+
 
 namespace eda::hls::parser::hil {
 
@@ -37,7 +49,7 @@ public:
   std::shared_ptr<Model> create();
 
   // Temporal solution.
-  Signature getNodeTypeSignature(const std::string nodeTypeName,
+  Signature getNodeTypeSignature(const std::string &nodeTypeName,
       const std::vector<std::string> inputChanNames,
       const std::vector<std::string> outputChanNames) {
     std::vector<std::string> inputTypeNames;
@@ -129,7 +141,7 @@ public:
 
     auto *chan = new Chan(name, type, *currentGraph);
     auto *graph = graphs.find(chan->graph.name)->second;
-    /// Why was it needed?
+    /// TODO: Why was it needed?
     // const auto *srcNode = graph->findNode(nodeFrom.getNodeName().str());
     // const auto *dstNode = graph->findNode(nodeTo.getNodeName().str());
     auto fPort = nodeFrom.getPort();
@@ -169,56 +181,58 @@ public:
     currentGraph->addChan(chan);
   }
 
-  void addCon(const std::string &type,
-              const std::string &name,
+  void startInst(const std::string &name) {
+    currentInstanceName = name;
+  }
+
+  void endInst() {
+    // Do nothing.
+  }
+
+  void addCon(const std::string &name,
+              const std::string &type,
+              const std::string &dir,
               const mlir::hil::BindingGraphAttr &nodeFrom,
               const mlir::hil::BindingGraphAttr &nodeTo) {
-
     uassert(currentGraph != nullptr, "Con is outside a graph!\n");
 
-    auto *con = new Con(name, type);
+    auto *con = new Con(name, type, dir);
 
     const auto *srcGraph = graphs.find(nodeFrom.getGraphName().str())->second;
     const auto *dstGraph = graphs.find(nodeTo.getGraphName().str())->second;
+    auto *srcChan = srcGraph->findChan(nodeFrom.getChanName().str());
+    auto *dstChan = dstGraph->findChan(nodeTo.getChanName().str());
 
-    const auto *srcNode = srcGraph->findNode(nodeFrom.getNodeName().str());
-    const auto *dstNode = dstGraph->findNode(nodeTo.getNodeName().str());
-    auto fPort = nodeFrom.getPort();
-    const std::string fPortName = fPort.getName();
-    auto tPort = nodeTo.getPort();
-    const std::string tPortName = tPort.getName();
+    con->source = { srcGraph, srcChan };
+    con->target = { dstGraph, dstChan };
 
-    const auto *srcPort = new Port(fPortName,
-                                   Type::get(fPort.getTypeName()),
-                                   fPort.getFlow(),
-                                   fPort.getLatency(),
-                                   fPort.getIsConst(),
-                                   fPort.getValue());
-    const auto *dstPort = new Port(tPortName,
-                                   Type::get(tPort.getTypeName()),
-                                   tPort.getFlow(),
-                                   tPort.getLatency(),
-                                   tPort.getIsConst(),
-                                   tPort.getValue());
+    auto iterator = cons.find(currentInstanceName);
+    if (iterator != cons.end()) {
+      iterator->second.push_back(con);
+    } else {
+      std::vector<Con*> consToInstance;
+      consToInstance.push_back(con);
+      cons.insert({ currentInstanceName, consToInstance });
+    }
 
-    con->source.node = srcNode;
-    con->source.port = srcPort;
-    con->source.graph = srcGraph;
-    con->target.node = dstNode;
-    con->target.port = dstPort;
-    con->target.graph = dstGraph;
-
-    cons.insert({ name, con });
-    currentGraph->addCon(con);
+    currentGraph->addCon(currentInstanceName, con);
   }
 
-  void addCon(const std::string &type, const std::string &name) {
-
+  void addCon(const std::string &name,
+              const std::string &type,
+              const std::string &dir) {
     uassert(currentGraph != nullptr, "Con is outside a graph!\n");
 
-    auto *con = new Con(name, type);
-    cons.insert({ name, con });
-    currentGraph->addCon(con);
+    auto *con = new Con(name, type, dir);
+
+    auto iterator = cons.find(currentInstanceName);
+    if (iterator != cons.end()) {
+      iterator->second.push_back(con);
+    } else {
+      std::vector<Con*> consToInstance;
+      consToInstance.push_back(con);
+      cons.insert({ currentInstanceName, consToInstance });
+    }
   }
 
   /// FIXME: deprecated
@@ -353,7 +367,6 @@ private:
   bool outputsStarted = false;
 
   Graph *currentInstance = nullptr;
-  std::string currentInstanceName;
   Node *currentInstanceNode = nullptr;
   std::map<std::string, Chan*> currentBindings;
 
@@ -363,7 +376,8 @@ private:
   std::unordered_map<Signature, NodeType*> nodetypes;
   std::unordered_map<std::string, NodeType*> nodetypesDeprecated;
   std::unordered_map<std::string, Chan*> chans;
-  std::unordered_map<std::string, Con*> cons;
+  std::unordered_map<std::string, std::vector<Con*>> cons;
+  std::string currentInstanceName;
   std::unordered_map<std::string, Graph*> graphs;
 };
 

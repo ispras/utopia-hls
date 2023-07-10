@@ -127,7 +127,7 @@ std::unique_ptr<Element> Mux::construct() const {
     std::string portDeclr =
       (port.width > 1 ? std::string("[") + std::to_string(port.width - 1)
                                          + ":0] " : std::string(""))
-                                         + replaceSomeChars(port.name) + ";\n";
+                                         + utils::replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -149,15 +149,15 @@ std::unique_ptr<Element> Mux::construct() const {
   std::string ir;
   std::string inPortName;
   std::vector<std::string> outPortNames;
-  ir += "assign " + replaceSomeChars(ports[ports.size() - 1].name) + " = ";
+  ir += "assign " + utils::replaceSomeChars(ports[ports.size() - 1].name) + " = ";
   for (size_t i = 3; i < ports.size() - 2; i++) {
-    ir += "(" + replaceSomeChars(ports[2].name) + " == " +
-        std::to_string(i - 3) + " ? " + replaceSomeChars(ports[i].name) +
+    ir += "(" + utils::replaceSomeChars(ports[2].name) + " == " +
+        std::to_string(i - 3) + " ? " + utils::replaceSomeChars(ports[i].name) +
         " : " + "0" + ")" + " | ";
   }
-  ir += "(" + replaceSomeChars(ports[2].name) + " == " +
+  ir += "(" + utils::replaceSomeChars(ports[2].name) + " == " +
         std::to_string(ports.size() - 5) + " ? " + 
-        replaceSomeChars(ports[ports.size() - 2].name) + " : " + "0" + ")" +
+        utils::replaceSomeChars(ports[ports.size() - 2].name) + " : " + "0" + ")" +
         ";";
   element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;
   return element;

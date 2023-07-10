@@ -21,10 +21,10 @@
 namespace eda::hls::scheduler {
 
 class TopologicalBalancer final : public TraverseBalancerBase, 
-    public util::Singleton<TopologicalBalancer> {
+    public utils::Singleton<TopologicalBalancer> {
 
 public:
-  friend util::Singleton<TopologicalBalancer>;
+  friend utils::Singleton<TopologicalBalancer>;
   ~TopologicalBalancer() {}
   void balance(model::Model &model) override;
 

@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -12,8 +12,7 @@
 
   #include "hls/parser/hil/builder.h"
 
-  using namespace eda::hls;
-  using namespace eda::hls::parser::hil;
+  using Builder = eda::hls::parser::hil::Builder;
 
   extern int hhlineno;
   extern char* hhtext;

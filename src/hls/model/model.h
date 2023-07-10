@@ -21,14 +21,14 @@
 #include <string>
 #include <vector>
 
-using namespace eda::utils;
-
 namespace eda::hls::library {
 struct MetaElement;
+
 } // namespace eda::hls::library
 
 namespace eda::hls::model {
 struct NodeType;
+
 } // namespace eda::hls::model
 
 namespace eda::hls::model {
@@ -44,6 +44,7 @@ struct Signature {
   std::vector<std::string> inputTypeNames;
   std::vector<std::string> outputTypeNames;
 };
+
 } // namespace eda::hls::model
 
 namespace std {
@@ -60,6 +61,7 @@ struct hash<eda::hls::model::Signature> {
     return hash;
   }
 };
+
 } // namespace std
 
 namespace eda::hls::model {
@@ -315,7 +317,7 @@ struct NodeType final {
   bool isCast() const {
     return inputs.size() == 1
         && outputs.size() == 1
-        && starts_with(name, "CAST");
+        && eda::utils::starts_with(name, "CAST");
   }
 
   bool isSource() const {
@@ -324,7 +326,7 @@ struct NodeType final {
 
   bool isMux() const {
     return outputs.size() == 1
-        && starts_with(name, "MUX");
+        && eda::utils::starts_with(name, "MUX");
   }
 
   bool isSink() const {
@@ -333,27 +335,27 @@ struct NodeType final {
 
   bool isMerge() const {
     return outputs.size() == 1
-        && starts_with(name, "merge");
+        && eda::utils::starts_with(name, "merge");
   }
 
   bool isSplit() const {
     return inputs.size() == 1
-        && starts_with(name, "split");
+        && eda::utils::starts_with(name, "split");
   }
 
   bool isDup() const {
     return inputs.size() == 1
-        && starts_with(name, "dup");
+        && eda::utils::starts_with(name, "dup");
   }
 
   bool isDelay() const {
     return inputs.size() == 1
         && outputs.size() == 1
-        && starts_with(name, "delay");
+        && eda::utils::starts_with(name, "delay");
   }
 
   bool isInstance() const {
-    return starts_with(name, "INSTANCE");
+    return eda::utils::starts_with(name, "INSTANCE");
   }
   
   const std::string name;
@@ -382,18 +384,6 @@ struct Binding {
 };
 
 //===----------------------------------------------------------------------===//
-// BindingGraph
-//===----------------------------------------------------------------------===//
-
-struct BindingGraph final : public Binding {
-  BindingGraph() = default;
-  BindingGraph(const Graph *graph, const Node *node, const Port *port):
-    Binding(node, port), graph(graph) {}
-
-  const Graph *graph = nullptr;
-};
-
-//===----------------------------------------------------------------------===//
 // Chan
 //===----------------------------------------------------------------------===//
 
@@ -418,16 +408,35 @@ struct Chan final {
 };
 
 //===----------------------------------------------------------------------===//
+// BindingGraph
+//===----------------------------------------------------------------------===//
+
+struct BindingGraph {
+  BindingGraph() = default;
+  BindingGraph(const Graph *graph, const Chan *chan):
+    graph(graph), chan(chan) {}
+
+  bool isLinked() const {
+    return chan != nullptr;
+  }
+
+  const Graph *graph = nullptr;
+  const Chan *chan = nullptr;
+};
+
+//===----------------------------------------------------------------------===//
 // Con
 //===----------------------------------------------------------------------===//
 
 struct Con final {
-    Con(const std::string &name, const std::string &type,
-        const size_t latency = 0): name(name), type(type), latency(latency) {}
+  Con(const std::string &name,
+      const std::string &type,
+      const std::string &dir):
+    name(name), type(type), dir(dir) {}
 
   std::string name;
   const std::string type;
-  size_t latency = 0;
+  std::string dir;
 
   BindingGraph source;
   BindingGraph target;
@@ -438,7 +447,6 @@ struct Con final {
 //===----------------------------------------------------------------------===//
 
 struct Node final {
-
   Node(const std::string &name, const NodeType &type, Graph &graph):
     name(name), type(type), graph(graph) {}
 
@@ -516,8 +524,15 @@ struct Graph final {
     }
   }
 
-  void addCon(Con *con) {
-    cons.push_back(con);
+  void addCon(const std::string &instanceName, Con *con) {
+    auto iterator = cons.find(instanceName);
+    if (iterator != cons.end()) {
+      iterator->second.push_back(con);
+    } else {
+      std::vector<Con*> consToInstance;
+      consToInstance.push_back(con);
+      cons.insert({ instanceName, consToInstance });
+    }
   }
 
   Chan* findChan(const std::string &name) const {
@@ -570,8 +585,9 @@ struct Graph final {
   const std::string name;
   std::vector<Chan*> chans;
   std::vector<Node*> nodes;
+
   /// Connections to other graphs.
-  std::vector<Con*> cons;
+  std::unordered_map<std::string, std::vector<Con*>> cons;
 
   std::vector<Node*> sources;
   std::vector<Node*> targets;

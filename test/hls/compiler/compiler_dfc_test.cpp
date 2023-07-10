@@ -29,7 +29,9 @@
 
 namespace fs = std::filesystem;
 
+using Builder = eda::hls::parser::dfc::Builder;
 using Compiler = eda::hls::compiler::Compiler;
+using Criteria = eda::hls::model::Criteria;
 using Library = eda::hls::library::Library;
 using Mapper = eda::hls::mapper::Mapper;
 using MLIRModule = mlir::model::MLIRModule;
@@ -310,8 +312,8 @@ int compilerDfcTest(const dfc::kernel &kernel,
   const fs::path homePath = std::string(getenv("UTOPIA_HLS_HOME"));
 
   // Optimization criterion and constraints.
-  eda::hls::model::Criteria criteria(
-    PERF,
+  Criteria criteria(
+    eda::hls::model::PERF,
     // Frequency (kHz)
     eda::hls::model::Constraint<unsigned>(40000, 500000), 
     // Performance (=frequency)
@@ -323,7 +325,7 @@ int compilerDfcTest(const dfc::kernel &kernel,
     // Area (number of LUTs)
     eda::hls::model::Constraint<unsigned>(1, 10000000));
 
-  auto &builder = eda::hls::parser::dfc::Builder::get();
+  auto &builder = Builder::get();
   std::shared_ptr<Model> model = builder.create(funcName, funcName);
 
   uassert(model != nullptr, "Could not build model for kernel " + funcName);
@@ -337,14 +339,22 @@ int compilerDfcTest(const dfc::kernel &kernel,
   fs::create_directories(fsOutPath);
 
   // Print model '.dot' representation to file.
-  const std::string outDotFileName = "dfc_" + toLower(funcName) + "_test.dot";
+  const std::string outDotFileName = "dfc_" + eda::utils::toLower(funcName) 
+                                            + "_test.dot";
   std::ofstream output(fsOutPath / outDotFileName);
   eda::hls::model::printDot(output, *model);
   output.close();
 
+  // Test MLIR dumper.
+  std::stringstream stream;
+  dumpModelMlir(*model, stream);
+  std::cout << stream.str() << std::endl;
+
   // Applying transforms in MLIR.
   mlir::transforms::Transformer<Model> transformer{*model};
-  transformer.apply_transform(mlir::transforms::UnfoldInstance("instance"));
+  transformer.applyTransform(mlir::transforms::UnfoldInstance("INSTANCE2007",
+                                                               "VectorSum",
+                                                               "IDCT"));
   auto model_after = transformer.done();
 
   // Print model after transformations.
@@ -353,7 +363,7 @@ int compilerDfcTest(const dfc::kernel &kernel,
 
   // Print model '.dot' representation after transformations to file.
   const std::string outAfterDotFileName =
-      "dfc_after_" + toLower(funcName) + "_test.dot";
+      "dfc_after_" + eda::utils::toLower(funcName) + "_test.dot";
   output.open(fsOutPath / outAfterDotFileName);
   eda::hls::model::printDot(output, model_after);
   output.close();

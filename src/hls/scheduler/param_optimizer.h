@@ -31,9 +31,9 @@ namespace eda::hls::scheduler {
 
 template<typename T>
 class ParametersOptimizer final : 
-    public util::Singleton<ParametersOptimizer<T>> {
+    public utils::Singleton<ParametersOptimizer<T>> {
   
-  friend class util::Singleton<ParametersOptimizer<T>>;
+  friend class utils::Singleton<ParametersOptimizer<T>>;
 
 public:
   std::map<std::string, model::Parameters> optimize(

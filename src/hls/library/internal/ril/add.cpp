@@ -76,7 +76,7 @@ std::unique_ptr<Element> Add::construct() const {
   for (auto port : ports) {
     ifaceWires += ((port.direction == Port::IN) ? std::string("input ") 
                                                 : std::string("output ")) +
-        " u:" + std::to_string(port.width) + " " + replaceSomeChars(port.name) +
+        " u:" + std::to_string(port.width) + " " + utils::replaceSomeChars(port.name) +
          ";\n";
   }
 
@@ -90,10 +90,10 @@ std::unique_ptr<Element> Add::construct() const {
       continue;
     }
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
-      inPortNames.push_back(replaceSomeChars(port.name));
+      inPortNames.push_back(utils::replaceSomeChars(port.name));
     }
     if (port.direction == Port::OUT || port.direction == Port::INOUT) {
-      outPortName = replaceSomeChars(port.name);
+      outPortName = utils::replaceSomeChars(port.name);
     }
   }
   ir += outPortName + " = " + inPortNames[0];
@@ -107,7 +107,7 @@ std::unique_ptr<Element> Add::construct() const {
 
 bool Add::isAdd(const NodeType &nodeType) {
   return nodeType.outputs.size() == 1 
-      && starts_with(nodeType.name, "ADD");
+      && utils::starts_with(nodeType.name, "ADD");
 }
 
 } // namespace eda::hls::library::internal::ril

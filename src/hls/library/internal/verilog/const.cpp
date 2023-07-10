@@ -89,7 +89,7 @@ std::unique_ptr<Element> Const::construct() const {
     std::string portDeclr =
       (port.width > 1 ? std::string("[") + std::to_string(port.width - 1)
                                          + ":0] " : std::string(""))
-                                         + replaceSomeChars(port.name) + ";\n";
+                                         + utils::replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -103,7 +103,7 @@ std::unique_ptr<Element> Const::construct() const {
     if (port.direction == Port::OUT || port.direction == Port::INOUT) {
       if (port.direction == Port::OUT) {
         ifaceWires += std::string("output ") + portDeclr;
-        ir += std::string("assign ") + replaceSomeChars(port.name) + " = " 
+        ir += std::string("assign ") + utils::replaceSomeChars(port.name) + " = " 
                                      + std::to_string(value) + ";\n";
       }
       outputs += outputType + portDeclr;

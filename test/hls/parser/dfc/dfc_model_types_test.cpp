@@ -106,7 +106,7 @@ void dfcModelTypesTest(const dfc::kernel &kernel,
   const fs::path fsOutPath = homePath / outSubPath;
   fs::create_directories(fsOutPath);
 
-  const std::string outDotFileName = "dfc_" + toLower(funcName) + "_test.dot";
+  const std::string outDotFileName = "dfc_" + eda::utils::toLower(funcName) + "_test.dot";
 
   fs::create_directories(fsOutPath);
 

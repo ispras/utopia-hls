@@ -43,8 +43,22 @@ def HIL_Model : HIL_Container<"model"> {
   let assemblyFormat = "$name $body attr-dict";
 }
 
-def HIL_Graph : HIL_Container<"graph", [HasParent<"Model">]> {
-  let summary = "Graph container.";
+def HIL_Graphs : HIL_Container<"graphs", [HasParent<"Model">]> {
+  let summary = "Graphs container.";
+  let description = [{
+    Container of `hil.graph`
+  }];
+}
+
+def HIL_Insts : HIL_Container<"insts", [HasParent<"Graph">]> {
+  let summary = "Insts container.";
+  let description = [{
+    Container of `hil.inst`
+  }];
+}
+
+def HIL_Graph : HIL_Container<"graph", [HasParent<"Graphs">]> {
+  let summary = "Graph.";
   let description = [{
     The `hil.graph` operation
   }];
@@ -60,6 +74,16 @@ def HIL_NodeTypes : HIL_Container<"nodetypes", [HasParent<"Model">]> {
   }];
 }
 
+def HIL_Inst : HIL_Container<"inst", [HasParent<"Insts">]> {
+  let summary = "Instance.";
+  let description = [{
+    The `hil.inst` operation
+  }];
+
+  let arguments = (ins StrAttr:$name);
+  let assemblyFormat = "$name $body attr-dict";
+}
+
 def HIL_Chans : HIL_Container<"chans", [HasParent<"Graph">]> {
   let summary = "Chans container.";
   let description = [{
@@ -67,7 +91,7 @@ def HIL_Chans : HIL_Container<"chans", [HasParent<"Graph">]> {
   }];
 }
 
-def HIL_Cons : HIL_Container<"cons", [HasParent<"Graph">]> {
+def HIL_Cons : HIL_Container<"cons", [HasParent<"Inst">]> {
   let summary = "Cons container.";
   let description = [{
     Container of `hil.con`
@@ -137,10 +161,11 @@ def HIL_Con : HIL_Op<"con", [HasParent<"Cons">]> {
   let arguments = (ins
     StrAttr:$typeName,
     StrAttr:$varName,
+    StrAttr:$dirTypeName,
     BindingGraphAttr:$nodeFrom,
     BindingGraphAttr:$nodeTo);
   let assemblyFormat = [{
-    $typeName $varName qualified($nodeFrom) `=``=` qualified($nodeTo) attr-dict
+    $typeName $varName $dirTypeName qualified($nodeFrom) `=``=` qualified($nodeTo) attr-dict
   }];
 }
 

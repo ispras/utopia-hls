@@ -29,7 +29,7 @@ using Parameters = eda::hls::model::Parameters;
 using Parameter = eda::hls::model::Parameter;
 using Signature = eda::hls::model::Signature;
 template<typename T>
-using Singleton = eda::util::Singleton<T>;
+using Singleton = eda::utils::Singleton<T>;
 using Type = eda::hls::model::Type;
 
 namespace eda::hls::library {
@@ -152,8 +152,8 @@ struct StorageEntry {
  * @brief High-level synthesis library.
  * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>.
  */
-class Library final : public eda::util::Singleton<Library> {
-  friend class eda::util::Singleton<Library>;
+class Library final : public Singleton<Library> {
+  friend class Singleton<Library>;
 public:
   /**
    * @brief Initializes the library by creating standard internal elements.

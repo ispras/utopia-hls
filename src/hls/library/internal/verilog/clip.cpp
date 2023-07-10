@@ -80,7 +80,7 @@ std::unique_ptr<Element> Clip::construct() const {
     std::string portDeclr =
       (port.width > 1 ? std::string("[") + std::to_string(port.width - 1)
                                          + ":0] " : std::string(""))
-                                         + replaceSomeChars(port.name) + ";\n";
+                                         + utils::replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -106,10 +106,10 @@ std::unique_ptr<Element> Clip::construct() const {
       continue;
     }
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
-      inPortName = replaceSomeChars(port.name);
+      inPortName = utils::replaceSomeChars(port.name);
     }
     if (port.direction == Port::OUT || port.direction == Port::INOUT) {
-      outPortName = replaceSomeChars(port.name);
+      outPortName = utils::replaceSomeChars(port.name);
     }
   }
   ir += "assign " + outPortName + " = clip16(" + inPortName + ");\n";
@@ -129,7 +129,7 @@ std::unique_ptr<Element> Clip::construct() const {
 }
 
 bool Clip::isClip(const NodeType &nodeType) {
-   return starts_with(nodeType.name, "CLIP");
+  return utils::starts_with(nodeType.name, "CLIP");
 }
 
 } // namespace eda::hls::library::internal::verilog

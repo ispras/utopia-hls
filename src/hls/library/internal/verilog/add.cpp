@@ -79,7 +79,7 @@ std::unique_ptr<Element> Add::construct() const {
 
     std::string portDeclr =
       (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) +
-             ":0] " : std::string("")) + replaceSomeChars(port.name) + ";\n";
+             ":0] " : std::string("")) + utils::replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -108,10 +108,10 @@ std::unique_ptr<Element> Add::construct() const {
       continue;
     }
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
-      inPortNames.push_back(replaceSomeChars(port.name));
+      inPortNames.push_back(utils::replaceSomeChars(port.name));
     }
     if (port.direction == Port::OUT || port.direction == Port::INOUT) {
-      outPortNames.push_back(replaceSomeChars(port.name));
+      outPortNames.push_back(utils::replaceSomeChars(port.name));
     }
   }
   ir += "assign {";
@@ -138,7 +138,7 @@ std::unique_ptr<Element> Add::construct() const {
 
 bool Add::isAdd(const NodeType &nodeType) {
   return nodeType.outputs.size() == 1 
-      && starts_with(nodeType.name, "ADD");
+      && utils::starts_with(nodeType.name, "ADD");
 }
 
 } // namespace eda::hls::library::internal::verilog

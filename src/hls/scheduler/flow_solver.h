@@ -30,11 +30,11 @@ enum FlowBalanceMode {
   Blocking,
 };
 
-class FlowLpSolver final : public util::Singleton<FlowLpSolver> {
+class FlowLpSolver final : public utils::Singleton<FlowLpSolver> {
 
 public:
 
-  friend util::Singleton<FlowLpSolver>;
+  friend utils::Singleton<FlowLpSolver>;
 
   ~FlowLpSolver();
 

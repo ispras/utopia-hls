@@ -61,10 +61,9 @@ def BindingGraphAttr : HIL_Attr<"BindingGraph"> {
 
   let parameters = (ins
     StringRefParameter<>:$graphName,
-    StringRefParameter<>:$nodeName,
-    PortAttr:$port);
+    StringRefParameter<>:$chanName);
 
-  let assemblyFormat = "`<` $graphName $nodeName qualified($port) `>`";
+  let assemblyFormat = "`<` $graphName $chanName `>`";
 }
 
 #endif // HIL_ATTRIBUTES

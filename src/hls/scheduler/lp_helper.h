@@ -49,11 +49,11 @@ enum Verbosity {
 struct SolverVariable;
 struct SolverConstraint;
 
-class LpSolverHelper final : public util::Singleton<LpSolverHelper> {
+class LpSolverHelper final : public utils::Singleton<LpSolverHelper> {
 
 public:
 
-  friend util::Singleton<LpSolverHelper>;
+  friend utils::Singleton<LpSolverHelper>;
 
   ~LpSolverHelper();
 

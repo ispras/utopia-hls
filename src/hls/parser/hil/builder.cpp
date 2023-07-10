@@ -10,8 +10,6 @@
 
 #include "hls/parser/hil/builder.h"
 
-using namespace eda::hls;
-
 namespace eda::hls::parser::hil {
 
 std::shared_ptr<Model> Builder::create() {
@@ -63,26 +61,24 @@ std::shared_ptr<Model> Builder::create() {
     }
 
     // Check connections.
-    for (const Con *con: graph->cons) {
-      uassert(con != nullptr, "Con is nullptr!\n");
+    for (const auto &pair : graph->cons) {
+      for (const Con *con: pair.second) {
+        uassert(con != nullptr, "Con is nullptr!\n");
 
-      // The connection is attached to nodes.
-      uassert(con->source.isLinked(), "Con source is not linked: " << *con
-              << "!\n");
-      uassert(con->target.isLinked(), "Con target is not linked: " << *con
-              << "!\n");
+        // The connection is attached to nodes.
+        uassert(con->source.isLinked(), "Con source is not linked: " << *con
+                << "!\n");
+        uassert(con->target.isLinked(), "Con target is not linked: " << *con
+                << "!\n");
 
-      // The connection is not a loopback.
-      uassert(con->source.node != con->target.node,
-        "Con is a self-loop: " << *con << "\n!");
+        // The connection is not a loopback.
+        uassert(con->source.chan != con->target.chan,
+          "Con is a self-loop: " << *con << "\n!");
 
-       // The source and target datatypes are the same.
-      uassert(con->source.port->type.name == con->target.port->type.name,
-          "Con source and target are of different types: " << *con << "\n!");
-
-      // The connection must be a link between different graphs.
-      uassert(con->source.graph->name != con->target.graph->name,
-              "Con source graph and target graph are the same!\n");
+        // The connection must be a link between different graphs.
+        uassert(con->source.graph->name != con->target.graph->name,
+                "Con source graph and target graph are the same!\n");
+      }
     }
   }
 

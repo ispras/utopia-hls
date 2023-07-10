@@ -365,8 +365,8 @@ Node* Builder::getNode(const Kernel *kernel,
   if (unit->opcode == "INSTANCE") {
     // Check whether the instance is fully connected.
     if (!unit->instance->isFullyConnected()) {
-      std::cout << "Instance " << unit->instance->instanceName << " " <<
-                   "is not fully connected!" << std::endl;
+      std::cout << "Instance " << unit->instance->instanceName << " " 
+                << "is not fully connected!" << std::endl;
     }
 
     Kernel *instanceKernel = Builder::get().getKernel(
@@ -387,13 +387,10 @@ Node* Builder::getNode(const Kernel *kernel,
       Unit *sourceUnit = instanceKernel->inputNamesToSources[
           unit->instance->bindingsToInputs[wire]];
       Node *sourceNode = instanceGraph->findNode(getSourceName(sourceUnit));
-      auto* con = new Con(input->name,
-                          input->type);
-      con->source = { graph, node, node->type.inputs[node->inputs.size()] };
-      con->target = { instanceGraph,
-                      sourceNode->outputs.back()->source.node,
-                      sourceNode->outputs.back()->source.port };
-      graph->addCon(con);
+      auto *con = new Con(input->name, input->type, "IN");
+      con->source = { graph, input };
+      con->target = { instanceGraph, sourceNode->outputs.back() };
+      graph->addCon(node->name, con);
     }
     input->target = { node, node->type.inputs[node->inputs.size()] };
     node->addInput(input);
@@ -406,13 +403,10 @@ Node* Builder::getNode(const Kernel *kernel,
       Unit *sinkUnit = instanceKernel->outputNamesToSinks[
           unit->instance->bindingsToOutputs[wire]];
       Node *sinkNode = instanceGraph->findNode(getSinkName(sinkUnit));
-      auto* con = new Con(output->name,
-                          output->type);
-      con->source = { instanceGraph,
-                      sinkNode->inputs.back()->target.node,
-                      sinkNode->inputs.back()->target.port };
-      con->target = { graph, node, node->type.outputs[node->outputs.size()] };
-      graph->addCon(con);
+      auto *con = new Con(output->name, output->type, "OUT");
+      con->source = { instanceGraph, sinkNode->inputs.back() };
+      con->target = { graph, output };
+      graph->addCon(node->name, con);
     }
     output->source = { node, node->type.outputs[node->outputs.size()] };
     node->addOutput(output);

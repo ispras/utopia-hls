@@ -24,8 +24,65 @@
 #include "llvm/Support/Casting.h"
 
 #include <iostream>
+#include <memory>
 
 namespace mlir::hil {
+
+std::unique_ptr<mlir::hil::Graph> findGraph(mlir::hil::Graphs graphs,
+                                            const std::string &name) {
+  std::unique_ptr<mlir::hil::Graph> result;
+  graphs.walk([&](mlir::hil::Graph graphOp) {
+      if (graphOp.name() == name) {
+        result = std::make_unique<mlir::hil::Graph>(graphOp);
+      }
+  });
+  return result;
+}
+
+std::unique_ptr<mlir::hil::Chan> findChan(mlir::hil::Chans chans,
+                                          const std::string &name) {
+  std::unique_ptr<mlir::hil::Chan> result;
+  chans.walk([&](mlir::hil::Chan chanOp) {
+      if (chanOp.varName() == name) {
+        result = std::make_unique<mlir::hil::Chan>(chanOp);
+      }
+  });
+  return result;
+}
+
+std::unique_ptr<mlir::hil::Node> findNode(mlir::hil::Nodes nodes,
+                                          const std::string &name) {
+  std::unique_ptr<mlir::hil::Node> result;
+  nodes.walk([&](mlir::hil::Node nodeOp) {
+      if (nodeOp.name() == name) {
+        result = std::make_unique<mlir::hil::Node>(nodeOp);
+      }
+  });
+  return result;
+}
+
+std::unique_ptr<mlir::hil::NodeType> findNodetype(
+    mlir::hil::NodeTypes nodeTypes,
+    const std::string &name) {
+  std::unique_ptr<mlir::hil::NodeType> result;
+  nodeTypes.walk([&](mlir::hil::NodeType nodeTypeOp) {
+      if (nodeTypeOp.name() == name) {
+        result = std::make_unique<mlir::hil::NodeType>(nodeTypeOp);
+      }
+  });
+  return result;
+}
+
+std::unique_ptr<mlir::hil::Inst> findInst(mlir::hil::Insts insts,
+                                          const std::string &name) {
+  std::unique_ptr<mlir::hil::Inst> result;
+  insts.walk([&](mlir::hil::Inst instOp) {
+      if (instOp.name() == name) {
+        result = std::make_unique<mlir::hil::Inst>(instOp);
+      }
+  });
+  return result;
+}
 
 std::string getModelName(mlir::hil::Node &node) {
   auto model =
@@ -33,15 +90,15 @@ std::string getModelName(mlir::hil::Node &node) {
   return model.name().str();
 }
 
-std::string getModelName(mlir::hil::Chan &ch) {
+std::string getModelName(mlir::hil::Chan &chan) {
   auto model =
-      mlir::cast<Model>(*ch->getParentOp()->getParentOp()->getParentOp());
+      mlir::cast<Model>(*chan->getParentOp()->getParentOp()->getParentOp());
   return model.name().str();
 }
 
 std::optional<Graph> getGraph(Model &model, const std::string &name) {
-  auto &model_ops = model.getBody()->getOperations();
-  auto graphs = find_elems_by_type<Graph>(model_ops.begin(), model_ops.end());
+  auto &modelOps = model.getBody()->getOperations();
+  auto graphs = findElemsByType<Graph>(modelOps.begin(), modelOps.end());
 
   for (size_t i = 0; i < graphs.size(); i++) {
     if (graphs[i].name() == name) {
@@ -61,10 +118,10 @@ std::vector<Chan> getInputs(Node &node) {
 
   for (auto arg : node.commandArguments()) {
 
-    llvm::StringRef in_chan_name = arg.cast<StringAttr>().getValue();
+    llvm::StringRef inChanName = arg.cast<StringAttr>().getValue();
 
     for (size_t i = 0; i < chans.size(); i++) {
-      if (chans[i].varName() == in_chan_name) {
+      if (chans[i].varName() == inChanName) {
         inChans.push_back(chans[i]);
       }
     }
@@ -82,10 +139,10 @@ std::vector<Chan> getOutputs(Node &node) {
 
   for (auto res : node.commandResults()) {
 
-    llvm::StringRef out_chan_name = res.cast<StringAttr>().getValue();
+    llvm::StringRef outChanName = res.cast<StringAttr>().getValue();
 
     for (size_t i = 0; i < chans.size(); i++) {
-      if (chans[i].varName() == out_chan_name) {
+      if (chans[i].varName() == outChanName) {
         outChans.push_back(chans[i]);
       }
     }
@@ -98,9 +155,9 @@ std::vector<Node> getInputs(mlir::hil::Graph &graph) {
   std::vector<Node> result;
   mlir::Block::OpListType &graphNodes = getNodes(graph);
 
-  for (auto &gNode : graphNodes) {
+  for (auto &graphNode : graphNodes) {
 
-    auto node = cast<Node>(gNode);
+    auto node = cast<Node>(graphNode);
     if (isSource(node) || isConst(node)) {
       result.push_back(node);
     }
@@ -113,9 +170,9 @@ std::vector<Node> getSinks(mlir::hil::Graph &graph) {
   std::vector<Node> result;
   mlir::Block::OpListType &graphNodes = getNodes(graph);
 
-  for (auto &gNode : graphNodes) {
+  for (auto &graphNode : graphNodes) {
 
-    auto node = cast<Node>(gNode);
+    auto node = cast<Node>(graphNode);
     if (isSink(node)) {
       result.push_back(node);
     }
@@ -127,10 +184,10 @@ std::vector<mlir::hil::Chan> getChans(mlir::hil::Graph &graph) {
 
   std::vector<mlir::hil::Chan> result;
 
-  auto &g_ops = graph.getBody()->getOperations();
-  auto chans_ops = find_elem_by_type<Chans>(g_ops).value();
-  for (auto &chans_op : chans_ops.getBody()->getOperations()) {
-    auto chan = cast<Chan>(chans_op);
+  auto &graphOperations = graph.getBody()->getOperations();
+  auto chansOp = findElemByType<Chans>(graphOperations).value();
+  for (auto &chansOperation : chansOp.getBody()->getOperations()) {
+    auto chan = cast<Chan>(chansOperation);
     result.push_back(chan);
   }
 
@@ -138,9 +195,9 @@ std::vector<mlir::hil::Chan> getChans(mlir::hil::Graph &graph) {
 }
 
 mlir::Block::OpListType& getNodes(mlir::hil::Graph &graph) {
-  auto &graph_ops = graph.getBody()->getOperations();
-  auto nodes_op = find_elem_by_type<Nodes>(graph_ops).value();
-  return nodes_op.getBody()->getOperations();
+  auto &graphOperations = graph.getBody()->getOperations();
+  auto nodesOp = findElemByType<Nodes>(graphOperations).value();
+  return nodesOp.getBody()->getOperations();
 }
 
 bool isConst(mlir::hil::Node &node) {

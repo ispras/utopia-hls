@@ -236,7 +236,7 @@ std::ostream& operator<<(std::ostream &out, const NodeType &nodetype) {
 }
 
 std::ostream& operator<<(std::ostream &out, const Chan &chan) {
-    return out << "chan " << chan.type << " " << chan.name << ";\n"
+    return out << "chan " << chan.type << " " << chan.name << " "
              << "(graph: " << chan.graph.name << " node: "
              << chan.source.node->name << " port: "
              << chan.source.port->name << ")"
@@ -257,13 +257,12 @@ static std::ostream& operator<<(std::ostream &out,
 }
 
 std::ostream& operator<<(std::ostream &out, const Con &con) {
-  return out << "con " << con.type << " " << con.name << ";\n"
-             << "(graph: " << con.source.graph->name << " node: "
-             << con.source.node->name << " port: "
-             << con.source.port->name << ")"
-             << " => " << "(graph: " << con.target.graph->name << " node: "
-             << con.target.node->name << " port: "
-             << con.target.port->name << ")";
+  return out << "con " << con.type << " " << con.name << " " << con.dir << " {" 
+             << std::endl << "        "
+             << "graph " << con.source.graph->name << " " << *con.source.chan 
+             << std::endl << "        "
+             << "graph " << con.target.graph->name << " " << *con.target.chan 
+             << std::endl << "      " << "}";
 }
 
 std::ostream& operator<<(std::ostream &out, const Node &node) {
@@ -280,18 +279,21 @@ std::ostream& operator<<(std::ostream &out, const Graph &graph) {
   for (const auto *node: graph.nodes)
     out << "    " << *node << std::endl;
 
-  for (const auto *con: graph.cons)
-    out << "    " << *con << std::endl;
+  for (const auto &pair: graph.cons) {
+    out << "    " << pair.first << ": {" << std::endl;
+
+    for (const auto *con: pair.second) {
+      out << "      " << *con << std::endl; 
+    }
+    out << "    }" << std::endl;
+  }
+
 
   return out << "  }";
 }
 
 std::ostream& operator<<(std::ostream &out, const Model &model) {
   out << "model " << model.name << "{" << std::endl;
-
-  // deprecated
-  /*for (const auto *nodetype: model.nodetypes)
-    out << *nodetype << std::endl;*/
   
   for (auto nodeTypeIterator = model.nodetypes.begin();
        nodeTypeIterator != model.nodetypes.end();

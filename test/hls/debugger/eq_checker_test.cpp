@@ -21,12 +21,12 @@ bool eqCheckTest(const std::string &fileM, const std::string &fileM2) {
   // Get first model for equivalence checking.
   const std::string pathM = getenv("UTOPIA_HLS_HOME") + fileM;
   MLIRModule modelM = eda::hls::parser::hil::parseToMlir(pathM);
-  Model model = modelM.get_root();
+  Model model = modelM.getRoot();
 
   // Get second model for equivalence checking.
   const std::string pathM2 = getenv("UTOPIA_HLS_HOME") + fileM2;
   MLIRModule modelM2 = eda::hls::parser::hil::parseToMlir(pathM2);
-  Model model2 = modelM2.get_root();
+  Model model2 = modelM2.getRoot();
 
   // Perform checking itself.
   EqChecker checker = EqChecker::get();

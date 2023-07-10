@@ -38,284 +38,301 @@ using eda::hls::model::Binding;
 
 namespace detail {
 
-template <typename T> class quoted {
+template <typename T> class Quoted {
 public:
-  quoted(const T &data) : data_(data) {}
+  Quoted(const T &data) : data(data) {}
   template <typename U>
-  friend std::ostream &operator<<(std::ostream &, const quoted<U> &q);
+  friend std::ostream &operator<<(std::ostream &, const Quoted<U> &quoted);
 
 private:
-  const T &data_;
+  const T &data;
 };
 
 template <typename T>
-std::ostream &operator<<(std::ostream &os, const quoted<T> &q) {
-  return os << '"' << q.data_ << '"';
+std::ostream &operator<<(std::ostream &os, const Quoted<T> &quoted) {
+  return os << '"' << quoted.data << '"';
 }
 
-template <typename T> class curly_braced {
+template <typename T> class CurlyBraced {
 public:
-  curly_braced(const T &data) : data_(data) {}
+  CurlyBraced(const T &data) : data(data) {}
   template <typename U>
-  friend std::ostream &operator<<(std::ostream &, const curly_braced<U> &q);
+  friend std::ostream &operator<<(std::ostream &, const CurlyBraced<U> &curly);
 
 private:
-  const T &data_;
+  const T &data;
 };
 
 template <typename T>
-std::ostream &operator<<(std::ostream &os, const curly_braced<T> &q) {
-  return os << '<' << q.data_ << '>';
+std::ostream &operator<<(std::ostream &os, const CurlyBraced<T> &curly) {
+  return os << '<' << curly.data << '>';
 }
 
-class indented_ostream {
+class IndentedOstream {
 public:
-  indented_ostream(std::ostream &os, size_t indent_step, char indent_char)
-      : os_(os), indent_char_(indent_char), indent_step_(indent_step) {}
+  IndentedOstream(std::ostream &os,
+                  const std::size_t indentStep,
+                  const char indentChar)
+      : os(os), indentChar(indentChar), indentStep(indentStep) {}
 
-  void increase_indent() { indent_width_ += indent_step_; }
+  void increaseIndent() { indentWidth += indentStep; }
 
-  void decrease_indent() {
-    assert(indent_width_ >= indent_step_);
-    indent_width_ -= indent_step_;
+  void decreaseIndent() {
+    assert(indentWidth >= indentStep);
+    indentWidth -= indentStep;
   }
 
-  template <typename T> indented_ostream &operator<<(const T &x) {
-    if (is_line_beginning_) {
-      os_ << std::string(indent_width_, indent_char_);
-      is_line_beginning_ = false;
+  template <typename T> IndentedOstream &operator<<(const T &x) {
+    if (isLineBeginning) {
+      os << std::string(indentWidth, indentChar);
+      isLineBeginning = false;
     }
-    os_ << x;
+    os << x;
     return *this;
   }
 
-  indented_ostream &operator<<(const char &x) {
-    if (is_line_beginning_) {
-      os_ << std::string(indent_width_, indent_char_);
-      is_line_beginning_ = false;
+  IndentedOstream &operator<<(const char &x) {
+    if (isLineBeginning) {
+      os << std::string(indentWidth, indentChar);
+      isLineBeginning = false;
     }
-    os_ << x;
+    os << x;
     if (x == '\n') {
-      is_line_beginning_ = true;
+      isLineBeginning = true;
     }
     return *this;
   }
 
-  indented_ostream &operator<<(const char *const &s) {
-    if (is_line_beginning_) {
-      os_ << std::string(indent_width_, indent_char_);
-      is_line_beginning_ = false;
+  IndentedOstream &operator<<(const char *const &s) {
+    if (isLineBeginning) {
+      os << std::string(indentWidth, indentChar);
+      isLineBeginning = false;
     }
     std::string str(s);
-    os_ << s;
+    os << s;
     if (!str.empty() && str.back() == '\n') {
-      is_line_beginning_ = true;
+      isLineBeginning = true;
     }
     return *this;
   }
 
 private:
-  std::ostream &os_;
-  std::size_t indent_width_ = 0;
-  bool is_line_beginning_ = true;
-  const char indent_char_;
-  const std::size_t indent_step_;
+  std::ostream &os;
+  std::size_t indentWidth = 0;
+  bool isLineBeginning = true;
+  const char indentChar;
+  const std::size_t indentStep;
 };
 
-class indent_block {
+class IndentBlock {
 public:
-  indent_block(indented_ostream &os) : os_(os) { os_.increase_indent(); }
-  ~indent_block() { os_.decrease_indent(); }
+  IndentBlock(IndentedOstream &os) : os(os) { os.increaseIndent(); }
+  ~IndentBlock() { os.decreaseIndent(); }
 
 private:
-  indented_ostream &os_;
+  IndentedOstream &os;
 };
 
 template <typename T> class ModelDumper {
 public:
-  ModelDumper(const T &node, indented_ostream &os) : node_(node), os_(os) {}
+  ModelDumper(const T &node, IndentedOstream &os) : node(node), os(os) {}
   void dump();
   template <typename U>
-  static ModelDumper<U> get(const U &node, indented_ostream &os) {
+  static ModelDumper<U> get(const U &node, IndentedOstream &os) {
     return ModelDumper<U>(node, os);
   }
 
 private:
-  const T &node_;
-  indented_ostream &os_;
+  const T &node;
+  IndentedOstream &os;
 };
 
 template <> void ModelDumper<Port>::dump() {
-  os_ << "#hil.port<" << quoted(node_.name) << ' ' << quoted(node_.type.name)
-      << ' ' << curly_braced(node_.flow) << ' ' << node_.latency << ' '
-      << node_.isConst << ' ' << node_.value.getIntValue() << '>';
+  os << "#hil.port<" << Quoted(node.name) << ' ' << Quoted(node.type.name)
+     << ' ' << CurlyBraced(node.flow) << ' ' << node.latency << ' '
+     << node.isConst << ' ' << node.value.getIntValue() << '>';
 }
 
 template <> void ModelDumper<Binding>::dump() {
-  os_ << "#hil.bnd<" << quoted((*(node_.node)).name) << ' ';
-  ModelDumper::get(*(node_.port), os_).dump();
-  os_ << '>';
+  os << "#hil.bnd<" << Quoted((*(node.node)).name) << ' ';
+  ModelDumper::get(*(node.port), os).dump();
+  os << '>';
 }
 
 template <> void ModelDumper<BindingGraph>::dump() {
-  os_ << "#hil.bndgraph<" << quoted((*(node_.graph)).name) << ' '
-      << quoted((*(node_.node)).name) << ' ';
-  ModelDumper::get(*(node_.port), os_).dump();
-  os_ << '>';
+  os << "#hil.bndgraph<" << Quoted((*(node.graph)).name) << ' '
+     << Quoted((*(node.chan)).name) << ' ';
+  os << '>';
 }
 
 template <> void ModelDumper<NodeType>::dump() {
-  os_ << "hil.nodetype " << quoted(node_.name) << " [";
+  os << "hil.nodetype " << Quoted(node.name) << " [";
   {
-    indent_block _(os_);
-    bool print_sep = false;
-    for (auto *input_arg : node_.inputs) {
-      if (print_sep) {
-        os_ << ", ";
+    IndentBlock _(os);
+    bool printSep = false;
+    for (auto *inputArg : node.inputs) {
+      if (printSep) {
+        os << ", ";
       } else {
-        os_ << '\n';
-        print_sep = true;
+        os << '\n';
+        printSep = true;
       }
-      ModelDumper::get(*input_arg, os_).dump();
+      ModelDumper::get(*inputArg, os).dump();
     }
   }
-  os_ << '\n' << "] => [";
+  os << '\n' << "] => [";
   {
-    indent_block _(os_);
-    bool print_sep = false;
-    for (auto *output_arg : node_.outputs) {
-      if (print_sep) {
-        os_ << ", ";
+    IndentBlock _(os);
+    bool printSep = false;
+    for (auto *outputArg : node.outputs) {
+      if (printSep) {
+        os << ", ";
       } else {
-        os_ << '\n';
+        os << '\n';
       }
-      print_sep = true;
-      ModelDumper::get(*output_arg, os_).dump();
+      printSep = true;
+      ModelDumper::get(*outputArg, os).dump();
     }
   }
-  os_ << '\n' << "]";
+  os << '\n' << "]";
 }
 
 template <> void ModelDumper<Chan>::dump() {
-  os_ << "hil.chan " << quoted(node_.type) << ' ' << quoted(node_.name) << ' ';
-  ModelDumper::get(node_.source, os_).dump();
-  os_ << " == ";
-  ModelDumper::get(node_.target, os_).dump();
+  os << "hil.chan " << Quoted(node.type) << ' ' << Quoted(node.name) << ' ';
+  ModelDumper::get(node.source, os).dump();
+  os << " == ";
+  ModelDumper::get(node.target, os).dump();
 }
 
 template <> void ModelDumper<Node>::dump() {
-  os_ << "hil.node " << quoted(node_.type.name) << ' ' << quoted(node_.name)
-      << " [";
+  os << "hil.node " << Quoted(node.type.name) << ' ' << Quoted(node.name)
+     << " [";
   {
-    indent_block _(os_);
-    bool print_sep = false;
-    for (auto *input_chan : node_.inputs) {
-      if (print_sep) {
-        os_ << ", ";
+    IndentBlock _(os);
+    bool printSep = false;
+    for (auto *inputChan : node.inputs) {
+      if (printSep) {
+        os << ", ";
       } else {
-        os_ << '\n';
-        print_sep = true;
+        os << '\n';
+        printSep = true;
       }
-      os_ << quoted(input_chan->name);
+      os << Quoted(inputChan->name);
     }
   }
-  os_ << '\n' << "] => [";
+  os << '\n' << "] => [";
   {
-    indent_block _(os_);
-    bool print_sep = false;
-    for (auto *output_chan : node_.outputs) {
-      if (print_sep) {
-        os_ << ", ";
+    IndentBlock _(os);
+    bool printSep = false;
+    for (auto *outputChan : node.outputs) {
+      if (printSep) {
+        os << ", ";
       } else {
-        os_ << '\n';
-        print_sep = true;
+        os << '\n';
+        printSep = true;
       }
-      os_ << quoted(output_chan->name);
+      os << Quoted(outputChan->name);
     }
   }
-  os_ << '\n' << "]";
+  os << '\n' << "]";
 }
 
 template <> void ModelDumper<Con>::dump() {
-  os_ << "hil.con " << quoted(node_.type) << ' ' << quoted(node_.name)
-      << ' ';
-  ModelDumper::get(node_.source, os_).dump();
-  os_ << " == ";
-  ModelDumper::get(node_.target, os_).dump();
+  os << "hil.con" << " " << Quoted(node.type) << " " << Quoted(node.name) 
+     << " " << Quoted(node.dir) << " ";
+  ModelDumper::get(node.source, os).dump();
+  os << " == ";
+  ModelDumper::get(node.target, os).dump();
 }
 
 template <> void ModelDumper<Graph>::dump() {
-  os_ << "hil.graph " << quoted(node_.name) << " {\n";
-  {
-    indent_block _(os_);
-    os_ << "hil.chans {\n";
+  os << "hil.graph " << Quoted(node.name) << " {\n";
+    IndentBlock _(os);
+    os << "hil.chans {\n";
     {
-      indent_block _(os_);
-      for (auto *chan : node_.chans) {
-        ModelDumper::get(*chan, os_).dump();
-        os_ << '\n';
+      IndentBlock _(os);
+      for (auto *chan : node.chans) {
+        ModelDumper::get(*chan, os).dump();
+        os << '\n';
       }
     }
-    os_ << "}\n";
-    os_ << "hil.nodes {\n";
+    os << "}\n";
+    os << "hil.nodes {\n";
     {
-      indent_block _(os_);
-      for (auto *node : node_.nodes) {
-        ModelDumper::get(*node, os_).dump();
-        os_ << '\n';
+      IndentBlock _(os);
+      for (auto *node : node.nodes) {
+        ModelDumper::get(*node, os).dump();
+        os << '\n';
       }
     }
-    os_ << "}\n";
-    os_ << "hil.cons {\n";
+    os << "}\n";
+    os << "hil.insts {\n";
     {
-      indent_block _(os_);
-      for (auto *con : node_.cons) {
-        ModelDumper::get(*con, os_).dump();
-        os_ << '\n';
+      IndentBlock _(os);
+      for (const auto &pair : node.cons) {
+        os << "hil.inst " << Quoted(pair.first) << " {\n";
+        {
+          IndentBlock _(os);
+          os << "hil.cons " << "{\n";
+          {
+            IndentBlock _(os);
+            for (auto *con : pair.second) {
+              ModelDumper::get(*con, os).dump();
+              os << '\n';
+          }
+          os << "}\n"; // Cons close
+          }
+        os << "}\n"; // Inst close
+        }
       }
     }
-    os_ << "}\n";
-  }
-  os_ << "}\n";
+    os << "}\n"; // Insts close
+  os << "}\n";// Graph close
 }
 
 template <> void ModelDumper<Model>::dump() {
-  os_ << "hil.model " << quoted(node_.name) << " {" << '\n';
+  os << "hil.model " << Quoted(node.name) << " {" << '\n';
   {
-    indent_block _(os_);
-    os_ << "hil.nodetypes {\n";
+    IndentBlock _(os);
+    os << "hil.nodetypes {\n";
     {
-      indent_block _(os_);
-      for (auto nodeTypeIterator = node_.nodetypes.begin();
-           nodeTypeIterator != node_.nodetypes.end();
+      IndentBlock _(os);
+      for (auto nodeTypeIterator = node.nodetypes.begin();
+           nodeTypeIterator != node.nodetypes.end();
            nodeTypeIterator++) {
-        ModelDumper::get(*(nodeTypeIterator->second), os_).dump();
-        os_ << '\n';
+        ModelDumper::get(*(nodeTypeIterator->second), os).dump();
+        os << '\n';
       }
     }
-    os_ << "}\n";
-    for (auto *graph : node_.graphs) {
-      ModelDumper::get(*graph, os_).dump();
+    os << "}\n";
+    
+    os << "hil.graphs {\n";
+    {
+      IndentBlock _(os);
+      for (auto *graph : node.graphs) {
+        ModelDumper::get(*graph, os).dump();
+      }
     }
+    os << "}\n";
   }
-  os_ << "}\n";
+  os << "}\n";
 }
 
 } // namespace detail
 
 namespace eda::hls::model {
-std::ostream &dump_model_mlir(const eda::hls::model::Model &model,
-                              std::ostream &os) {
+std::ostream &dumpModelMlir(const eda::hls::model::Model &model,
+                            std::ostream &os) {
   os << std::fixed << std::setprecision(8);
-  detail::indented_ostream ios(os, 2, ' ');
+  detail::IndentedOstream ios(os, 2, ' ');
   detail::ModelDumper(model, ios).dump();
   return os;
 }
 
-void dump_model_mlir_to_file(const eda::hls::model::Model &model,
-                             const std::string &filename) {
+void dumpModelMlirToFile(const eda::hls::model::Model &model,
+                         const std::string &filename) {
   std::ofstream os(filename);
-  dump_model_mlir(model, os);
+  dumpModelMlir(model, os);
 }
 
 } // namespace eda::hls::model

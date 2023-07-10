@@ -27,12 +27,19 @@ namespace eda::hls::model {
   struct Port;
 } // namespace eda::hls::model
 
-using namespace eda::hls::model;
+
+using Chan = eda::hls::model::Chan;
+using Graph = eda::hls::model::Graph;
+using Model = eda::hls::model::Model;
+using Node = eda::hls::model::Node;
+using NodeType = eda::hls::model::NodeType;
+using Port = eda::hls::model::Port;
+using Signature = eda::hls::model::Signature;
 
 namespace eda::hls::parser::dfc {
 
-class Builder final: public eda::util::Singleton<Builder> {
-  friend class eda::util::Singleton<Builder>;
+class Builder final: public eda::utils::Singleton<Builder> {
+  friend class eda::utils::Singleton<Builder>;
 
 public:
 

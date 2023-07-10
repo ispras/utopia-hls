@@ -34,18 +34,18 @@ public:
   MLIRModule(MLIRModule &&oth);
   MLIRModule &operator=(MLIRModule &&oth);
   MLIRModule clone();
-  MLIRContext *get_context();
-  static MLIRModule load_from_mlir(const std::string &s);
-  static MLIRModule load_from_mlir_file(const std::string &filename);
-  static MLIRModule load_from_model(const eda::hls::model::Model &m);
+  MLIRContext *getContext();
+  static MLIRModule loadFromMlir(const std::string &string);
+  static MLIRModule loadFromMlirFile(const std::string &filename);
+  static MLIRModule loadFromModel(const eda::hls::model::Model &model);
   void print(llvm::raw_ostream &os);
-  mlir::hil::Model get_root();
+  mlir::hil::Model getRoot();
 
 private:
   MLIRModule(std::shared_ptr<mlir::MLIRContext> context,
              mlir::OwningOpRef<mlir::ModuleOp> &&module);
-  std::shared_ptr<mlir::MLIRContext> context_;
-  mlir::OwningOpRef<mlir::ModuleOp> module_;
+  std::shared_ptr<mlir::MLIRContext> context;
+  mlir::OwningOpRef<mlir::ModuleOp> module;
 };
 
 } // namespace mlir::model
@@ -53,8 +53,8 @@ private:
 namespace eda::hls::model {
 
 std::shared_ptr<eda::hls::model::Model>
-parse_model_from_mlir(const std::string &s);
+parseModelFromMlir(const std::string &string);
 std::shared_ptr<eda::hls::model::Model>
-parse_model_from_mlir_file(const std::string &filename);
+parseModelFromMlirFile(const std::string &filename);
 
 } // namespace eda::hls::model

@@ -33,11 +33,11 @@ struct Buffer final {
 };
 
 class LatencyLpSolver final : 
-    public LatencyBalancerBase, public util::Singleton<LatencyLpSolver> {
+    public LatencyBalancerBase, public utils::Singleton<LatencyLpSolver> {
 
 public:
 
-  friend util::Singleton<LatencyLpSolver>;
+  friend utils::Singleton<LatencyLpSolver>;
 
   ~LatencyLpSolver();
 

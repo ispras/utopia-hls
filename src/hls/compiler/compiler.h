@@ -50,8 +50,8 @@ struct Port final {
                                const model::Port *port,
                                const Port::Direction dir,
                                const Type type) {
-    return Port(replaceSomeChars(node->name) 
-                + "_" + replaceSomeChars(port->name),
+    return Port(utils::replaceSomeChars(node->name) 
+                + "_" + utils::replaceSomeChars(port->name),
                 dir, type);
   }
 

@@ -80,7 +80,7 @@ std::unique_ptr<Element> Shl11::construct() const {
 
     std::string portDeclr =
       (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) +
-             ":0] " : std::string("")) + replaceSomeChars(port.name) + ";\n";
+             ":0] " : std::string("")) + utils::replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -106,10 +106,10 @@ std::unique_ptr<Element> Shl11::construct() const {
       continue;
     }
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
-      inPortName = replaceSomeChars(port.name);
+      inPortName = utils::replaceSomeChars(port.name);
     }
     if (port.direction == Port::OUT || port.direction == Port::INOUT) {
-      outPortName = replaceSomeChars(port.name);
+      outPortName = utils::replaceSomeChars(port.name);
     }
   }
 
@@ -123,7 +123,7 @@ std::unique_ptr<Element> Shl11::construct() const {
 bool Shl11::isShl11(const NodeType &nodeType) {
   return nodeType.outputs.size() == 1 
       && nodeType.inputs.size()  == 1
-      && starts_with(nodeType.name, "SHL11");
+      && utils::starts_with(nodeType.name, "SHL11");
 }
 
 } // namespace eda::hls::library::internal::verilog

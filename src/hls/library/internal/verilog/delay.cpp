@@ -86,7 +86,7 @@ std::unique_ptr<Element> Delay::construct() const {
     std::string portDeclr =
       (port.width > 1 ? std::string("[") + std::to_string(port.width - 1)
                                          + ":0] " : std::string(""))
-                                         + replaceSomeChars(port.name) + ";\n";
+                                         + utils::replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -115,10 +115,10 @@ std::unique_ptr<Element> Delay::construct() const {
       continue;
     }
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
-      inPort = replaceSomeChars(port.name);
+      inPort = utils::replaceSomeChars(port.name);
     }
     if (port.direction == Port::OUT || port.direction == Port::INOUT) {
-      outPort = replaceSomeChars(port.name);
+      outPort = utils::replaceSomeChars(port.name);
     }
   }
 

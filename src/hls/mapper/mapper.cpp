@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -17,8 +17,6 @@
 
 #define uassert_node(cond, node, mess) \
   uassert(cond, mess << ": " << node.name << "[" << node.type.name << "]")
-
-using namespace eda::utils::graph;
 
 namespace eda::hls::mapper {
 
@@ -80,7 +78,7 @@ void Mapper::estimate(model::Graph &graph) {
 
   std::unordered_map<const Node*, ChanInd> distance;
 
-  traverseTopologicalOrder<model::Graph>(
+  eda::utils::graph::traverseTopologicalOrder<model::Graph>(
     graph,
 
     // Node handler.

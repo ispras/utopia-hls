@@ -110,7 +110,7 @@ std::unique_ptr<Element> Default::construct() const {
 
     std::string portDeclr = ((port.width) > 1 ?
         (std::string("[") + std::to_string(port.width - 1) + ":0] ") :
-        (std::string(""))) + replaceSomeChars(port.name) + ";\n";
+        (std::string(""))) + utils::replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -130,7 +130,7 @@ std::unique_ptr<Element> Default::construct() const {
       } else {
         fsm += std::string(", ");
       }
-      fsm += replaceSomeChars(port.name);
+      fsm += utils::replaceSomeChars(port.name);
     }
 
     if (port.direction == Port::OUT || port.direction == Port::INOUT) {
@@ -143,7 +143,7 @@ std::unique_ptr<Element> Default::construct() const {
         pos -= port.width;
       }
       uassert(outputLength != 0, "All the outputs have zero width!");
-      assigns += std::string("assign ") + replaceSomeChars(port.name) +
+      assigns += std::string("assign ") + utils::replaceSomeChars(port.name) +
                  " = state_" +
                  (latency == 0 ? "0" : std::to_string(latency - 1)) +
                  "[" + std::to_string((pos + port.width - 1) % outputLength) +
