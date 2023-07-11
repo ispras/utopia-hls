@@ -170,7 +170,9 @@ bool EqChecker::match(
   return true;
 }
 
-void EqChecker::makeExprs(Graph &graph, z3::context &ctx,
+void EqChecker::makeExprs(
+    Graph &graph,
+    z3::context &ctx,
     z3::expr_vector &nodes) const {
 
   // create equations for channels
@@ -301,9 +303,10 @@ z3::sort EqChecker::getSort(Port port, z3::context &ctx) const {
   return ctx.uninterpreted_sort(port.getTypeName().c_str());
 }
 
-z3::expr EqChecker::toConst(Chan &ch,
-                            const Binding &bnd,
-                            z3::context &ctx) const {
+z3::expr EqChecker::toConst(
+    Chan &ch,
+    const Binding &bnd,
+    z3::context &ctx) const {
 
   const auto port = bnd.getPort();
   const std::string name = port.getName();
