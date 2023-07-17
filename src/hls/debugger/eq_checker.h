@@ -20,6 +20,25 @@
 
 namespace eda::hls::eqchecker {
 
+using Binding = const mlir::hil::BindingAttr;
+using Chan = mlir::hil::Chan;
+using ChanVector = std::vector<Chan>;
+using CheckResult = z3::check_result;
+using Context = z3::context;
+using Expr = z3::expr;
+using ExprVector = z3::expr_vector;
+using FuncDecl = z3::func_decl;
+using Graph = mlir::hil::Graph;
+using Model = mlir::hil::Model;
+using Node = mlir::hil::Node;
+using NodePairList = std::list<std::pair<Node, Node>>;
+using NodeVector = std::vector<Node>;
+using OptionalGraph = std::optional<Graph>;
+using Port = mlir::hil::PortAttr;
+using Solver = z3::solver;
+using Sort = z3::sort;
+using SortVector = z3::sort_vector;
+
 /**
  * \brief Equivalence checker for high-level models.
  *
@@ -29,17 +48,6 @@ namespace eda::hls::eqchecker {
  * \author <a href="mailto:smolov@ispras.ru">Sergey Smolov</a>
  */
 class EqChecker final {
-
-  using Binding = const mlir::hil::BindingAttr;
-  using Chan = mlir::hil::Chan;
-  using ChanVector = std::vector<Chan>;
-  using Graph = mlir::hil::Graph;
-  using Model = mlir::hil::Model;
-  using Node = mlir::hil::Node;
-  using NodePairList = std::list<std::pair<Node, Node>>;
-  using NodeVector = std::vector<Node>;
-  using OptionalGraph = std::optional<Graph>;
-  using Port = mlir::hil::PortAttr;
 
 public:
   static EqChecker& get() {
@@ -66,30 +74,30 @@ private:
   /* Methods for model-to-solver interaction. */
 
   /// Extracts formal expressions from the specified graph.
-  void makeExprs(Graph &graph, z3::context &ctx, z3::expr_vector &nodes) const;
+  void makeExprs(Graph &graph, Context &ctx, ExprVector &nodes) const;
 
   /// Creates constant expression for the channel's binding.
-  z3::expr toConst(Chan &ch, const Binding &bnd, z3::context &ctx) const;
+  Expr toConst(Chan &ch, const Binding &bnd, Context &ctx) const;
 
   /// Creates constant expression for the node.
-  z3::expr toConst(Node &node, z3::context &ctx) const;
+  Expr toConst(Node &node, Context &ctx) const;
 
   /// Creates constant expression for the channel.
-  z3::expr toConst(Chan &ch, z3::context &ctx) const;
+  Expr toConst(Chan &ch, Context &ctx) const;
 
   /// Creates input function call for the node-chan pair.
-  z3::expr toInFunc(Node &node, Chan &ch, z3::context &ctx) const;
+  Expr toInFunc(Node &node, Chan &ch, Context &ctx) const;
 
   /// Calculates sort of the node.
-  z3::sort getSort(Node &node, z3::context &ctx) const;
+  Sort getSort(Node &node, Context &ctx) const;
 
   /// Calculates sort of the named port.
-  z3::sort getSort(mlir::hil::PortAttr port, z3::context &ctx) const;
+  Sort getSort(Port port, Context &ctx) const;
 
   /// Returns sorts of the node's inputs.
-  z3::sort_vector getInSorts(Node &node, z3::context &ctx) const;
+  SortVector getInSorts(Node &node, Context &ctx) const;
 
   /// Returns arguments for function call that is constructed from the node.
-  z3::expr_vector getFuncArgs(Node &node, z3::context &ctx) const;
+  ExprVector getFuncArgs(Node &node, Context &ctx) const;
 };
 } // namespace eda::hls::eqchecker

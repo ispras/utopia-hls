@@ -18,8 +18,8 @@ std::unique_ptr<EqChecker> EqChecker::instance = nullptr;
 
 bool EqChecker::equivalent(Model &lhs, Model &rhs) const {
 
-  z3::context ctx;
-  z3::expr_vector nodes(ctx);
+  Context ctx;
+  ExprVector nodes(ctx);
 
   OptionalGraph lGraphOpt = mlir::hil::getGraph(lhs, "main");
   OptionalGraph rGraphOpt = mlir::hil::getGraph(rhs, "main");
@@ -60,9 +60,9 @@ bool EqChecker::equivalent(Model &lhs, Model &rhs) const {
       Chan fOut = fOuts[i];
       Chan sOut = sOuts[i];
 
-      const z3::expr fFunc = toInFunc(fIn, fOut, ctx);
-      const z3::expr sFunc = toInFunc(sIn, sOut, ctx);
-      const z3::expr inEq = fFunc == sFunc;
+      const Expr fFunc = toInFunc(fIn, fOut, ctx);
+      const Expr sFunc = toInFunc(sIn, sOut, ctx);
+      const Expr inEq = fFunc == sFunc;
 
       nodes.push_back(inEq);
     }
@@ -89,31 +89,31 @@ bool EqChecker::equivalent(Model &lhs, Model &rhs) const {
     const std::string sName = sOut.nodeTypeName().str();
 
     // output sorts
-    const z3::sort fOutSort = getSort(fOut, ctx);
-    const z3::sort sOutSort = getSort(sOut, ctx);
+    const Sort fOutSort = getSort(fOut, ctx);
+    const Sort sOutSort = getSort(sOut, ctx);
 
     // input sorts
-    const z3::sort_vector fInSorts = getInSorts(fOut, ctx);
-    const z3::sort_vector sInSorts = getInSorts(sOut, ctx);
+    const SortVector fInSorts = getInSorts(fOut, ctx);
+    const SortVector sInSorts = getInSorts(sOut, ctx);
 
-    const z3::func_decl fFunc = function(fName.c_str(), fInSorts, fOutSort);
-    const z3::expr_vector fArgs = getFuncArgs(fOut, ctx);
+    const FuncDecl fFunc = function(fName.c_str(), fInSorts, fOutSort);
+    const ExprVector fArgs = getFuncArgs(fOut, ctx);
 
-    const z3::func_decl sFunc = function(sName.c_str(), sInSorts, sOutSort);
-    const z3::expr_vector sArgs = getFuncArgs(sOut, ctx);
+    const FuncDecl sFunc = function(sName.c_str(), sInSorts, sOutSort);
+    const ExprVector sArgs = getFuncArgs(sOut, ctx);
 
-    const z3::expr outExpr = fFunc(fArgs) != sFunc(sArgs);
+    const Expr outExpr = fFunc(fArgs) != sFunc(sArgs);
 
     nodes.push_back(outExpr);
   }
 
-  z3::solver solver(ctx);
+  Solver solver(ctx);
   solver.add(nodes);
 
   std::cout << "SMT-LIBv2 formula:" << std::endl;
   std::cout << solver.to_smt2() << std::endl;
 
-  z3::check_result result = solver.check();
+  CheckResult result = solver.check();
   switch (result) {
     case z3::sat:
       std::cout << "Models are NOT equivalent" << std::endl;
@@ -170,23 +170,20 @@ bool EqChecker::match(
   return true;
 }
 
-void EqChecker::makeExprs(
-    Graph &graph,
-    z3::context &ctx,
-    z3::expr_vector &nodes) const {
+void EqChecker::makeExprs(Graph &graph, Context &ctx, ExprVector &nodes) const {
 
   // create equations for channels
   ChanVector gChannels = getChans(graph);
 
   for (auto &ch : gChannels) {
 
-    z3::expr src = toConst(ch, ch.nodeFrom(), ctx);
-    z3::expr dst = toConst(ch, ch.nodeTo(), ctx);
-    z3::expr chConst = toConst(ch, ctx);
+    Expr src = toConst(ch, ch.nodeFrom(), ctx);
+    Expr dst = toConst(ch, ch.nodeTo(), ctx);
+    Expr chConst = toConst(ch, ctx);
 
-    const z3::expr srcExpr = src == chConst;
+    const Expr srcExpr = src == chConst;
     nodes.push_back(srcExpr);
-    const z3::expr dstExpr = chConst == dst;
+    const Expr dstExpr = chConst == dst;
     nodes.push_back(dstExpr);
   }
 
@@ -203,16 +200,16 @@ void EqChecker::makeExprs(
       Chan input = getInputs(node)[0];
       Chan output = getOutputs(node)[0];
 
-      const z3::expr in = toConst(input, input.nodeTo(), ctx);
-      const z3::expr out = toConst(output, output.nodeFrom(), ctx);
+      const Expr in = toConst(input, input.nodeTo(), ctx);
+      const Expr out = toConst(output, output.nodeFrom(), ctx);
 
-      const z3::expr delayExpr = in == out;
+      const Expr delayExpr = in == out;
 
       nodes.push_back(delayExpr);
 
     } else if (isKernel(node)) {
 
-      std::vector<mlir::hil::Chan> nodeOuts = getOutputs(node);
+      std::vector<Chan> nodeOuts = getOutputs(node);
 
       // create equation for every output port of kernel node
       for (auto &nOut : nodeOuts) {
@@ -226,15 +223,15 @@ void EqChecker::makeExprs(
         const std::string fName = oneOut ? tName : tName + "_" + pName;
 
         // input/output sorts for kernel function
-        const z3::sort_vector sorts = getInSorts(node, ctx);
-        const z3::sort fSort = getSort(port, ctx);
+        const SortVector sorts = getInSorts(node, ctx);
+        const Sort fSort = getSort(port, ctx);
 
         // kernel function
-        const z3::func_decl kernel = function(fName.c_str(), sorts, fSort);
-        const z3::expr_vector kArgs = getFuncArgs(node, ctx);
+        const FuncDecl kernel = function(fName.c_str(), sorts, fSort);
+        const ExprVector kArgs = getFuncArgs(node, ctx);
 
         // create equation & store it
-        const z3::expr kernEq = kernel(kArgs) == toConst(nOut, nOutBnd, ctx);
+        const Expr kernEq = kernel(kArgs) == toConst(nOut, nOutBnd, ctx);
         nodes.push_back(kernEq);
       }
     } else if (isMerge(node)) {
@@ -243,8 +240,8 @@ void EqChecker::makeExprs(
       Chan nodeOut = getOutputs(node)[0];
       Binding outBnd = nodeOut.nodeFrom();
 
-      const z3::expr outConst = toConst(nodeOut, outBnd, ctx);
-      z3::expr_vector mergeVec(ctx);
+      const Expr outConst = toConst(nodeOut, outBnd, ctx);
+      ExprVector mergeVec(ctx);
 
       ChanVector nodeInputs = getInputs(node);
 
@@ -252,7 +249,7 @@ void EqChecker::makeExprs(
       for (auto &nodeInput : nodeInputs) {
 
         Binding inBnd = nodeInput.nodeTo();
-        const z3::expr inConst = toConst(nodeInput, inBnd, ctx);
+        const Expr inConst = toConst(nodeInput, inBnd, ctx);
 
         mergeVec.push_back(outConst == inConst);
       }
@@ -268,8 +265,8 @@ void EqChecker::makeExprs(
       Chan nodeInput = inputs[0];
       Binding inBnd = nodeInput.nodeTo();
 
-      const z3::expr inConst = toConst(nodeInput, inBnd, ctx);
-      z3::expr_vector splitVec(ctx);
+      const Expr inConst = toConst(nodeInput, inBnd, ctx);
+      ExprVector splitVec(ctx);
 
       ChanVector nodeOutputs = getOutputs(node);
 
@@ -277,8 +274,8 @@ void EqChecker::makeExprs(
       for (auto &nodeOut : nodeOutputs) {
 
         Binding outBnd = nodeOut.nodeFrom();
-        const z3::expr outConst = toConst(nodeOut, outBnd, ctx);
-        const z3::expr outEq = inConst == outConst;
+        const Expr outConst = toConst(nodeOut, outBnd, ctx);
+        const Expr outEq = inConst == outConst;
         splitVec.push_back(outEq);
       }
 
@@ -293,24 +290,21 @@ void EqChecker::makeExprs(
   }
 }
 
-z3::sort EqChecker::getSort(Node &node, z3::context &ctx) const {
+Sort EqChecker::getSort(Node &node, Context &ctx) const {
 
   return ctx.uninterpreted_sort(node.nodeTypeName().str().c_str());
 }
 
-z3::sort EqChecker::getSort(Port port, z3::context &ctx) const {
+Sort EqChecker::getSort(Port port, Context &ctx) const {
 
   return ctx.uninterpreted_sort(port.getTypeName().c_str());
 }
 
-z3::expr EqChecker::toConst(
-    Chan &ch,
-    const Binding &bnd,
-    z3::context &ctx) const {
+Expr EqChecker::toConst(Chan &ch, const Binding &bnd, Context &ctx) const {
 
   const auto port = bnd.getPort();
   const std::string name = port.getName();
-  const z3::sort fInSort = getSort(port, ctx);
+  const Sort fInSort = getSort(port, ctx);
   const std::string modelName = getModelName(ch);
   const std::string nodeName = bnd.getNodeName().str();
   const std::string constName = modelName + "_" + nodeName + "_" + name;
@@ -318,16 +312,16 @@ z3::expr EqChecker::toConst(
   return ctx.constant(constName.c_str(), fInSort);
 }
 
-z3::expr EqChecker::toConst(Node &node, z3::context &ctx) const {
+Expr EqChecker::toConst(Node &node, Context &ctx) const {
 
-  const z3::sort fInSort = getSort(node, ctx);
+  const Sort fInSort = getSort(node, ctx);
   const std::string modelName = getModelName(node);
   const std::string constName = modelName + "_" + node.name().str();
 
   return ctx.constant(constName.c_str(), fInSort);
 }
 
-z3::expr EqChecker::toConst(Chan &ch, z3::context &ctx) const {
+Expr EqChecker::toConst(Chan &ch, Context &ctx) const {
 
   const auto fromPort = ch.nodeFrom().getPort();
   const auto toPort = ch.nodeTo().getPort();
@@ -336,23 +330,23 @@ z3::expr EqChecker::toConst(Chan &ch, z3::context &ctx) const {
   return ctx.constant(ch.varName().str().c_str(), getSort(fromPort, ctx));
 }
 
-z3::expr EqChecker::toInFunc(Node &node, Chan &ch, z3::context &ctx) const {
+Expr EqChecker::toInFunc(Node &node, Chan &ch, Context &ctx) const {
 
   const std::string modelName = getModelName(node);
   const std::string nodeName = node.name().str();
   const std::string chName = ch.nodeFrom().getPort().getName();
   const std::string funcName = modelName + "_" + nodeName + "_" + chName;
-  const z3::sort fSort = getSort(ch.nodeFrom().getPort(), ctx);
-  z3::sort_vector sorts(ctx);
-  const z3::func_decl func = function(funcName.c_str(), sorts, fSort);
+  const Sort fSort = getSort(ch.nodeFrom().getPort(), ctx);
+  SortVector sorts(ctx);
+  const FuncDecl func = function(funcName.c_str(), sorts, fSort);
 
-  return func(z3::expr_vector(ctx));
+  return func(ExprVector(ctx));
 }
 
-z3::sort_vector EqChecker::getInSorts(Node &node, z3::context &ctx) const {
+SortVector EqChecker::getInSorts(Node &node, Context &ctx) const {
 
   auto inputs = getInputs(node);
-  z3::sort_vector sorts(ctx);
+  SortVector sorts(ctx);
 
   for (size_t i = 0; i < inputs.size(); i++) {
 
@@ -362,10 +356,10 @@ z3::sort_vector EqChecker::getInSorts(Node &node, z3::context &ctx) const {
   return sorts;
 }
 
-z3::expr_vector EqChecker::getFuncArgs(Node &node, z3::context &ctx) const {
+ExprVector EqChecker::getFuncArgs(Node &node, Context &ctx) const {
 
   ChanVector inputs = getInputs(node);
-  z3::expr_vector args(ctx);
+  ExprVector args(ctx);
 
   for (size_t i = 0; i < inputs.size(); i++) {
 
