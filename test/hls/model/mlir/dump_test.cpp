@@ -31,8 +31,8 @@ bool dumpToMlirTest(const std::string &filePath) {
   Transformer<Model> transformer{model};
 
   // Check whether one can reconstruct the model. 
-  auto model_after = transformer.done();
-  std::cout << model_after << std::endl;
+  auto modelAfter = transformer.done();
+  std::cout << modelAfter << std::endl;
   return true;
 }
 

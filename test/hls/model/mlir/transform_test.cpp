@@ -35,9 +35,9 @@ protected:
     /*               n3[snd]              */
 
     // Create model.
-    model_ = std::make_unique<Model>("M");
+    model = std::make_unique<Model>("M");
     // Create graph.
-    auto graph = new Graph{"main", *model_};
+    auto graph = new Graph{"main", *model};
     // Create chans.
     auto chan_x = new Chan{"x", "X", *graph};
     auto chan_y = new Chan{"y", "Y", *graph};
@@ -49,27 +49,27 @@ protected:
     auto port_z = Port{"z", chan_z->type, 1.0f, 0, false, 0};
     auto port_w = Port{"w", chan_w->type, 1.0f, 0, false, 0};
     // Create nodetypes.
-    auto source_nt = new NodeType{"source", *model_};
+    auto source_nt = new NodeType{"source", *model};
     source_nt->addOutput(new Port{port_x});
     source_nt->addOutput(new Port{port_y});
     Signature source_nt_signature = source_nt->getSignature();
-    auto fst_nt = new NodeType{"fst", *model_};
+    auto fst_nt = new NodeType{"fst", *model};
     fst_nt->addInput(new Port{port_x});
     fst_nt->addOutput(new Port{port_z});
     Signature fst_nt_signature = fst_nt->getSignature();
-    auto snd_nt = new NodeType{"snd", *model_};
+    auto snd_nt = new NodeType{"snd", *model};
     snd_nt->addInput(new Port{port_y});
     snd_nt->addOutput(new Port{port_w});
     Signature snd_nt_signature = snd_nt->getSignature();
-    auto sink_nt = new NodeType("sink", *model_);
+    auto sink_nt = new NodeType("sink", *model);
     sink_nt->addInput(new Port{port_z});
     sink_nt->addInput(new Port{port_w});
     Signature sink_nt_signature = sink_nt->getSignature();
     // Add nodetypes.
-    model_->addNodetype(source_nt_signature, source_nt);
-    model_->addNodetype(fst_nt_signature, fst_nt);
-    model_->addNodetype(snd_nt_signature, snd_nt);
-    model_->addNodetype(sink_nt_signature, sink_nt);
+    model->addNodetype(source_nt_signature, source_nt);
+    model->addNodetype(fst_nt_signature, fst_nt);
+    model->addNodetype(snd_nt_signature, snd_nt);
+    model->addNodetype(sink_nt_signature, sink_nt);
     // Create nodes.
     auto n1 = new Node{"n1", *source_nt, *graph};
     auto n2 = new Node{"n2", *fst_nt, *graph};
@@ -104,15 +104,15 @@ protected:
     graph->addChan(chan_z);
     graph->addChan(chan_w);
     // Add graph to model.
-    model_->addGraph(graph);
+    model->addGraph(graph);
   }
 
   void TearDown() override {
-    if (!model_) {
+    if (!model) {
       return;
     }
     // Free memory.
-    for (auto graph : model_->graphs) {
+    for (auto graph : model->graphs) {
       for (auto node : graph->nodes) {
         delete node;
       }
@@ -121,8 +121,8 @@ protected:
       }
       delete graph;
     }
-    for (auto nodeTypeIterator = model_->nodetypes.begin();
-         nodeTypeIterator != model_->nodetypes.end();
+    for (auto nodeTypeIterator = model->nodetypes.begin();
+         nodeTypeIterator != model->nodetypes.end();
          nodeTypeIterator++) {
       const auto *nodetype = nodeTypeIterator->second;
       for (auto input_port : nodetype->inputs) {
@@ -135,28 +135,28 @@ protected:
     }
   }
 
-  std::unique_ptr<Model> model_;
+  std::unique_ptr<Model> model;
 };
 
-TEST_F(TransformTest, CheckName) { EXPECT_EQ(model_->name, "M"); }
+TEST_F(TransformTest, CheckName) { EXPECT_EQ(model->name, "M"); }
 
 TEST_F(TransformTest, InsertDelay) {
-  std::cout << *model_ << std::endl;
-  Transformer<Model> transformer{*model_};
+  std::cout << *model << std::endl;
+  Transformer<Model> transformer{*model};
   transformer.applyTransform(mlir::transforms::ChanAddSourceTarget());
   transformer.applyTransform(mlir::transforms::InsertDelay("x", 7));
-  auto model_after = transformer.done();
-  std::cout << model_after << std::endl;
-  EXPECT_EQ(model_after.name, "M");
+  auto modelAfter = transformer.done();
+  std::cout << modelAfter << std::endl;
+  EXPECT_EQ(modelAfter.name, "M");
 }
 
 TEST_F(TransformTest, InsertDelayUndo) {
-  std::cout << *model_ << std::endl;
-  Transformer<Model> transformer{*model_};
+  std::cout << *model << std::endl;
+  Transformer<Model> transformer{*model};
   transformer.applyTransform(mlir::transforms::ChanAddSourceTarget());
   transformer.applyTransform(mlir::transforms::InsertDelay("x", 7));
   transformer.undoTransforms();
-  auto model_after = transformer.done();
-  std::cout << model_after << std::endl;
-  EXPECT_EQ(model_after.name, "M");
+  auto modelAfter = transformer.done();
+  std::cout << modelAfter << std::endl;
+  EXPECT_EQ(modelAfter.name, "M");
 }

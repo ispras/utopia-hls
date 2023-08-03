@@ -113,7 +113,7 @@ TEST(CompilerHilTest, CompilerHilTestIdct) {
                             "idctFir.mlir",
                             "idctLib.v",
                             "idctTop.v",
-                            "output/test/hil/idct/",
+                            "output/test/compiler/hil/idct/",
                             "idctTestBench.v"), 0);
 }
 
@@ -124,7 +124,7 @@ TEST(CompilerHilTest, CompilerHilTestTest) {
                             "testFir.mlir",
                             "testLib.v",
                             "testTop.v",
-                            "output/test/hil/test",
+                            "output/test/compiler/hil/test",
                             "testTestBench.v"), 0);
 }
 
