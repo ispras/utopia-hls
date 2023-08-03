@@ -67,6 +67,7 @@ below are specific to this operating system:
 * `autoconf`
 * `bison`
 * `clang`
+* `clang-12`
 * `clang-tidy`
 * `cmake`
 * `flex`
@@ -96,18 +97,42 @@ sudo apt install autoconf bison clang clang-tidy cmake flex g++ gcc \
 LLVM requires a significant amount of RAM (about 8 Gb or more) to build.
 Please take this into account while moving through the guide.
 
+### Z3 Installation
+
+```
+cd <workdir>
+git clone https://github.com/Z3Prover/z3.git
+cd z3
+git checkout 013d5dc
+git submodule update
+python scripts/mk_make.py
+cd build
+make
+sudo make install
+```
+If you would like to install Z3 to a non-standard location,
+please set `Z3_DIR` environment variable to Z3 build/installation directory.
+
 #### Check out LLVM and CIRCT repos
 
 ```
 cd <workdir>
 git clone --recursive https://github.com/circt/circt.git
 cd circt
-git checkout 6de88ef7
+git checkout 5c31646
 git submodule update
 ```
 
 #### LLVM/MLIR Installation
 
+Set `MLIR_DIR` environment variable to directory with MLIR CMake files:
+```
+export MLIR_DIR=<workdir>/circt/llvm/build/lib/cmake/mlir/
+```
+
+##### Release
+
+Type the following commands:
 ```
 cd <workdir>/circt
 mkdir llvm/build
@@ -115,19 +140,67 @@ cd llvm/build
 cmake -G Ninja ../llvm \
     -DLLVM_ENABLE_PROJECTS=mlir \
     -DLLVM_BUILD_EXAMPLES=ON \
-    -DLLVM_TARGETS_TO_BUILD="X86;NVPTX;AMDGPU" \
+    -DLLVM_TARGETS_TO_BUILD="X86;RISCV" \
     -DCMAKE_BUILD_TYPE=Release \
     -DLLVM_ENABLE_ASSERTIONS=ON \
-    -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_ENABLE_LLD=ON
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DLLVM_ENABLE_LLD=ON
 ninja
 ```
-Set `MLIR_DIR` environment variable to directory with MLIR CMake files:
+
+##### Debug (Release with Debug Info)
+
+1. Open the file `<workdir>/circt/llvm/clang/include/clang/Options.td`;
+2. Locate the following line:
 ```
-export MLIR_DIR=<workdir>/circt/llvm/build/lib/cmake/mlir/
+defm float_store : BooleanFFlag<"float-store">, Group<clang_ignored_gcc_optimization_f_Group>;
+```
+3. Insert the following line after:
+```
+defm lifetime_dse : BooleanFFlag<"lifetime-dse">, Group<clang_ignored_f_Group>;
+```
+
+(This is needed because clang does not have flag `fno-lifetime-dse`).
+
+Then type the following commands:
+```
+cd <workdir>/circt
+mkdir llvm/build
+cd llvm/build
+cmake -G Ninja ../llvm \
+  -DLLVM_ENABLE_PROJECTS="mlir;clang;clang-tools-extra;lld" \
+  -DLLVM_BUILD_EXAMPLES=ON \
+  -DLLVM_TARGETS_TO_BUILD="X86;RISCV" \
+  -DCMAKE_BUILD_TYPE="RelWithDebInfo" \
+  -DLLVM_ENABLE_ASSERTIONS=ON \
+  -DCMAKE_C_COMPILER=$(which clang) \
+  -DCMAKE_CXX_COMPILER=$(which clang++) \
+  -DLLVM_BUILD_LLVM_DYLIB=ON \
+  -DLLVM_LINK_LLVM_DYLIB=ON \
+  -DBUILD_SHARED_LIBS=OFF \
+  -DLLVM_ENABLE_LLD=ON \
+  -DLLVM_USE_SPLIT_DWARF=ON \
+  -DLLVM_OPTIMIZED_TABLEGEN=ON \
+  -DLLVM_USE_NEWPM=ON \
+  -DCMAKE_EXE_LINKER_FLAGS='-Wl,-no-keep-memory' \
+  -DLLVM_CCACHE_BUILD=ON \
+  -DLLVM_PARALLEL_LINK_JOBS=4 \
+  -DLLVM_PARALLEL_COMPILE_JOBS=4
+ninja
 ```
 
 #### CIRCT Installation
 
+Add `<workdir>/circt/build/bin` and `<workdir>/circt/llvm/build/bin`
+to your `PATH` environment variable:
+```
+export PATH=<workdir>/circt/build/bin:<workdir>/circt/llvm/build/bin:$PATH
+```
+
+##### Release
+
+Type the following commands:
 ```
 cd <workdir>/circt
 mkdir build
@@ -140,25 +213,35 @@ cmake -G Ninja .. \
     -DVERILATOR_DISABLE=ON
 ninja
 ```
-Add `<workdir>/circt/build/bin` and `<workdir>/circt/llvm/build/bin`
-to your `PATH` environment variable:
-```
-export PATH=<workdir>/circt/build/bin:<workdir>/circt/llvm/build/bin:$PATH
-```
 
-### Z3 Installation
+##### Debug (Release with Debug Info)
 
+Type the following commands:
 ```
-cd <workdir>
-git clone https://github.com/Z3Prover/z3.git
-cd z3
-python scripts/mk_make.py
+cd <workdir>/circt
+mkdir build
 cd build
-make
-sudo make install
+cmake -G Ninja .. \
+    -DCMAKE_BUILD_TYPE="RelWithDebInfo" \
+    -DLLVM_ENABLE_ASSERTIONS=ON \
+    -DMLIR_DIR=$PWD/../llvm/build/lib/cmake/mlir \
+    -DLLVM_DIR=$PWD/../llvm/build/lib/cmake/llvm \
+    -DCMAKE_C_COMPILER=$(which clang) \
+    -DCMAKE_CXX_COMPILER=$(which clang++) \
+    -DVERILATOR_DISABLE=ON \
+    -DLLVM_BUILD_LLVM_DYLIB=ON \
+    -DLLVM_LINK_LLVM_DYLIB=ON \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DLLVM_ENABLE_LLD=ON \
+    -DLLVM_USE_SPLIT_DWARF=ON \
+    -DLLVM_OPTIMIZED_TABLEGEN=ON \
+    -DLLVM_USE_NEWPM=ON \
+    -DCMAKE_EXE_LINKER_FLAGS='-Wl,-no-keep-memory' \
+    -DLLVM_CCACHE_BUILD=ON \
+    -DLLVM_PARALLEL_LINK_JOBS=4 \
+    -DLLVM_PARALLEL_COMPILE_JOBS=4
+ninja
 ```
-If you would like to install Z3 to a non-standard location,
-please set `Z3_DIR` environment variable to Z3 build/installation directory.
 
 ### C++ CTemplate Installation
 

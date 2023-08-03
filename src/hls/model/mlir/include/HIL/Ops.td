@@ -26,7 +26,7 @@ class HIL_Container<string mnemonic, list<Trait> traits = []> :
   let assemblyFormat = "$body attr-dict";
   let regions = (region SizedRegion<1>: $body);
   let extraClassDeclaration = [{
-  Block *getBody() {
+  Block *getBodyBlock() {
     Region& region = getOperation()->getRegion(0);
     assert(region.hasOneBlock() && "The body should have one block.");
     return &region.front();
@@ -34,7 +34,7 @@ class HIL_Container<string mnemonic, list<Trait> traits = []> :
 }];
 }
 
-def HIL_Model : HIL_Container<"model"> {
+def HIL_ModelOp : HIL_Container<"model"> {
   let summary = "Model container.";
   let description = [{
     The `hil.model` operation
@@ -43,21 +43,14 @@ def HIL_Model : HIL_Container<"model"> {
   let assemblyFormat = "$name $body attr-dict";
 }
 
-def HIL_Graphs : HIL_Container<"graphs", [HasParent<"Model">]> {
+def HIL_GraphsOp : HIL_Container<"graphs", [HasParent<"ModelOp">]> {
   let summary = "Graphs container.";
   let description = [{
     Container of `hil.graph`
   }];
 }
 
-def HIL_Insts : HIL_Container<"insts", [HasParent<"Graph">]> {
-  let summary = "Insts container.";
-  let description = [{
-    Container of `hil.inst`
-  }];
-}
-
-def HIL_Graph : HIL_Container<"graph", [HasParent<"Graphs">]> {
+def HIL_GraphOp : HIL_Container<"graph", [HasParent<"GraphsOp">]> {
   let summary = "Graph.";
   let description = [{
     The `hil.graph` operation
@@ -67,45 +60,35 @@ def HIL_Graph : HIL_Container<"graph", [HasParent<"Graphs">]> {
   let assemblyFormat = "$name $body attr-dict";
 }
 
-def HIL_NodeTypes : HIL_Container<"nodetypes", [HasParent<"Model">]> {
+def HIL_NodeTypesOp : HIL_Container<"nodetypes", [HasParent<"ModelOp">]> {
   let summary = "Nodetypes container.";
   let description = [{
     Container of `hil.nodetype`
   }];
 }
 
-def HIL_Inst : HIL_Container<"inst", [HasParent<"Insts">]> {
-  let summary = "Instance.";
-  let description = [{
-    The `hil.inst` operation
-  }];
-
-  let arguments = (ins StrAttr:$name);
-  let assemblyFormat = "$name $body attr-dict";
-}
-
-def HIL_Chans : HIL_Container<"chans", [HasParent<"Graph">]> {
+def HIL_ChansOp : HIL_Container<"chans", [HasParent<"GraphOp">]> {
   let summary = "Chans container.";
   let description = [{
     Container of `hil.chan`
   }];
 }
 
-def HIL_Cons : HIL_Container<"cons", [HasParent<"Inst">]> {
-  let summary = "Cons container.";
-  let description = [{
-    Container of `hil.con`
-  }];
-}
-
-def HIL_Nodes : HIL_Container<"nodes", [HasParent<"Graph">]> {
+def HIL_NodesOp : HIL_Container<"nodes", [HasParent<"GraphOp">]> {
   let summary = "Nodes container.";
   let description = [{
     Container of `hil.node`
   }];
 }
 
-def HIL_NodeType : HIL_Op<"nodetype", [HasParent<"NodeTypes">]> {
+def HIL_ConsOp : HIL_Container<"cons", [HasParent<"NodeOp">]> {
+  let summary = "Connections container.";
+  let description = [{
+    Container of `hil.con`
+  }];
+}
+
+def HIL_NodeTypeOp : HIL_Op<"nodetype", [HasParent<"NodeTypesOp">]> {
   let summary = "Node type.";
   let description = [{
     The `hil.nodetype` operation for defining types of nodes
@@ -120,23 +103,7 @@ def HIL_NodeType : HIL_Op<"nodetype", [HasParent<"NodeTypes">]> {
   }];
 }
 
-def HIL_Node : HIL_Op<"node", [HasParent<"Nodes">]> {
-  let summary = "Node.";
-  let description = [{
-    The `hil.node` operation for defining nodes
-  }];
-
-  let arguments = (ins
-    StrAttr:$nodeTypeName,
-    StrAttr:$name,
-    StrArrayAttr:$commandArguments,
-    StrArrayAttr:$commandResults);
-  let assemblyFormat = [{
-    $nodeTypeName $name $commandArguments `=``>` $commandResults attr-dict
-  }];
-}
-
-def HIL_Chan : HIL_Op<"chan", [HasParent<"Chans">]> {
+def HIL_ChanOp : HIL_Op<"chan", [HasParent<"ChansOp">]> {
   let summary = "Channel.";
   let description = [{
     The `hil.chan` operation for defining channels
@@ -152,7 +119,30 @@ def HIL_Chan : HIL_Op<"chan", [HasParent<"Chans">]> {
   }];
 }
 
-def HIL_Con : HIL_Op<"con", [HasParent<"Cons">]> {
+def HIL_NodeOp : HIL_Op<"node", [NoTerminator, SingleBlock, HasParent<"NodesOp">]> {
+  let summary = "Node.";
+  let description = [{
+    The `hil.node` operation for defining nodes
+  }];
+  let regions = (region SizedRegion<1>: $body);
+  let arguments = (ins
+    StrAttr:$nodeTypeName,
+    StrAttr:$name,
+    StrArrayAttr:$commandArguments,
+    StrArrayAttr:$commandResults);
+  let assemblyFormat = [{
+    $nodeTypeName $name $commandArguments `=``>` $commandResults $body attr-dict
+  }];
+  let extraClassDeclaration = [{
+    Block *getBodyBlock() {
+      Region& region = getOperation()->getRegion(0);
+      assert(region.hasOneBlock() && "The body should have one block.");
+      return &region.front();
+    }
+  }];
+}
+
+def HIL_ConOp : HIL_Op<"con", [HasParent<"ConsOp">]> {
   let summary = "Connection.";
   let description = [{
     The `hil.con` operation for defining connections between graphs

@@ -24,6 +24,21 @@
 #include <optional>
 #include <vector>
 
+using BindingGraphAttr = mlir::hil::BindingGraphAttr;
+using BindingAttr = mlir::hil::BindingAttr;
+using ChansOp = mlir::hil::ChansOp;
+using ChanOp = mlir::hil::ChanOp;
+using ConsOp = mlir::hil::ConsOp;
+using ConOp = mlir::hil::ConOp;
+using GraphsOp = mlir::hil::GraphsOp;
+using GraphOp = mlir::hil::GraphOp;
+using ModelOp = mlir::hil::ModelOp;
+using NodeTypesOp = mlir::hil::NodeTypesOp;
+using NodeTypeOp = mlir::hil::NodeTypeOp;
+using NodesOp = mlir::hil::NodesOp;
+using NodeOp = mlir::hil::NodeOp;
+using PortAttr = mlir::hil::PortAttr;
+
 template <typename T, typename Iterator>
 std::vector<T> findElemsByType(Iterator first, Iterator last) {
   std::vector<T> result;
@@ -56,54 +71,46 @@ std::optional<T> findElemByType(Container &&c) {
 namespace mlir::hil {
 
   // Tries to find a Graph by name; returns nullptr if unsuccessful.
-  std::unique_ptr<mlir::hil::Graph> findGraph(mlir::hil::Graphs graphs,
-                                              const std::string &name);
+  std::unique_ptr<GraphOp> findGraph(GraphsOp graphs, const std::string &name);
   
   // Tries to find a Chan by name; returns nullptr if unsuccessful.
-  std::unique_ptr<mlir::hil::Chan> findChan(mlir::hil::Chans chans,
-                                            const std::string &name);
+  std::unique_ptr<ChanOp> findChan(ChansOp chans, const std::string &name);
   
   // Tries to find a Node by name; returns nullptr if unsuccessful.
-  std::unique_ptr<mlir::hil::Node> findNode(mlir::hil::Nodes nodes,
-                                            const std::string &name);
+  std::unique_ptr<NodeOp> findNode(NodesOp nodes, const std::string &name);
 
   // Tries to find a NodeType by name; returns nullptr if unsuccessful.
-  std::unique_ptr<mlir::hil::NodeType> findNodetype(
-      mlir::hil::NodeTypes nodeTypes,
-      const std::string &name);
-
-  // Tries to find an Inst by name; returns nullptr if unsuccessful.
-  std::unique_ptr<mlir::hil::Inst> findInst(mlir::hil::Insts insts,
-                                            const std::string &name);
+  std::unique_ptr<NodeTypeOp> findNodeType(NodeTypesOp nodeTypes,
+                                           const std::string &name);
 
   /// Returns parent model's name for the node.
-  std::string getModelName(mlir::hil::Node &node);
+  std::string getModelName(NodeOp &nodeOp);
 
   /// Returns parent model's name for the channel.
-  std::string getModelName(mlir::hil::Chan &chan);
+  std::string getModelName(ChanOp &chanOp);
 
   /// Returns (if exist) named graph that belongs to the model.
-  std::optional<Graph> getGraph(Model &model, const std::string &name);
+  std::optional<GraphOp> getGraphOp(ModelOp &modelOp, const std::string &name);
 
   /* Graph-related methods. */
-  std::vector<Node> getInputs(Graph &graph);
-  std::vector<Node> getSinks(Graph &graph);
-  std::vector<Chan> getChans(Graph &graph);
-  mlir::Block::OpListType& getNodes(Graph &graph);
+  std::vector<NodeOp> getSourcesAndConsts(GraphOp &graphOp);
+  std::vector<NodeOp> getSinks(GraphOp &graphOp);
+  std::vector<ChanOp> getChans(GraphOp &graphOp);
+  mlir::Block::OpListType& getNodes(GraphOp &graphOp);
 
   /* Node-related methods. */
-  std::vector<Chan> getInputs(Node &node);
-  std::vector<Chan> getOutputs(Node &node);
+  std::vector<ChanOp> getInputs(NodeOp &nodeOp);
+  std::vector<ChanOp> getOutputs(NodeOp &nodeOp);
 
   /* Type-checking methods. */
-  bool isConst(Node &node);
-  bool isDelay(Node &node);
-  bool isDup(Node &node);
-  bool isInstance(Node &node);
-  bool isKernel(Node &node);
-  bool isMerge(Node &node);
-  bool isSink(Node &node);
-  bool isSource(Node &node);
-  bool isSplit(Node &node);
+  bool isConst(NodeOp &nodeOp);
+  bool isDelay(NodeOp &nodeOp);
+  bool isDup(NodeOp &nodeOp);
+  bool isInstance(NodeOp &nodeOp);
+  bool isKernel(NodeOp &nodeOp);
+  bool isMerge(NodeOp &nodeOp);
+  bool isSink(NodeOp &nodeOp);
+  bool isSource(NodeOp &nodeOp);
+  bool isSplit(NodeOp &nodeOp);
 
 } // namespace mlir::hil

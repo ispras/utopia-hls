@@ -16,7 +16,7 @@ bool eqCheckTest(const std::string &fileM, const std::string &fileM2) {
 
   using EqChecker = eda::hls::eqchecker::EqChecker;
   using MLIRModule = mlir::model::MLIRModule;
-  using Model = mlir::hil::Model;
+  using Model = mlir::hil::ModelOp;
 
   // Get first model for equivalence checking.
   const std::string pathM = getenv("UTOPIA_HLS_HOME") + fileM;

@@ -24,8 +24,8 @@
 
 #include <iostream>
 
-using eda::hls::model::Model;
-using mlir::model::MLIRModule;
+using Model = eda::hls::model::Model;
+using MLIRModule = mlir::model::MLIRModule;
 
 namespace mlir::transforms {
 

@@ -111,16 +111,15 @@ std::unique_ptr<Element> Merge::construct() const {
 
   outputType = std::string("reg ");
 
-  for (auto port : ports) {
+  for (const auto &port : ports) {
     if (port.name == "clock" || port.name == "reset") {
       ifaceWires += std::string("input ") + port.name + ";\n";
       continue;
     }
 
     std::string portDeclr =
-      (port.width > 1 ? std::string("[") + std::to_string(port.width - 1)
-                                         + ":0] " : std::string(""))
-                                         + utils::replaceSomeChars(port.name) + ";\n";
+        (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) +
+        ":0] " : std::string("")) + utils::replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -143,9 +142,10 @@ std::unique_ptr<Element> Merge::construct() const {
   std::vector<std::string> portNames;
   std::string portName;
   ir += std::string("reg [31:0] state;\n");
-  ir += std::string("always @(posedge clock) begin\nif (!reset) begin\n  state <= 0; end\nelse");
+  ir += std::string("always @(posedge clock) begin\n +"
+                    "if (!reset) begin\n  state <= 0; end\nelse");
 
-  for (auto port : ports) {
+  for (const auto &port : ports) {
     if (port.name == "clock" || port.name == "reset") {
       continue;
     }
@@ -157,10 +157,10 @@ std::unique_ptr<Element> Merge::construct() const {
     }
   }
   unsigned counter = 0;
-  for (auto currName : portNames) {
+  for (const auto &currentName : portNames) {
     ir += std::string(" if (state == ") + std::to_string(counter) + ") begin\n";
     ir += std::string("  state <= ") + std::to_string(++counter) + ";\n  ";
-    ir += portName + " <= " + currName + "; end\nelse ";
+    ir += portName + " <= " + currentName + "; end\nelse ";
   }
   ir += std::string("begin\n  state <= 0; end\nend\n");
   element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;

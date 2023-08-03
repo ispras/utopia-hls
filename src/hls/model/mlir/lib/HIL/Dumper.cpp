@@ -29,11 +29,13 @@
 #include <iomanip>
 
 using eda::hls::model::Chan;
+using eda::hls::model::Con;
 using eda::hls::model::Graph;
 using eda::hls::model::Model;
 using eda::hls::model::Node;
 using eda::hls::model::NodeType;
 using eda::hls::model::Port;
+using eda::hls::model::BindingGraph;
 using eda::hls::model::Binding;
 
 namespace detail {
@@ -174,13 +176,13 @@ template <> void ModelDumper<NodeType>::dump() {
       if (printSep) {
         os << ", ";
       } else {
-        os << '\n';
+        os << ' ';
         printSep = true;
       }
       ModelDumper::get(*inputArg, os).dump();
     }
   }
-  os << '\n' << "] => [";
+  os << ' ' << "] => [";
   {
     IndentBlock _(os);
     bool printSep = false;
@@ -188,13 +190,13 @@ template <> void ModelDumper<NodeType>::dump() {
       if (printSep) {
         os << ", ";
       } else {
-        os << '\n';
+        os << ' ';
       }
       printSep = true;
       ModelDumper::get(*outputArg, os).dump();
     }
   }
-  os << '\n' << "]";
+  os << ' ' << "]";
 }
 
 template <> void ModelDumper<Chan>::dump() {
@@ -204,51 +206,62 @@ template <> void ModelDumper<Chan>::dump() {
   ModelDumper::get(node.target, os).dump();
 }
 
-template <> void ModelDumper<Node>::dump() {
-  os << "hil.node " << Quoted(node.type.name) << ' ' << Quoted(node.name)
-     << " [";
-  {
-    IndentBlock _(os);
-    bool printSep = false;
-    for (auto *inputChan : node.inputs) {
-      if (printSep) {
-        os << ", ";
-      } else {
-        os << '\n';
-        printSep = true;
-      }
-      os << Quoted(inputChan->name);
-    }
-  }
-  os << '\n' << "] => [";
-  {
-    IndentBlock _(os);
-    bool printSep = false;
-    for (auto *outputChan : node.outputs) {
-      if (printSep) {
-        os << ", ";
-      } else {
-        os << '\n';
-        printSep = true;
-      }
-      os << Quoted(outputChan->name);
-    }
-  }
-  os << '\n' << "]";
-}
-
 template <> void ModelDumper<Con>::dump() {
-  os << "hil.con" << " " << Quoted(node.type) << " " << Quoted(node.name) 
+  os << "hil.con" << " " << Quoted(node.type) << " " << Quoted(node.name)
      << " " << Quoted(node.dir) << " ";
   ModelDumper::get(node.source, os).dump();
   os << " == ";
   ModelDumper::get(node.target, os).dump();
 }
 
-template <> void ModelDumper<Graph>::dump() {
-  os << "hil.graph " << Quoted(node.name) << " {\n";
+template <> void ModelDumper<Node>::dump() {
+  os << "hil.node " << Quoted(node.type.name) << ' ' << Quoted(node.name)
+     << " [";
+  bool printSep = false;
+  for (auto *inputChan : node.inputs) {
+    if (printSep) {
+      os << ", ";
+    } else {
+      os << ' ';
+      printSep = true;
+    }
+    os << Quoted(inputChan->name);
+  }
+  os << ' ' << "] => [";
+  printSep = false;
+  for (auto *outputChan : node.outputs) {
+    if (printSep) {
+      os << ", ";
+    } else {
+      os << ' ';
+      printSep = true;
+    }
+    os << Quoted(outputChan->name);
+  }
+  os << ' ' << "] ";
+  os << "{\n";
+  if (node.type.isInstance()) {
     IndentBlock _(os);
-    os << "hil.chans {\n";
+    {
+      os << "hil.cons {\n";
+      {
+        IndentBlock _(os);
+        for (auto *con : node.cons) {
+          ModelDumper::get(*con, os).dump();
+          os << '\n';
+        }
+      }
+      os << "}\n"; // Cons Op close
+    }
+  }
+  os << "}\n"; // Node Op close
+}
+
+template <> void ModelDumper<Graph>::dump() {
+  os << "hil.graph " << Quoted(node.name) << " {\n"; // Graph Op open
+    {
+    IndentBlock _(os);
+    os << "hil.chans {\n"; // Chans Op open
     {
       IndentBlock _(os);
       for (auto *chan : node.chans) {
@@ -256,8 +269,11 @@ template <> void ModelDumper<Graph>::dump() {
         os << '\n';
       }
     }
-    os << "}\n";
-    os << "hil.nodes {\n";
+    os << "}\n"; // Chans Op close
+    }
+    {
+    IndentBlock _(os);
+    os << "hil.nodes {\n"; // Nodes Op open
     {
       IndentBlock _(os);
       for (auto *node : node.nodes) {
@@ -265,63 +281,43 @@ template <> void ModelDumper<Graph>::dump() {
         os << '\n';
       }
     }
-    os << "}\n";
-    os << "hil.insts {\n";
-    {
-      IndentBlock _(os);
-      for (const auto &pair : node.cons) {
-        os << "hil.inst " << Quoted(pair.first) << " {\n";
-        {
-          IndentBlock _(os);
-          os << "hil.cons " << "{\n";
-          {
-            IndentBlock _(os);
-            for (auto *con : pair.second) {
-              ModelDumper::get(*con, os).dump();
-              os << '\n';
-          }
-          os << "}\n"; // Cons close
-          }
-        os << "}\n"; // Inst close
-        }
-      }
+    os << "}\n"; // Nodes Op close
     }
-    os << "}\n"; // Insts close
-  os << "}\n";// Graph close
+  os << "}\n"; // Graph Op close
 }
 
 template <> void ModelDumper<Model>::dump() {
-  os << "hil.model " << Quoted(node.name) << " {" << '\n';
+  os << "hil.model " << Quoted(node.name) << " {" << '\n'; // Model Op open
   {
     IndentBlock _(os);
-    os << "hil.nodetypes {\n";
+    os << "hil.nodetypes {\n"; // NodeTypes Op open
     {
       IndentBlock _(os);
-      for (auto nodeTypeIterator = node.nodetypes.begin();
-           nodeTypeIterator != node.nodetypes.end();
+      for (auto nodeTypeIterator = node.nodetypes.cbegin();
+           nodeTypeIterator != node.nodetypes.cend();
            nodeTypeIterator++) {
         ModelDumper::get(*(nodeTypeIterator->second), os).dump();
         os << '\n';
       }
     }
-    os << "}\n";
+    os << "}\n"; // NodeTypes Op close
     
-    os << "hil.graphs {\n";
+    os << "hil.graphs {\n"; // Graphs Op open
     {
       IndentBlock _(os);
       for (auto *graph : node.graphs) {
         ModelDumper::get(*graph, os).dump();
       }
     }
-    os << "}\n";
+    os << "}\n"; // Graphs Op close
   }
-  os << "}\n";
+  os << "}\n"; // Model Op close
 }
 
 } // namespace detail
 
 namespace eda::hls::model {
-std::ostream &dumpModelMlir(const eda::hls::model::Model &model,
+std::ostream &dumpModelMlir(const Model &model,
                             std::ostream &os) {
   os << std::fixed << std::setprecision(8);
   detail::IndentedOstream ios(os, 2, ' ');
@@ -329,7 +325,7 @@ std::ostream &dumpModelMlir(const eda::hls::model::Model &model,
   return os;
 }
 
-void dumpModelMlirToFile(const eda::hls::model::Model &model,
+void dumpModelMlirToFile(const Model &model,
                          const std::string &filename) {
   std::ofstream os(filename);
   dumpModelMlir(model, os);

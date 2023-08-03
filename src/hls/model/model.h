@@ -31,13 +31,16 @@ struct NodeType;
 
 } // namespace eda::hls::model
 
+using MetaElement = eda::hls::library::MetaElement;
+using NodeType = eda::hls::model::NodeType;
+
 namespace eda::hls::model {
 /// Key for MetaElement / Nodetype / Unit 
 struct Signature {
   Signature(const std::string &name, 
             const std::vector<std::string> &inputTypeNames,
             const std::vector<std::string> &outputTypeNames);
-  Signature(const eda::hls::model::NodeType &nodeType);
+  Signature(const NodeType &nodeType);
   bool operator==(const Signature &signature) const;
 
   std::string name;
@@ -47,10 +50,12 @@ struct Signature {
 
 } // namespace eda::hls::model
 
+using Signature = eda::hls::model::Signature;
+
 namespace std {
 template<>
-struct hash<eda::hls::model::Signature> {
-  size_t operator()(const eda::hls::model::Signature &signature) const {
+struct hash<Signature> {
+  size_t operator()(const Signature &signature) const {
     size_t hash = std::hash<std::string>()(signature.name);
     for (const auto &inputTypeName : signature.inputTypeNames) {
       hash = hash * 13 + std::hash<std::string>()(inputTypeName);
@@ -85,7 +90,7 @@ struct Type {
     TENSOR  // tensor<Type, Dim1, ..., DimN>
   };
 
-  static const Type& get(const std::string &name);
+  static const Type &get(const std::string &name);
 
   Type(Kind kind, const std::string &name, std::size_t size):
     kind(kind), name(name), size(size) {}
@@ -189,7 +194,7 @@ private:
     std::stringstream out;
 
     out << "tensor_" << type->name;
-    for (auto dim : dims)
+    for (const auto &dim : dims)
       out << "_" << dim;
 
     return out.str();
@@ -198,7 +203,7 @@ private:
   static std::size_t size(const Type *type,
                           const std::vector<std::size_t> &dims) {
     std::size_t mul = 1;
-    for (auto dim : dims)
+    for (const auto &dim : dims)
       mul *= dim;
 
     return type->size * mul;
@@ -222,7 +227,7 @@ struct Value final {
     return std::to_string(value);
   }
 
-  long long value;
+  long long value{ 0 };
 };
 
 //===----------------------------------------------------------------------===//
@@ -276,13 +281,13 @@ struct NodeType final {
     outputs.push_back(output);
   }
 
-  Port* findInput(const std::string &name) const {
+  Port *findInput(const std::string &name) const {
     auto i = std::find_if(inputs.begin(), inputs.end(),
       [&name](Port *port) { return port->name == name; });
     return i != inputs.end() ? *i : nullptr;
   }
 
-  Port* findOutput(const std::string &name) const {
+  Port *findOutput(const std::string &name) const {
     auto i = std::find_if(outputs.begin(), outputs.end(),
       [&name](Port *port) { return port->name == name; });
     return i != outputs.end() ? *i : nullptr;
@@ -401,7 +406,7 @@ struct Chan final {
   /// Reference to the parent.
   Graph &graph;
 
-  size_t latency = 0;
+  size_t latency{ 0 };
 
   /// Indicators.
   ChanInd ind;
@@ -464,30 +469,39 @@ struct Node final {
     outputs.push_back(output);
   }
 
-  Chan* findInput(const std::string &name) const {
+  void addCon(Con *con) {
+    cons.push_back(con);
+  }
+
+  Chan *findInput(const std::string &name) const {
     auto i = std::find_if(inputs.begin(), inputs.end(),
       [&name](Chan *chan) { return chan->name == name; });
     return i != inputs.end() ? *i : nullptr;
   }
 
-  Chan* findOutput(const std::string &name) const {
+  Chan *findOutput(const std::string &name) const {
     auto i = std::find_if(outputs.begin(), outputs.end(),
       [&name](Chan *chan) { return chan->name == name; });
     return i != outputs.end() ? *i : nullptr;
   }
 
-  bool isConst()  const { return type.isConst();  }
-  bool isSource() const { return type.isSource(); }
-  bool isSink()   const { return type.isSink();   }
-  bool isMerge()  const { return type.isMerge();  }
-  bool isSplit()  const { return type.isSplit();  }
-  bool isDup()    const { return type.isDup();    }
-  bool isDelay()  const { return type.isDelay();  }
+  bool isConst()    const { return type.isConst();    }
+  bool isSource()   const { return type.isSource();   }
+  bool isSink()     const { return type.isSink();     }
+  bool isMerge()    const { return type.isMerge();    }
+  bool isSplit()    const { return type.isSplit();    }
+  bool isDup()      const { return type.isDup();      }
+  bool isMux()      const { return type.isMux();      }
+  bool isDelay()    const { return type.isDelay();    }
+  bool isCast()     const { return type.isCast();     }
+  bool isInstance() const { return type.isInstance(); }
 
   const std::string name;
   const NodeType &type;
   std::vector<Chan*> inputs;
   std::vector<Chan*> outputs;
+
+  std::vector<Con*> cons;
 
   /// Reference to the parent.
   Graph &graph;
@@ -524,24 +538,13 @@ struct Graph final {
     }
   }
 
-  void addCon(const std::string &instanceName, Con *con) {
-    auto iterator = cons.find(instanceName);
-    if (iterator != cons.end()) {
-      iterator->second.push_back(con);
-    } else {
-      std::vector<Con*> consToInstance;
-      consToInstance.push_back(con);
-      cons.insert({ instanceName, consToInstance });
-    }
-  }
-
-  Chan* findChan(const std::string &name) const {
+  Chan *findChan(const std::string &name) const {
     auto i = std::find_if(chans.begin(), chans.end(),
       [&name](Chan *chan) { return chan->name == name; });
     return i != chans.end() ? *i : nullptr;
   }
 
-  Node* findNode(const std::string &name) const {
+  Node *findNode(const std::string &name) const {
     auto i = std::find_if(nodes.begin(), nodes.end(),
       [&name](Node *node) { return node->name == name; });
     return i != nodes.end() ? *i : nullptr;
@@ -566,15 +569,15 @@ struct Graph final {
   bool hasNode(Node *node) const { return true; }
   bool hasEdge(Chan *chan) const { return true; }
 
-  const std::vector<Node*>& getSources() const {
+  const std::vector<Node*> &getSources() const {
     return sources;
   }
 
-  const std::vector<Chan*>& getOutEdges(Node *node) const {
+  const std::vector<Chan*> &getOutEdges(Node *node) const {
     return node->outputs;
   }
 
-  Node* leadsTo(Chan *chan) const {
+  Node *leadsTo(Chan *chan) const {
     return const_cast<Node*>(chan->target.node);
   }
 
@@ -585,9 +588,6 @@ struct Graph final {
   const std::string name;
   std::vector<Chan*> chans;
   std::vector<Node*> nodes;
-
-  /// Connections to other graphs.
-  std::unordered_map<std::string, std::vector<Con*>> cons;
 
   std::vector<Node*> sources;
   std::vector<Node*> targets;
@@ -614,19 +614,19 @@ struct Model final {
     graphs.push_back(graph);
   }
   
-  NodeType* findNodetype(const Signature &signature) const {
+  NodeType *findNodetype(const Signature &signature) const {
     auto nodeTypeIterator = nodetypes.find(signature);
     return nodeTypeIterator != nodetypes.end() ? nodeTypeIterator->second :
                                                  nullptr;
   }
 
-  Graph* findGraph(const std::string &name) const {
+  Graph *findGraph(const std::string &name) const {
     auto i = std::find_if(graphs.begin(), graphs.end(),
       [&name](Graph *graph) { return graph->name == name; });
     return i != graphs.end() ? *i : nullptr;
   }
 
-  Graph* main() const {
+  Graph *main() const {
     return graphs.size() == 1 ? *graphs.begin() : findGraph("main");
   }
 
@@ -649,13 +649,13 @@ struct Model final {
 // Output
 //===----------------------------------------------------------------------===//
 
-std::ostream& operator<<(std::ostream &out, const Type &type);
-std::ostream& operator<<(std::ostream &out, const Port &port);
-std::ostream& operator<<(std::ostream &out, const NodeType &nodetype);
-std::ostream& operator<<(std::ostream &out, const Chan &chan);
-std::ostream& operator<<(std::ostream &out, const Con &con);
-std::ostream& operator<<(std::ostream &out, const Node &node);
-std::ostream& operator<<(std::ostream &out, const Graph &graph);
-std::ostream& operator<<(std::ostream &out, const Model &model);
+std::ostream &operator<<(std::ostream &out, const Type &type);
+std::ostream &operator<<(std::ostream &out, const Port &port);
+std::ostream &operator<<(std::ostream &out, const NodeType &nodetype);
+std::ostream &operator<<(std::ostream &out, const Chan &chan);
+std::ostream &operator<<(std::ostream &out, const Con &con);
+std::ostream &operator<<(std::ostream &out, const Node &node);
+std::ostream &operator<<(std::ostream &out, const Graph &graph);
+std::ostream &operator<<(std::ostream &out, const Model &model);
 
 } // namespace eda::hls::model

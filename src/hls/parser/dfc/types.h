@@ -48,7 +48,7 @@ template<std::size_t IntBits, std::size_t FracBits, bool IsSigned>
 struct fix: public basic {
   static constexpr std::size_t type_size = IntBits + FracBits;
 
-  static eda::hls::model::Type& type_info() {
+  static eda::hls::model::Type &type_info() {
     static auto type = eda::hls::model::FixedType(IntBits, FracBits, IsSigned);
     return type;
   } 

@@ -16,13 +16,13 @@ namespace eda::hls::eqchecker {
 
 std::unique_ptr<EqChecker> EqChecker::instance = nullptr;
 
-bool EqChecker::equivalent(Model &lhs, Model &rhs) const {
+bool EqChecker::equivalent(ModelOp &lhs, ModelOp &rhs) const {
 
   Context ctx;
   ExprVector nodes(ctx);
 
-  OptionalGraph lGraphOpt = mlir::hil::getGraph(lhs, "main");
-  OptionalGraph rGraphOpt = mlir::hil::getGraph(rhs, "main");
+  OptionalGraphOp lGraphOpt = mlir::hil::getGraphOp(lhs, "main");
+  OptionalGraphOp rGraphOpt = mlir::hil::getGraphOp(rhs, "main");
 
   if (!lGraphOpt.has_value() || !rGraphOpt.has_value()) {
     std::cerr << ": One of models doesn't have main graph." << std::endl;
@@ -36,9 +36,9 @@ bool EqChecker::equivalent(Model &lhs, Model &rhs) const {
   makeExprs(rGraph, ctx, nodes);
 
   // create equations for graph inputs
-  const NodeVector lInputs = getInputs(lGraph);
-  const NodeVector rInputs = getInputs(rGraph);
-  NodePairList sources;
+  const NodeOpVector lInputs = getSourcesAndConsts(lGraph);
+  const NodeOpVector rInputs = getSourcesAndConsts(rGraph);
+  NodeOpPairList sources;
 
   if (!match(lInputs, rInputs, sources)) {
     std::cerr << "Cannot match graphs inputs!" << std::endl;
@@ -47,18 +47,18 @@ bool EqChecker::equivalent(Model &lhs, Model &rhs) const {
 
   for (const auto &inPair : sources) {
 
-    Node fIn = inPair.first;
-    Node sIn = inPair.second;
+    NodeOp fIn = inPair.first;
+    NodeOp sIn = inPair.second;
 
-    ChanVector fOuts = getOutputs(fIn);
-    ChanVector sOuts = getOutputs(sIn);
+    ChanOpVector fOuts = getOutputs(fIn);
+    ChanOpVector sOuts = getOutputs(sIn);
 
     assert(fOuts.size() == sOuts.size());
 
     for (size_t i = 0; i < fOuts.size(); i++) {
 
-      Chan fOut = fOuts[i];
-      Chan sOut = sOuts[i];
+      ChanOp fOut = fOuts[i];
+      ChanOp sOut = sOuts[i];
 
       const Expr fFunc = toInFunc(fIn, fOut, ctx);
       const Expr sFunc = toInFunc(sIn, sOut, ctx);
@@ -69,9 +69,9 @@ bool EqChecker::equivalent(Model &lhs, Model &rhs) const {
   }
 
   // create inequations for outputs
-  const NodeVector lOuts = getSinks(lGraph);
-  const NodeVector rOuts = getSinks(rGraph);
-  NodePairList outMatch;
+  const NodeOpVector lOuts = getSinks(lGraph);
+  const NodeOpVector rOuts = getSinks(rGraph);
+  NodeOpPairList outMatch;
 
   if (!match(lOuts, rOuts, outMatch)) {
 
@@ -81,12 +81,12 @@ bool EqChecker::equivalent(Model &lhs, Model &rhs) const {
 
   for (const auto &outPair : outMatch) {
 
-    Node fOut = outPair.first;
-    Node sOut = outPair.second;
+    NodeOp fOut = outPair.first;
+    NodeOp sOut = outPair.second;
 
     // function names
-    const std::string fName = fOut.nodeTypeName().str();
-    const std::string sName = sOut.nodeTypeName().str();
+    const std::string fName = fOut.getNodeTypeName().str();
+    const std::string sName = sOut.getNodeTypeName().str();
 
     // output sorts
     const Sort fOutSort = getSort(fOut, ctx);
@@ -133,9 +133,9 @@ bool EqChecker::equivalent(Model &lhs, Model &rhs) const {
 }
 
 bool EqChecker::match(
-    const NodeVector &lhs,
-    const NodeVector &rhs,
-    NodePairList &matched) const {
+    const NodeOpVector &lhs,
+    const NodeOpVector &rhs,
+    NodeOpPairList &matched) const {
 
   size_t lSize = lhs.size();
   size_t rSize = rhs.size();
@@ -146,14 +146,14 @@ bool EqChecker::match(
 
   for (size_t i = 0; i < lSize; i++) {
 
-    Node lNode = lhs[i];
-    std::string lName = lNode.name().str();
+    NodeOp lNode = lhs[i];
+    std::string lName = lNode.getName().str();
     bool hasMatch = false;
 
     for (size_t j = 0; j < rSize; j++) {
 
-      Node rNode = rhs[j];
-      std::string rName = rNode.name().str();
+      NodeOp rNode = rhs[j];
+      std::string rName = rNode.getName().str();
 
       if (lName == rName) {
 
@@ -170,16 +170,18 @@ bool EqChecker::match(
   return true;
 }
 
-void EqChecker::makeExprs(Graph &graph, Context &ctx, ExprVector &nodes) const {
+void EqChecker::makeExprs(GraphOp &graphOp,
+                          Context &ctx,
+                          ExprVector &nodes) const {
 
   // create equations for channels
-  ChanVector gChannels = getChans(graph);
+  ChanOpVector gChannels = getChans(graphOp);
 
-  for (auto &ch : gChannels) {
+  for (auto &chanOp : gChannels) {
 
-    Expr src = toConst(ch, ch.nodeFrom(), ctx);
-    Expr dst = toConst(ch, ch.nodeTo(), ctx);
-    Expr chConst = toConst(ch, ctx);
+    Expr src = toConst(chanOp, chanOp.getNodeFrom(), ctx);
+    Expr dst = toConst(chanOp, chanOp.getNodeTo(), ctx);
+    Expr chConst = toConst(chanOp, ctx);
 
     const Expr srcExpr = src == chConst;
     nodes.push_back(srcExpr);
@@ -188,67 +190,67 @@ void EqChecker::makeExprs(Graph &graph, Context &ctx, ExprVector &nodes) const {
   }
 
   // create equations for nodes
-  auto &gNodes = getNodes(graph);
+  auto &gNodes = getNodes(graphOp);
 
   for (auto &node_op : gNodes) {
 
-    Node node = mlir::cast<Node>(node_op);
+    NodeOp nodeOp = mlir::cast<NodeOp>(node_op);
 
-    if (isDelay(node)) {
+    if (isDelay(nodeOp)) {
 
-      // treat delay node as in-to-out channel
-      Chan input = getInputs(node)[0];
-      Chan output = getOutputs(node)[0];
+      // treat delay nodeOp as in-to-out channel
+      ChanOp input = getInputs(nodeOp)[0];
+      ChanOp output = getOutputs(nodeOp)[0];
 
-      const Expr in = toConst(input, input.nodeTo(), ctx);
-      const Expr out = toConst(output, output.nodeFrom(), ctx);
+      const Expr in = toConst(input, input.getNodeTo(), ctx);
+      const Expr out = toConst(output, output.getNodeFrom(), ctx);
 
       const Expr delayExpr = in == out;
 
       nodes.push_back(delayExpr);
 
-    } else if (isKernel(node)) {
+    } else if (isKernel(nodeOp)) {
 
-      std::vector<Chan> nodeOuts = getOutputs(node);
+      std::vector<ChanOp> nodeOuts = getOutputs(nodeOp);
 
       // create equation for every output port of kernel node
       for (auto &nOut : nodeOuts) {
 
         // function name
-        const Binding nOutBnd = nOut.nodeFrom();
-        const Port port = nOutBnd.getPort();
+        const BindingAttr nOutBnd = nOut.getNodeFrom();
+        const PortAttr port = nOutBnd.getPort();
         const std::string pName = port.getName();
-        const std::string tName = node.nodeTypeName().str();
+        const std::string tName = nodeOp.getNodeTypeName().str();
         const bool oneOut = nodeOuts.size() == 1;
         const std::string fName = oneOut ? tName : tName + "_" + pName;
 
         // input/output sorts for kernel function
-        const SortVector sorts = getInSorts(node, ctx);
+        const SortVector sorts = getInSorts(nodeOp, ctx);
         const Sort fSort = getSort(port, ctx);
 
         // kernel function
         const FuncDecl kernel = function(fName.c_str(), sorts, fSort);
-        const ExprVector kArgs = getFuncArgs(node, ctx);
+        const ExprVector kArgs = getFuncArgs(nodeOp, ctx);
 
         // create equation & store it
         const Expr kernEq = kernel(kArgs) == toConst(nOut, nOutBnd, ctx);
         nodes.push_back(kernEq);
       }
-    } else if (isMerge(node)) {
+    } else if (isMerge(nodeOp)) {
 
       // merge node has the only output
-      Chan nodeOut = getOutputs(node)[0];
-      Binding outBnd = nodeOut.nodeFrom();
+      ChanOp nodeOut = getOutputs(nodeOp)[0];
+      BindingAttr outBnd = nodeOut.getNodeFrom();
 
       const Expr outConst = toConst(nodeOut, outBnd, ctx);
       ExprVector mergeVec(ctx);
 
-      ChanVector nodeInputs = getInputs(node);
+      ChanOpVector nodeInputs = getInputs(nodeOp);
 
       // create equation for every input of node
       for (auto &nodeInput : nodeInputs) {
 
-        Binding inBnd = nodeInput.nodeTo();
+        BindingAttr inBnd = nodeInput.getNodeTo();
         const Expr inConst = toConst(nodeInput, inBnd, ctx);
 
         mergeVec.push_back(outConst == inConst);
@@ -256,24 +258,24 @@ void EqChecker::makeExprs(Graph &graph, Context &ctx, ExprVector &nodes) const {
 
       nodes.push_back(mk_or(mergeVec));
 
-    } else if (isDup (node) || isSplit(node)) {
+    } else if (isDup (nodeOp) || isSplit(nodeOp)) {
 
       // split node has the only input
-      auto inputs = getInputs(node);
+      auto inputs = getInputs(nodeOp);
       assert(inputs.size() == 1);
 
-      Chan nodeInput = inputs[0];
-      Binding inBnd = nodeInput.nodeTo();
+      ChanOp nodeInput = inputs[0];
+      BindingAttr inBnd = nodeInput.getNodeTo();
 
       const Expr inConst = toConst(nodeInput, inBnd, ctx);
       ExprVector splitVec(ctx);
 
-      ChanVector nodeOutputs = getOutputs(node);
+      ChanOpVector nodeOutputs = getOutputs(nodeOp);
 
       // create equation for every output of node
       for (auto &nodeOut : nodeOutputs) {
 
-        Binding outBnd = nodeOut.nodeFrom();
+        BindingAttr outBnd = nodeOut.getNodeFrom();
         const Expr outConst = toConst(nodeOut, outBnd, ctx);
         const Expr outEq = inConst == outConst;
         splitVec.push_back(outEq);
@@ -281,89 +283,93 @@ void EqChecker::makeExprs(Graph &graph, Context &ctx, ExprVector &nodes) const {
 
       nodes.push_back(mk_and(splitVec));
 
-    } else if (!isSink(node) && !isSource(node)) {
+    } else if (!isSink(nodeOp) && !isSource(nodeOp)) {
 
       // sink or source, do nothing
-      const auto nodeType = node.nodeTypeName().str();
+      const auto nodeType = nodeOp.getNodeTypeName().str();
       std::cerr << "Unsupported node type: " + nodeType << std::endl;
     }
   }
 }
 
-Sort EqChecker::getSort(Node &node, Context &ctx) const {
+Sort EqChecker::getSort(NodeOp &nodeOp, Context &ctx) const {
 
-  return ctx.uninterpreted_sort(node.nodeTypeName().str().c_str());
+  return ctx.uninterpreted_sort(nodeOp.getNodeTypeName().str().c_str());
 }
 
-Sort EqChecker::getSort(Port port, Context &ctx) const {
+Sort EqChecker::getSort(PortAttr port, Context &ctx) const {
 
   return ctx.uninterpreted_sort(port.getTypeName().c_str());
 }
 
-Expr EqChecker::toConst(Chan &ch, const Binding &bnd, Context &ctx) const {
+Expr EqChecker::toConst(ChanOp &chanOp,
+                        const BindingAttr &bnd,
+                        Context &ctx) const {
 
   const auto port = bnd.getPort();
   const std::string name = port.getName();
   const Sort fInSort = getSort(port, ctx);
-  const std::string modelName = getModelName(ch);
+  const std::string modelName = getModelName(chanOp);
   const std::string nodeName = bnd.getNodeName().str();
   const std::string constName = modelName + "_" + nodeName + "_" + name;
 
   return ctx.constant(constName.c_str(), fInSort);
 }
 
-Expr EqChecker::toConst(Node &node, Context &ctx) const {
+Expr EqChecker::toConst(NodeOp &nodeOp, Context &ctx) const {
 
-  const Sort fInSort = getSort(node, ctx);
-  const std::string modelName = getModelName(node);
-  const std::string constName = modelName + "_" + node.name().str();
+  const Sort fInSort = getSort(nodeOp, ctx);
+  const std::string modelName = getModelName(nodeOp);
+  const std::string constName = modelName + "_" + nodeOp.getName().str();
 
   return ctx.constant(constName.c_str(), fInSort);
 }
 
-Expr EqChecker::toConst(Chan &ch, Context &ctx) const {
+Expr EqChecker::toConst(ChanOp &chanOp, Context &ctx) const {
 
-  const auto fromPort = ch.nodeFrom().getPort();
-  const auto toPort = ch.nodeTo().getPort();
+  const auto fromPort = chanOp.getNodeFrom().getPort();
+  const auto toPort = chanOp.getNodeTo().getPort();
   assert(fromPort.getTypeName() == toPort.getTypeName());
 
-  return ctx.constant(ch.varName().str().c_str(), getSort(fromPort, ctx));
+  return ctx.constant(chanOp.getVarName().str().c_str(),
+                      getSort(fromPort, ctx));
 }
 
-Expr EqChecker::toInFunc(Node &node, Chan &ch, Context &ctx) const {
+Expr EqChecker::toInFunc(NodeOp &nodeOp, ChanOp &chanOp, Context &ctx) const {
 
-  const std::string modelName = getModelName(node);
-  const std::string nodeName = node.name().str();
-  const std::string chName = ch.nodeFrom().getPort().getName();
-  const std::string funcName = modelName + "_" + nodeName + "_" + chName;
-  const Sort fSort = getSort(ch.nodeFrom().getPort(), ctx);
+  const std::string modelOpName = getModelName(nodeOp);
+  const std::string nodeOpName = nodeOp.getName().str();
+  const std::string chanOpName = chanOp.getNodeFrom().getPort().getName();
+  const std::string funcName = modelOpName + "_" + nodeOpName + "_"
+                                           + chanOpName;
+  const Sort fSort = getSort(chanOp.getNodeFrom().getPort(), ctx);
   SortVector sorts(ctx);
   const FuncDecl func = function(funcName.c_str(), sorts, fSort);
 
   return func(ExprVector(ctx));
 }
 
-SortVector EqChecker::getInSorts(Node &node, Context &ctx) const {
+SortVector EqChecker::getInSorts(NodeOp &nodeOp, Context &ctx) const {
 
-  auto inputs = getInputs(node);
+  auto inputs = getInputs(nodeOp);
   SortVector sorts(ctx);
 
   for (size_t i = 0; i < inputs.size(); i++) {
 
-    Port targetPort = inputs[i].nodeTo().getPort();
+    PortAttr targetPort = inputs[i].getNodeTo().getPort();
     sorts.push_back(getSort(targetPort, ctx));
   }
   return sorts;
 }
 
-ExprVector EqChecker::getFuncArgs(Node &node, Context &ctx) const {
+ExprVector EqChecker::getFuncArgs(NodeOp &nodeOp, Context &ctx) const {
 
-  ChanVector inputs = getInputs(node);
+  ChanOpVector inputs = getInputs(nodeOp);
   ExprVector args(ctx);
 
   for (size_t i = 0; i < inputs.size(); i++) {
 
-    Binding bnd = inputs[i].nodeTo();
+    BindingAttr bnd = inputs[i].getNodeTo();
     args.push_back(toConst(inputs[i], bnd, ctx));
   }
   return args;

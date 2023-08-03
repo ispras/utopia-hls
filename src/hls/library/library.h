@@ -45,7 +45,7 @@ struct Port {
   Port(const std::string &name,
        const Direction direction,
        const unsigned width,
-       const model::Parameter &param,
+       const Parameter &param,
        const Type type = Type::DATA):
     name(name),
     direction(direction),

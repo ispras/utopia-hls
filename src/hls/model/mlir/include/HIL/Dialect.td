@@ -30,6 +30,7 @@ def HIL_Dialect : Dialect {
       (HIL) which is an input for the Utopia EDA.
   }];
   let cppNamespace = "::mlir::hil";
+  let useDefaultAttributePrinterParser = 1;
 }
 
 //===----------------------------------------------------------------------===//
@@ -39,8 +40,14 @@ def HIL_Dialect : Dialect {
 class HIL_Op<string mnemonic, list<Trait> traits = []> :
         Op<HIL_Dialect, mnemonic, traits>;
 
-class HIL_Type<string name> : TypeDef<HIL_Dialect, name> { }
+class HIL_Type<string name, string typeMnemonic, list<Trait> traits = []>
+    : TypeDef<HIL_Dialect, name, traits> {
+  let mnemonic = typeMnemonic;
+}
 
-class HIL_Attr<string name> : AttrDef<HIL_Dialect, name> { }
+class HIL_Attr<string name, string attrMnemonic, list<Trait> traits = []>
+    : AttrDef<HIL_Dialect, name, traits> {
+  let mnemonic = attrMnemonic;
+}
 
 #endif // HIL_DIALECT

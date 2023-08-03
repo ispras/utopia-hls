@@ -30,15 +30,13 @@
 #include <iostream>
 #include <optional>
 
-using eda::hls::model::Model;
-using eda::hls::parser::hil::Builder;
+using Builder = eda::hls::parser::hil::Builder;
 
 namespace mlir::model {
 MLIRModule MLIRModule::loadFromMlir(const std::string &string) {
-  auto context = std::make_unique<mlir::MLIRContext>();
-  context->getOrLoadDialect<mlir::hil::HILDialect>();
-  context->getOrLoadDialect<mlir::arith::ArithmeticDialect>();
-  auto module = mlir::parseSourceString<mlir::ModuleOp>(string, context.get());
+  auto context = std::make_unique<MLIRContext>();
+  context->getOrLoadDialect<HILDialect>();
+  auto module = mlir::parseSourceString<ModuleOp>(string, context.get());
   return {std::move(context), std::move(module)};
 }
 
@@ -53,7 +51,7 @@ MLIRModule MLIRModule::loadFromMlirFile(const std::string &filename) {
   return loadFromMlir(buf.str());
 }
 
-MLIRModule MLIRModule::loadFromModel(const eda::hls::model::Model &model) {
+MLIRModule MLIRModule::loadFromModel(const Model &model) {
   std::stringstream buf;
   dumpModelMlir(model, buf);
 
@@ -62,8 +60,8 @@ MLIRModule MLIRModule::loadFromModel(const eda::hls::model::Model &model) {
 
 void MLIRModule::print(llvm::raw_ostream &os) { module->print(os); }
 
-mlir::hil::Model MLIRModule::getRoot() {
-  return mlir::cast<mlir::hil::Model>(*module->getOps().begin());
+ModelOp MLIRModule::getRoot() {
+  return mlir::cast<ModelOp>(*module->getOps().begin());
 }
 
 MLIRModule::MLIRModule(MLIRModule &&oth)
@@ -79,8 +77,8 @@ MLIRModule MLIRModule::clone() { return {context, module->clone()}; }
 
 MLIRContext *MLIRModule::getContext() { return module->getContext(); }
 
-MLIRModule::MLIRModule(std::shared_ptr<mlir::MLIRContext> context,
-                       mlir::OwningOpRef<mlir::ModuleOp> &&module)
+MLIRModule::MLIRModule(std::shared_ptr<MLIRContext> context,
+                       mlir::OwningOpRef<ModuleOp> &&module)
     : context(std::move(context)), module(std::move(module)) {}
 } // namespace mlir::model
 
@@ -112,182 +110,170 @@ MLIRBuilder<T>::buildModelFromMlir(MLIRModule &mlirModule,
   return builder.create();
 }
 
-template <> void MLIRBuilder<mlir::hil::PortAttr>::build() {
+template <> void MLIRBuilder<PortAttr>::build() {
   auto isConst = node.getIsConst();
   if (isConst == 0) {
     builder.addPort(node.getName(), node.getTypeName(),
-                     std::to_string(node.getFlow()),
-                     std::to_string(node.getLatency()));
+                    std::to_string(node.getFlow()),
+                    std::to_string(node.getLatency()));
   } else {
     auto value = node.getValue();
     builder.addPort(node.getName(), node.getTypeName(),
-                     std::to_string(node.getFlow()),
-                     std::to_string(node.getLatency()),
-                     std::to_string(value));
+                    std::to_string(node.getFlow()),
+                    std::to_string(node.getLatency()),
+                    std::to_string(value));
   }
 }
 
-template <> void MLIRBuilder<mlir::hil::NodeType>::build() {
-  builder.startNodetype(node.name().str());
+template <> void MLIRBuilder<NodeTypeOp>::build() {
+  builder.startNodetype(node.getName().str());
   // Build inputs
-  for (auto op : node.commandArguments()) {
-    auto inPortOp = op.cast<mlir::Attribute>().cast<mlir::hil::PortAttr>();
-    MLIRBuilder::get(inPortOp, builder).build();
+  for (auto op : node.getCommandArguments()) {
+    auto inPortAttr = op.cast<mlir::Attribute>().cast<PortAttr>();
+    MLIRBuilder::get(inPortAttr, builder).build();
   }
   // Build outputs
   builder.startOutputs();
-  for (auto op : node.commandResults()) {
-    auto outPortOp = op.cast<mlir::Attribute>().cast<mlir::hil::PortAttr>();
-    MLIRBuilder::get(outPortOp, builder).build();
+  for (auto op : node.getCommandResults()) {
+    auto outPortAttr = op.cast<mlir::Attribute>().cast<PortAttr>();
+    MLIRBuilder::get(outPortAttr, builder).build();
   }
   builder.endNodetype();
 }
 
-template <> void MLIRBuilder<mlir::hil::NodeTypes>::build() {
-  for (auto &op : node.getBody()->getOperations()) {
-    auto nodetypeOp = mlir::cast<mlir::hil::NodeType>(op);
-    MLIRBuilder::get(nodetypeOp, builder).build();
+template <> void MLIRBuilder<NodeTypesOp>::build() {
+  for (auto &op : node.getBodyBlock()->getOperations()) {
+    auto nodeTypeOp = mlir::cast<NodeTypeOp>(op);
+    MLIRBuilder::get(nodeTypeOp, builder).build();
   }
 }
 
-template <> void MLIRBuilder<mlir::hil::Chan>::build() {
-  auto nodeFrom = node.nodeFrom();
-  auto nodeTo = node.nodeTo();
-  auto typeName = node.typeName().str();
-  auto varName = node.varName().str();
+template <> void MLIRBuilder<ChanOp>::build() {
+  auto nodeFrom = node.getNodeFrom();
+  auto nodeTo = node.getNodeTo();
+  auto typeName = node.getTypeName().str();
+  auto varName = node.getVarName().str();
   builder.addChan(typeName, varName, nodeFrom, nodeTo);
 }
 
-template <> void MLIRBuilder<mlir::hil::Chans>::build() {
-  for (auto &op : node.getBody()->getOperations()) {
-    auto chanOp = mlir::cast<mlir::hil::Chan>(op);
+template <> void MLIRBuilder<ChansOp>::build() {
+  for (auto &op : node.getBodyBlock()->getOperations()) {
+    auto chanOp = mlir::cast<ChanOp>(op);
     MLIRBuilder::get(chanOp, builder).build();
   }
 }
 
-template <> void MLIRBuilder<mlir::hil::Con>::build() {
-  auto nodeFrom = node.nodeFrom();
-  auto nodeTo = node.nodeTo();
-  auto varName = node.varName().str();
-  auto typeName = node.typeName().str();
-  auto dirTypeName = node.dirTypeName().str();
+template <> void MLIRBuilder<ConOp>::build() {
+  auto nodeFrom = node.getNodeFrom();
+  auto nodeTo = node.getNodeTo();
+  auto varName = node.getVarName().str();
+  auto typeName = node.getTypeName().str();
+  auto dirTypeName = node.getDirTypeName().str();
   builder.addCon(varName, typeName, dirTypeName, nodeFrom, nodeTo);
 }
 
-template <> void MLIRBuilder<mlir::hil::Cons>::build() {
-  for (auto &op : node.getBody()->getOperations()) {
-    auto conOp = mlir::cast<mlir::hil::Con>(op);
+template <> void MLIRBuilder<ConsOp>::build() {
+  for (auto &op : node.getBodyBlock()->getOperations()) {
+    auto conOp = mlir::cast<ConOp>(op);
     MLIRBuilder::get(conOp, builder).build();
   }
 }
 
-template <> void MLIRBuilder<mlir::hil::Node>::build() {
+template <> void MLIRBuilder<NodeOp>::build() {
   // Get Signature of the Nodetype to look in Nodetype storage.
-  const auto nodeTypeName = node.nodeTypeName().str();
+  const auto nodeTypeName = node.getNodeTypeName().str();
   std::vector<std::string> inputChanNames;
-  for (auto op : node.commandArguments()) {
+  for (auto op : node.getCommandArguments()) {
     inputChanNames.push_back(op.cast<mlir::StringAttr>().getValue().str());
   }
   std::vector<std::string> outputChanNames;
-  for (auto op : node.commandResults()) {
+  for (auto op : node.getCommandResults()) {
     outputChanNames.push_back(op.cast<mlir::StringAttr>().getValue().str());
   }
   Signature signature = builder.getNodeTypeSignature(nodeTypeName,
                                                      inputChanNames,
                                                      outputChanNames);
 
-  builder.startNode(signature, node.name().str());
-  for (auto op : node.commandArguments()) {
+  builder.startNode(signature, node.getName().str());
+
+  for (auto op : node.getCommandArguments()) {
     auto chanName = op.cast<mlir::StringAttr>().getValue().str();
     builder.addParam(chanName);
   }
   builder.startOutputs();
-  for (auto op : node.commandResults()) {
+  for (auto op : node.getCommandResults()) {
     auto chanName = op.cast<mlir::StringAttr>().getValue().str();
     builder.addParam(chanName);
   }
+
   builder.endNode();
+
+  if (isInstance(node)) {
+    builder.startInst(node.getName().str());
+    auto &operations = node.getBodyBlock()->getOperations();
+    auto consOp = findElemByType<ConsOp>(operations.begin(), operations.end());
+    if (consOp) {
+      MLIRBuilder::get(*consOp, builder).build();
+    } else {
+      std::cerr << "ERROR: `Cons` operation not found!\n";
+      exit(1);
+    }
+    builder.endInst();
+  }
 }
 
-template <> void MLIRBuilder<mlir::hil::Nodes>::build() {
-  for (auto &op : node.getBody()->getOperations()) {
-    auto nodeOp = mlir::cast<mlir::hil::Node>(op);
+template <> void MLIRBuilder<NodesOp>::build() {
+  for (auto &op : node.getBodyBlock()->getOperations()) {
+    auto nodeOp = mlir::cast<NodeOp>(op);
     MLIRBuilder::get(nodeOp, builder).build();
   }
 }
 
-template <> void MLIRBuilder<mlir::hil::Inst>::build() {
-  builder.startInst(node.name().str());
-  auto &operations = node.getBody()->getOperations();
-  auto consOp = findElemByType<mlir::hil::Cons>(operations.begin(),
-                                                operations.end());
-  if (consOp) {
-    MLIRBuilder::get(*consOp, builder).build();
-  } else {
-    std::cerr << "ERROR: `Cons` operator not found\n";
-    exit(1);
-  }
-  builder.endInst();
-}
-
-template <> void MLIRBuilder<mlir::hil::Insts>::build() {
-  for (auto &op : node.getBody()->getOperations()) {
-    auto instOp = mlir::cast<mlir::hil::Inst>(op);
-    MLIRBuilder::get(instOp, builder).build();
-  }
-}
-
-template <> void MLIRBuilder<mlir::hil::Graph>::build() {
-  builder.startGraph(node.name().str());
-  auto &operations = node.getBody()->getOperations();
-  auto chansOp = findElemByType<mlir::hil::Chans>(operations.begin(),
-                                                  operations.end());
+template <> void MLIRBuilder<GraphOp>::build() {
+  builder.startGraph(node.getName().str());
+  auto &operations = node.getBodyBlock()->getOperations();
+  auto chansOp = findElemByType<ChansOp>(operations.begin(), operations.end());
   if (chansOp) {
     MLIRBuilder::get(*chansOp, builder).build();
   } else {
-    std::cerr << "ERROR: `Chans` operator not found\n";
+    std::cerr << "ERROR: `Chans` operation not found!\n";
     exit(1);
   }
-  auto nodesOp = findElemByType<mlir::hil::Nodes>(operations.begin(),
-                                                  operations.end());
+  auto nodesOp = findElemByType<NodesOp>(operations.begin(),
+                                         operations.end());
   if (nodesOp) {
     MLIRBuilder::get(*nodesOp, builder).build();
   } else {
-    std::cerr << "ERROR: `Nodes` operator not found\n";
+    std::cerr << "ERROR: `Nodes` operation not found!\n";
     exit(1);
-  }
-  auto instsOp = findElemByType<mlir::hil::Insts>(operations.begin(),
-                                                  operations.end());
-  if (instsOp) {
-    MLIRBuilder::get(*instsOp, builder).build();
   }
   builder.endGraph();
 }
 
-template <> void MLIRBuilder<mlir::hil::Graphs>::build() {
-  for (auto &operation : node.getBody()->getOperations()) {
-    auto graphOp = mlir::cast<mlir::hil::Graph>(operation);
+template <> void MLIRBuilder<GraphsOp>::build() {
+  for (auto &operation : node.getBodyBlock()->getOperations()) {
+    auto graphOp = mlir::cast<GraphOp>(operation);
     MLIRBuilder::get(graphOp, builder).build();
   }
 }
 
-template <> void MLIRBuilder<mlir::hil::Model>::build() {
-  builder.startModel(node.name().str());
-  auto &operations = node.getBody()->getOperations();
-  auto nodeTypesOp = findElemByType<mlir::hil::NodeTypes>(operations.begin(),
-                                                          operations.end());
+template <> void MLIRBuilder<ModelOp>::build() {
+  builder.startModel(node.getName().str());
+  auto &operations = node.getBodyBlock()->getOperations();
+  auto nodeTypesOp = findElemByType<NodeTypesOp>(operations.begin(),
+                                                 operations.end());
   if (nodeTypesOp) {
     MLIRBuilder::get(*nodeTypesOp, builder).build();
   } else {
-    std::cerr << "ERROR: `NodeTypes` operator not found\n";
+    std::cerr << "ERROR: `NodeTypes` operation not found!\n";
     exit(1);
   }
-  auto graphsOp = findElemByType<mlir::hil::Graphs>(operations.begin(),
-                                                    operations.end());
+  auto graphsOp = findElemByType<GraphsOp>(operations.begin(),
+                                           operations.end());
   if (graphsOp) {
     MLIRBuilder::get(*graphsOp, builder).build();
   } else {
-    std::cerr << "ERROR: `Graphs` operator not found\n";
+    std::cerr << "ERROR: `Graphs` operation not found!\n";
     exit(1);
   }
   builder.endModel();
@@ -299,8 +285,8 @@ namespace eda::hls::model {
 std::shared_ptr<Model> parseModelFromMlir(const std::string &string) {
   auto &builder = Builder::get();
   auto mlirModelLayer = MLIRModule::loadFromMlir(string);
-  auto model = MLIRBuilder<mlir::hil::Model>::buildModelFromMlir(
-      mlirModelLayer, builder);
+  auto model = MLIRBuilder<ModelOp>::buildModelFromMlir(mlirModelLayer,
+                                                        builder);
   /* std::cerr << "***********MODEL_BEGIN**********" << std::endl; */
   /* std::cerr << *model << std::endl; */
   /* std::cerr << "************MODEL_END***********" << std::endl; */

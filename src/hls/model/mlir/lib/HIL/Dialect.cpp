@@ -27,8 +27,11 @@
 #include <cstring>
 #include <iostream>
 
-using namespace mlir;
-using namespace hil;
+using AsmPrinter = mlir::AsmPrinter;
+using Attribute = mlir::Attribute;
+using HILDialect = mlir::hil::HILDialect;
+using PortAttr = mlir::hil::PortAttr;
+using Type = mlir::Type;
 
 namespace mlir::hil {
 
@@ -66,14 +69,14 @@ void HILDialect::initialize() {
       >();
 }
 
-void mlir::hil::PortAttr::print(mlir::AsmPrinter &printer) const {
+void PortAttr::print(AsmPrinter &printer) const {
   printer << "<\"" << getName() << "\" \"" << getTypeName() << "\" <"
-      << getFlow() << "> " << getLatency() << ' ' << getIsConst() << ' '
-      << getValue() << '>';
+          << getFlow() << "> " << getLatency() << ' ' << getIsConst() << ' '
+          << getValue() << '>';
 }
 
-mlir::Attribute mlir::hil::PortAttr::parse(mlir::AsmParser &parser,
-                                           mlir::Type type) {
+Attribute PortAttr::parse(AsmParser &parser,
+                          Type type) {
   if (parser.parseLess())
     return {};
   std::string name;

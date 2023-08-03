@@ -17,8 +17,7 @@
 
 include "Dialect.td"
 
-def PortAttr : HIL_Attr<"Port"> {
-  let mnemonic = "port";
+def PortAttr : HIL_Attr<"Port", "port"> {
   let summary = "Port attribute";
 
   let description = [{
@@ -36,8 +35,7 @@ def PortAttr : HIL_Attr<"Port"> {
   let hasCustomAssemblyFormat = 1;
 }
 
-def BindingAttr : HIL_Attr<"Binding"> {
-  let mnemonic = "bnd";
+def BindingAttr : HIL_Attr<"Binding", "bnd"> {
   let summary = "Binding attribute";
 
   let description = [{
@@ -51,8 +49,7 @@ def BindingAttr : HIL_Attr<"Binding"> {
   let assemblyFormat = "`<` $nodeName qualified($port) `>`";
 }
 
-def BindingGraphAttr : HIL_Attr<"BindingGraph"> {
-  let mnemonic = "bndgraph";
+def BindingGraphAttr : HIL_Attr<"BindingGraph", "bndgraph"> {
   let summary = "BindingGraph attribute";
 
   let description = [{

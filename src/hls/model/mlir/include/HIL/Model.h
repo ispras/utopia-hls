@@ -27,6 +27,27 @@
 
 #include <string>
 
+using HILDialect = mlir::hil::HILDialect;
+using MLIRContext = mlir::MLIRContext;
+using Model = eda::hls::model::Model;
+using ModuleOp = mlir::ModuleOp;
+using BindingGraphAttr = mlir::hil::BindingGraphAttr;
+using BindingAttr = mlir::hil::BindingAttr;
+using ChansOp = mlir::hil::ChansOp;
+using ChanOp = mlir::hil::ChanOp;
+using ConsOp = mlir::hil::ConsOp;
+using ConOp = mlir::hil::ConOp;
+using GraphsOp = mlir::hil::GraphsOp;
+using GraphOp = mlir::hil::GraphOp;
+using ModelOp = mlir::hil::ModelOp;
+using NodeTypesOp = mlir::hil::NodeTypesOp;
+using NodeTypeOp = mlir::hil::NodeTypeOp;
+using NodesOp = mlir::hil::NodesOp;
+using NodeOp = mlir::hil::NodeOp;
+template<typename Type>
+using OwningOpRef = mlir::OwningOpRef<Type>;
+using PortAttr = mlir::hil::PortAttr;
+
 namespace mlir::model {
 
 class MLIRModule {
@@ -37,24 +58,23 @@ public:
   MLIRContext *getContext();
   static MLIRModule loadFromMlir(const std::string &string);
   static MLIRModule loadFromMlirFile(const std::string &filename);
-  static MLIRModule loadFromModel(const eda::hls::model::Model &model);
+  static MLIRModule loadFromModel(const Model &model);
   void print(llvm::raw_ostream &os);
-  mlir::hil::Model getRoot();
+  ModelOp getRoot();
 
 private:
-  MLIRModule(std::shared_ptr<mlir::MLIRContext> context,
-             mlir::OwningOpRef<mlir::ModuleOp> &&module);
-  std::shared_ptr<mlir::MLIRContext> context;
-  mlir::OwningOpRef<mlir::ModuleOp> module;
+  MLIRModule(std::shared_ptr<MLIRContext> context,
+             mlir::OwningOpRef<ModuleOp> &&module);
+  std::shared_ptr<MLIRContext> context;
+  OwningOpRef<ModuleOp> module;
 };
 
 } // namespace mlir::model
 
 namespace eda::hls::model {
-
-std::shared_ptr<eda::hls::model::Model>
+std::shared_ptr<Model>
 parseModelFromMlir(const std::string &string);
-std::shared_ptr<eda::hls::model::Model>
+std::shared_ptr<Model>
 parseModelFromMlirFile(const std::string &filename);
 
 } // namespace eda::hls::model

@@ -17,17 +17,18 @@
 
 #include "gtest/gtest.h"
 
-using namespace eda::hls::model;
-using namespace eda::hls::parser::hil;
+using Model = eda::hls::model::Model;
+template<typename Type>
+using Transformer = mlir::transforms::Transformer<Type>;
 
 bool dumpToMlirTest(const std::string &filePath) {
   // Construct a model from a '.hil' file.
   const std::string path = getenv("UTOPIA_HLS_HOME") + filePath;
-  const Model model = *parse(path).get();
+  const Model model = *eda::hls::parser::hil::parse(path).get();
   std::cout << model << std::endl;
 
   // Dump the model to MLIR.
-  mlir::transforms::Transformer<Model> transformer{model};
+  Transformer<Model> transformer{model};
 
   // Check whether one can reconstruct the model. 
   auto model_after = transformer.done();

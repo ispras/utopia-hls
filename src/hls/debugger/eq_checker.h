@@ -20,21 +20,21 @@
 
 namespace eda::hls::eqchecker {
 
-using Binding = const mlir::hil::BindingAttr;
-using Chan = mlir::hil::Chan;
-using ChanVector = std::vector<Chan>;
+using BindingAttr = mlir::hil::BindingAttr;
+using ChanOp = mlir::hil::ChanOp;
+using ChanOpVector = std::vector<ChanOp>;
 using CheckResult = z3::check_result;
 using Context = z3::context;
 using Expr = z3::expr;
 using ExprVector = z3::expr_vector;
 using FuncDecl = z3::func_decl;
-using Graph = mlir::hil::Graph;
-using Model = mlir::hil::Model;
-using Node = mlir::hil::Node;
-using NodePairList = std::list<std::pair<Node, Node>>;
-using NodeVector = std::vector<Node>;
-using OptionalGraph = std::optional<Graph>;
-using Port = mlir::hil::PortAttr;
+using GraphOp = mlir::hil::GraphOp;
+using ModelOp = mlir::hil::ModelOp;
+using NodeOp = mlir::hil::NodeOp;
+using NodeOpPairList = std::list<std::pair<NodeOp, NodeOp>>;
+using NodeOpVector = std::vector<NodeOp>;
+using OptionalGraphOp = std::optional<GraphOp>;
+using PortAttr = mlir::hil::PortAttr;
 using Solver = z3::solver;
 using Sort = z3::sort;
 using SortVector = z3::sort_vector;
@@ -58,7 +58,7 @@ public:
   }
 
   /// Checks if models are equivalent.
-  bool equivalent(Model &lhs, Model &rhs) const;
+  bool equivalent(ModelOp &lhs, ModelOp &rhs) const;
 
 private:
   EqChecker() {}
@@ -68,36 +68,36 @@ private:
   /* Methods that implement equivalence checking sub-tasks. */
 
   /// Checks if collections contain nodes with same names.
-  bool match(const NodeVector &left, const NodeVector &right,
-      NodePairList &matched) const;
+  bool match(const NodeOpVector &left, const NodeOpVector &right,
+      NodeOpPairList &matched) const;
 
   /* Methods for model-to-solver interaction. */
 
   /// Extracts formal expressions from the specified graph.
-  void makeExprs(Graph &graph, Context &ctx, ExprVector &nodes) const;
+  void makeExprs(GraphOp &graphOp, Context &ctx, ExprVector &nodes) const;
 
   /// Creates constant expression for the channel's binding.
-  Expr toConst(Chan &ch, const Binding &bnd, Context &ctx) const;
+  Expr toConst(ChanOp &chanOp, const BindingAttr &bnd, Context &ctx) const;
 
   /// Creates constant expression for the node.
-  Expr toConst(Node &node, Context &ctx) const;
+  Expr toConst(NodeOp &nodeOp, Context &ctx) const;
 
   /// Creates constant expression for the channel.
-  Expr toConst(Chan &ch, Context &ctx) const;
+  Expr toConst(ChanOp &chanOp, Context &ctx) const;
 
   /// Creates input function call for the node-chan pair.
-  Expr toInFunc(Node &node, Chan &ch, Context &ctx) const;
+  Expr toInFunc(NodeOp &nodeOp, ChanOp &chanOp, Context &ctx) const;
 
   /// Calculates sort of the node.
-  Sort getSort(Node &node, Context &ctx) const;
+  Sort getSort(NodeOp &nodeOp, Context &ctx) const;
 
   /// Calculates sort of the named port.
-  Sort getSort(Port port, Context &ctx) const;
+  Sort getSort(PortAttr port, Context &ctx) const;
 
   /// Returns sorts of the node's inputs.
-  SortVector getInSorts(Node &node, Context &ctx) const;
+  SortVector getInSorts(NodeOp &nodeOp, Context &ctx) const;
 
   /// Returns arguments for function call that is constructed from the node.
-  ExprVector getFuncArgs(Node &node, Context &ctx) const;
+  ExprVector getFuncArgs(NodeOp &nodeOp, Context &ctx) const;
 };
 } // namespace eda::hls::eqchecker

@@ -27,7 +27,6 @@ namespace eda::hls::model {
   struct Port;
 } // namespace eda::hls::model
 
-
 using Chan = eda::hls::model::Chan;
 using Graph = eda::hls::model::Graph;
 using Model = eda::hls::model::Model;
@@ -64,11 +63,11 @@ public:
 
   struct Kernel;
 
-  Kernel* getKernel() {
+  Kernel *getKernel() {
     return activeKernels.empty() ? &common : activeKernels.back();
   }
 
-  Kernel* getKernel(const std::string &name) {
+  Kernel *getKernel(const std::string &name) {
     auto i = std::find_if(kernels.begin(), kernels.end(),
       [&name](Kernel *kernel) { return kernel->name == name; });
     assert(i != kernels.end() && "Kernel does not exist");
@@ -215,9 +214,9 @@ private:
     void addBindingToInput(Wire *wire, const std::string &inputName) {
       auto *source = sourcesWaitConnection.find(inputName)->second;
       uassert(source != nullptr,
-              "Input with such name doesn't exist!");
+              "Input with such name doesn't exist!\n");
       uassert(source->out.front()->type == wire->type,
-              "Types of connecting wires doesn't match!");
+              "Types of connecting wires doesn't match!\n");
       sourcesWaitConnection.erase(inputName);
       bindingsToInputs.insert({wire, inputName});
     }
@@ -225,9 +224,9 @@ private:
     void addBindingToOutput(Wire *wire, const std::string &outputName) {
       auto *sink = sinksWaitConnection.find(outputName)->second;
       uassert(sink != nullptr,
-              "Input with such name doesn't exist!");
+              "Input with such name doesn't exist!\n");
       uassert(sink->in.front()->type == wire->type,
-              "Types of connecting wires doesn't match!");
+              "Types of connecting wires doesn't match!\n");
       sinksWaitConnection.erase(outputName);
       bindingsToOutputs.insert({wire, outputName});
     }
@@ -257,9 +256,9 @@ private:
       ACCESS_VERSION
     };
 
-    Wire* getWire(const ::dfc::wire *wire, Mode mode);
+    Wire *getWire(const ::dfc::wire *wire, Mode mode);
 
-    Unit* getUnit(const std::string &opcode,
+    Unit *getUnit(const std::string &opcode,
                   const std::vector<Wire*> &in,
                   const std::vector<Wire*> &out);
 
@@ -294,23 +293,23 @@ private:
   };
   private:
 
-  static std::string getSourceName(const Unit* source);
+  static std::string getSourceName(const Unit *source);
 
-  static std::string getSinkName(const Unit* sink);
+  static std::string getSinkName(const Unit *sink);
 
-  static Port* getPort(const Wire *wire, unsigned latency);
+  static Port *getPort(const Wire *wire, const unsigned latency);
 
-  static Chan* getChan(const Wire *wire, Graph *graph);
+  static Chan *getChan(const Wire *wire, Graph *graph);
 
-  static NodeType* getNodetype(const Unit *unit,
+  static NodeType *getNodetype(const Unit *unit,
                                Model *model);
 
-  static Node* getNode(const Kernel *kernel,
+  static Node *getNode(const Kernel *kernel,
                        const Unit *unit,
                        Graph *graph,
                        Model *model);
 
-  static Graph* getGraph(const Kernel *kernel, Model *model);
+  static Graph *getGraph(const Kernel *kernel, Model *model);
 
   /// Common part of all kernels (usually, wires and constants).
   Kernel common;

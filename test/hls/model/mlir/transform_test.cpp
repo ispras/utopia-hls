@@ -20,6 +20,8 @@ using eda::hls::model::Node;
 using eda::hls::model::NodeType;
 using eda::hls::model::Port;
 using eda::hls::model::Signature;
+template<typename Type>
+using Transformer = mlir::transforms::Transformer<Type>;
 
 class TransformTest : public ::testing::Test {
 protected:
@@ -139,22 +141,20 @@ protected:
 TEST_F(TransformTest, CheckName) { EXPECT_EQ(model_->name, "M"); }
 
 TEST_F(TransformTest, InsertDelay) {
-  using namespace mlir::transforms;
   std::cout << *model_ << std::endl;
   Transformer<Model> transformer{*model_};
-  transformer.applyTransform(ChanAddSourceTarget());
-  transformer.applyTransform(InsertDelay("x", 7));
+  transformer.applyTransform(mlir::transforms::ChanAddSourceTarget());
+  transformer.applyTransform(mlir::transforms::InsertDelay("x", 7));
   auto model_after = transformer.done();
   std::cout << model_after << std::endl;
   EXPECT_EQ(model_after.name, "M");
 }
 
 TEST_F(TransformTest, InsertDelayUndo) {
-  using namespace mlir::transforms;
   std::cout << *model_ << std::endl;
   Transformer<Model> transformer{*model_};
-  transformer.applyTransform(ChanAddSourceTarget());
-  transformer.applyTransform(InsertDelay("x", 7));
+  transformer.applyTransform(mlir::transforms::ChanAddSourceTarget());
+  transformer.applyTransform(mlir::transforms::InsertDelay("x", 7));
   transformer.undoTransforms();
   auto model_after = transformer.done();
   std::cout << model_after << std::endl;

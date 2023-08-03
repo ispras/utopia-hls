@@ -50,8 +50,8 @@ struct Port final {
                                const model::Port *port,
                                const Port::Direction dir,
                                const Type type) {
-    return Port(utils::replaceSomeChars(node->name) 
-                + "_" + utils::replaceSomeChars(port->name),
+    return Port(utils::replaceSomeChars(node->name) + "_" +
+        utils::replaceSomeChars(port->name),
                 dir, type);
   }
 
@@ -280,12 +280,12 @@ public:
                         const std::string &outTestFileName,
                         const size_t testCount) const;
 
-  static constexpr const char* indent        = "    ";
-  static constexpr const char* opPrefix      = "firrtl.";
-  static constexpr const char* typePrefix    = "!firrtl.";
-  static constexpr const char* varPrefix     = "%";
-  static constexpr const char* circt         = "circt-opt ";
-  static constexpr const char* circtOptions  = " --lower-firrtl-to-hw \
+  static constexpr const char *indent        = "    ";
+  static constexpr const char *opPrefix      = "firrtl.";
+  static constexpr const char *typePrefix    = "!firrtl.";
+  static constexpr const char *varPrefix     = "%";
+  static constexpr const char *circt         = "circt-opt ";
+  static constexpr const char *circtOptions  = " --lower-firrtl-to-hw \
                                                  --export-split-verilog";
 
 };

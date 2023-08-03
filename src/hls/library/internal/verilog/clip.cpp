@@ -71,16 +71,15 @@ std::unique_ptr<Element> Clip::construct() const {
 
   outputType = std::string("reg ");
 
-  for (auto port : ports) {
+  for (const auto &port : ports) {
     if (port.name == "clock" || port.name == "reset") {
       ifaceWires += std::string("input ") + port.name + ";\n";
       continue;
     }
 
     std::string portDeclr =
-      (port.width > 1 ? std::string("[") + std::to_string(port.width - 1)
-                                         + ":0] " : std::string(""))
-                                         + utils::replaceSomeChars(port.name) + ";\n";
+        (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) +
+        ":0] " : std::string("")) + utils::replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -101,7 +100,7 @@ std::unique_ptr<Element> Clip::construct() const {
 
   std::string ir;
   std::string inPortName, outPortName;
-  for (auto port : ports) {
+  for (const auto &port : ports) {
     if (port.name == "clock" || port.name == "reset") {
       continue;
     }

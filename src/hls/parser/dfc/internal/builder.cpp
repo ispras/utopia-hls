@@ -54,13 +54,13 @@ std::string Builder::Unit::getFullName() const {
 // Kernel
 //===----------------------------------------------------------------------===//
 
-Builder::Wire* Builder::Kernel::getWire(const ::dfc::wire *wire, Mode mode) {
+Builder::Wire *Builder::Kernel::getWire(const ::dfc::wire *wire, Mode mode) {
   auto i = originals.find(wire->name);
 
   const bool access = (mode == Kernel::ACCESS_ORIGINAL) ||
                       (mode == Kernel::ACCESS_VERSION);
 
-  assert((!access || i != originals.end()) && "Wire does not exist");
+  assert((!access || i != originals.end()) && "Wire does not exist!\n");
 
   if ((mode == Kernel::ACCESS_ORIGINAL) ||
       (mode == Kernel::CREATE_ORIGINAL && i != originals.end()))
@@ -89,7 +89,7 @@ Builder::Wire* Builder::Kernel::getWire(const ::dfc::wire *wire, Mode mode) {
   return result;
 }
 
-Builder::Unit* Builder::Kernel::getUnit(const std::string &opcode,
+Builder::Unit *Builder::Kernel::getUnit(const std::string &opcode,
                                         const std::vector<Wire*> &in,
                                         const std::vector<Wire*> &out) {
   auto *unit = new Unit(opcode, in, out);
@@ -117,7 +117,7 @@ void Builder::Kernel::connect(Wire *source, Wire *target) {
   } else if (producer && producer->opcode == "dup") {
     producer->addOutput(target);
   } else {
-    assert(false && "Duplication unit expected");
+    assert(false && "Duplication unit expected!\n");
   }
 }
 
@@ -163,7 +163,8 @@ void Builder::Kernel::transform() {
   }
 
   auto predicate = [&removing](Unit *unit) { return removing.count(unit) > 0; };
-  units.erase(std::remove_if(units.begin(), units.end(), predicate), units.end());
+  units.erase(std::remove_if(units.begin(), units.end(), predicate),
+      units.end());
 
   // Create units for the constants, sources and sinks.
   for (const auto &[_, wire] : originals) {
@@ -184,11 +185,11 @@ void Builder::Kernel::transform() {
 // Builder
 //===----------------------------------------------------------------------===//
 
-std::string Builder::getSourceName(const Unit* source) {
+std::string Builder::getSourceName(const Unit *source) {
   return source->opcode + "_" + source->out.front()->name;
 }
 
-std::string Builder::getSinkName(const Unit* sink) {
+std::string Builder::getSinkName(const Unit *sink) {
   return sink->opcode + "_" + sink->in.front()->name;
 }
 
@@ -209,7 +210,7 @@ std::shared_ptr<Model> Builder::create(const std::string &modelName,
 
   auto i = std::find_if(kernels.begin(), kernels.end(),
     [&kernelName](Kernel *kernel) { return kernel->name == kernelName; });
-  assert(i != kernels.end() && "Kernel does not exist");
+  assert(i != kernels.end() && "Kernel does not exist!\n");
 
   auto *kernel = *i;
   kernel->transform();
@@ -307,7 +308,7 @@ void Builder::connectWires(const std::string &opcode,
   kernel->getUnit(opcode, targets, outputs);
 }
 
-Port* Builder::getPort(const Wire *wire, unsigned latency) {
+Port *Builder::getPort(const Wire *wire, const unsigned latency) {
   return new Port(wire->name,                                       // Name
                   wire->type,                                       // Type
                   1.0,                                              // Flow
@@ -316,7 +317,7 @@ Port* Builder::getPort(const Wire *wire, unsigned latency) {
                   wire->value);                                     // Value 
 }
 
-Chan* Builder::getChan(const Wire *wire, Graph *graph) {
+Chan *Builder::getChan(const Wire *wire, Graph *graph) {
   auto *chan = graph->findChan(wire->name);
 
   if (!chan) {
@@ -327,7 +328,7 @@ Chan* Builder::getChan(const Wire *wire, Graph *graph) {
   return chan; 
 }
 
-NodeType* Builder::getNodetype(const Unit *unit,
+NodeType *Builder::getNodetype(const Unit *unit,
                                Model *model) {
   auto *nodetype = new NodeType(unit->getFullName(), *model);
   for (auto *wire : unit->in) {
@@ -340,7 +341,7 @@ NodeType* Builder::getNodetype(const Unit *unit,
   return nodetype;
 }
 
-Node* Builder::getNode(const Kernel *kernel,
+Node *Builder::getNode(const Kernel *kernel,
                        const Unit *unit,
                        Graph *graph,
                        Model *model) {
@@ -389,7 +390,7 @@ Node* Builder::getNode(const Kernel *kernel,
       auto *con = new Con(input->name, input->type, "IN");
       con->source = { graph, input };
       con->target = { instanceGraph, sourceNode->outputs.back() };
-      graph->addCon(node->name, con);
+      node->addCon(con);
     }
     input->target = { node, node->type.inputs[node->inputs.size()] };
     node->addInput(input);
@@ -405,7 +406,7 @@ Node* Builder::getNode(const Kernel *kernel,
       auto *con = new Con(output->name, output->type, "OUT");
       con->source = { instanceGraph, sinkNode->inputs.back() };
       con->target = { graph, output };
-      graph->addCon(node->name, con);
+      node->addCon(con);
     }
     output->source = { node, node->type.outputs[node->outputs.size()] };
     node->addOutput(output);
@@ -413,9 +414,8 @@ Node* Builder::getNode(const Kernel *kernel,
   return node;
 }
 
-Graph* Builder::getGraph(const Kernel *kernel, Model *model) {
+Graph *Builder::getGraph(const Kernel *kernel, Model *model) {
   auto *graph = new Graph(kernel->name, *model);
-
 
   for (auto *unit : kernel->units) {
     graph->addNode(getNode(kernel, unit, graph, model));

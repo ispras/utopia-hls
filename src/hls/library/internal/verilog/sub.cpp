@@ -72,15 +72,15 @@ std::unique_ptr<Element> Sub::construct() const {
 
   outputType = std::string("wire ");
 
-  for (auto port : ports) {
+  for (const auto &port : ports) {
     if (port.name == "clock" || port.name == "reset") {
       ifaceWires += std::string("input ") + port.name + ";\n";
       continue;
     }
 
     std::string portDeclr =
-      (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) +
-               ":0] " : std::string("")) + utils::replaceSomeChars(port.name) + ";\n";
+        (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) +
+        ":0] " : std::string("")) + utils::replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -104,7 +104,7 @@ std::unique_ptr<Element> Sub::construct() const {
   std::vector<std::string> outPortNames;
   std::string ir;
 
-  for (auto port : ports) {
+  for (const auto &port : ports) {
     if (port.name == "clock" || port.name == "reset") {
       continue;
     }
@@ -117,7 +117,7 @@ std::unique_ptr<Element> Sub::construct() const {
   }
   ir += "assign {";
   bool comma = false;
-  for (auto portName : outPortNames) {
+  for (const auto &portName : outPortNames) {
     ir += (comma ? ", " : "") + portName;
     if (!comma) {
       comma = true;
@@ -126,7 +126,7 @@ std::unique_ptr<Element> Sub::construct() const {
   ir += "} = ";
   bool needAction = false;
   std::string action = " - ";
-  for (auto portName : inPortNames) {
+  for (const auto &portName : inPortNames) {
     ir += (needAction ? action : "") + "$signed(" + portName + ")";
     if (!needAction) {
       needAction = true;

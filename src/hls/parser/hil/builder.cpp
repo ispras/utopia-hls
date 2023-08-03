@@ -16,8 +16,8 @@ std::shared_ptr<Model> Builder::create() {
   uassert(currentModel != nullptr, "No model found!\n");
 
   // Check nodetypes.
-  for (auto nodeTypeIterator = currentModel->nodetypes.begin();
-       nodeTypeIterator != currentModel->nodetypes.end();
+  for (auto nodeTypeIterator = currentModel->nodetypes.cbegin();
+       nodeTypeIterator != currentModel->nodetypes.cend();
        nodeTypeIterator++) {
     const auto *nodetype = nodeTypeIterator->second;
     uassert(nodetype != nullptr, "NodeType is nullptr!\n");
@@ -31,7 +31,7 @@ std::shared_ptr<Model> Builder::create() {
   for (const Graph *graph: currentModel->graphs) {
     // Check chans.
     for (const Chan *chan: graph->chans) {
-      uassert(chan != nullptr, "Chan is nullptr!\n" << "\n!");
+      uassert(chan != nullptr, "Chan is nullptr!\n");
 
       // The channel is attached to nodes.
       uassert(chan->source.isLinked(), "Chan source is not linked: " << *chan
@@ -58,26 +58,27 @@ std::shared_ptr<Model> Builder::create() {
         "Wrong number of inputs: " << *node << "\n!");
       uassert(node->outputs.size() == node->type.outputs.size(),
         "Wrong number of outputs: " << *node << "\n!");
-    }
+      
+      // If a node is an Instance of a Graph... 
+      if (node->isInstance()) {
+        // Check connections.
+        for (const Con *con: node->cons) {
+          uassert(con != nullptr, "Con is nullptr!\n");
 
-    // Check connections.
-    for (const auto &pair : graph->cons) {
-      for (const Con *con: pair.second) {
-        uassert(con != nullptr, "Con is nullptr!\n");
+          // The connection is attached to nodes.
+          uassert(con->source.isLinked(), "Con source is not linked: " << *con
+                  << "!\n");
+          uassert(con->target.isLinked(), "Con target is not linked: " << *con
+                  << "!\n");
 
-        // The connection is attached to nodes.
-        uassert(con->source.isLinked(), "Con source is not linked: " << *con
-                << "!\n");
-        uassert(con->target.isLinked(), "Con target is not linked: " << *con
-                << "!\n");
+          // The connection is not a loopback.
+          uassert(con->source.chan != con->target.chan,
+              "Con is a self-loop: " << *con << "\n!");
 
-        // The connection is not a loopback.
-        uassert(con->source.chan != con->target.chan,
-          "Con is a self-loop: " << *con << "\n!");
-
-        // The connection must be a link between different graphs.
-        uassert(con->source.graph->name != con->target.graph->name,
-                "Con source graph and target graph are the same!\n");
+          // The connection must be a link between different graphs.
+          uassert(con->source.graph->name != con->target.graph->name,
+                  "Con source graph and target graph are the same!\n");
+        }
       }
     }
   }

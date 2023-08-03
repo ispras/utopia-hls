@@ -37,6 +37,16 @@
 
 namespace cl = llvm::cl;
 
+using MLIRContext = mlir::MLIRContext;
+using ModuleOp = mlir::ModuleOp;
+template<typename Type>
+using LLVMErrorOr = llvm::ErrorOr<Type>;
+using LLVMMemoryBuffer = llvm::MemoryBuffer;
+using LLVMSourceMgr = llvm::SourceMgr;
+template<typename Type>
+using OwningOpRef = mlir::OwningOpRef<Type>;
+using PassManager = mlir::PassManager;
+
 static cl::opt<std::string> inputFilename(cl::Positional,
                                           cl::desc("<input mlir file>"),
                                           cl::init("-"),
@@ -45,20 +55,20 @@ static cl::opt<std::string> outputFilename("o", cl::desc("Output filename"),
                                            cl::value_desc("filename"),
                                            cl::init("-"));
 
-int loadMLIR(mlir::MLIRContext &context,
-             mlir::OwningOpRef<mlir::ModuleOp> &module) {
+int loadMLIR(MLIRContext &context,
+             OwningOpRef<ModuleOp> &module) {
   // Open file.
-  llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> fileOrErr =
-      llvm::MemoryBuffer::getFileOrSTDIN(inputFilename);
+  LLVMErrorOr<std::unique_ptr<LLVMMemoryBuffer>> fileOrErr =
+      LLVMMemoryBuffer::getFileOrSTDIN(inputFilename);
   if (std::error_code err = fileOrErr.getError()) {
     llvm::errs() << "Could not open input file: " << err.message() << "\n";
     return -1;
   }
 
   // Parse the input mlir.
-  llvm::SourceMgr sourceMgr;
+  LLVMSourceMgr sourceMgr;
   sourceMgr.AddNewSourceBuffer(std::move(*fileOrErr), llvm::SMLoc());
-  module = mlir::parseSourceFile<mlir::ModuleOp>(sourceMgr, &context);
+  module = mlir::parseSourceFile<ModuleOp>(sourceMgr, &context);
   if (!module) {
     llvm::errs() << "Error can't load file " << inputFilename << "\n";
     return 3;
@@ -74,17 +84,17 @@ int main(int argc, char **argv) {
 
   cl::ParseCommandLineOptions(argc, argv, "hil dialect");
 
-  mlir::MLIRContext context;
+  MLIRContext context;
 
   context.getOrLoadDialect<mlir::hil::HILDialect>();
-  context.getOrLoadDialect<mlir::arith::ArithmeticDialect>();
+  context.getOrLoadDialect<mlir::arith::ArithDialect>();
 
-  mlir::OwningOpRef<mlir::ModuleOp> module;
+  OwningOpRef<ModuleOp> module;
 
   if (int error = loadMLIR(context, module))
     return error;
 
-  mlir::PassManager pm(&context);
+  PassManager pm(&context);
   mlir::applyPassManagerCLOptions(pm);
   pm.addPass(createGraphRewritePass());
 

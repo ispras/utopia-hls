@@ -182,11 +182,11 @@ public:
   }
 
   void startInst(const std::string &name) {
-    currentInstanceName = name;
+    currentInstanceNode = currentGraph->findNode(name);
   }
 
   void endInst() {
-    // Do nothing.
+    currentInstanceNode = nullptr;
   }
 
   void addCon(const std::string &name,
@@ -206,16 +206,7 @@ public:
     con->source = { srcGraph, srcChan };
     con->target = { dstGraph, dstChan };
 
-    auto iterator = cons.find(currentInstanceName);
-    if (iterator != cons.end()) {
-      iterator->second.push_back(con);
-    } else {
-      std::vector<Con*> consToInstance;
-      consToInstance.push_back(con);
-      cons.insert({ currentInstanceName, consToInstance });
-    }
-
-    currentGraph->addCon(currentInstanceName, con);
+    currentInstanceNode->addCon(con);
   }
 
   void addCon(const std::string &name,
@@ -225,14 +216,7 @@ public:
 
     auto *con = new Con(name, type, dir);
 
-    auto iterator = cons.find(currentInstanceName);
-    if (iterator != cons.end()) {
-      iterator->second.push_back(con);
-    } else {
-      std::vector<Con*> consToInstance;
-      consToInstance.push_back(con);
-      cons.insert({ currentInstanceName, consToInstance });
-    }
+    currentInstanceNode->addCon(con);
   }
 
   /// FIXME: deprecated
@@ -300,11 +284,13 @@ public:
 
       if (outputsStarted) {
         // Outputs are sink inputs.
-        const Port *port = currentInstanceNode->type.inputs[currentBindings.size()];
+        const Port *port = 
+            currentInstanceNode->type.inputs[currentBindings.size()];
         currentBindings.insert({ port->name, chan });
       } else {
         // Inputs are source outputs.
-        const Port *port = currentInstanceNode->type.outputs[currentBindings.size()];
+        const Port *port = 
+            currentInstanceNode->type.outputs[currentBindings.size()];
         currentBindings.insert({ port->name, chan });
       }
     }

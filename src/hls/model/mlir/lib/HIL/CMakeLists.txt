@@ -18,7 +18,6 @@ add_mlir_dialect_library(MLIRHIL
             MLIRIR
 
           PRIVATE
-            MLIRArithmetic
             MLIRParser
             MLIRRewrite
             MLIRTransformUtils

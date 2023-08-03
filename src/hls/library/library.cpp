@@ -66,7 +66,7 @@ void Library::importLibrary(const std::string &libraryPath,
     std::string name;
     Signature signature = metaElement->getSignature();
     auto iterator = groupedMetaElements.find(signature);
-    if (iterator == groupedMetaElements.end()) {
+    if (iterator == groupedMetaElements.cend()) {
       LibraryToStorageEntry metaElementsEntries;
       metaElementsEntries.insert({metaElement->libraryName,
                                   StorageEntry(metaElement)});
@@ -140,8 +140,8 @@ std::vector<std::shared_ptr<MetaElement>> Library::find(
   std::vector<std::shared_ptr<MetaElement>> metaElements;
   auto groupIterator = groupedMetaElements.find(signature);
   if (groupIterator != groupedMetaElements.end()) {
-    for (auto entryIterator = groupIterator->second.begin();
-         entryIterator != groupIterator->second.end();
+    for (auto entryIterator = groupIterator->second.cbegin();
+         entryIterator != groupIterator->second.cend();
          entryIterator++) {
       if (entryIterator->second.isEnabled &&
           entryIterator->second.metaElement->supports(hwconfig)) {

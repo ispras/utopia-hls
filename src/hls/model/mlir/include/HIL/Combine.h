@@ -23,6 +23,8 @@
 
 #include "mlir/Pass/Pass.h"
 
-std::unique_ptr<mlir::Pass> createGraphRewritePass();
+using Pass = mlir::Pass;
+
+std::unique_ptr<Pass> createGraphRewritePass();
 
 #endif // HIL_HILCOMBINE_H

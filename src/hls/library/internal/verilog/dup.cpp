@@ -112,16 +112,15 @@ std::unique_ptr<Element> Dup::construct() const {
 
   outputType = std::string("wire ");
 
-  for (auto port : ports) {
+  for (const auto &port : ports) {
     if (port.name == "clock" || port.name == "reset") {
       ifaceWires += std::string("input ") + port.name + ";\n";
       continue;
     }
 
     std::string portDeclr =
-      (port.width > 1 ? std::string("[") + std::to_string(port.width - 1)
-                                         + ":0] " : std::string(""))
-                                         + utils::replaceSomeChars(port.name) + ";\n";
+        (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) +
+        ":0] " : std::string("")) + utils::replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -143,7 +142,7 @@ std::unique_ptr<Element> Dup::construct() const {
   std::string ir;
   std::string inPortName;
   std::vector<std::string> outPortNames;
-  for (auto port : ports) {
+  for (const auto &port : ports) {
     if (port.name == "clock" || port.name == "reset") {
       continue;
     }
@@ -154,7 +153,7 @@ std::unique_ptr<Element> Dup::construct() const {
       outPortNames.push_back(utils::replaceSomeChars(port.name));
     }
   }
-  for (auto outPortName : outPortNames) {
+  for (const auto &outPortName : outPortNames) {
     ir += "assign " + outPortName + " = " + inPortName + ";\n";
   }
   element->ir = std::string("\n") + ifaceWires + inputs + outputs + ir;

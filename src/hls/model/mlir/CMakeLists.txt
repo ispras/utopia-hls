@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ standard to conform to")
 add_compile_options(-g3 -Wall -Wignored-qualifiers -DYYERROR_VERBOSE)
 
 find_package(MLIR REQUIRED CONFIG)
+find_package(LLVM REQUIRED CONFIG)
+find_package(CIRCT REQUIRED CONFIG)
 
 message(STATUS "Using MLIRConfig.cmake in: ${MLIR_DIR}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
@@ -17,13 +19,17 @@ set(MLIR_BINARY_DIR ${CMAKE_BINARY_DIR})
 
 list(APPEND CMAKE_MODULE_PATH "${MLIR_CMAKE_DIR}")
 list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
+list(APPEND CMAKE_MODULE_PATH "${CIRCT_CMAKE_DIR}")
 include(TableGen)
 include(AddLLVM)
 include(AddMLIR)
 include(HandleLLVMOptions)
 
-include_directories(${LLVM_INCLUDE_DIRS})
+
+message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
 include_directories(${MLIR_INCLUDE_DIRS})
+include_directories(${LLVM_INCLUDE_DIRS})
+include_directories(${CIRCT_INCLUDE_DIRS})
 
 # FIXME resolve circular dependencies w/ model and remove the direct inclusion
 include_directories(${Utopia_SOURCE_DIR}/src)

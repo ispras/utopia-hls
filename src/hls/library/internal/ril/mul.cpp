@@ -71,11 +71,10 @@ std::unique_ptr<Element> Mul::construct() const {
 
   outputType = std::string("wire ");
 
-  for (auto port : ports) {
-    ifaceWires += ((port.direction == Port::IN) ? std::string("input ") 
-                                                : std::string("output ")) +
-        " u:" + std::to_string(port.width) + " " + utils::replaceSomeChars(port.name) +
-        ";\n";
+  for (const auto &port : ports) {
+    ifaceWires += ((port.direction == Port::IN) ? std::string("input ") :
+        std::string("output ")) + " u:" + std::to_string(port.width) + " " +
+        utils::replaceSomeChars(port.name) + ";\n";
   }
 
   std::string ir;
@@ -83,7 +82,7 @@ std::unique_ptr<Element> Mul::construct() const {
   std::string outPortName;
   ir += "\n";
   ir += "@(*) {\n";
-  for (auto port : ports) {
+  for (const auto &port : ports) {
     if (port.name == "clock" || port.name == "reset") {
       continue;
     }

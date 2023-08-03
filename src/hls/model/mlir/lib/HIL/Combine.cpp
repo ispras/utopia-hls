@@ -16,30 +16,94 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "HIL/Combine.h"
-
 #include "HIL/API.h"
+#include "HIL/Combine.h"
 #include "HIL/Dialect.h"
 #include "HIL/Model.h"
 #include "HIL/Ops.h"
 #include "HIL/Utils.h"
 
+#include "circt/Dialect/FIRRTL/FIRRTLDialect.h"
+#include "circt/Dialect/FIRRTL/FIRRTLOps.h"
+#include "circt/Dialect/FIRRTL/Passes.h"
+
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/Matchers.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Pass/Pass.h"
+#include "mlir/Transforms/DialectConversion.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "mlir/Transforms/Passes.h"
 
 #include <iostream>
 #include <optional>
-
 #include <typeinfo>
 
-using namespace mlir;
-using namespace mlir::hil;
+using ArrayAttr = mlir::ArrayAttr;
+template<typename Type>
+using ArrayRef = mlir::ArrayRef<Type>;
+using Attribute = mlir::Attribute;
+using BindingGraphAttr = mlir::hil::BindingGraphAttr;
+using BindingAttr = mlir::hil::BindingAttr;
+using Block = mlir::Block;
+using ChansOp = mlir::hil::ChansOp;
+using ChanOp = mlir::hil::ChanOp;
+using ConsOp = mlir::hil::ConsOp;
+using ConversionPattern = mlir::ConversionPattern;
+using ConversionPatternRewriter = mlir::ConversionPatternRewriter;
+using ConOp = mlir::hil::ConOp;
+using CircuitOp = circt::firrtl::CircuitOp;
+using DialectRegistry = mlir::DialectRegistry;
+using FrozenRewritePatternSet = mlir::FrozenRewritePatternSet;
+using GraphsOp = mlir::hil::GraphsOp;
+using GraphOp = mlir::hil::GraphOp;
+using GreedyRewriteConfig = mlir::GreedyRewriteConfig;
+using LogicalResult = mlir::LogicalResult;
+using MLIRContext = mlir::MLIRContext;
+using ModelOp = mlir::hil::ModelOp;
+using NodeTypesOp = mlir::hil::NodeTypesOp;
+using NodeTypeOp = mlir::hil::NodeTypeOp;
+using NodesOp = mlir::hil::NodesOp;
+using NodeOp = mlir::hil::NodeOp;
+using Operation = mlir::Operation;
+template<typename Type = void>
+using OperationPass = mlir::OperationPass<Type>;
+template<typename Type>
+using Option = mlir::Pass::Option<Type>;
+using LLVMStringLiteral = llvm::StringLiteral;
+using LLVMStringRef = llvm::StringRef;
+template<typename Type>
+using ListOption = mlir::Pass::ListOption<Type>;
+using Pass = mlir::Pass;
+using PatternRewriter = mlir::PatternRewriter;
+using PortAttr = mlir::hil::PortAttr;
+using RewritePattern = mlir::RewritePattern;
+using RewritePatternSet = mlir::RewritePatternSet;
+using StringAttr = mlir::StringAttr;
+using TypeID = mlir::TypeID;
+using Value = mlir::Value;
 
+
+/// TODO:
 namespace {
+class ModelOpLowering : public ConversionPattern {
+public:
+  ModelOpLowering(MLIRContext *context)
+      : ConversionPattern(ModelOp::getOperationName(), 1, context) {}
+
+  LogicalResult matchAndRewrite(Operation *operation,
+      ArrayRef<mlir::Value> operands,
+      ConversionPatternRewriter &rewriter) const final {
+
+    auto modelOp = mlir::dyn_cast<ModelOp>(*operation);
+    if (!modelOp) {
+      return mlir::failure();
+    }
+
+    return mlir::success();
+  }
+};
+
 class SimpleRewriter : public PatternRewriter {
 public:
   SimpleRewriter(MLIRContext *context) : PatternRewriter(context) {}
@@ -49,23 +113,23 @@ class ChansRewritePass : public RewritePattern {
 public:
   ChansRewritePass(MLIRContext *context)
       : RewritePattern(/*Root operation name to match against*/
-                       mlir::hil::Chans::getOperationName(),
+                       ChansOp::getOperationName(),
                        /*benefit*/1,
                        context) {}
 
-  LogicalResult matchAndRewrite(Operation *op,
+  LogicalResult matchAndRewrite(Operation *operation,
                                 PatternRewriter &rewriter) const override {
 
     // Detect channels container operation.
-    auto chansOp = dyn_cast<Chans>(*op);
+    auto chansOp = mlir::dyn_cast<ChansOp>(*operation);
     if (!chansOp) {
-      return failure();
+      return mlir::failure();
     }
     auto *context = chansOp.getContext();
     auto outerRegionOps = chansOp->getParentRegion()->getOps();
 
     // Find Nodes operation.
-    auto nodesOp = findElemByType<Nodes>(outerRegionOps).value();
+    auto nodesOp = findElemByType<NodesOp>(outerRegionOps).value();
 
     // Create inChanName->nodeName map.
     std::map<std::string, std::string> chanToSource;
@@ -74,16 +138,16 @@ public:
     std::map<std::string, std::string> chanToTarget;
 
     // Iterate over Nodes' sub-operations, fill maps.
-    for (auto &nodesBlockOp : nodesOp.getBody()->getOperations()) {
-      auto nodeOp = cast<Node>(nodesBlockOp);
-      auto nodeName = nodeOp.name().str();
+    for (auto &nodesBlockOp : nodesOp.getBodyBlock()->getOperations()) {
+      auto nodeOp = mlir::cast<NodeOp>(nodesBlockOp);
+      auto nodeName = nodeOp.getName().str();
 
-      for (auto inChanOp : nodeOp.commandArguments()) {
+      for (auto inChanOp : nodeOp.getCommandArguments()) {
         auto inChanName = inChanOp.cast<StringAttr>().getValue().str();
         chanToTarget[inChanName] = nodeName;
       }
 
-      for (auto outChanOp : nodeOp.commandResults()) {
+      for (auto outChanOp : nodeOp.getCommandResults()) {
         auto outChanName = outChanOp.cast<StringAttr>().getValue().str();
         chanToSource[outChanName] = nodeName;
       }
@@ -91,16 +155,16 @@ public:
 
     // Copy channels into vector.
     std::vector<std::reference_wrapper<Operation>> vectorOperations;
-    std::copy(chansOp.getBody()->getOperations().begin(),
-              chansOp.getBody()->getOperations().end(),
+    std::copy(chansOp.getBodyBlock()->getOperations().begin(),
+              chansOp.getBodyBlock()->getOperations().end(),
               std::back_inserter(vectorOperations));
 
     // Iterate over channels.
     for (auto &chansBlockOpRef : vectorOperations) {
 
       auto &chansBlockOp = chansBlockOpRef.get();
-      auto chanOp = cast<Chan>(chansBlockOp);
-      auto chanName = chanOp.varName().str();
+      auto chanOp = mlir::cast<ChanOp>(chansBlockOp);
+      auto chanName = chanOp.getVarName().str();
 
       std::optional<std::string> nodeFrom;
       auto nodeFromIt = chanToSource.find(chanName);
@@ -117,14 +181,14 @@ public:
       }
 
       rewriter.setInsertionPoint(&chansBlockOp);
-      rewriter.replaceOpWithNewOp<Chan>(
-          &chansBlockOp, chanOp.typeName(), chanOp.varName(),
+      rewriter.replaceOpWithNewOp<ChanOp>(
+          &chansBlockOp, chanOp.getTypeName(), chanOp.getVarName(),
           BindingAttr{}.get(context, nodeFrom.value(),
-              chanOp.nodeFrom().getPort()),
+              chanOp.getNodeFrom().getPort()),
           BindingAttr{}.get(context, nodeTo.value(),
-              chanOp.nodeTo().getPort()));
+              chanOp.getNodeTo().getPort()));
     }
-    return success();
+    return mlir::success();
   }
 };
 
@@ -132,29 +196,29 @@ class InsertDelayPass : public RewritePattern {
 public:
   InsertDelayPass(MLIRContext *context, const std::string &chanName,
       const unsigned latency)
-      : RewritePattern(mlir::hil::Chan::getOperationName(), 1, context),
+      : RewritePattern(ChanOp::getOperationName(), 1, context),
         chanName(chanName), latency(latency) {}
 
-  LogicalResult matchAndRewrite(Operation *op,
+  LogicalResult matchAndRewrite(Operation *operation,
                                 PatternRewriter &rewriter) const override {
 
     // Detect requested channel.
-    auto chanOp = dyn_cast<Chan>(*op);
-    if (!chanOp || chanOp.varName() != chanName) {
-      return failure();
+    auto chanOp = mlir::dyn_cast<ChanOp>(*operation);
+    if (!chanOp || chanOp.getVarName() != chanName) {
+      return mlir::failure();
     }
-    auto chansOp = cast<Chans>(*chanOp->getParentOp());
-    auto modelOp = cast<mlir::hil::Model>(*chansOp->getParentOp()->getParentOp());
-    auto &modelOperations = modelOp.getBody()->getOperations();
-    auto nodeTypesOp = findElemByType<NodeTypes>(modelOperations).value();
-    auto graphOp = findElemByType<Graph>(modelOperations).value();
-    auto &graphOps = graphOp.getBody()->getOperations();
-    auto nodesOp = findElemByType<Nodes>(graphOps).value();
-    auto nodesCount = nodesOp.getBody()->getOperations().size();
+    auto chansOp = mlir::cast<ChansOp>(*chanOp->getParentOp());
+    auto modelOp = mlir::cast<ModelOp>(*chansOp->getParentOp()->getParentOp());
+    auto &modelOperations = modelOp.getBodyBlock()->getOperations();
+    auto nodeTypesOp = findElemByType<NodeTypesOp>(modelOperations).value();
+    auto graphOp = findElemByType<GraphOp>(modelOperations).value();
+    auto &graphOps = graphOp.getBodyBlock()->getOperations();
+    auto nodesOp = findElemByType<NodesOp>(graphOps).value();
+    auto nodesCount = nodesOp.getBodyBlock()->getOperations().size();
 
-    auto chanType = chanOp.typeName();
-    auto nodeFrom = chanOp.nodeFromAttr();
-    auto nodeTo = chanOp.nodeToAttr();
+    auto chanType = chanOp.getTypeName();
+    auto nodeFrom = chanOp.getNodeFromAttr();
+    auto nodeTo = chanOp.getNodeToAttr();
 
     auto betweenTypeName =
         "delay_" + chanType.str() + "_" + std::to_string(latency);
@@ -162,13 +226,13 @@ public:
 
     // Check if we already added a delay.
     bool isDelayAdded = false;
-    nodeTypesOp.walk([&](NodeType op) {
-      if (!isDelayAdded && op.name() == betweenTypeName) {
+    nodeTypesOp.walk([&](NodeTypeOp nodeTypeOp) {
+      if (!isDelayAdded && nodeTypeOp.getName() == betweenTypeName) {
         isDelayAdded = true;
       }
     });
     if (isDelayAdded) {
-      return failure();
+      return mlir::failure();
     }
 
     auto *context = nodeTypesOp.getContext();
@@ -179,31 +243,31 @@ public:
        1.0, latency, false, 0);
     std::array<Attribute, 1> inAttrs{inAttr};
     std::array<Attribute, 1> outAttrs{outAttr};
-    rewriter.setInsertionPointToEnd(nodeTypesOp.getBody());
-    rewriter.create<NodeType>(
+    rewriter.setInsertionPointToEnd(nodeTypesOp.getBodyBlock());
+    rewriter.create<NodeTypeOp>(
         nodeTypesOp.getLoc(), StringAttr{}.get(context, betweenTypeName),
         ArrayAttr::get(context, inAttrs), ArrayAttr::get(context, outAttrs));
     auto newChanName = betweenName + "_out";
     // Add a splitting node.
-    rewriter.setInsertionPointToEnd(nodesOp.getBody());
-    std::array<Attribute, 1> inChans{chanOp.varNameAttr()};
+    rewriter.setInsertionPointToEnd(nodesOp.getBodyBlock());
+    std::array<Attribute, 1> inChans{chanOp.getVarNameAttr()};
     std::array<Attribute, 1> outChans{
         StringAttr{}.get(context, newChanName)};
-    rewriter.create<Node>(
+    rewriter.create<NodeOp>(
         nodesOp.getLoc(), StringAttr{}.get(context, betweenTypeName),
-        StringAttr{}.get(context, betweenName), ArrayAttr::get(context, inChans),
-        ArrayAttr::get(context, outChans));
+        StringAttr{}.get(context, betweenName),
+        ArrayAttr::get(context, inChans), ArrayAttr::get(context, outChans));
     // Split the channel with the node.
-    rewriter.setInsertionPointToEnd(chansOp.getBody());
-    rewriter.create<Chan>(chansOp.getLoc(), chanOp.typeName(), newChanName,
+    rewriter.setInsertionPointToEnd(chansOp.getBodyBlock());
+    rewriter.create<ChanOp>(chansOp.getLoc(), chanOp.getTypeName(), newChanName,
         BindingAttr{}.get(context, betweenName, outAttr), nodeTo);
-    rewriter.replaceOpWithNewOp<Chan>(chanOp, chanOp.typeName(),
-        chanOp.varName(), nodeFrom,
+    rewriter.replaceOpWithNewOp<ChanOp>(chanOp, chanOp.getTypeName(),
+        chanOp.getVarName(), nodeFrom,
         BindingAttr{}.get(context, betweenName, inAttr));
     // Rename target node's input channel.
-    nodesOp.walk([&](Node nodeOp) {
-      if (nodeOp.name() == nodeTo.getNodeName()) {
-        auto &&args = nodeOp.commandArguments();
+    nodesOp.walk([&](NodeOp nodeOp) {
+      if (nodeOp.getName() == nodeTo.getNodeName()) {
+        auto &&args = nodeOp.getCommandArguments();
         std::vector<Attribute> inChans{args.begin(), args.end()};
         for (auto &inChanName : inChans) {
           if (inChanName.cast<StringAttr>().getValue() == chanName) {
@@ -212,12 +276,12 @@ public:
           }
         }
         rewriter.setInsertionPoint(nodeOp);
-        rewriter.replaceOpWithNewOp<Node>(
-            nodeOp, nodeOp.nodeTypeNameAttr(), nodeOp.nameAttr(),
-            ArrayAttr::get(context, inChans), nodeOp.commandResultsAttr());
+        rewriter.replaceOpWithNewOp<NodeOp>(
+            nodeOp, nodeOp.getNodeTypeNameAttr(), nodeOp.getNameAttr(),
+            ArrayAttr::get(context, inChans), nodeOp.getCommandResultsAttr());
       }
     });
-    return success();
+    return mlir::success();
   }
 
 private:
@@ -231,64 +295,47 @@ public:
                      const std::string &instanceName,
                      const std::string &instanceGraphName,
                      const std::string &mainGraphName)
-      : RewritePattern(mlir::hil::Insts::getOperationName(), 1, context),
+      : RewritePattern(NodeOp::getOperationName(), 1, context),
         instanceName(instanceName), 
         instanceGraphName(instanceGraphName),
         mainGraphName(mainGraphName) {}
 
-  LogicalResult matchAndRewrite(Operation *op,
+  LogicalResult matchAndRewrite(Operation *operation,
                                 PatternRewriter &rewriter) const override {
-    /// This method is used to notify the rewriter that an in-place operation
-    /// modification is about to happen. A call to this function *must* be
-    /// followed by a call to either `finalizeRootUpdate` or `cancelRootUpdate`.
-    /// This is a minor efficiency win (it avoids creating a new operation and
-    /// removing the old one) but also often allows simpler code in the client.
-    // virtual void startRootUpdate(Operation *op) {}
-
-    /// This method is used to signal the end of a root update on the given
-    /// operation. This can only be called on operations that were provided to a
-    /// call to `startRootUpdate`.
-    // virtual void finalizeRootUpdate(Operation *op);
-
-    /// This method cancels a pending root update. This can only be called on
-    /// operations that were provided to a call to `startRootUpdate`.
-    // virtual void cancelRootUpdate(Operation *op) {}
-
     // MATCH PART.
     //--------------------------------------------------------------------------
     // Get the requested instance.
-    auto instOp = dyn_cast<Inst>(op);
-    if (!instOp || instOp.name() != instanceName) {
-      return failure();
+    auto nodeInstOp = mlir::dyn_cast<NodeOp>(operation);
+    if (!nodeInstOp || nodeInstOp.getName() != instanceName) {
+      return mlir::failure();
     }
     //--------------------------------------------------------------------------
     // REWRITE PART.
     //--------------------------------------------------------------------------
   
     // Get the main Graph and the instance Graph.
-    auto modelOp = cast<mlir::hil::Model>(
-        *instOp->getParentOp()->getParentOp()->getParentOp()->getParentOp());
-    auto &modelOperations = modelOp.getBody()->getOperations();
-    auto graphsOp = findElemByType<Graphs>(modelOperations).value();
+    auto modelOp = nodeInstOp->getParentOfType<ModelOp>();
+    auto &modelOperations = modelOp.getBodyBlock()->getOperations();
+    auto graphsOp = findElemByType<GraphsOp>(modelOperations).value();
     auto graphInstOp = findGraph(graphsOp, instanceGraphName);
     auto graphMainOp = findGraph(graphsOp, mainGraphName);
 
     // Get the main and the instance graph operations.
-    auto &graphInstOperations = graphInstOp->getBody()->getOperations();
-    auto &graphMainOperations = graphMainOp->getBody()->getOperations();
+    auto &graphInstOperations = graphInstOp->getBodyBlock()->getOperations();
+    auto &graphMainOperations = graphMainOp->getBodyBlock()->getOperations();
 
     // Get Nodes from the main Graph and the instance Graph.
-    auto nodesInstOp = findElemByType<Nodes>(graphInstOperations).value();
-    auto nodesMainOp = findElemByType<Nodes>(graphMainOperations).value();
+    auto nodesInstOp = findElemByType<NodesOp>(graphInstOperations).value();
+    auto nodesMainOp = findElemByType<NodesOp>(graphMainOperations).value();
 
     auto *context = nodesMainOp.getContext();
     // Clone Nodes from the instance graph to the main Graph.
     // NOTE: There may be multiple instances so name change is needed.
-    rewriter.setInsertionPointToEnd(nodesMainOp.getBody());
-    nodesInstOp.walk([&](Node nodeOp) {
+    rewriter.setInsertionPointToEnd(nodesMainOp.getBodyBlock());
+    nodesInstOp.walk([&](NodeOp nodeOp) {
       // Changing the name of the clone Node and 
       // the names of the inputs...
-      auto &&args = nodeOp.commandArguments();
+      auto &&args = nodeOp.getCommandArguments();
       std::vector<Attribute> newInChanNames;
       for (const auto arg : args) {
         auto newInChanName = arg.cast<StringAttr>().str() + "_" 
@@ -296,81 +343,81 @@ public:
         newInChanNames.push_back(StringAttr{}.get(context, newInChanName));
       }
       // ...and the names of the outputs. 
-      auto &&ress = nodeOp.commandResults();
+      auto &&ress = nodeOp.getCommandResults();
       std::vector<Attribute> newOutChanNames;
       for (const auto res : ress) {
         auto newOutChanName = res.cast<StringAttr>().str() + "_" 
-                                                          + instanceName;
+                                                           + instanceName;
         newOutChanNames.push_back(StringAttr{}.get(context, newOutChanName));
       }
       // Creating a new Node with the modified name.
-      auto newNodeName = nodeOp.nameAttr().str() + "_" + instanceName;
-      rewriter.create<Node>(nodesMainOp.getLoc(),
-                            nodeOp.nodeTypeNameAttr(),
-                            newNodeName,
-                            ArrayAttr::get(context, newInChanNames),
-                            ArrayAttr::get(context, newOutChanNames));
+      auto newNodeName = nodeOp.getNameAttr().str() + "_" + instanceName;
+      /// TODO: Try to find a more convenient way to create a container.
+      auto newNodeOp = rewriter.create<NodeOp>(nodesMainOp.getLoc(),
+          nodeOp.getNodeTypeNameAttr(), newNodeName,
+          ArrayAttr::get(context, newInChanNames),
+          ArrayAttr::get(context, newOutChanNames));
+      Block *body = new Block();
+      newNodeOp.getRegion().push_back(body);
     });
 
     // Get Chans from the main Graph and the instance Graph.
-    auto chansInstOp = findElemByType<Chans>(graphInstOperations).value();
-    auto chansMainOp = findElemByType<Chans>(graphMainOperations).value();
+    auto chansInstOp = findElemByType<ChansOp>(graphInstOperations).value();
+    auto chansMainOp = findElemByType<ChansOp>(graphMainOperations).value();
 
     // Clone Chans from the instance graph to the main Graph.
-    // NOTE: There may be multiple instances so the name changes are needed.
-    rewriter.setInsertionPointToEnd(chansMainOp.getBody());
-    chansInstOp.walk([&](Chan chanOp) {
+    // NOTE: There may be multiple instances so name change is needed.
+    rewriter.setInsertionPointToEnd(chansMainOp.getBodyBlock());
+    chansInstOp.walk([&](ChanOp chanOp) {
       // Creating a new Chan with the modified names.
-      auto newChanName = chanOp.varName().str() + "_" + instanceName;
-      auto newNodeFromName = chanOp.nodeFromAttr().getNodeName().str() + "_"
+      auto newChanName = chanOp.getVarName().str() + "_" + instanceName;
+      auto newNodeFromName = chanOp.getNodeFromAttr().getNodeName().str() + "_"
                            + instanceName;
-      auto newNodeToName = chanOp.nodeToAttr().getNodeName().str() + "_"
-                           + instanceName;
-      rewriter.create<Chan>(chansMainOp.getLoc(),
-                            chanOp.typeName(),
-                            newChanName,
-                            BindingAttr{}.get(context, newNodeFromName,
-                                              chanOp.nodeFrom().getPort()),
-                            BindingAttr{}.get(context, newNodeToName,
-                                              chanOp.nodeTo().getPort())
-                            );
+      auto newNodeToName = chanOp.getNodeToAttr().getNodeName().str() + "_"
+                         + instanceName;
+      rewriter.create<ChanOp>(chansMainOp.getLoc(),
+                              chanOp.getTypeName(),
+                              newChanName,
+                              BindingAttr{}.get(context, newNodeFromName,
+                                                chanOp.getNodeFrom().getPort()),
+                              BindingAttr{}.get(context, newNodeToName,
+                                                chanOp.getNodeTo().getPort()));
     });
 
     // Get main Graph connections.
-    auto instsMainOp = findElemByType<Insts>(graphMainOperations).value();
-    auto reqInstOp = findInst(instsMainOp, instanceName);
-    auto &reqInstMainOperations = reqInstOp->getBody()->getOperations();
-    auto consReqInsOp = findElemByType<Cons>(reqInstMainOperations).value();
+    auto &nodeInstOpOperations = nodeInstOp.getBodyBlock()->getOperations();
+    auto consInstOp = findElemByType<ConsOp>(nodeInstOpOperations).value();
 
     // Modify the Chans in the main Graph and in the instance Graph.
     std::map<std::string, std::vector<Attribute>> nodeToNewInChanNames;
     std::map<std::string, std::vector<Attribute>> nodeToNewOutChanNames;
-    consReqInsOp.walk([&](Con conOp) {
-      auto sourceBndGraph = conOp.nodeFromAttr();
-      auto targetBndGraph = conOp.nodeToAttr();
-      auto dirTypeName = conOp.dirTypeName();
+    consInstOp.walk([&](ConOp conOp) {
+      auto sourceBndGraph = conOp.getNodeFromAttr();
+      auto targetBndGraph = conOp.getNodeToAttr();
+      auto dirTypeName = conOp.getDirTypeName();
       // Connection to input.
       if (dirTypeName == "IN") {
         auto sourceChanName = sourceBndGraph.getChanName().str();
-        auto targetChanNameAfter = targetBndGraph.getChanName().str()
-                                    + "_" + instanceName;
+        auto targetChanNameAfter = targetBndGraph.getChanName().str() + "_" 
+                                 + instanceName;
         
         auto sourceChanOp = findChan(chansMainOp,
-                                      sourceChanName);
+                                     sourceChanName);
         auto targetChanAfterOp = findChan(chansMainOp,
-                                           targetChanNameAfter);
+                                          targetChanNameAfter);
 
-        rewriter.setInsertionPointToEnd(chansMainOp.getBody());
-        rewriter.replaceOpWithNewOp<Chan>(
+        rewriter.setInsertionPointToEnd(chansMainOp.getBodyBlock());
+        rewriter.replaceOpWithNewOp<ChanOp>(
            *sourceChanOp,
-            sourceChanOp->typeName(),
-            sourceChanOp->varName(),
-            sourceChanOp->nodeFrom(),
+            sourceChanOp->getTypeName(),
+            sourceChanOp->getVarName(),
+            sourceChanOp->getNodeFrom(),
             BindingAttr{}.get(context, 
-                targetChanAfterOp->nodeToAttr().getNodeName(),
-                targetChanAfterOp->nodeTo().getPort()));
+                targetChanAfterOp->getNodeToAttr().getNodeName(),
+                targetChanAfterOp->getNodeTo().getPort()));
         // Save the name of the input chan to modify it in the node later.
-        auto nodeToName = targetChanAfterOp->nodeToAttr().getNodeName().str();
+        auto nodeToName = 
+            targetChanAfterOp->getNodeToAttr().getNodeName().str();
         auto iterator = nodeToNewInChanNames.find(nodeToName);
         std::vector<Attribute> newVectorAttr;
         if (iterator == nodeToNewInChanNames.end()) {
@@ -378,12 +425,12 @@ public:
                                        newVectorAttr);
         }
         iterator = nodeToNewInChanNames.find(nodeToName);
-        auto newChanNameStr = sourceChanOp->varName().str();
+        auto newChanNameStr = sourceChanOp->getVarName().str();
         auto newChanNameAttr = StringAttr{}.get(context, newChanNameStr);
         iterator->second.push_back(newChanNameAttr);
         // Delete the 'source' Node.
         auto sourceNodeNameAfter = 
-            targetChanAfterOp->nodeFromAttr().getNodeName().str();
+            targetChanAfterOp->getNodeFromAttr().getNodeName().str();
         auto sourceNode = findNode(nodesMainOp, sourceNodeNameAfter);
         rewriter.eraseOp(*sourceNode);
         // Delete the Chan connecting the 'source' Node.
@@ -393,24 +440,25 @@ public:
       // Connection to output.
       if (dirTypeName == "OUT") {
         auto targetChanName = targetBndGraph.getChanName().str();
-        auto sourceChanNameAfter = sourceBndGraph.getChanName().str() 
-                                 + "_" + instanceName;
+        auto sourceChanNameAfter = sourceBndGraph.getChanName().str() + "_" 
+                                 + instanceName;
       
         auto sourceChanAfterOp = findChan(chansMainOp,
-                                           sourceChanNameAfter);
+                                          sourceChanNameAfter);
         auto targetChanOp = findChan(chansMainOp,
-                                      targetChanName);
-        rewriter.setInsertionPointToEnd(chansMainOp.getBody());
-        rewriter.replaceOpWithNewOp<Chan>(
+                                     targetChanName);
+        rewriter.setInsertionPointToEnd(chansMainOp.getBodyBlock());
+        rewriter.replaceOpWithNewOp<ChanOp>(
            *targetChanOp,
-            targetChanOp->typeName(),
-            targetChanOp->varName(),
+            targetChanOp->getTypeName(),
+            targetChanOp->getVarName(),
             BindingAttr{}.get(context,
-                sourceChanAfterOp->nodeFromAttr().getNodeName(),
-                sourceChanAfterOp->nodeFrom().getPort()),
-            targetChanOp->nodeTo());
+                sourceChanAfterOp->getNodeFrom().getNodeName(),
+                sourceChanAfterOp->getNodeFrom().getPort()),
+            targetChanOp->getNodeTo());
         // Save the name of the output chan to modify it in the node later.
-        auto nodeFromName = sourceChanAfterOp->nodeFromAttr().getNodeName().str();
+        auto nodeFromName = 
+            sourceChanAfterOp->getNodeFromAttr().getNodeName().str();
         auto iterator = nodeToNewOutChanNames.find(nodeFromName);
         std::vector<Attribute> newVectorAttr;
         if (iterator == nodeToNewOutChanNames.end()) {
@@ -418,12 +466,12 @@ public:
                                         newVectorAttr);
         }
         iterator = nodeToNewOutChanNames.find(nodeFromName);
-        auto newChanNameStr = targetChanOp->varName().str();
+        auto newChanNameStr = targetChanOp->getVarName().str();
         auto newChanNameAttr = StringAttr{}.get(context, newChanNameStr);
         iterator->second.push_back(newChanNameAttr);
         // Delete the 'sink' Node.
         auto sinkNodeNameAfter = 
-            sourceChanAfterOp->nodeToAttr().getNodeName().str();
+            sourceChanAfterOp->getNodeToAttr().getNodeName().str();
         auto sinkNode = findNode(nodesMainOp, sinkNodeNameAfter);
         rewriter.eraseOp(*sinkNode);
         // Delete the Chan connecting the 'sink' Node.
@@ -432,28 +480,23 @@ public:
       // Delete connection.
       rewriter.eraseOp(conOp);
     });
-    rewriter.setInsertionPointToEnd(nodesMainOp.getBody());
+    rewriter.setInsertionPointToEnd(nodesMainOp.getBodyBlock());
     for (const auto &pair : nodeToNewInChanNames) {
       auto nodeOp = findNode(nodesMainOp, pair.first);
       auto inChans = nodeToNewInChanNames.find(pair.first)->second;
       auto outChans = nodeToNewOutChanNames.find(pair.first)->second;
-      rewriter.replaceOpWithNewOp<Node>(*nodeOp,
-                                         nodeOp->nodeTypeNameAttr(),
-                                         nodeOp->name(),
-                                         ArrayAttr::get(context, inChans),
-                                         ArrayAttr::get(context, outChans));
+      /// TODO: Try to find a more convenient way to create a container.
+      Block *block = new Block();
+      auto newNodeOp = rewriter.replaceOpWithNewOp<NodeOp>(*nodeOp,
+          nodeOp->getNodeTypeNameAttr(), nodeOp->getName(),
+          ArrayAttr::get(context, inChans), ArrayAttr::get(context, outChans));
+      newNodeOp.getRegion().push_back(block);
     }
-    // Delete connections containers.
-    rewriter.eraseOp(consReqInsOp);
-    rewriter.eraseOp(*reqInstOp);
-
+    // Delete connections container.
+    rewriter.eraseOp(consInstOp);
     // Delete the instance node in the main Graph.
-    nodesMainOp.walk([&](Node nodeOp) {
-      if (nodeOp.name() == instanceName) {
-        rewriter.eraseOp(nodeOp);
-      }
-    });
-    return success();
+    rewriter.eraseOp(nodeInstOp);
+    return mlir::success();
   }
 
 private:
@@ -466,63 +509,63 @@ private:
 
 namespace {
 template <typename DerivedT>
-class CanonicalizerBase : public ::mlir::OperationPass<> {
+class CanonicalizerBase : public OperationPass<> {
 public:
   using Base = CanonicalizerBase;
 
   CanonicalizerBase()
-      : ::mlir::OperationPass<>(::mlir::TypeID::get<DerivedT>()) {}
+      : OperationPass<>(TypeID::get<DerivedT>()) {}
   CanonicalizerBase(const CanonicalizerBase &other)
-      : ::mlir::OperationPass<>(other) {}
+      : OperationPass<>(other) {}
 
   /// Returns the command-line argument attached to this pass.
-  static constexpr ::llvm::StringLiteral getArgumentName() {
-    return ::llvm::StringLiteral("canonicalize");
+  static constexpr LLVMStringLiteral getArgumentName() {
+    return LLVMStringLiteral("canonicalize");
   }
-  ::llvm::StringRef getArgument() const override { return "canonicalize"; }
+  LLVMStringRef getArgument() const override { return "canonicalize"; }
 
-  ::llvm::StringRef getDescription() const override {
+  LLVMStringRef getDescription() const override {
     return "Canonicalize operations";
   }
 
   /// Returns the derived pass name.
-  static constexpr ::llvm::StringLiteral getPassName() {
-    return ::llvm::StringLiteral("Canonicalizer");
+  static constexpr LLVMStringLiteral getPassName() {
+    return LLVMStringLiteral("Canonicalizer");
   }
-  ::llvm::StringRef getName() const override { return "Canonicalizer"; }
+  LLVMStringRef getName() const override { return "Canonicalizer"; }
 
   /// Support isa/dyn_cast functionality for the derived pass class.
-  static bool classof(const ::mlir::Pass *pass) {
-    return pass->getTypeID() == ::mlir::TypeID::get<DerivedT>();
+  static bool classof(const Pass *pass) {
+    return pass->getTypeID() == TypeID::get<DerivedT>();
   }
 
   /// A clone method to create a copy of this pass.
-  std::unique_ptr<::mlir::Pass> clonePass() const override {
+  std::unique_ptr<Pass> clonePass() const override {
     return std::make_unique<DerivedT>(*static_cast<const DerivedT *>(this));
   }
 
   /// Return the dialect that must be loaded in the context before this pass.
-  void getDependentDialects(::mlir::DialectRegistry &registry) const override {}
+  void getDependentDialects(DialectRegistry &registry) const override {}
 
 protected:
-  ::mlir::Pass::Option<bool> topDownProcessingEnabled{
+  Option<bool> topDownProcessingEnabled{
       *this, "top-down",
       ::llvm::cl::desc("Seed the worklist in general top-down order"),
       ::llvm::cl::init(true)};
-  ::mlir::Pass::Option<bool> enableRegionSimplification{
+  Option<bool> enableRegionSimplification{
       *this, "region-simplify",
       ::llvm::cl::desc("Seed the worklist in general top-down order"),
       ::llvm::cl::init(true)};
-  ::mlir::Pass::Option<int64_t> maxIterations{
+  Option<int64_t> maxIterations{
       *this, "max-iterations",
       ::llvm::cl::desc("The max number of PatternSet iterations"),
       ::llvm::cl::init(1)};
-  ::mlir::Pass::ListOption<std::string> disabledPatterns{
+  ListOption<std::string> disabledPatterns{
       *this, "disable-patterns",
       ::llvm::cl::desc(
           "Labels of patterns that should be filtered out during application"),
       llvm::cl::MiscFlags::CommaSeparated};
-  ::mlir::Pass::ListOption<std::string> enabledPatterns{
+  ListOption<std::string> enabledPatterns{
       *this, "enable-patterns",
       ::llvm::cl::desc("Labels of patterns that should be used during "
                        "application, all other patterns are filtered out"),
@@ -547,11 +590,11 @@ struct GraphCanonicalizer : public CanonicalizerBase<GraphCanonicalizer> {
     owningPatterns.add<ChansRewritePass>(context);
 
     patterns = FrozenRewritePatternSet(std::move(owningPatterns));
-    return success();
+    return mlir::success();
   }
   void runOnOperation() override {
-    (void)applyPatternsAndFoldGreedily(getOperation()->getRegions(), patterns,
-                                       config);
+    /*(void)applyPatternsAndFoldGreedily(getOperation()->getRegions(), patterns,
+                                       config);*/
   }
 
   GreedyRewriteConfig config;
@@ -565,7 +608,16 @@ void runPass(MLIRModule &mlirModule, RewritePattern &&pass) {
   auto *context = mlirModule.getContext();
   SimpleRewriter rewriter(context);
   mlirModule.getRoot()->walk(
-      [&](Operation *op) { (void)pass.matchAndRewrite(op, rewriter); });
+      [&](Operation *operation) { (void)pass.matchAndRewrite(operation,
+                                                             rewriter); });
+}
+
+std::function<void(MLIRModule &)> ModelLowering() {
+  return [=](MLIRModule &mlirModule) {
+    auto *context = mlirModule.getContext();
+    ModelOpLowering pass{context};
+    runPass(mlirModule, std::move(pass));
+  };
 }
 
 std::function<void(MLIRModule &)> ChanAddSourceTarget() {

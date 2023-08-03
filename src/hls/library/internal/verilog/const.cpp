@@ -58,7 +58,6 @@ std::shared_ptr<MetaElement> Const::create(const NodeType &nodetype,
   }
   Parameters params;
   params.add(Parameter(stages, Constraint<unsigned>(1, 100), 0));
-  //params.add(Parameter(width, Constraint<unsigned>(1, 128), 16));
 
   metaElement = std::shared_ptr<MetaElement>(new Const(lowerCaseName,
                                                        "std",
@@ -80,16 +79,15 @@ std::unique_ptr<Element> Const::construct() const {
 
   outputType = std::string("wire ");
 
-  for (auto port : ports) {
+  for (const auto &port : ports) {
     if (port.name == "clock" || port.name == "reset") {
       ifaceWires += std::string("input ") + port.name + ";\n";
       continue;
     }
 
     std::string portDeclr =
-      (port.width > 1 ? std::string("[") + std::to_string(port.width - 1)
-                                         + ":0] " : std::string(""))
-                                         + utils::replaceSomeChars(port.name) + ";\n";
+        (port.width > 1 ? std::string("[") + std::to_string(port.width - 1) +
+        ":0] " : std::string("")) + utils::replaceSomeChars(port.name) + ";\n";
 
     if (port.direction == Port::IN || port.direction == Port::INOUT) {
       if (port.direction == Port::IN) {
@@ -103,8 +101,8 @@ std::unique_ptr<Element> Const::construct() const {
     if (port.direction == Port::OUT || port.direction == Port::INOUT) {
       if (port.direction == Port::OUT) {
         ifaceWires += std::string("output ") + portDeclr;
-        ir += std::string("assign ") + utils::replaceSomeChars(port.name) + " = " 
-                                     + std::to_string(value) + ";\n";
+        ir += std::string("assign ") + utils::replaceSomeChars(port.name) +
+            " = " + std::to_string(value) + ";\n";
       }
       outputs += outputType + portDeclr;
     }

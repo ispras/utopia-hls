@@ -57,15 +57,15 @@ void Instance::addModuleInputs(const std::vector<model::Port*> &inputs) {
   addModuleInput(Port("clock", Port::Direction::IN, Type("clock", 1)));
   addModuleInput(Port("reset", Port::Direction::IN, Type("reset", 1)));
   for (const auto *input : inputs) {
-    addModuleInput(Port(utils::replaceSomeChars(input->name), Port::Direction::IN,
-        Type("sint", input->type.size)));
+    addModuleInput(Port(utils::replaceSomeChars(input->name), 
+        Port::Direction::IN, Type("sint", input->type.size)));
   }
 }
 
 void Instance::addModuleOutputs(const std::vector<model::Port*> &outputs) {
   for (const auto *output : outputs) {
-    addModuleOutput(Port(utils::replaceSomeChars(output->name), Port::Direction::OUT,
-        Type("sint", output->type.size)));
+    addModuleOutput(Port(utils::replaceSomeChars(output->name),
+        Port::Direction::OUT, Type("sint", output->type.size)));
   }
 }
 
@@ -197,7 +197,7 @@ void ExternalModule::addPortsToDict(TemplateDictionary *dict,
                                     const std::string &tagSepName,
                                     const size_t portCount) const {
   for (size_t i = 0; i < ports.size(); i++) {
-    const auto port = ports[i];
+    const auto &port = ports[i];
     auto *subDict = dict->AddSectionDictionary(tagSectName);
     subDict->SetValue(tagPortName, port.name);
     subDict->SetValue(tagSepName, (i == portCount - 1) ? "" : ",");
@@ -212,7 +212,7 @@ void FirrtlCircuit::addPortsToDict(TemplateDictionary *dict,
                                    const std::string &tagSepName,
                                    const size_t portCount) const {
   for (size_t i = 0; i < ports.size(); i++) {
-    const auto port = ports[i];
+    const auto &port = ports[i];
     auto *subDict = dict->AddSectionDictionary(tagSectName);
     subDict->SetValue(tagPortName, port.name);
     const auto type = port.type;
@@ -318,8 +318,8 @@ void FirrtlCircuit::printFirrtl(std::ostream &out) const {
   addExtModulesToDict(dict, extModules);
   // Use template to store result to file.
   std::string output;
-  const char* basePath = std::getenv("UTOPIA_HLS_HOME");
-  const char* verilogTemplate = "/src/data/ctemplate/top_firrtl.tpl";
+  const char *basePath = std::getenv("UTOPIA_HLS_HOME");
+  const char *verilogTemplate = "/src/data/ctemplate/top_firrtl.tpl";
   ctemplate::ExpandTemplate(std::string(basePath) + 
                             std::string(verilogTemplate),
                             ctemplate::DO_NOT_STRIP,
@@ -341,8 +341,8 @@ void FirrtlCircuit::dumpVerilogLibrary(const std::string &outPath,
 
 FirrtlCircuit::FirrtlCircuit(const Model &model, const std::string &name) :
     name(name), latency(model.ind.ticks), resetInitialValue(0) {
-  for (auto nodeTypeIterator = model.nodetypes.begin();
-       nodeTypeIterator != model.nodetypes.end();
+  for (auto nodeTypeIterator = model.nodetypes.cbegin();
+       nodeTypeIterator != model.nodetypes.cend();
        nodeTypeIterator++) {
     addExternalModule(nodeTypeIterator->second);
   }
@@ -400,23 +400,23 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
                           localTime->tm_min,
                           localTime->tm_sec);
 
-  const auto main = (firModules.find(name))->second;
+  const auto &main = (firModules.find(name))->second;
 
   dict->SetValue("MODULE_NAME", main.name);
 
   // Set registers for device inputs.
   std::vector<Port> inputs = main.inputs;
   std::vector<std::string> bndNames;
-  for (size_t i = 0; i < inputs.size(); i++) {
+  for (const auto &input : inputs) {
     TemplateDictionary *inDict = dict->AddSectionDictionary("INS");
-    if (inputs[i].isClock() || inputs[i].isReset()) {
+    if (input.isClock() || input.isReset()) {
       inDict->SetValue("IN_TYPE", "");
     } else {
       inDict->SetValue("IN_TYPE", 
-          "[" + std::to_string(inputs[i].type.width - 1) + ":0]");
+          "[" + std::to_string(input.type.width - 1) + ":0]");
     }
 
-    const std::string iName = utils::replaceSomeChars(inputs[i].name);
+    const std::string iName = utils::replaceSomeChars(input.name);
     inDict->SetValue("IN_NAME", iName);
     bndNames.push_back(iName);
   }
@@ -424,11 +424,11 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
   // Set registers for device outputs.
   std::vector<Port> outputs = main.outputs;
 
-  for (size_t i = 0; i < outputs.size(); i++) {
+  for (const auto &output : outputs) {
     TemplateDictionary *outDict = dict->AddSectionDictionary("OUTS");
     outDict->SetValue("OUT_TYPE", 
-        "[" + std::to_string(outputs[i].type.width - 1) + ":0]");
-    const std::string oName = utils::replaceSomeChars(outputs[i].name);
+        "[" + std::to_string(output.type.width - 1) + ":0]");
+    const std::string oName = utils::replaceSomeChars(output.name);
     outDict->SetValue("OUT_NAME", oName);
     bndNames.push_back(oName);
   }
@@ -445,10 +445,10 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
   bndNames.clear();
 
   // Set resets.
-  for (size_t i = 0; i < inputs.size(); i++) {
-    if (inputs[i].isReset()) {
+  for (const auto &input : inputs) {
+    if (input.isReset()) {
       auto *resetDict = dict->AddSectionDictionary("RESETS");
-      resetDict->SetValue("RESET_NAME", inputs[i].name);
+      resetDict->SetValue("RESET_NAME", input.name);
       resetDict->SetIntValue("RESET_VALUE", resetInitialValue);
     }
   }
@@ -456,20 +456,20 @@ void FirrtlCircuit::printRndVlogTest(const Model &model,
   // Generate random stimuli.
   for (size_t i = 0; i < testCount; i++) {
     TemplateDictionary *tDict = dict->AddSectionDictionary("TESTS");
-    for (size_t j = 0; j < inputs.size(); j++) {
+    for (const auto &input : inputs) {
 
-      if (inputs[j].isClock() || inputs[j].isReset())
+      if (input.isClock() || input.isReset())
         continue;
 
       TemplateDictionary *sDict = tDict->AddSectionDictionary("ST");
-      sDict->SetValue("NAME", utils::replaceSomeChars(inputs[j].name));
+      sDict->SetValue("NAME", utils::replaceSomeChars(input.name));
     }
   }
 
   // Use the template to store testbench to file.
   std::string output;
-  const char* basePath = std::getenv("UTOPIA_HLS_HOME");
-  const char* verilogTemplate = "/src/data/ctemplate/tbench_verilog.tpl";
+  const char *basePath = std::getenv("UTOPIA_HLS_HOME");
+  const char *verilogTemplate = "/src/data/ctemplate/tbench_verilog.tpl";
   ctemplate::ExpandTemplate(std::string(basePath) + 
                             std::string(verilogTemplate),
                             ctemplate::DO_NOT_STRIP, dict, &output);

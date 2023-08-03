@@ -16,22 +16,6 @@ namespace eda::hls::library::internal::verilog {
 
 void Default::estimate(const Parameters &params,
                        Indicators &indicators) const {
-  unsigned inputCount = 0;
-  unsigned latencySum = 0;
-  unsigned widthSum = 0;
-
-  const auto latency = params.getValue(stages);
-
-  const auto width = 1u;
-
-  for (const auto &port : ports) {
-    widthSum += width;
-    if (port.direction == Port::IN)
-      inputCount++;
-    else
-      latencySum += latency;
-  }
-
   double S = params.getValue(stages);
   double Fmax = 500000.0;
   double F = Fmax * ((1 - std::exp(-S)) + 0.1);
@@ -88,7 +72,7 @@ std::unique_ptr<Element> Default::construct() const {
 
   const auto latency = 1u;
 
-  for (auto port : ports) {
+  for (const auto &port : ports) {
     if (port.name != "clock" && port.name != "reset") {
       if (port.direction == Port::IN || port.direction == Port::INOUT) {
         inputLength += port.width;
@@ -102,7 +86,7 @@ std::unique_ptr<Element> Default::construct() const {
   // FSM can be create iff there is at least one input in the design.
   bool fsmNotCreated = true;
 
-  for (auto port : ports) {
+  for (const auto &port : ports) {
     if (port.name == "clock" || port.name == "reset") {
       ifaceWires += std::string("input ") + port.name + ";\n";
       continue;

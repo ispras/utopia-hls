@@ -22,11 +22,11 @@
 
 #include <string>
 
+using Model = eda::hls::model::Model;
+
 namespace eda::hls::model {
 
-std::ostream &dumpModelMlir(const eda::hls::model::Model &model,
-                            std::ostream &os);
-void dumpModelMlirToFile(const eda::hls::model::Model &model,
-                         const std::string &filename);
+std::ostream &dumpModelMlir(const Model &model, std::ostream &os);
+void dumpModelMlirToFile(const Model &model, const std::string &filename);
 
 } // namespace eda::hls::model
