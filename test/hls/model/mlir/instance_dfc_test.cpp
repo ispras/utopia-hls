@@ -34,7 +34,6 @@ using Compiler = eda::hls::compiler::Compiler;
 using Criteria = eda::hls::model::Criteria;
 using Library = eda::hls::library::Library;
 using Mapper = eda::hls::mapper::Mapper;
-using MLIRModule = mlir::model::MLIRModule;
 template<typename Type>
 using ParametersOptimizer = eda::hls::scheduler::ParametersOptimizer<Type>;
 using TopologicalBalancer = eda::hls::scheduler::TopologicalBalancer;
@@ -318,7 +317,7 @@ int instanceDfcTest(const dfc::kernel &kernel,
 
   // Applying transforms in MLIR.
   Transformer<Model> transformer{*model};
-  transformer.applyTransform(mlir::transforms::UnfoldInstance("INSTANCE2007",
+  transformer.applyTransform(mlir::transforms::UnfoldInstance("VectorSum1",
                                                               "VectorSum",
                                                               "InstanceTest"));
   auto modelAfter = transformer.done();

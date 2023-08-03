@@ -357,6 +357,8 @@ Node *Builder::getNode(const Kernel *kernel,
     nodeName = getSourceName(unit);
   } else if (unit->opcode == "sink") {
     nodeName = getSinkName(unit);
+  } else if (unit->opcode == "INSTANCE") {
+    nodeName = unit->instance->instanceName;
   } else {
     nodeName = unit->opcode + std::to_string(id);
   }
