@@ -309,18 +309,15 @@ int instanceDfcTest(const dfc::kernel &kernel,
   std::ofstream output(fsOutPath / outDotFileName);
   eda::hls::model::printDot(output, *model);
   output.close();
-
-  // Test MLIR dumper.
-  std::stringstream stream;
-  dumpModelMlir(*model, stream);
-  std::cout << stream.str() << std::endl;
-
+  // Round-trip.
+  //----------------------------------------------------------------------------
   // Applying transforms in MLIR.
   Transformer<Model> transformer{*model};
-  transformer.applyTransform(mlir::transforms::UnfoldInstance("VectorSum1",
-                                                              "VectorSum",
-                                                              "InstanceTest"));
+  transformer.addPass(createGraphRewritePass());
+  transformer.runPasses();
+  transformer.clearPasses();
   auto modelAfter = transformer.done();
+  //----------------------------------------------------------------------------
 
   // Print model after transformations.
   std::cout << "Model after transformations:" << std::endl;

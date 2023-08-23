@@ -315,7 +315,7 @@ int compilerDfcTest(const dfc::kernel &kernel,
   eda::hls::model::printDot(output, *model);
   output.close();
 
-  /// TODO: Uncomment when the whole
+  /// TODO: Uncomment when the end-to-end tool path is ready.
   /*const std::string inLibPath = homePath / inLibSubPath;
   Library::get().initialize();
   Library::get().importLibrary(inLibPath, relCatPath);

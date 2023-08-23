@@ -3,6 +3,7 @@ add_mlir_dialect_library(MLIRHIL
         Dialect.cpp
         Ops.cpp
         Combine.cpp
+        Conversion.cpp
         Model.cpp
         Dumper.cpp
         Utils.cpp

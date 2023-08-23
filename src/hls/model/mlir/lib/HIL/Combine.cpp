@@ -23,10 +23,6 @@
 #include "HIL/Ops.h"
 #include "HIL/Utils.h"
 
-#include "circt/Dialect/FIRRTL/FIRRTLDialect.h"
-#include "circt/Dialect/FIRRTL/FIRRTLOps.h"
-#include "circt/Dialect/FIRRTL/Passes.h"
-
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/Matchers.h"
 #include "mlir/IR/PatternMatch.h"
@@ -49,10 +45,7 @@ using Block = mlir::Block;
 using ChansOp = mlir::hil::ChansOp;
 using ChanOp = mlir::hil::ChanOp;
 using ConsOp = mlir::hil::ConsOp;
-using ConversionPattern = mlir::ConversionPattern;
-using ConversionPatternRewriter = mlir::ConversionPatternRewriter;
 using ConOp = mlir::hil::ConOp;
-using CircuitOp = circt::firrtl::CircuitOp;
 using DialectRegistry = mlir::DialectRegistry;
 using FrozenRewritePatternSet = mlir::FrozenRewritePatternSet;
 using GraphsOp = mlir::hil::GraphsOp;
@@ -81,29 +74,8 @@ using RewritePattern = mlir::RewritePattern;
 using RewritePatternSet = mlir::RewritePatternSet;
 using StringAttr = mlir::StringAttr;
 using TypeID = mlir::TypeID;
-using Value = mlir::Value;
 
-
-/// TODO:
 namespace {
-class ModelOpLowering : public ConversionPattern {
-public:
-  ModelOpLowering(MLIRContext *context)
-      : ConversionPattern(ModelOp::getOperationName(), 1, context) {}
-
-  LogicalResult matchAndRewrite(Operation *operation,
-      ArrayRef<mlir::Value> operands,
-      ConversionPatternRewriter &rewriter) const final {
-
-    auto modelOp = mlir::dyn_cast<ModelOp>(*operation);
-    if (!modelOp) {
-      return mlir::failure();
-    }
-
-    return mlir::success();
-  }
-};
-
 class SimpleRewriter : public PatternRewriter {
 public:
   SimpleRewriter(MLIRContext *context) : PatternRewriter(context) {}
@@ -509,14 +481,14 @@ private:
 
 namespace {
 template <typename DerivedT>
-class CanonicalizerBase : public OperationPass<> {
+class CanonicalizerBase : public OperationPass<ModuleOp> {
 public:
   using Base = CanonicalizerBase;
 
   CanonicalizerBase()
-      : OperationPass<>(TypeID::get<DerivedT>()) {}
+      : OperationPass<ModuleOp>(TypeID::get<DerivedT>()) {}
   CanonicalizerBase(const CanonicalizerBase &other)
-      : OperationPass<>(other) {}
+      : OperationPass<ModuleOp>(other) {}
 
   /// Returns the command-line argument attached to this pass.
   static constexpr LLVMStringLiteral getArgumentName() {
@@ -546,59 +518,26 @@ public:
 
   /// Return the dialect that must be loaded in the context before this pass.
   void getDependentDialects(DialectRegistry &registry) const override {}
-
-protected:
-  Option<bool> topDownProcessingEnabled{
-      *this, "top-down",
-      ::llvm::cl::desc("Seed the worklist in general top-down order"),
-      ::llvm::cl::init(true)};
-  Option<bool> enableRegionSimplification{
-      *this, "region-simplify",
-      ::llvm::cl::desc("Seed the worklist in general top-down order"),
-      ::llvm::cl::init(true)};
-  Option<int64_t> maxIterations{
-      *this, "max-iterations",
-      ::llvm::cl::desc("The max number of PatternSet iterations"),
-      ::llvm::cl::init(1)};
-  ListOption<std::string> disabledPatterns{
-      *this, "disable-patterns",
-      ::llvm::cl::desc(
-          "Labels of patterns that should be filtered out during application"),
-      llvm::cl::MiscFlags::CommaSeparated};
-  ListOption<std::string> enabledPatterns{
-      *this, "enable-patterns",
-      ::llvm::cl::desc("Labels of patterns that should be used during "
-                       "application, all other patterns are filtered out"),
-      llvm::cl::MiscFlags::CommaSeparated};
 };
 
-struct GraphCanonicalizer : public CanonicalizerBase<GraphCanonicalizer> {
-  GraphCanonicalizer(const GreedyRewriteConfig &config) : config(config) {}
-
-  GraphCanonicalizer() {
-    // Default constructed GraphCanonicalizer takes its settings from command
-    // line options.
-    config.useTopDownTraversal = topDownProcessingEnabled;
-    config.enableRegionSimplification = enableRegionSimplification;
-    config.maxIterations = maxIterations;
-  }
-
-  /// Initialize the canonicalizer by building the set of patterns used during
-  /// execution.
-  LogicalResult initialize(MLIRContext *context) override {
-    RewritePatternSet owningPatterns(context);
-    owningPatterns.add<ChansRewritePass>(context);
-
-    patterns = FrozenRewritePatternSet(std::move(owningPatterns));
-    return mlir::success();
-  }
+class GraphCanonicalizer : public CanonicalizerBase<GraphCanonicalizer> {
+public:
   void runOnOperation() override {
-    /*(void)applyPatternsAndFoldGreedily(getOperation()->getRegions(), patterns,
-                                       config);*/
-  }
+    GreedyRewriteConfig config;
+    config.useTopDownTraversal = true;
+    config.enableRegionSimplification = false;
+    config.maxIterations = 1;
+    RewritePatternSet patterns(&getContext());
+    patterns.add<UnfoldInstancePass>(&getContext(),
+                                     "VectorSum1",
+                                     "VectorSum",
+                                     "InstanceTest");
 
-  GreedyRewriteConfig config;
-  FrozenRewritePatternSet patterns;
+    if (failed(mlir::applyPatternsAndFoldGreedily(getOperation(),
+                                                  std::move(patterns),
+                                                  config)))
+      signalPassFailure();
+  }
 };
 
 } // namespace
@@ -610,14 +549,6 @@ void runPass(MLIRModule &mlirModule, RewritePattern &&pass) {
   mlirModule.getRoot()->walk(
       [&](Operation *operation) { (void)pass.matchAndRewrite(operation,
                                                              rewriter); });
-}
-
-std::function<void(MLIRModule &)> ModelLowering() {
-  return [=](MLIRModule &mlirModule) {
-    auto *context = mlirModule.getContext();
-    ModelOpLowering pass{context};
-    runPass(mlirModule, std::move(pass));
-  };
 }
 
 std::function<void(MLIRModule &)> ChanAddSourceTarget() {

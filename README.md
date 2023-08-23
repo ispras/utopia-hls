@@ -66,15 +66,15 @@ below are specific to this operating system:
 
 * `autoconf`
 * `bison`
+* `build-essential`
 * `clang`
-* `clang-12`
 * `clang-tidy`
-* `cmake`
 * `flex`
 * `g++`
 * `gcc`
 * `iverilog`
 * `liblpsolve55-dev`
+* `libssl-dev`
 * `libtool`
 * `libxerces-c3.2`
 * `libxerces-c-dev`
@@ -87,15 +87,23 @@ below are specific to this operating system:
 
 To install them, do the following:
 ```
-sudo apt install autoconf bison clang clang-tidy cmake flex g++ gcc \
-    iverilog liblpsolve55-dev libtool libxerces-c3.2 libxerces-c-dev lld \
-    make ninja-build python zlib1g zlib1g-dev
+sudo apt install autoconf bison build-essential clang clang-tidy flex \
+    g++ gcc iverilog liblpsolve55-dev libssl-dev libtool libxerces-c3.2 \
+    libxerces-c-dev lld make ninja-build python zlib1g zlib1g-dev
 ```
 
-### CIRCT Installation
+### CMake Installation
 
-LLVM requires a significant amount of RAM (about 8 Gb or more) to build.
-Please take this into account while moving through the guide.
+```
+cd <workdir>
+wget https://cmake.org/files/v3.27/cmake-3.27.3-linux-x86_64.tar.gz
+tar xzf cmake-3.27.3-linux-x86_64.tar.gz
+rm -rf cmake-3.27.3-Linux-x86_64.tar.gz
+cd cmake-3.27.3-Linux-x86_64
+./bootstrap
+make
+sudo make install
+```
 
 ### Z3 Installation
 
@@ -112,6 +120,11 @@ sudo make install
 ```
 If you would like to install Z3 to a non-standard location,
 please set `Z3_DIR` environment variable to Z3 build/installation directory.
+
+### CIRCT Installation
+
+LLVM requires a significant amount of RAM (about 8 Gb or more) to build.
+Please take this into account while moving through the guide.
 
 #### Check out LLVM and CIRCT repos
 
@@ -151,7 +164,7 @@ ninja
 
 ##### Debug (Release with Debug Info)
 
-1. Open the file `<workdir>/circt/llvm/clang/include/clang/Options.td`;
+1. Open the file `<workdir>/circt/llvm/clang/include/clang/Driver/Options.td`;
 2. Locate the following line:
 ```
 defm float_store : BooleanFFlag<"float-store">, Group<clang_ignored_gcc_optimization_f_Group>;
@@ -184,7 +197,6 @@ cmake -G Ninja ../llvm \
   -DLLVM_OPTIMIZED_TABLEGEN=ON \
   -DLLVM_USE_NEWPM=ON \
   -DCMAKE_EXE_LINKER_FLAGS='-Wl,-no-keep-memory' \
-  -DLLVM_CCACHE_BUILD=ON \
   -DLLVM_PARALLEL_LINK_JOBS=4 \
   -DLLVM_PARALLEL_COMPILE_JOBS=4
 ninja
@@ -237,7 +249,6 @@ cmake -G Ninja .. \
     -DLLVM_OPTIMIZED_TABLEGEN=ON \
     -DLLVM_USE_NEWPM=ON \
     -DCMAKE_EXE_LINKER_FLAGS='-Wl,-no-keep-memory' \
-    -DLLVM_CCACHE_BUILD=ON \
     -DLLVM_PARALLEL_LINK_JOBS=4 \
     -DLLVM_PARALLEL_COMPILE_JOBS=4
 ninja
