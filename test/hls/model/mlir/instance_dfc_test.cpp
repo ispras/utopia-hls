@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -31,7 +31,6 @@ namespace fs = std::filesystem;
 
 using Builder = eda::hls::parser::dfc::Builder;
 using Compiler = eda::hls::compiler::Compiler;
-using Criteria = eda::hls::model::Criteria;
 using Library = eda::hls::library::Library;
 using Mapper = eda::hls::mapper::Mapper;
 template<typename Type>
@@ -274,20 +273,6 @@ int instanceDfcTest(const dfc::kernel &kernel,
                     const std::string &outSubPath) {
   const std::string funcName = kernel.name;
   const fs::path homePath = std::string(getenv("UTOPIA_HLS_HOME"));
-
-  // Optimization criterion and constraints.
-  Criteria criteria(
-    eda::hls::model::PERF,
-    // Frequency (kHz)
-    eda::hls::model::Constraint<unsigned>(40000, 500000), 
-    // Performance (=frequency)
-    eda::hls::model::Constraint<unsigned>(1000, 500000),
-    // Latency (cycles)
-    eda::hls::model::Constraint<unsigned>(0, 1000),
-    // Power (does not matter)
-    eda::hls::model::Constraint<unsigned>(),
-    // Area (number of LUTs)
-    eda::hls::model::Constraint<unsigned>(1, 10000000));
 
   auto &builder = Builder::get();
   std::shared_ptr<Model> model = builder.create(funcName, funcName);

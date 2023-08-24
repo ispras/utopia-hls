@@ -22,6 +22,7 @@
 #include "circt/Dialect/FIRRTL/FIRRTLTypes.h"
 #include "circt/Dialect/FIRRTL/Passes.h"
 #include "circt/Support/LLVM.h"
+#include "mlir/IR/Dialect.h"
 
 #include "mlir/Transforms/DialectConversion.h"
 
@@ -310,12 +311,10 @@ public:
 class HILToFIRRTLPass : public HILToFIRRTLBase<HILToFIRRTLPass> {
 public:
   void runOnOperation() override {
-    ModuleOp moduleOp = getOperation();
-
     ConvertedOps convertedOps;
 
     ConversionTarget target(getContext());
-    target.addIllegalDialect<HILDialect>();
+    target.addLegalDialect<HILDialect>();
     target.addLegalDialect<FIRRTLDialect>();
     target.addLegalOp<ModuleOp>();
 
@@ -333,7 +332,9 @@ public:
              ConOpConversionPattern>(
             &getContext(), typeConverter, &convertedOps);
 
-    if (failed(applyPartialConversion(moduleOp, target, std::move(patterns))))
+    if (failed(applyPartialConversion(getOperation(),
+                                      target,
+                                      std::move(patterns))))
       signalPassFailure();
   }
 };

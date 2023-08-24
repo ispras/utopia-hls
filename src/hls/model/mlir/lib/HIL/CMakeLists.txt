@@ -17,6 +17,7 @@ add_mlir_dialect_library(MLIRHIL
         LINK_LIBS
           PUBLIC
             MLIRIR
+            CIRCTFIRRTL
 
           PRIVATE
             MLIRParser

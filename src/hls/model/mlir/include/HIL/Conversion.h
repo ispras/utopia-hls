@@ -22,7 +22,7 @@ namespace mlir {
 class Pass;
 } // namespace mlir
 
-std::unique_ptr<mlir::Pass> createConversionPass();
+std::unique_ptr<mlir::Pass> createHILToFIRRTLPass();
 
 namespace mlir::hil {
 

@@ -32,6 +32,7 @@ add_executable(${TEST_TARGET}
   hls/debugger/eq_checker_test.cpp
   #hls/library/library_test.cpp
   hls/library/parser_test.cpp
+  hls/model/mlir/conversion_dfc_test.cpp
   hls/model/mlir/dump_test.cpp
   hls/model/mlir/instance_dfc_test.cpp
   hls/model/mlir/transform_test.cpp

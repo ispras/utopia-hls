@@ -19,6 +19,7 @@
 #pragma once
 
 #include "HIL/Combine.h"
+#include "HIL/Conversion.h"
 #include "HIL/Model.h"
 #include "hls/model/model.h"
 #include "mlir/Pass/PassManager.h"
