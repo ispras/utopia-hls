@@ -27,14 +27,16 @@
   eda::hls::parser::dfc::Builder::get().deactivateKernel()
 
 #define DFC_CREATE_KERNEL_FUNCTION(UserKernel) \
-  public: static std::shared_ptr<UserKernel> create(const std::string &name) { \
+  public: \
+  static std::shared_ptr<UserKernel> create(const std::string &name) { \
       return std::shared_ptr<UserKernel>(new UserKernel(name)); }
 
 #define DFC_CREATE_KERNEL(UserKernel) \
   UserKernel::create(#UserKernel);
 
 #define DFC_KERNEL_CTOR(UserKernel) \
-  private: UserKernel(const std::string &name): \
+  private: \
+  UserKernel(const std::string &name): \
     dfc::user_kernel<UserKernel>(name)
 
 namespace dfc {

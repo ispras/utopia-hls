@@ -45,27 +45,20 @@ void Mul::estimate(const Parameters &params, Indicators &indicators) const {
 SharedMetaElement Mul::create(const NodeType &nodetype,
                               const HWConfig &hwconfig) {
   std::string name = nodetype.name;
-    std::shared_ptr<MetaElement> metaElement;
-    auto ports = createPorts(nodetype);
-    std::string lowerCaseName = name;
-    unsigned i = 0;
-    while (lowerCaseName[i]) {
-      lowerCaseName[i] = tolower(lowerCaseName[i]);
-      i++;
-    }
-    Parameters params;
-    params.add(Parameter(stages, Constraint<unsigned>(1, 100), 50));
-
-    metaElement = std::shared_ptr<MetaElement>(new Mul(lowerCaseName,
-                                                       "std",
-                                                       false,
-                                                       params,
-                                                       ports));
-  return metaElement;
-};
+  auto ports = createPorts(nodetype);
+  std::string lowerCaseName = name;
+  unsigned i = 0;
+  while (lowerCaseName[i]) {
+    lowerCaseName[i] = tolower(lowerCaseName[i]);
+    i++;
+  }
+  Parameters params;
+  params.add(Parameter(stages, Constraint<unsigned>(1, 100), 50));
+  return std::make_shared<Mul>(lowerCaseName, "std", false, params, ports);
+}
 
 std::unique_ptr<Element> Mul::construct() const {
-  std::unique_ptr<Element> element = std::make_unique<Element>(ports);
+  auto element = std::make_unique<Element>(ports);
   std::string inputs, outputs, ifaceWires, regs, fsm, assigns;
   std::string outputType;
 

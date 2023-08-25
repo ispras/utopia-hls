@@ -48,7 +48,6 @@ static int getValueFromOutputs(std::vector<eda::hls::model::Port*> outputs) {
 std::shared_ptr<MetaElement> Const::create(const NodeType &nodetype,
                                            const HWConfig &hwconfig) {
   std::string name = nodetype.name;
-  std::shared_ptr<MetaElement> metaElement;
   auto ports = createPorts(nodetype);
   std::string lowerCaseName = name;
   unsigned i = 0;
@@ -58,20 +57,12 @@ std::shared_ptr<MetaElement> Const::create(const NodeType &nodetype,
   }
   Parameters params;
   params.add(Parameter(stages, Constraint<unsigned>(1, 100), 0));
-
-  metaElement = std::shared_ptr<MetaElement>(new Const(lowerCaseName,
-                                                       "std",
-                                                       true,
-                                                       params,
-                                                       ports,
-                                                       getValueFromOutputs(
-                                                           nodetype.outputs)));
-  return metaElement;
-};
-
+  return std::make_shared<Const>(lowerCaseName, "std", true, params, ports,
+      getValueFromOutputs(nodetype.outputs));
+}
 
 std::unique_ptr<Element> Const::construct() const {
-  std::unique_ptr<Element> element = std::make_unique<Element>(ports);
+  auto element = std::make_unique<Element>(ports);
   std::string inputs, outputs, ifaceWires, regs, fsm, assigns;
   std::string outputType;
 

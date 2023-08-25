@@ -43,26 +43,19 @@ void Clip::estimate(const Parameters &params, Indicators &indicators) const {
 
 std::shared_ptr<MetaElement> Clip::create(const NodeType &nodetype,
                                           const HWConfig &hwconfig) {
-    std::string name = nodetype.name;
-    std::shared_ptr<MetaElement> metaElement;
-    auto ports = createPorts(nodetype);
-    std::string lowerCaseName = name;
-    unsigned i = 0;
-    while (lowerCaseName[i]) {
-      lowerCaseName[i] = tolower(lowerCaseName[i]);
-      i++;
-    }
-    Parameters params;
-    params.add(Parameter(stages, Constraint<unsigned>(1, 100), 40));
-    params.add(Parameter(width, Constraint<unsigned>(1, 128), 16));
-
-    metaElement = std::shared_ptr<MetaElement>(new Clip(lowerCaseName,
-                                                        "std",
-                                                        false,
-                                                        params,
-                                                        ports));
-  return metaElement;
-};
+  std::string name = nodetype.name;
+  auto ports = createPorts(nodetype);
+  std::string lowerCaseName = name;
+  unsigned i = 0;
+  while (lowerCaseName[i]) {
+    lowerCaseName[i] = tolower(lowerCaseName[i]);
+    i++;
+  }
+  Parameters params;
+  params.add(Parameter(stages, Constraint<unsigned>(1, 100), 40));
+  params.add(Parameter(width, Constraint<unsigned>(1, 128), 16));
+  return std::make_shared<Clip>(lowerCaseName, "std", false, params, ports);
+}
 
 std::unique_ptr<Element> Clip::construct() const {
   std::unique_ptr<Element> element = std::make_unique<Element>(ports);

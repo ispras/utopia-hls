@@ -43,31 +43,22 @@ void Split::estimate(const Parameters &params, Indicators &indicators) const {
 
 std::shared_ptr<MetaElement> Split::create(const NodeType &nodetype,
                                            const HWConfig &hwconfig) {
-    std::string name = nodetype.name;
-    std::shared_ptr<MetaElement> metaElement;
-    auto ports = createPorts(nodetype);
-    std::string lowerCaseName = name;
-    unsigned i = 0;
-    while (lowerCaseName[i]) {
-      lowerCaseName[i] = tolower(lowerCaseName[i]);
-      i++;
-    }
-    Parameters params;
-    params.add(Parameter(stages, Constraint<unsigned>(1, 100), 0));
-    params.add(Parameter(width, Constraint<unsigned>(1, 128), 16));
-
-    metaElement = std::shared_ptr<MetaElement>(new Split(lowerCaseName,
-                                                         "std",
-                                                         true,
-                                                         params,
-                                                         ports));
-  return metaElement;
-};
+  std::string name = nodetype.name;
+  auto ports = createPorts(nodetype);
+  std::string lowerCaseName = name;
+  unsigned i = 0;
+  while (lowerCaseName[i]) {
+    lowerCaseName[i] = tolower(lowerCaseName[i]);
+    i++;
+  }
+  Parameters params;
+  params.add(Parameter(stages, Constraint<unsigned>(1, 100), 0));
+  params.add(Parameter(width, Constraint<unsigned>(1, 128), 16));
+  return std::make_shared<Split>(lowerCaseName, "std", true, params, ports);
+}
 
 std::shared_ptr<MetaElement> Split::createDefaultElement() {
-  std::shared_ptr<MetaElement> metaElement;
   std::vector<Port> ports;
-
   ports.push_back(Port("clock",
                        Port::IN,
                        1,
@@ -94,18 +85,11 @@ std::shared_ptr<MetaElement> Split::createDefaultElement() {
                       model::Parameter(std::string("width"), 16)));
   Parameters params;
   params.add(Parameter(stages, Constraint<unsigned>(1, 100), 10));
-
-  metaElement = std::shared_ptr<MetaElement>(new Split("split",
-                                                       "std",
-                                                       true,
-                                                       params,
-                                                       ports));
-  return metaElement;
-};
-
+  return std::make_shared<Split>("split", "std", true, params, ports);
+}
 
 std::unique_ptr<Element> Split::construct() const {
-  std::unique_ptr<Element> element = std::make_unique<Element>(ports);
+  auto element = std::make_unique<Element>(ports);
   std::string inputs, outputs, ifaceWires, regs, fsm, assigns;
   std::string outputType;
 

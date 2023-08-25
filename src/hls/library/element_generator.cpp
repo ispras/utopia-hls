@@ -19,7 +19,7 @@ std::unique_ptr<Element> ElementGenerator::construct() const {
           "mul.v" +
               " " +
               "16").c_str());
-  std::unique_ptr<Element> element = std::make_unique<Element>(ports);
+  auto element = std::make_unique<Element>(ports);
   element->ir = "";
   element->path = "./mul.v";
   return element;

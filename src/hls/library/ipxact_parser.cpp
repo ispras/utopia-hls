@@ -92,7 +92,7 @@ std::string IPXACTParser::getStrValueFromTag(const DOMElement *element,
   uassert(tagFirstChild != nullptr,
           "Missing value inside " + tagNameStr + "tag!\n");
   std::string tagValue = XMLString::transcode(
-    tagFirstChild->getNodeValue());
+      tagFirstChild->getNodeValue());
   return tagValue;
 }
 
@@ -128,7 +128,7 @@ std::string IPXACTParser::getStrAttrFromTag(const DOMElement *element,
   const auto *item = tag->getAttributes()->getNamedItem(attributeName);
   uassert(item != nullptr, "Missing attribute inside " + tagNameStr + "tag!\n");
   std::string attributeValue = std::string(XMLString::transcode(
-    item->getNodeValue()));
+      item->getNodeValue()));
   return attributeValue;
 }
 
@@ -321,12 +321,8 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
     path = path + "/" + genPath;
 
     // Create metaElement.
-    metaElement = std::shared_ptr<MetaElement>(new ElementGenerator(name,
-                                                                    libraryName,
-                                                                    false,
-                                                                    params,
-                                                                    ports,
-                                                                    path));
+    metaElement = std::make_shared<ElementGenerator>(name, libraryName, false,
+        params, ports, path);
 
   } else {
     const auto *file = (const DOMElement*)(doc->getElementsByTagName(
@@ -341,12 +337,8 @@ std::shared_ptr<MetaElement> IPXACTParser::parseComponent(
     std::string path = filesystemPath.string();
 
     // Create metaElement.
-    metaElement = std::shared_ptr<MetaElement>(new ElementCore(name,
-                                                               libraryName,
-                                                               false,
-                                                               params,
-                                                               ports,
-                                                               path));
+    metaElement = std::make_shared<ElementCore>(name, libraryName, false,
+        params, ports, path);
   }
   // Reset parser for further use.
   parser->reset();

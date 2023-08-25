@@ -47,31 +47,24 @@ void Delay::estimate(const Parameters &params, Indicators &indicators) const {
 
 std::shared_ptr<MetaElement> Delay::create(const NodeType &nodetype,
                                            const HWConfig &hwconfig) {
-    std::string name = nodetype.name;
-    std::shared_ptr<MetaElement> metaElement;
-    auto ports = createPorts(nodetype);
-    std::string lowerCaseName = name;
-    unsigned i = 0;
-    while (lowerCaseName[i]) {
-      lowerCaseName[i] = tolower(lowerCaseName[i]);
-      i++;
-    }
-    Parameters params;
-    params.add(Parameter(depth,
-        Constraint<unsigned>(1, std::numeric_limits<unsigned>::max()), 1));
-    params.add(Parameter(width,
-        Constraint<unsigned>(1, std::numeric_limits<unsigned>::max()), 1));
-
-    metaElement = std::shared_ptr<MetaElement>(new Delay(lowerCaseName,
-                                                         "std",
-                                                         false,
-                                                         params,
-                                                         ports));
-  return metaElement;
-};
+  std::string name = nodetype.name;
+  auto ports = createPorts(nodetype);
+  std::string lowerCaseName = name;
+  unsigned i = 0;
+  while (lowerCaseName[i]) {
+    lowerCaseName[i] = tolower(lowerCaseName[i]);
+    i++;
+  }
+  Parameters params;
+  params.add(Parameter(depth,
+      Constraint<unsigned>(1, std::numeric_limits<unsigned>::max()), 1));
+  params.add(Parameter(width,
+      Constraint<unsigned>(1, std::numeric_limits<unsigned>::max()), 1));
+  return std::make_shared<Delay>(lowerCaseName, "std", false, params, ports);
+}
 
 std::unique_ptr<Element> Delay::construct() const {
-  std::unique_ptr<Element> element = std::make_unique<Element>(ports);
+  auto element = std::make_unique<Element>(ports);
   std::string inputs, outputs, ifaceWires, regs, fsm, assigns;
   std::string outputType;
 

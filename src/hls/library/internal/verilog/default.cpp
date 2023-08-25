@@ -43,29 +43,21 @@ void Default::estimate(const Parameters &params,
 
 std::shared_ptr<MetaElement> Default::create(const NodeType &nodetype,
                                              const HWConfig &hwconfig) {
-    std::string name = nodetype.name;
-    std::shared_ptr<MetaElement> metaElement;
-    auto ports = createPorts(nodetype);
-    std::string lowerCaseName = name;
-    unsigned i = 0;
-    while (lowerCaseName[i]) {
-      lowerCaseName[i] = tolower(lowerCaseName[i]);
-      i++;
-    }
-    Parameters params;
-    params.add(Parameter(stages, Constraint<unsigned>(1, 100), 10));
-
-    metaElement = std::shared_ptr<MetaElement>(new Default(lowerCaseName,
-                                                           "std",
-                                                           false,
-                                                           params,
-                                                           ports));
-  return metaElement;
-};
-
+  std::string name = nodetype.name;
+  auto ports = createPorts(nodetype);
+  std::string lowerCaseName = name;
+  unsigned i = 0;
+  while (lowerCaseName[i]) {
+    lowerCaseName[i] = tolower(lowerCaseName[i]);
+    i++;
+  }
+  Parameters params;
+  params.add(Parameter(stages, Constraint<unsigned>(1, 100), 10));
+  return std::make_shared<Default>(lowerCaseName, "std", false, params, ports);
+}
 
 std::unique_ptr<Element> Default::construct() const {
-  std::unique_ptr<Element> element = std::make_unique<Element>(ports);
+  auto element = std::make_unique<Element>(ports);
   std::string inputs, outputs, ifaceWires, regs, fsm, assigns;
   unsigned pos = 0, inputLength = 0, outputLength = 0;
   std::string outputType = std::string("wire ");

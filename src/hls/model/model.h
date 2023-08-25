@@ -23,12 +23,10 @@
 
 namespace eda::hls::library {
 struct MetaElement;
-
 } // namespace eda::hls::library
 
 namespace eda::hls::model {
 struct NodeType;
-
 } // namespace eda::hls::model
 
 using MetaElement = eda::hls::library::MetaElement;
