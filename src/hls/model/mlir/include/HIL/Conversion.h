@@ -6,26 +6,20 @@
 //
 //===----------------------------------------------------------------------===//
 //
-// This file declares passes which together will lower HIL dialect to
-// FIRRTL dialect.
+// This file declares pass which will lower HIL dialect to FIRRTL dialect.
 //
 //===----------------------------------------------------------------------===//
 
 #ifndef HIL_CONVERSION_H
 #define HIL_CONVERSION_H
 
+#include "HIL/Model.h"
 #include "HIL/Ops.h"
-
 #include "mlir/IR/Builders.h"
+#include "mlir/Pass/Pass.h"
 
-namespace mlir {
-class Pass;
-} // namespace mlir
+using Pass = mlir::Pass;
 
-std::unique_ptr<mlir::Pass> createHILToFIRRTLPass();
-
-namespace mlir::hil {
-
-} // namespace mlir::hil
+std::unique_ptr<Pass> createHILToFIRRTLPass();
 
 #endif // HIL_CONVERSION_H

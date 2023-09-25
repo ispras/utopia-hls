@@ -18,7 +18,6 @@
 
 #include "HIL/Utils.h"
 
-#include "mlir/IR/BuiltinAttributes.h"
 #include "utils/string.h"
 
 #include "llvm/Support/Casting.h"
@@ -225,6 +224,19 @@ bool isKernel(NodeOp &nodeOp) {
       && !isSink(nodeOp)
       && !isSource(nodeOp)
       && !isSplit(nodeOp);
+}
+
+bool isInstance(NodeTypeOp &nodeTypeOp) {
+  return eda::utils::starts_with(nodeTypeOp.getName().str(), "INSTANCE");
+}
+
+bool isSink(NodeTypeOp &nodeTypeOp) {
+  return nodeTypeOp.getCommandResults().size() == 0;
+}
+
+bool isSource(NodeTypeOp &nodeTypeOp) {
+  return nodeTypeOp.getCommandArguments().size() == 0
+      && eda::utils::starts_with(nodeTypeOp.getName().str(), "source"); 
 }
 
 } // namespace mlir::hil

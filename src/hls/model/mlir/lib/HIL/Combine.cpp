@@ -285,7 +285,7 @@ public:
     // REWRITE PART.
     //--------------------------------------------------------------------------
   
-    // Get the main Graph and the instance Graph.
+    // Get the main graph and the instance graph.
     auto modelOp = nodeInstOp->getParentOfType<ModelOp>();
     auto &modelOperations = modelOp.getBodyBlock()->getOperations();
     auto graphsOp = findElemByType<GraphsOp>(modelOperations).value();
@@ -296,17 +296,15 @@ public:
     auto &graphInstOperations = graphInstOp->getBodyBlock()->getOperations();
     auto &graphMainOperations = graphMainOp->getBodyBlock()->getOperations();
 
-    // Get Nodes from the main Graph and the instance Graph.
+    // Get the nodes from the main graph and the instance graph.
     auto nodesInstOp = findElemByType<NodesOp>(graphInstOperations).value();
     auto nodesMainOp = findElemByType<NodesOp>(graphMainOperations).value();
 
     auto *context = nodesMainOp.getContext();
-    // Clone Nodes from the instance graph to the main Graph.
-    // NOTE: There may be multiple instances so name change is needed.
+    // Clone the nodes from the instance graph to the main graph.
     rewriter.setInsertionPointToEnd(nodesMainOp.getBodyBlock());
     nodesInstOp.walk([&](NodeOp nodeOp) {
-      // Changing the name of the clone Node and 
-      // the names of the inputs...
+      // Change the name of the clone node and the names of the inputs...
       auto &&args = nodeOp.getCommandArguments();
       std::vector<Attribute> newInChanNames;
       for (const auto arg : args) {
@@ -314,6 +312,7 @@ public:
                                                           + instanceName;
         newInChanNames.push_back(StringAttr{}.get(context, newInChanName));
       }
+
       // ...and the names of the outputs. 
       auto &&ress = nodeOp.getCommandResults();
       std::vector<Attribute> newOutChanNames;
@@ -322,9 +321,8 @@ public:
                                                            + instanceName;
         newOutChanNames.push_back(StringAttr{}.get(context, newOutChanName));
       }
-      // Creating a new Node with the modified name.
+      // Create a new node with the modified name.
       auto newNodeName = nodeOp.getNameAttr().str() + "_" + instanceName;
-      /// TODO: Try to find a more convenient way to create a container.
       auto newNodeOp = rewriter.create<NodeOp>(nodesMainOp.getLoc(),
           nodeOp.getNodeTypeNameAttr(), newNodeName,
           ArrayAttr::get(context, newInChanNames),
@@ -333,15 +331,14 @@ public:
       newNodeOp.getRegion().push_back(body);
     });
 
-    // Get Chans from the main Graph and the instance Graph.
+    // Get channels from the main graph and the instance graph.
     auto chansInstOp = findElemByType<ChansOp>(graphInstOperations).value();
     auto chansMainOp = findElemByType<ChansOp>(graphMainOperations).value();
 
-    // Clone Chans from the instance graph to the main Graph.
-    // NOTE: There may be multiple instances so name change is needed.
+    // Clone the channels from the instance graph to the main graph.
     rewriter.setInsertionPointToEnd(chansMainOp.getBodyBlock());
     chansInstOp.walk([&](ChanOp chanOp) {
-      // Creating a new Chan with the modified names.
+      // Create a new channel with the modified names.
       auto newChanName = chanOp.getVarName().str() + "_" + instanceName;
       auto newNodeFromName = chanOp.getNodeFromAttr().getNodeName().str() + "_"
                            + instanceName;
@@ -356,23 +353,24 @@ public:
                                                 chanOp.getNodeTo().getPort()));
     });
 
-    // Get main Graph connections.
+    // Get main graph connections.
     auto &nodeInstOpOperations = nodeInstOp.getBodyBlock()->getOperations();
     auto consInstOp = findElemByType<ConsOp>(nodeInstOpOperations).value();
 
-    // Modify the Chans in the main Graph and in the instance Graph.
+    // Modify the channels in the main graph and in the instance graph.
     std::map<std::string, std::vector<Attribute>> nodeToNewInChanNames;
     std::map<std::string, std::vector<Attribute>> nodeToNewOutChanNames;
     consInstOp.walk([&](ConOp conOp) {
       auto sourceBndGraph = conOp.getNodeFromAttr();
       auto targetBndGraph = conOp.getNodeToAttr();
       auto dirTypeName = conOp.getDirTypeName();
-      // Connection to input.
+      // Connection to the input.
       if (dirTypeName == "IN") {
         auto sourceChanName = sourceBndGraph.getChanName().str();
         auto targetChanNameAfter = targetBndGraph.getChanName().str() + "_" 
                                  + instanceName;
         
+        // Get the source channel and the modified target channel.
         auto sourceChanOp = findChan(chansMainOp,
                                      sourceChanName);
         auto targetChanAfterOp = findChan(chansMainOp,
@@ -387,7 +385,8 @@ public:
             BindingAttr{}.get(context, 
                 targetChanAfterOp->getNodeToAttr().getNodeName(),
                 targetChanAfterOp->getNodeTo().getPort()));
-        // Save the name of the input chan to modify it in the node later.
+
+        // Save the name of the input channel to modify it in the node later.
         auto nodeToName = 
             targetChanAfterOp->getNodeToAttr().getNodeName().str();
         auto iterator = nodeToNewInChanNames.find(nodeToName);
@@ -400,16 +399,18 @@ public:
         auto newChanNameStr = sourceChanOp->getVarName().str();
         auto newChanNameAttr = StringAttr{}.get(context, newChanNameStr);
         iterator->second.push_back(newChanNameAttr);
-        // Delete the 'source' Node.
+
+        // Delete the 'source' node.
         auto sourceNodeNameAfter = 
             targetChanAfterOp->getNodeFromAttr().getNodeName().str();
         auto sourceNode = findNode(nodesMainOp, sourceNodeNameAfter);
         rewriter.eraseOp(*sourceNode);
-        // Delete the Chan connecting the 'source' Node.
+
+        // Delete the channel connecting the 'source' node.
         rewriter.eraseOp(*targetChanAfterOp);
       }
 
-      // Connection to output.
+      // Connection to the output.
       if (dirTypeName == "OUT") {
         auto targetChanName = targetBndGraph.getChanName().str();
         auto sourceChanNameAfter = sourceBndGraph.getChanName().str() + "_" 
@@ -420,6 +421,10 @@ public:
         auto targetChanOp = findChan(chansMainOp,
                                      targetChanName);
         rewriter.setInsertionPointToEnd(chansMainOp.getBodyBlock());
+        /// TODO: Optimization: replaceOpWithNewOp => setSomeAttr().
+        // targetChanOp->setNodeFromAttr(BindingAttr{}.get(context,
+        //         sourceChanAfterOp->getNodeFrom().getNodeName(),
+        //         sourceChanAfterOp->getNodeFrom().getPort()));
         rewriter.replaceOpWithNewOp<ChanOp>(
            *targetChanOp,
             targetChanOp->getTypeName(),
@@ -428,7 +433,8 @@ public:
                 sourceChanAfterOp->getNodeFrom().getNodeName(),
                 sourceChanAfterOp->getNodeFrom().getPort()),
             targetChanOp->getNodeTo());
-        // Save the name of the output chan to modify it in the node later.
+
+        // Save the name of the output channel to modify it in the node later.
         auto nodeFromName = 
             sourceChanAfterOp->getNodeFromAttr().getNodeName().str();
         auto iterator = nodeToNewOutChanNames.find(nodeFromName);
@@ -441,33 +447,39 @@ public:
         auto newChanNameStr = targetChanOp->getVarName().str();
         auto newChanNameAttr = StringAttr{}.get(context, newChanNameStr);
         iterator->second.push_back(newChanNameAttr);
-        // Delete the 'sink' Node.
+
+        // Delete the 'sink' node.
         auto sinkNodeNameAfter = 
             sourceChanAfterOp->getNodeToAttr().getNodeName().str();
         auto sinkNode = findNode(nodesMainOp, sinkNodeNameAfter);
         rewriter.eraseOp(*sinkNode);
-        // Delete the Chan connecting the 'sink' Node.
+
+        // Delete the channel connecting the 'sink' node.
         rewriter.eraseOp(*sourceChanAfterOp);
       }
-      // Delete connection.
+      // Delete the connection.
       rewriter.eraseOp(conOp);
     });
+
+    // Replace the names of the nodes accordingly.
     rewriter.setInsertionPointToEnd(nodesMainOp.getBodyBlock());
     for (const auto &pair : nodeToNewInChanNames) {
       auto nodeOp = findNode(nodesMainOp, pair.first);
       auto inChans = nodeToNewInChanNames.find(pair.first)->second;
       auto outChans = nodeToNewOutChanNames.find(pair.first)->second;
-      /// TODO: Try to find a more convenient way to create a container.
       Block *block = new Block();
       auto newNodeOp = rewriter.replaceOpWithNewOp<NodeOp>(*nodeOp,
           nodeOp->getNodeTypeNameAttr(), nodeOp->getName(),
           ArrayAttr::get(context, inChans), ArrayAttr::get(context, outChans));
       newNodeOp.getRegion().push_back(block);
     }
+
     // Delete connections container.
     rewriter.eraseOp(consInstOp);
-    // Delete the instance node in the main Graph.
+
+    // Delete the instance node in the main graph.
     rewriter.eraseOp(nodeInstOp);
+
     return mlir::success();
   }
 

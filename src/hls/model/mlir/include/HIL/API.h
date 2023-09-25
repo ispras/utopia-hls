@@ -43,6 +43,7 @@ public:
   void addPass(std::unique_ptr<Pass> pass);
   void runPasses();
   void clearPasses();
+  void print();
   T done();
 
 private:
@@ -95,6 +96,13 @@ void Transformer<T>::clearPasses() {
 
 template <typename T> void Transformer<T>::undoTransforms() {
   module = moduleInitial.clone();
+}
+
+template <typename T> void Transformer<T>::print() {
+  std::string buf;
+  llvm::raw_string_ostream os{buf};
+  module.print(os);
+  std::cout << buf << std::endl;
 }
 
 /* End-of-transformation methods */

@@ -67,17 +67,17 @@ def HIL_NodeTypesOp : HIL_Container<"nodetypes", [HasParent<"ModelOp">]> {
   }];
 }
 
-def HIL_ChansOp : HIL_Container<"chans", [HasParent<"GraphOp">]> {
-  let summary = "Chans container.";
-  let description = [{
-    Container of `hil.chan`
-  }];
-}
-
 def HIL_NodesOp : HIL_Container<"nodes", [HasParent<"GraphOp">]> {
   let summary = "Nodes container.";
   let description = [{
     Container of `hil.node`
+  }];
+}
+
+def HIL_ChansOp : HIL_Container<"chans", [HasParent<"GraphOp">]> {
+  let summary = "Chans container.";
+  let description = [{
+    Container of `hil.chan`
   }];
 }
 
@@ -103,22 +103,6 @@ def HIL_NodeTypeOp : HIL_Op<"nodetype", [HasParent<"NodeTypesOp">]> {
   }];
 }
 
-def HIL_ChanOp : HIL_Op<"chan", [HasParent<"ChansOp">]> {
-  let summary = "Channel.";
-  let description = [{
-    The `hil.chan` operation for defining channels
-  }];
-
-  let arguments = (ins
-    StrAttr:$typeName,
-    StrAttr:$varName,
-    BindingAttr:$nodeFrom,
-    BindingAttr:$nodeTo);
-  let assemblyFormat = [{
-    $typeName $varName qualified($nodeFrom) `=``=` qualified($nodeTo) attr-dict
-  }];
-}
-
 def HIL_NodeOp : HIL_Op<"node", [NoTerminator, SingleBlock, HasParent<"NodesOp">]> {
   let summary = "Node.";
   let description = [{
@@ -139,6 +123,22 @@ def HIL_NodeOp : HIL_Op<"node", [NoTerminator, SingleBlock, HasParent<"NodesOp">
       assert(region.hasOneBlock() && "The body should have one block.");
       return &region.front();
     }
+  }];
+}
+
+def HIL_ChanOp : HIL_Op<"chan", [HasParent<"ChansOp">]> {
+  let summary = "Channel.";
+  let description = [{
+    The `hil.chan` operation for defining channels
+  }];
+
+  let arguments = (ins
+    StrAttr:$typeName,
+    StrAttr:$varName,
+    BindingAttr:$nodeFrom,
+    BindingAttr:$nodeTo);
+  let assemblyFormat = [{
+    $typeName $varName qualified($nodeFrom) `=``=` qualified($nodeTo) attr-dict
   }];
 }
 

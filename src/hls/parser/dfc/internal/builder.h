@@ -69,7 +69,7 @@ public:
 
   Kernel *getKernel(const std::string &name) {
     auto i = std::find_if(kernels.begin(), kernels.end(),
-      [&name](Kernel *kernel) { return kernel->name == name; });
+        [&name](Kernel *kernel) { return kernel->name == name; });
     assert(i != kernels.end() && "Kernel does not exist");
     auto *kernel = *i;
     return kernel;
@@ -302,14 +302,14 @@ private:
   static Chan *getChan(const Wire *wire, Graph *graph);
 
   static NodeType *getNodetype(const Unit *unit,
-                               Model *model);
+                               std::shared_ptr<Model> model);
 
   static Node *getNode(const Kernel *kernel,
                        const Unit *unit,
                        Graph *graph,
-                       Model *model);
+                       std::shared_ptr<Model> model);
 
-  static Graph *getGraph(const Kernel *kernel, Model *model);
+  static Graph *getGraph(const Kernel *kernel, std::shared_ptr<Model> model);
 
   /// Common part of all kernels (usually, wires and constants).
   Kernel common;

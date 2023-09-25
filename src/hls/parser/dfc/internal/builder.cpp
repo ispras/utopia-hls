@@ -194,29 +194,29 @@ std::string Builder::getSinkName(const Unit *sink) {
 }
 
 std::shared_ptr<Model> Builder::create(const std::string &modelName) {
-  auto *model = new Model(modelName);
+  auto model = std::make_shared<Model>(modelName);
 
   for (auto *kernel : kernels) {
     kernel->transform();
     model->addGraph(getGraph(kernel, model));
   }
 
-  return std::shared_ptr<Model>(model);
+  return model;
 }
 
 std::shared_ptr<Model> Builder::create(const std::string &modelName,
                                        const std::string &kernelName) {
-  auto *model = new Model(modelName);
+  auto model = std::make_shared<Model>(modelName);
 
   auto i = std::find_if(kernels.begin(), kernels.end(),
-    [&kernelName](Kernel *kernel) { return kernel->name == kernelName; });
+      [&kernelName](Kernel *kernel) { return kernel->name == kernelName; });
   assert(i != kernels.end() && "Kernel does not exist!\n");
 
   auto *kernel = *i;
   kernel->transform();
   model->addGraph(getGraph(kernel, model));
 
-  return std::shared_ptr<Model>(model);
+  return model;
 }
 
 void Builder::startKernel(const std::string &name) {
@@ -329,7 +329,7 @@ Chan *Builder::getChan(const Wire *wire, Graph *graph) {
 }
 
 NodeType *Builder::getNodetype(const Unit *unit,
-                               Model *model) {
+                               std::shared_ptr<Model> model) {
   auto *nodetype = new NodeType(unit->getFullName(), *model);
   for (auto *wire : unit->in) {
     nodetype->addInput(getPort(wire, 0));
@@ -344,7 +344,7 @@ NodeType *Builder::getNodetype(const Unit *unit,
 Node *Builder::getNode(const Kernel *kernel,
                        const Unit *unit,
                        Graph *graph,
-                       Model *model) {
+                       std::shared_ptr<Model> model) {
   static unsigned id = 0;
   Signature signature = unit->getSignature();
   auto *nodetype = model->findNodetype(signature);
@@ -416,7 +416,7 @@ Node *Builder::getNode(const Kernel *kernel,
   return node;
 }
 
-Graph *Builder::getGraph(const Kernel *kernel, Model *model) {
+Graph *Builder::getGraph(const Kernel *kernel, std::shared_ptr<Model> model) {
   auto *graph = new Graph(kernel->name, *model);
 
   for (auto *unit : kernel->units) {

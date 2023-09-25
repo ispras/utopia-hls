@@ -31,10 +31,27 @@ using TopologicalBalancer = eda::hls::scheduler::TopologicalBalancer;
 template<typename Type>
 using Transformer = mlir::transforms::Transformer<Type>;
 
-DFC_KERNEL(VectorSum) {
-  static const int SIZE = 4;
+DFC_KERNEL(MultTwoNumbers) {
+  DFC_KERNEL_CTOR(MultTwoNumbers) {
+    DFC_KERNEL_ACTIVATE;
 
-  DFC_KERNEL_CTOR(VectorSum) {
+    dfc::stream<dfc::sint16> lhs(std::string("lhs"));
+    dfc::stream<dfc::sint16> rhs(std::string("rhs"));
+
+    dfc::stream<dfc::sint16> res(std::string("res"));
+
+    res = lhs * rhs;
+
+    DFC_KERNEL_DEACTIVATE;
+  }
+
+  DFC_CREATE_KERNEL_FUNCTION(MultTwoNumbers);
+};
+
+DFC_KERNEL(TwoVectorSum) {
+  static const int SIZE = 2;
+
+  DFC_KERNEL_CTOR(TwoVectorSum) {
     DFC_KERNEL_ACTIVATE;
 
     std::vector<dfc::stream<dfc::sint16>> lhs;
@@ -49,6 +66,8 @@ DFC_KERNEL(VectorSum) {
                                              "_" +
                                              std::to_string(i)));
     }
+    DFC_CREATE_KERNEL(MultTwoNumbers);
+
     std::vector<dfc::stream<dfc::sint16>> res;
     for (std::size_t i = 0; i < SIZE; i++) {
       res.push_back(dfc::stream<dfc::sint16>(std::string("res") +
@@ -60,10 +79,15 @@ DFC_KERNEL(VectorSum) {
       res[i] = lhs[i] + rhs[i];
     }
 
+    dfc::instance("MultTwoNumbers1", "MultTwoNumbers");
+    dfc::connectionToInstanceInput("MultTwoNumbers1", res[0], "lhs");
+    dfc::connectionToInstanceInput("MultTwoNumbers1", res[1], "rhs");
+    dfc::connectionToInstanceOutput("MultTwoNumbers1", res[1], "res");
+
     DFC_KERNEL_DEACTIVATE;
   }
 
-  DFC_CREATE_KERNEL_FUNCTION(VectorSum);
+  DFC_CREATE_KERNEL_FUNCTION(TwoVectorSum);
 };
 
 int conversionDfcTest(const dfc::kernel &kernel) {
@@ -85,11 +109,14 @@ int conversionDfcTest(const dfc::kernel &kernel) {
   transformer.runPasses();
   transformer.clearPasses();
 
+  // Printing the resulting FIRRTL circuit.
+  transformer.print();
+
   return 0;
 }
 
 TEST(ConversionDfcTest, ConversionDfcTestVectorSum) {
-  std::shared_ptr<VectorSum> kernel = DFC_CREATE_KERNEL(VectorSum);
+  std::shared_ptr<TwoVectorSum> kernel = DFC_CREATE_KERNEL(TwoVectorSum);
 
   EXPECT_EQ(conversionDfcTest(*kernel), 0);
 }

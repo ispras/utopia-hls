@@ -1,3 +1,4 @@
+set(LIBS CIRCTFIRRTL)
 set(LLVM_TARGET_DEFINITIONS Ops.td)
 mlir_tablegen(Ops.h.inc -gen-op-decls)
 mlir_tablegen(Ops.cpp.inc -gen-op-defs)

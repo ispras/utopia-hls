@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "mlir/IR/BuiltinAttributes.h"
+
 #include "HIL/Ops.h"
 #include "mlir/Support/LLVM.h"
 
@@ -30,8 +32,10 @@ using ChansOp = mlir::hil::ChansOp;
 using ChanOp = mlir::hil::ChanOp;
 using ConsOp = mlir::hil::ConsOp;
 using ConOp = mlir::hil::ConOp;
+// using FModuleOp = circt::firrtl::FModuleOp;
 using GraphsOp = mlir::hil::GraphsOp;
 using GraphOp = mlir::hil::GraphOp;
+// using InstanceOp = circt::firrtl::InstanceOp;
 using ModelOp = mlir::hil::ModelOp;
 using NodeTypesOp = mlir::hil::NodeTypesOp;
 using NodeTypeOp = mlir::hil::NodeTypeOp;
@@ -67,8 +71,23 @@ std::optional<T> findElemByType(Container &&c) {
   return findElemByType<T>(c.begin(), c.end());
 }
 
+template <typename T, typename Container>
+std::vector<T> findElemsByType(Container &&c) {
+  return findElemsByType<T>(c.begin(), c.end());
+}
+
 /* Utility methods for MLIR-based IR */
 namespace mlir::hil {
+  // // Tries to find a FModule by name; returns nullptr if unsuccessful.
+  // std::unique_ptr<FModuleOp> findFModule(Operation *op,
+  //                                        const std::string &name);
+
+  // // Tries to find an Instance by name; returns nullptr if unsuccessful.
+  // std::unique_ptr<InstanceOp> findInstance(Operation *op,
+  //                                          const std::string &name);
+  
+  // Tries to find a Chan by name; returns nullptr if unsuccessful.
+  std::unique_ptr<ChanOp> findChan(ChansOp chans, const std::string &name);
 
   // Tries to find a Graph by name; returns nullptr if unsuccessful.
   std::unique_ptr<GraphOp> findGraph(GraphsOp graphs, const std::string &name);
@@ -112,5 +131,9 @@ namespace mlir::hil {
   bool isSink(NodeOp &nodeOp);
   bool isSource(NodeOp &nodeOp);
   bool isSplit(NodeOp &nodeOp);
+
+  bool isInstance(NodeTypeOp &nodeTypeOp);
+  bool isSink(NodeTypeOp &nodeTypeOp);
+  bool isSource(NodeTypeOp &nodeTypeOp);
 
 } // namespace mlir::hil
