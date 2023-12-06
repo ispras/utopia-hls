@@ -12,8 +12,8 @@ include "mlir/Interfaces/InferTypeOpInterface.td"
 class DFCIR_Op<string name, list<Trait> traits = []> : Op<DFCIR_Dialect, name, traits>;
 
 
-def CoreOp : DFCIR_Op<"core"> {
-	let summary = "Defines a dataflow core (kernel).";
+def CoreOp : DFCIR_Op<"kernel"> {
+	let summary = "Defines a dataflow kernel.";
 	let arguments = (ins
 		StrAttr:$name);
 	let assemblyFormat = "$name attr-dict `{` regions `}`";
