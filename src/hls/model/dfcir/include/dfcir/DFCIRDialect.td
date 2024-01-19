@@ -11,6 +11,11 @@ def DFCIR_Dialect : Dialect {
   let cppNamespace = "::mlir::dfcir";
   
   let summary = "A high-level dataflow core description representation.";
+
+  let extraClassDeclaration = [{
+    void registerOperations();
+    void registerTypes();
+  }];
 }
 
 #endif // DFCIR_Dialect

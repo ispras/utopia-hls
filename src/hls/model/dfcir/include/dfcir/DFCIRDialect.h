@@ -3,7 +3,6 @@
 
 #include "mlir/Bytecode/BytecodeOpInterface.h"
 #include "mlir/IR/Dialect.h"
-
-#include "DFCIRDialect.h.inc"
+#include "dfcir/DFCIRDialect.h.inc"
 
 #endif // DFCIR_DIALECT_H
