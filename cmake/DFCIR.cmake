@@ -6,6 +6,7 @@ find_package(CIRCT REQUIRED CONFIG)
 
 message(STATUS "Using MLIRConfig.cmake in: ${MLIR_DIR}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+message(STATUS "Using CIRCTConfig.cmake in: ${CIRCT_DIR}")
 
 list(APPEND CMAKE_MODULE_PATH "${CIRCT_CMAKE_DIR}")
 list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
