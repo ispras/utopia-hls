@@ -36,34 +36,20 @@ def Primitive : TypeConstraint<Or<[Fixed.predicate, Float.predicate, RawBits.pre
 
 def Complex : DFCIR_DialectType<"DFCIRComplex", "complex"> {
 	let parameters = (ins "Type":$complexType);
-	let assemblyFormat = "`<` $complexType `>`";
+	let assemblyFormat = "`<` qualified($complexType) `>`";
 }
 
 def Streamable : TypeConstraint<Or<[Primitive.predicate, Complex.predicate]>, "streamable">;
 
 def Stream : DFCIR_DialectType<"DFCIRStream", "stream"> {
 	let parameters = (ins "Type":$streamType);
-	let assemblyFormat = "`<` $streamType `>`";
+    let assemblyFormat = "`<` qualified($streamType) `>`";
 }
 
 def Scalar : DFCIR_DialectType<"DFCIRScalar", "scalar"> {
 	let parameters = (ins "Type":$scalarType);
-	let assemblyFormat = "`<` $scalarType `>`";
+    let assemblyFormat = "`<` qualified($scalarType) `>`";
 }
-
-//def ConstInt : DFCIR_DialectType<"DFCIRConstInt", "constI"> {
-//	let parameters = (ins Builtin_IntegerAttr:$value);
-//	let assemblyFormat = "`<` $value `>`";
-//}
-
-//def ConstFloat : DFCIR_DialectType<"DFCIRConstFloat", "constF"> {
-//	let parameters = (ins Builtin_FloatAttr:$value);
-//	let assemblyFormat = "`<` $value `>`";
-//}
-
-//def ConstUnknown : DFCIR_DialectType<"DFCIRConstUnknown", "constUn">;
-
-//def Const : TypeConstraint<Or<[ConstInt.predicate, ConstFloat.predicate, ConstUnknown.predicate]>, "const">;
 
 def Const : DFCIR_DialectType<"DFCIRConstant", "const">;
 

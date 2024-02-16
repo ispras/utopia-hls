@@ -16,6 +16,8 @@ def DFCIR_Dialect : Dialect {
     void registerOperations();
     void registerTypes();
   }];
+
+  let useDefaultTypePrinterParser = 1;
 }
 
 #endif // DFCIR_Dialect

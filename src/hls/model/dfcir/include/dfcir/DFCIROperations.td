@@ -12,11 +12,12 @@ include "mlir/Interfaces/InferTypeOpInterface.td"
 class DFCIR_Op<string name, list<Trait> traits = []> : Op<DFCIR_Dialect, name, traits>;
 
 
-def CoreOp : DFCIR_Op<"kernel"> {
+def KernelOp : DFCIR_Op<"kernel", [NoRegionArguments, NoTerminator, SingleBlock]> {
 	let summary = "Defines a dataflow kernel.";
 	let arguments = (ins
 		StrAttr:$name);
-	let assemblyFormat = "$name attr-dict `{` regions `}`";
+    let regions = (region SizedRegion<1>:$body);
+	let assemblyFormat = "$name $body attr-dict";
 }
 
 def ScalarInputOp : DFCIR_Op<"scalarInput"> {
@@ -46,9 +47,9 @@ def InputOp : DFCIR_Op<"input"> {
 		StrAttr:$name,
 		Optional<Stream>:$ctrl);
 		
-	let assemblyFormat = "`<` type($res) `>` `(` $name (`,` $ctrl^ `:` type($ctrl))? `)` attr-dict";
-	
-	let results = (outs Stream:$res);
+	//let assemblyFormat = "`<` type($res) `>` `(` $name (`,` $ctrl^ `:` type($ctrl))? `)` attr-dict";
+    let hasCustomAssemblyFormat = 1;
+    let results = (outs Stream:$res);
 }
 
 def OutputOp : DFCIR_Op<"output", [AttrSizedOperandSegments]> {

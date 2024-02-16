@@ -18,6 +18,7 @@ set(MLIR_BINARY_DIR ${CMAKE_BINARY_DIR})
 
 include(TableGen)
 # FIXME find out why CIRCT isn't moving AddCIRCT.cmake to ${CIRCT_CMAKE_DIR}
+message(STATUS "Using AddCIRCT.cmake in: ${CIRCT_MOD_DIR}")
 list(APPEND CMAKE_MODULE_PATH "${CIRCT_MOD_DIR}")
 include(AddCIRCT)
 include(AddLLVM)
