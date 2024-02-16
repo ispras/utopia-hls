@@ -14,57 +14,60 @@ class DFCIR_Op<string name, list<Trait> traits = []> : Op<DFCIR_Dialect, name, t
 
 def KernelOp : DFCIR_Op<"kernel", [NoRegionArguments, NoTerminator, SingleBlock]> {
 	let summary = "Defines a dataflow kernel.";
+
 	let arguments = (ins
 		StrAttr:$name);
+
     let regions = (region SizedRegion<1>:$body);
-	let assemblyFormat = "$name $body attr-dict";
+
+    let assemblyFormat = "$name $body attr-dict";
 }
 
-def ScalarInputOp : DFCIR_Op<"scalarInput"> {
+def ScalarInputOp : DFCIR_Op<"scalarInput", []> {
 	let arguments = (ins
-		// TypeAttr:$type,
 		StrAttr:$name);
 		
-	let assemblyFormat = "`<` type($res) `>` `(` $name `)` attr-dict";
-	
+	//let assemblyFormat = "`<` type($res) `>` `(` $name `)` attr-dict";
+    let hasCustomAssemblyFormat = 1;
+
 	let results = (outs Scalar:$res);
 }
 
-def ScalarOutputOp : DFCIR_Op<"scalarOutput"> {
+def ScalarOutputOp : DFCIR_Op<"scalarOutput", []> {
 	let arguments = (ins
-		// TypeAttr:$type,
 		StrAttr:$name,
 		Optional<Stream>:$stream);
 	
-	let assemblyFormat = "`<` type($res) `>` `(` $name `)` (`<` `=` $stream^ `:` type($stream))? attr-dict";
-	
+	//let assemblyFormat = "`<` type($res) `>` `(` $name `)` (`<` `=` $stream^ `:` type($stream))? attr-dict";
+    let hasCustomAssemblyFormat = 1;
+
 	let results = (outs Scalar:$res);
 }
 
-def InputOp : DFCIR_Op<"input"> {
+def InputOp : DFCIR_Op<"input", []> {
 	let arguments = (ins
-		// TypeAttr:$type,
 		StrAttr:$name,
 		Optional<Stream>:$ctrl);
 		
 	//let assemblyFormat = "`<` type($res) `>` `(` $name (`,` $ctrl^ `:` type($ctrl))? `)` attr-dict";
     let hasCustomAssemblyFormat = 1;
+
     let results = (outs Stream:$res);
 }
 
 def OutputOp : DFCIR_Op<"output", [AttrSizedOperandSegments]> {
 	let arguments = (ins
-		// TypeAttr:$type,
 		StrAttr:$name,
 		Optional<Stream>:$ctrl,
 		Optional<Stream>:$stream);
 	
-	let assemblyFormat = "`<` type($res) `>` `(` $name (`,` $ctrl^ `:` type($ctrl))? `)` (`<` `=` $stream^ `:` type($stream))? attr-dict";
-	
-	let results = (outs Stream:$res);
+	//let assemblyFormat = "`<` type($res) `>` `(` $name (`,` $ctrl^ `:` type($ctrl))? `)` (`<` `=` $stream^ `:` type($stream))? attr-dict";
+    let hasCustomAssemblyFormat = 1;
+
+    let results = (outs Stream:$res);
 }
 
-def ConnectOp : DFCIR_Op<"connect"> {
+def ConnectOp : DFCIR_Op<"connect", []> {
 	let arguments = (ins
 		Variable:$connecting,
 		Variable:$connectee);
@@ -73,7 +76,7 @@ def ConnectOp : DFCIR_Op<"connect"> {
 
 }
 
-def OffsetOp : DFCIR_Op<"offset"> {
+def OffsetOp : DFCIR_Op<"offset", []> {
 	let arguments = (ins
 		Stream:$stream,
 		Variable:$offset);
@@ -83,7 +86,7 @@ def OffsetOp : DFCIR_Op<"offset"> {
 	let results = (outs Stream:$res);
 }
 
-def ConvertOp : DFCIR_Op<"convert"> {
+def ConvertOp : DFCIR_Op<"convert", []> {
 	let arguments = (ins ConvertVariable:$var);
 	
 	let assemblyFormat = "`(` $var `:` type($var) `)` attr-dict `:` type($res)";
@@ -91,7 +94,7 @@ def ConvertOp : DFCIR_Op<"convert"> {
 	let results = (outs Stream:$res); 
 }
 
-def MuxOp : DFCIR_Op<"mux"> {
+def MuxOp : DFCIR_Op<"mux", []> {
 	let arguments = (ins
 		Stream:$control,
 		Variadic<Stream>:$streams);
@@ -101,7 +104,7 @@ def MuxOp : DFCIR_Op<"mux"> {
 	let results = (outs Stream:$res);
 }
 
-def LessOp : DFCIR_Op<"less"> {
+def LessOp : DFCIR_Op<"less", []> {
 	let arguments = (ins
 		Variable:$first,
 		Variable:$second);
@@ -111,7 +114,7 @@ def LessOp : DFCIR_Op<"less"> {
 	let results = (outs Variable:$res);
 }
 
-def LessEqOp : DFCIR_Op<"lessEq"> {
+def LessEqOp : DFCIR_Op<"lessEq", []> {
 	let arguments = (ins
 		Variable:$first,
 		Variable:$second);
@@ -121,7 +124,7 @@ def LessEqOp : DFCIR_Op<"lessEq"> {
 	let results = (outs Variable:$res);
 }
 
-def MoreOp : DFCIR_Op<"more"> {
+def MoreOp : DFCIR_Op<"more", []> {
 	let arguments = (ins
 		Variable:$first,
 		Variable:$second);
@@ -131,7 +134,7 @@ def MoreOp : DFCIR_Op<"more"> {
 	let results = (outs Variable:$res);
 }
 
-def MoreEqOp : DFCIR_Op<"moreEq"> {
+def MoreEqOp : DFCIR_Op<"moreEq", []> {
 	let arguments = (ins
 		Variable:$first,
 		Variable:$second);
@@ -141,7 +144,7 @@ def MoreEqOp : DFCIR_Op<"moreEq"> {
 	let results = (outs Variable:$res);
 }
 
-def EqOp : DFCIR_Op<"eq"> {
+def EqOp : DFCIR_Op<"eq", []> {
 	let arguments = (ins
 		Variable:$first,
 		Variable:$second);
@@ -151,7 +154,7 @@ def EqOp : DFCIR_Op<"eq"> {
 	let results = (outs Variable:$res);
 }
 
-def NotEqOp : DFCIR_Op<"notEq"> {
+def NotEqOp : DFCIR_Op<"notEq", []> {
 	let arguments = (ins
 		Variable:$first,
 		Variable:$second);
@@ -161,7 +164,7 @@ def NotEqOp : DFCIR_Op<"notEq"> {
 	let results = (outs Variable:$res);
 }
 
-def AndOp : DFCIR_Op<"and"> {
+def AndOp : DFCIR_Op<"and", []> {
 	let arguments = (ins
 		Variable:$first,
 		Variable:$second);
@@ -171,7 +174,7 @@ def AndOp : DFCIR_Op<"and"> {
 	let results = (outs Variable:$res);
 }
 
-def OrOp : DFCIR_Op<"or"> {
+def OrOp : DFCIR_Op<"or", []> {
 	let arguments = (ins
 		Variable:$first,
 		Variable:$second);
@@ -181,7 +184,7 @@ def OrOp : DFCIR_Op<"or"> {
 	let results = (outs Variable:$res);
 }
 
-def XorOp : DFCIR_Op<"xor"> {
+def XorOp : DFCIR_Op<"xor", []> {
 	let arguments = (ins
 		Variable:$first,
 		Variable:$second);
@@ -191,7 +194,7 @@ def XorOp : DFCIR_Op<"xor"> {
 	let results = (outs Variable:$res);
 }
 
-def NotOp : DFCIR_Op<"not", [SameOperandsAndResultType]> {
+def NotOp : DFCIR_Op<"not", [SameOperandsAndResultType, ]> {
 	let arguments = (ins Variable:$first);
 		
 	let assemblyFormat = "$first attr-dict `:` type($res)";
@@ -199,7 +202,7 @@ def NotOp : DFCIR_Op<"not", [SameOperandsAndResultType]> {
 	let results = (outs Variable:$res);
 }
 
-def NegOp : DFCIR_Op<"neg", [SameOperandsAndResultType]> {
+def NegOp : DFCIR_Op<"neg", [SameOperandsAndResultType, ]> {
 	let arguments = (ins Variable:$first);
 	
 	let assemblyFormat = "$first attr-dict `:` type($res)";
@@ -207,7 +210,7 @@ def NegOp : DFCIR_Op<"neg", [SameOperandsAndResultType]> {
 	let results = (outs Variable:$res);
 }
 
-def AddOp : DFCIR_Op<"add"> {
+def AddOp : DFCIR_Op<"add", []> {
 	let arguments = (ins
 		Variable:$first,
 		Variable:$second);
@@ -217,7 +220,7 @@ def AddOp : DFCIR_Op<"add"> {
 	let results = (outs Variable:$res);
 }
 
-def SubOp : DFCIR_Op<"sub"> {
+def SubOp : DFCIR_Op<"sub", []> {
 	let arguments = (ins
 		Variable:$first,
 		Variable:$second);
@@ -227,7 +230,7 @@ def SubOp : DFCIR_Op<"sub"> {
 	let results = (outs Variable:$res);
 }
 
-def MulOp : DFCIR_Op<"mul"> {
+def MulOp : DFCIR_Op<"mul", []> {
 	let arguments = (ins
 		Variable:$first,
 		Variable:$second);
@@ -237,7 +240,7 @@ def MulOp : DFCIR_Op<"mul"> {
 	let results = (outs Variable:$res);
 }
 
-def DivOp : DFCIR_Op<"div"> {
+def DivOp : DFCIR_Op<"div", []> {
 	let arguments = (ins
 		Variable:$first,
 		Variable:$second);
@@ -247,11 +250,11 @@ def DivOp : DFCIR_Op<"div"> {
 	let results = (outs Variable:$res);
 }
 
-def CreateCCOp : DFCIR_Op<"createCc"> {
+def CreateCCOp : DFCIR_Op<"createCc", []> {
 	let results = (outs CounterChain);
 }
 
-def AddCounterOp : DFCIR_Op<"addCounter"> {
+def AddCounterOp : DFCIR_Op<"addCounter", []> {
 	let arguments = (ins
 		CounterChain:$chain,
 		Const:$step,
@@ -262,7 +265,7 @@ def AddCounterOp : DFCIR_Op<"addCounter"> {
 	let results = (outs Stream:$res);
 }
 
-def SimpleCounterOp : DFCIR_Op<"simpleCounter"> {
+def SimpleCounterOp : DFCIR_Op<"simpleCounter", []> {
 	let arguments = (ins
 		Const:$width,
 		Variable:$max);
@@ -272,13 +275,7 @@ def SimpleCounterOp : DFCIR_Op<"simpleCounter"> {
 	let results = (outs Stream:$res);
 }
 
-//def ConstOp : DFCIR_Op<"constOp"> {
-//	let assemblyFormat = " type($res) attr-dict";
-//	
-//	let results = (outs Const:$res);
-//}
-
-def ConstOp : DFCIR_Op<"constOp"> {
+def ConstOp : DFCIR_Op<"constOp", []> {
 	let arguments = (ins AnyAttrOf<[Builtin_IntegerAttr, Builtin_FloatAttr]>:$value);
 	
 	let assemblyFormat = " $value attr-dict";
@@ -286,7 +283,7 @@ def ConstOp : DFCIR_Op<"constOp"> {
 	let results = (outs Const:$res);
 }
 
-def CastOp : DFCIR_Op<"cast"> {
+def CastOp : DFCIR_Op<"cast", []> {
 	let arguments = (ins CastVariable:$var);
 	
 	let assemblyFormat = "`<` type($res) `>` `(` $var `:` type($var) `)` attr-dict";
