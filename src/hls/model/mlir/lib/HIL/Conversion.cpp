@@ -49,6 +49,7 @@ using FModuleLike = circt::firrtl::FModuleLike;
 using FModuleOp = circt::firrtl::FModuleOp;
 using FIRRTLDialect = circt::firrtl::FIRRTLDialect;
 using HILDialect = mlir::hil::HILDialect;
+using InnerSymAttr = circt::hw::InnerSymAttr;
 using InstanceOp = circt::firrtl::InstanceOp;
 using IntegerType = circt::IntegerType;
 using LLVMStringLiteral = llvm::StringLiteral;
@@ -266,7 +267,8 @@ public:
 
     auto *context = nodeTypeOp.getContext();
     /// TODO: What does 'ConventionAttr' mean? What is it for?
-    auto conventionAttr = ConventionAttr::get(context, Convention::Scalarized);
+    auto conventionAttr = ConventionAttr::get(context,
+        circt::firrtl::Convention::Scalarized);
     SmallVector<PortInfo> portList;
     StringAttr name = rewriter.getStringAttr(nodeTypeOp.getName());
     StringAttr defName = rewriter.getStringAttr(nodeTypeOp.getName());
@@ -334,7 +336,8 @@ public:
       ConversionPatternRewriter &rewriter) const override {
     /// TODO: What does 'ConventionAttr' mean? What is it for?
     auto *context = graphOp.getContext();
-    auto conventionAttr = ConventionAttr::get(context, Convention::Scalarized);
+    auto conventionAttr = ConventionAttr::get(context,
+        circt::firrtl::Convention::Scalarized);
     SmallVector<PortInfo> portList;
     // Add 'clock' and 'reset' ports to the port list.
     portList.push_back(PortInfo(rewriter.getStringAttr("clock"),
@@ -423,7 +426,7 @@ public:
     SmallVector<Type> resultTypes;
     SmallVector<Direction> portDirections;
     SmallVector<Attribute> portNames;
-    StringAttr innerSym = {};
+    InnerSymAttr innerSymAttr = {};
     auto &&fModuleOp = nodeOp->getParentOfType<FModuleOp>();
     auto &&circuitOp = nodeOp->getParentOfType<CircuitOp>();
     auto &&moduleName = nodeOp.getNodeTypeName().str();
@@ -443,12 +446,12 @@ public:
       instanceOp = rewriter.create<InstanceOp>(nodeOp.getLoc(), *module,
           rewriter.getStringAttr(nodeOp.getName()),
           NameKindEnum::InterestingName, ArrayRef<Attribute>(),
-          ArrayRef<Attribute>(), false, innerSym);
+          ArrayRef<Attribute>(), false, innerSymAttr);
     } else {
       instanceOp = rewriter.create<InstanceOp>(nodeOp.getLoc(), *extModule,
           rewriter.getStringAttr(nodeOp.getName()),
           NameKindEnum::InterestingName, ArrayRef<Attribute>(),
-          ArrayRef<Attribute>(), false, innerSym);
+          ArrayRef<Attribute>(), false, innerSymAttr);
     }
 
     // Print the assembly code of the created 'InstanceOp'.

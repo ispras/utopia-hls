@@ -29,6 +29,10 @@ def HIL_Dialect : Dialect {
       This dialect describes primitives of High-level Intermediate Language
       (HIL) which is an input for the Utopia EDA.
   }];
+  let extraClassDeclaration = [{
+    void registerTypes();
+    void registerAttributes();
+  }];
   let cppNamespace = "::mlir::hil";
   let useDefaultAttributePrinterParser = 1;
 }

@@ -130,9 +130,10 @@ Please take this into account while moving through the guide.
 
 ```
 cd <workdir>
-git clone --recursive https://github.com/circt/circt.git
+git clone https://github.com/circt/circt.git
 cd circt
-git checkout 5c31646
+git checkout 2d822ea
+git submodule init
 git submodule update
 ```
 
