@@ -55,8 +55,8 @@ llvm::hash_code hash_value(Flow v) {
 // HIL dialect.
 //===----------------------------------------------------------------------===//
 void HILDialect::initialize() {
-registerTypes();
-registerAttributes();
+  registerTypes();
+  registerAttributes();
   addOperations<
 #define GET_OP_LIST
 #include "HIL/Ops.cpp.inc"

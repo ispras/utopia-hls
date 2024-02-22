@@ -112,7 +112,6 @@ cd <workdir>
 git clone https://github.com/Z3Prover/z3.git
 cd z3
 git checkout 013d5dc
-git submodule update
 python scripts/mk_make.py
 cd build
 make
@@ -205,12 +204,6 @@ ninja
 
 #### CIRCT Installation
 
-Add `<workdir>/circt/build/bin` and `<workdir>/circt/llvm/build/bin`
-to your `PATH` environment variable:
-```
-export PATH=<workdir>/circt/build/bin:<workdir>/circt/llvm/build/bin:$PATH
-```
-
 ##### Release
 
 Type the following commands:
@@ -253,6 +246,7 @@ cmake -G Ninja .. \
     -DLLVM_PARALLEL_LINK_JOBS=4 \
     -DLLVM_PARALLEL_COMPILE_JOBS=4
 ninja
+sudo cp <workdir>/circt/build/bin/circt-opt /usr/bin/circt-opt
 ```
 
 ### C++ CTemplate Installation

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.20)
 
 project(Utopia VERSION 0.0)
 
@@ -18,7 +18,6 @@ endif()
 
 include(UtopiaFindHelper)
 set_local_from_env(CTemplate_ROOT CT_DIR)
-set_local_from_env(XercesC_ROOT XERCES_DIR)
 set_local_from_env(Z3_ROOT Z3_DIR)
 set_local_from_env(CIRCT_ROOT CIRCT_DIR)
 
