@@ -223,9 +223,13 @@ private:
       const std::map<std::string, ExternalModule> &extModules) const;
 
   void dumpVerilogOptFile(const std::string &inFirName) const {
-    system((std::string(FirrtlCircuit::circt) +
-           inFirName +
-           std::string(FirrtlCircuit::circtOptions)).c_str());
+    const char *circtDirPath = std::getenv("CIRCT_DIR");
+    const char *fromCirctDirToCirctOptPath = "/../../../bin/";
+    system((std::string(circtDirPath) +
+            std::string(fromCirctDirToCirctOptPath) +
+            std::string(FirrtlCircuit::circt) +
+            inFirName +
+            std::string(FirrtlCircuit::circtOptions)).c_str());
   }
 
   void dumpVerilogLibrary(const std::string &outPath,

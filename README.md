@@ -204,6 +204,11 @@ ninja
 
 #### CIRCT Installation
 
+Set `CIRCT_DIR` environment variable to the directory with CIRCT CMake files:
+```
+export CIRCT_DIR=<workdir>/circt/build/lib/cmake/circt/
+```
+
 ##### Release
 
 Type the following commands:
@@ -246,7 +251,6 @@ cmake -G Ninja .. \
     -DLLVM_PARALLEL_LINK_JOBS=4 \
     -DLLVM_PARALLEL_COMPILE_JOBS=4
 ninja
-sudo cp <workdir>/circt/build/bin/circt-opt /usr/bin/circt-opt
 ```
 
 ### C++ CTemplate Installation
