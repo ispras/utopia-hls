@@ -33,6 +33,14 @@ using HILDialect = mlir::hil::HILDialect;
 using PortAttr = mlir::hil::PortAttr;
 using Type = mlir::Type;
 
+#include "HIL/OpsDialect.cpp.inc"
+#define GET_TYPEDEF_CLASSES
+#include "HIL/OpsTypes.cpp.inc"
+#undef GET_TYPEDEF_CLASSES
+#define GET_ATTRDEF_CLASSES
+#include "HIL/OpsAttributes.cpp.inc"
+#undef GET_ATTRDEF_CLASSES
+
 namespace mlir::hil {
 
 llvm::hash_code hash_value(Flow v) {
@@ -43,26 +51,26 @@ llvm::hash_code hash_value(Flow v) {
 
 } // namespace mlir::hil
 
-#include "HIL/OpsDialect.cpp.inc"
-#define GET_TYPEDEF_CLASSES
-#include "HIL/OpsTypes.cpp.inc"
-#undef GET_TYPEDEF_CLASSES
-#define GET_ATTRDEF_CLASSES
-#include "HIL/OpsAttributes.cpp.inc"
-#undef GET_ATTRDEF_CLASSES
-
 //===----------------------------------------------------------------------===//
 // HIL dialect.
 //===----------------------------------------------------------------------===//
 void HILDialect::initialize() {
+  registerTypes();
+  registerAttributes();
   addOperations<
 #define GET_OP_LIST
 #include "HIL/Ops.cpp.inc"
       >();
+}
+
+void HILDialect::registerTypes() {
   addTypes<
 #define GET_TYPEDEF_LIST
 #include "HIL/OpsTypes.cpp.inc"
       >();
+}
+
+void HILDialect::registerAttributes() {
   addAttributes<
 #define GET_ATTRDEF_LIST
 #include "HIL/OpsAttributes.cpp.inc"
@@ -77,32 +85,20 @@ void PortAttr::print(AsmPrinter &printer) const {
 
 Attribute PortAttr::parse(AsmParser &parser,
                           Type type) {
-  if (parser.parseLess())
-    return {};
   std::string name;
-  if (parser.parseString(&name))
-    return {};
   std::string typeName;
-  if (parser.parseString(&typeName))
-    return {};
-  if (parser.parseLess())
-    return {};
-  double flow = 0.0;
-  if (parser.parseFloat(flow))
-    return {};
-  if (parser.parseGreater())
-    return {};
-  unsigned latency = 0;
-  if (parser.parseInteger(latency))
-    return {};
-  unsigned isConst = 0;
-  if (parser.parseInteger(isConst))
-    return {};
-  unsigned value = 0;
-  if (parser.parseInteger(value))
-    return {};
-  if (parser.parseGreater())
-    return {};
-  auto *ctx = parser.getContext();
-  return get(ctx, name, typeName, flow, latency, isConst, value);
+  double flow;
+  unsigned latency;
+  unsigned isConst;
+  unsigned value;
+  if (parser.parseLess() || parser.parseString(&name) ||
+      parser.parseString(&typeName) || parser.parseLess() ||
+      parser.parseFloat(flow) || parser.parseGreater() ||
+      parser.parseInteger(latency) || parser.parseInteger(isConst) ||
+      parser.parseInteger(value) || parser.parseGreater()) {
+    llvm::SMLoc loc = parser.getCurrentLocation();
+    parser.emitError(loc, "Unable to parse Port! Abort.");
+    return Attribute();
+  }
+  return PortAttr::get(parser.getContext(), name, typeName, Flow(flow), latency, isConst, value);
 }

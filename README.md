@@ -112,7 +112,6 @@ cd <workdir>
 git clone https://github.com/Z3Prover/z3.git
 cd z3
 git checkout 013d5dc
-git submodule update
 python scripts/mk_make.py
 cd build
 make
@@ -130,9 +129,10 @@ Please take this into account while moving through the guide.
 
 ```
 cd <workdir>
-git clone --recursive https://github.com/circt/circt.git
+git clone https://github.com/circt/circt.git
 cd circt
-git checkout 5c31646
+git checkout 2d822ea
+git submodule init
 git submodule update
 ```
 
@@ -204,10 +204,9 @@ ninja
 
 #### CIRCT Installation
 
-Add `<workdir>/circt/build/bin` and `<workdir>/circt/llvm/build/bin`
-to your `PATH` environment variable:
+Set `CIRCT_DIR` environment variable to the directory with CIRCT CMake files:
 ```
-export PATH=<workdir>/circt/build/bin:<workdir>/circt/llvm/build/bin:$PATH
+export CIRCT_DIR=<workdir>/circt/build/lib/cmake/circt/
 ```
 
 ##### Release
