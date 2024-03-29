@@ -22,6 +22,7 @@ add_mlir_dialect_library(MLIRDFCIR
         MLIRParser
         MLIRRewrite
         MLIRTransformUtils
+        LpSolve::LpSolve
         )
 
 target_include_directories(MLIRDFCIR
