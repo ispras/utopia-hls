@@ -9,11 +9,10 @@ namespace mlir::dfcir {
 
     enum Ops {
         UNDEFINED,
-        WIRE,
-        ADD,
-        SUB,
-        MUL,
-        DIV
+        ADD_INT,
+        ADD_FLOAT,
+        MUL_INT,
+        MUL_FLOAT
     };
 } // namespace mlir::dfcir
 
@@ -22,8 +21,8 @@ typedef std::unordered_map<mlir::dfcir::Ops, unsigned> LatencyConfig;
 
 namespace mlir::dfcir {
     std::unique_ptr<mlir::Pass> createDFCIRToFIRRTLPass(LatencyConfig *config = nullptr);
-    std::unique_ptr<mlir::Pass> createDFCIRDijkstraSchedulerPass(LatencyConfig *config = nullptr);
-    std::unique_ptr<mlir::Pass> createDFCIRLinearSchedulerPass(LatencyConfig *config = nullptr);
+    std::unique_ptr<mlir::Pass> createDFCIRDijkstraSchedulerPass();
+    std::unique_ptr<mlir::Pass> createDFCIRLinearSchedulerPass();
 } // namespace mlir::dfcir
 
 #define GEN_PASS_REGISTRATION

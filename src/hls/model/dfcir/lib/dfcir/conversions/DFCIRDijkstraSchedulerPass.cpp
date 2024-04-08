@@ -22,11 +22,10 @@ namespace mlir::dfcir {
         class ChannelComp final {
         private:
             Latencies &map;
-            LatencyConfig &config;
         public:
-            explicit ChannelComp(Latencies &map, LatencyConfig &config) : map(map), config(config) {}
+            explicit ChannelComp(Latencies &map) : map(map) {}
             bool operator() (const Channel &lhs, const Channel &rhs) const {
-                return map[lhs.source] + config[lhs.source.type] < map[rhs.source] + config[rhs.source.type];
+                return map[lhs.source] + lhs.source.latency < map[rhs.source] + rhs.source.latency;
             }
         };
 
@@ -34,15 +33,15 @@ namespace mlir::dfcir {
 
         Buffers schedule(Graph &graph) {
             Latencies map;
-            std::priority_queue<Channel, std::vector<Channel>, ChannelComp> queue(ChannelComp(map, *latencyConfig));
+            std::priority_queue<Channel, std::vector<Channel>, ChannelComp> chanQueue((ChannelComp(map)));
 
             auto visitChannel = [&] (const Channel &channel) {
-                map[channel.target] = std::max(map[channel.target], map[channel.source] + (*latencyConfig)[channel.source.type]);
+                map[channel.target] = std::max(map[channel.target], map[channel.source] + channel.source.latency);
             };
 
             auto visitNode = [&] (const Node &node) {
                 for (const Channel &out : graph.outputs[node]) {
-                    queue.push(out);
+                    chanQueue.push(out);
                     visitChannel(out);
                 }
             };
@@ -51,9 +50,9 @@ namespace mlir::dfcir {
                 visitNode(node);
             }
 
-            while (!queue.empty()) {
-                Node outNode = queue.top().target;
-                queue.pop();
+            while (!chanQueue.empty()) {
+                Node outNode = chanQueue.top().target;
+                chanQueue.pop();
                 visitNode(outNode);
             }
 
@@ -61,7 +60,7 @@ namespace mlir::dfcir {
 
             for (const Node &node : graph.nodes) {
                 for (const Channel &channel : graph.inputs[node]) {
-                    unsigned delta = map[channel.target] - (map[channel.source] + (*latencyConfig)[channel.source.type]);
+                    unsigned delta = map[channel.target] - (map[channel.source] + channel.source.latency);
                     if (delta) {
                         buffers[channel] = delta;
                     }
@@ -72,8 +71,6 @@ namespace mlir::dfcir {
         }
 
     public:
-        explicit DFCIRDijkstraSchedulerPass(const DFCIRDijkstraSchedulerPassOptions &options)
-                : impl::DFCIRDijkstraSchedulerPassBase<DFCIRDijkstraSchedulerPass>(options) { }
 
         void runOnOperation() override {
 
@@ -88,10 +85,8 @@ namespace mlir::dfcir {
         }
     };
 
-    std::unique_ptr<mlir::Pass> createDFCIRDijkstraSchedulerPass(LatencyConfig *config) {
-        DFCIRDijkstraSchedulerPassOptions options;
-        options.latencyConfig = config;
-        return std::make_unique<DFCIRDijkstraSchedulerPass>(options);
+    std::unique_ptr<mlir::Pass> createDFCIRDijkstraSchedulerPass() {
+        return std::make_unique<DFCIRDijkstraSchedulerPass>();
     }
 
 } // namespace mlir::dfcir

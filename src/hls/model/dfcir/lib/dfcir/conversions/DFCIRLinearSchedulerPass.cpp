@@ -41,7 +41,7 @@ namespace mlir::dfcir {
 
             // t_next >= t_prev + prev_latency
             _problem.addConstraint(2, vars, coeffs, OpType::GreaterOrEqual,
-                                   (*latencyConfig)[chan.source.type]);
+                                   chan.source.latency);
         }
 
         int addDeltaConstraint(const Channel &chan) {
@@ -62,7 +62,7 @@ namespace mlir::dfcir {
             double *coeffs = new double[3] { 1.0, -1.0, 1.0 };
 
             // buf_next_prev = t_next - (t_prev + prev_latency)
-            _problem.addConstraint(3, vars, coeffs, OpType::Equal, -1.0 * (*latencyConfig)[chan.source.type]);
+            _problem.addConstraint(3, vars, coeffs, OpType::Equal, -1.0 * chan.source.latency);
         }
 
         LPProblem _problem;
@@ -122,8 +122,6 @@ namespace mlir::dfcir {
 
 
     public:
-        explicit DFCIRLinearSchedulerPass(const DFCIRLinearSchedulerPassOptions &options)
-            : impl::DFCIRLinearSchedulerPassBase<DFCIRLinearSchedulerPass>(options) { }
 
         void runOnOperation() override {
 
@@ -138,10 +136,8 @@ namespace mlir::dfcir {
         }
     };
 
-    std::unique_ptr<mlir::Pass> createDFCIRLinearSchedulerPass(LatencyConfig *config) {
-        DFCIRLinearSchedulerPassOptions options;
-        options.latencyConfig = config;
-        return std::make_unique<DFCIRLinearSchedulerPass>(options);
+    std::unique_ptr<mlir::Pass> createDFCIRLinearSchedulerPass() {
+        return std::make_unique<DFCIRLinearSchedulerPass>();
     }
 
 } // namespace mlir::dfcir

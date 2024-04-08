@@ -15,8 +15,18 @@
 #define DIV_MODULE "__DIV"
 #define MUL_MODULE "__MUL"
 
+#define FLOAT_SPEC "FLOAT"
+#define INT_SPEC "INT"
+#define UINT_SPEC "UINT"
+#define SINT_SPEC "SINT"
+
+
 #define BUF_MODULE "__FIFO"
-#define BUF_MODULE_STAGES "stages"
+#define STAGES_PARAM "stages"
+#define CLOCK_ARG "clk"
+
+#define TYPE_SIZE_PARAM "size"
+#define INSTANCE_LATENCY_ATTR "_latency"
 
 namespace mlir::dfcir::utils {
     struct Node;
@@ -40,7 +50,9 @@ namespace circt::firrtl::utils {
     inline FExtModuleOp createBufferModuleWithTypeName(OpBuilder &builder, Type type, Location loc, unsigned stages);
     FExtModuleOp findOrCreateBufferModule(OpBuilder &builder, Type type, Location loc, unsigned stages);
     bool isAStartWire(Operation *op);
-    std::pair<Operation *, Operation *> unrollConnectChain(Value value);
+    std::pair<Value, Operation *> unrollConnectChain(Value value);
+    Value getClockVar(Block *block);
+    Value getClockVarFromOpBlock(Operation *op);
 } // namespace circt::firrtl::utils
 
 namespace mlir::utils {
@@ -63,8 +75,9 @@ namespace mlir::dfcir::utils {
 
     struct Node {
         Operation *op;
-        Ops type;
-        explicit Node(Operation *op, Ops type);
+        unsigned latency;
+        long arg_ind;
+        explicit Node(Operation *op, unsigned latency = 0, long arg_ind = -1);
         Node();
         Node(const Node &node) = default;
         ~Node() = default;
@@ -89,7 +102,7 @@ namespace mlir::dfcir::utils {
 template<>
 struct std::hash<mlir::dfcir::utils::Node> {
     size_t operator() (const mlir::dfcir::utils::Node &node) const noexcept {
-        return std::hash<mlir::Operation *>()(node.op);
+        return std::hash<mlir::Operation *>()(node.op) + node.arg_ind;
     }
 };
 

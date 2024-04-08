@@ -12,9 +12,15 @@ namespace circt::firrtl::utils {
                 circt::firrtl::PortInfo(
                         mlir::StringAttr::get(builder.getContext(), "in"),
                         type,
+                        circt::firrtl::Direction::In),
+                circt::firrtl::PortInfo(
+                        mlir::StringAttr::get(builder.getContext(), "clk"),
+                        circt::firrtl::ClockType::get(builder.getContext()),
                         circt::firrtl::Direction::In)
         };
         IntegerType attrType = mlir::IntegerType::get(builder.getContext(), 32, mlir::IntegerType::Unsigned);
+        auto typeWidth = circt::firrtl::getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(type));
+        assert(typeWidth.has_value());
         return builder.create<FExtModuleOp>(
                 loc,
                 mlir::StringAttr::get(builder.getContext(), name),
@@ -24,10 +30,16 @@ namespace circt::firrtl::utils {
                 mlir::ArrayAttr(),
                 mlir::ArrayAttr::get(
                         builder.getContext(),
+                        {
                         ParamDeclAttr::get(builder.getContext(),
-                                           mlir::StringAttr::get(builder.getContext(), BUF_MODULE_STAGES),
+                                           mlir::StringAttr::get(builder.getContext(), STAGES_PARAM),
                                            attrType,
-                                           mlir::IntegerAttr::get(attrType, stages))));
+                                           mlir::IntegerAttr::get(attrType, stages)),
+                        ParamDeclAttr::get(builder.getContext(),
+                                           mlir::StringAttr::get(builder.getContext(), "in_" TYPE_SIZE_PARAM),
+                                           attrType,
+                                           mlir::IntegerAttr::get(attrType, *typeWidth))
+                        }));
     }
 
     inline FExtModuleOp createBufferModuleWithTypeName(OpBuilder &builder, Type type, Location loc, unsigned stages) {
@@ -69,9 +81,8 @@ namespace circt::firrtl::utils {
         return true;
     }
 
-    std::pair<Operation *, Operation *> unrollConnectChain(Value value) {
+    std::pair<Value, Operation *> unrollConnectChain(Value value) {
         Value cur_val = value;
-        Operation *initial_op = nullptr;
         Operation *connect_op = nullptr;
         bool flag;
         do {
@@ -83,26 +94,35 @@ namespace circt::firrtl::utils {
                     if (!connect_op) {
                         connect_op = found.getOperation();
                     }
-                    initial_op = cur_val.getDefiningOp();
                     flag = true;
                 }
             }
         } while (flag);
-        return std::make_pair(initial_op, connect_op);
+        return std::make_pair(cur_val, connect_op);
     }
 
-} // namespace circt::firrtl::utils
+    Value getClockVar(Block *block) {
 
-#include <iostream>
+        BlockArgument arg = block->getArgument(block->getNumArguments() - 1);
+        if (arg.getType().isa<ClockType>()) {
+            return arg;
+        }
+        return nullptr;
+    }
+
+    Value getClockVarFromOpBlock(Operation *op) {
+        return getClockVar(op->getBlock());
+    }
+} // namespace circt::firrtl::utils
 
 namespace mlir::dfcir::utils {
 
-    Node::Node(Operation *op, Ops type) : op(op), type(type) {}
+    Node::Node(Operation *op, unsigned latency, long arg_ind) : op(op), latency(latency), arg_ind(arg_ind) {}
 
-    Node::Node() : Node(nullptr, Ops::UNDEFINED) {}
+    Node::Node() : Node(nullptr) {}
 
     bool Node::operator ==(const Node &node) const {
-        return this->op == node.op && this->type == node.type;
+        return this->op == node.op && this->latency == node.latency && this->arg_ind == node.arg_ind;
     }
 
     Channel::Channel(Node source, Node target, Value val, unsigned val_ind, Operation *connect_op)
@@ -130,41 +150,36 @@ namespace mlir::dfcir::utils {
 
         assert(module);
 
-        for (WireOp wire : module.getBodyBlock()->getOps<WireOp>()) {
-            Operation *op = wire.operator Operation *();
-            Node newNode(op, Ops::WIRE);
-            nodes.insert(newNode);
-            if (isAStartWire(op)) {
+        for (BlockArgument arg : module.getArguments()) {
+            if (!(arg.getType().isa<circt::firrtl::ClockType>())) {
+                Node newNode(nullptr, 0, arg.getArgNumber());
+                nodes.insert(newNode);
                 start_nodes.insert(newNode);
-                continue;
             }
         }
 
         for (InstanceOp instance : module.getBodyBlock()->getOps<InstanceOp>()) {
+
             Operation *op = instance.operator Operation *();
-            Ops type = UNDEFINED;
+            unsigned latency = static_cast<Ops>(instance.getReferencedModule()->getAttr(INSTANCE_LATENCY_ATTR).cast<IntegerAttr>().getUInt());
 
-            auto name = instance.getModuleName();
-            if (name.starts_with(ADD_MODULE)) {
-                type = Ops::ADD;
-            } else if (name.starts_with(SUB_MODULE)) {
-                type = Ops::SUB;
-            } else if (name.starts_with(DIV_MODULE)) {
-                type = Ops::DIV;
-            } else if (name.starts_with(MUL_MODULE)) {
-                type = Ops::MUL;
-            }
-
-            Node newNode(op, type);
+            Node newNode(op, latency);
             nodes.insert(newNode);
 
             auto directions = instance.getPortDirections();
             for (size_t index = 0, count = instance.getResults().size(); index < count; ++index) {
-                if (!directions.isOneBitSet(index)) {
-                    // TODO: Handle the case of block arguments.
-                    auto operand = instance.getResult(index);
+                auto operand = instance.getResult(index);
+                if (!directions.isOneBitSet(index) && !(operand.getType().isa<circt::firrtl::ClockType>())) {
+                    // TODO: Check that all block arguments cases are handled properly.
+
                     auto connectInfo = circt::firrtl::utils::unrollConnectChain(operand);
-                    auto found = std::find_if(nodes.begin(), nodes.end(), [&] (const Node &n) {return n.op == connectInfo.first;});
+
+                    bool isArg = connectInfo.first.isa<BlockArgument>();
+                    auto found = std::find_if(nodes.begin(), nodes.end(),
+                                              [&] (const Node &n) {
+                        return (isArg) ? (n.arg_ind == connectInfo.first.cast<BlockArgument>().getArgNumber()) : (n.op == connectInfo.first.getDefiningOp());
+                    });
+
                     if (found == nodes.end()) continue;
                     Channel newChan(*found, newNode, operand, index, connectInfo.second);
                     outputs[*found].insert(newChan);
@@ -192,7 +207,12 @@ namespace mlir::dfcir::utils {
             ConnectOp castedConnect = llvm::dyn_cast<ConnectOp>(channel.connect_op);
             // Take the original connectee operand and bind it to a newly created 'ConnectOp'
             Value connecteeVal = castedConnect.getSrc();
-            builder.create<ConnectOp>(builder.getUnknownLoc(), instance.getResult(1), connecteeVal);
+            builder.create<ConnectOp>(builder.getUnknownLoc(),
+                                      instance.getResult(1),
+                                      connecteeVal);
+            builder.create<ConnectOp>(builder.getUnknownLoc(),
+                                      instance.getResult(2),
+                                      circt::firrtl::utils::getClockVarFromOpBlock(instance));
             // Set the original connectee operand to the newly created 'ConnectOp''s result.
             castedConnect.setOperand(1, instance.getResult(0));
         }
