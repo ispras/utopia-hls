@@ -155,9 +155,9 @@ defm lifetime_dse : BooleanFFlag<"lifetime-dse">, Group<clang_ignored_f_Group>;
 5. Open the file:
 `<workdir>/circt/llvm/build/lib/cmake/mlir/MLIR/MLIRConfig.cmake`;
 6. Locate the following line:
-`set(MLIR_INCLUDE_DIRS "/home/ivan/circt/llvm/mlir/include;/home/ivan/circt/llvm/build/tools/mlir/include")`;
+`set(MLIR_INCLUDE_DIRS "<workdir>/circt/llvm/mlir/include;<workdir>/circt/llvm/build/tools/mlir/include")`;
 7. Replace it with the following line:
-`set(MLIR_INCLUDE_DIRS "/home/ivan/circt/llvm/mlir/include;/home/ivan/circt/llvm/build/tools/mlir/include;/home/ivan/circt/llvm/llvm/include;/home/ivan/circt/llvm/build/include")`;
+`set(MLIR_INCLUDE_DIRS "<workdir>/circt/llvm/mlir/include;<workdir>/circt/llvm/build/tools/mlir/include;<workdir>/circt/llvm/llvm/include;<workdir>/circt/llvm/build/include")`;
 
 ##### Release
 
