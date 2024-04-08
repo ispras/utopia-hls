@@ -105,20 +105,20 @@ make
 sudo make install
 ```
 
-### Z3 Installation
+### C++ CTemplate Installation
 
 ```
 cd <workdir>
-git clone https://github.com/Z3Prover/z3.git
-cd z3
-git checkout 013d5dc
-python scripts/mk_make.py
-cd build
+git clone https://github.com/OlafvdSpek/ctemplate.git
+cd ctemplate
+./autogen.sh
+./configure --prefix=/usr
 make
 sudo make install
 ```
-If you would like to install Z3 to a non-standard location,
-please set `Z3_DIR` environment variable to Z3 build/installation directory.
+If you would like to install CTemplate to a non-standard location, please
+specify `--prefix` option of `configure` script to installation directory
+you want and set `CT_DIR` environment variable to it too.
 
 ### CIRCT Installation
 
@@ -138,10 +138,26 @@ git submodule update
 
 #### LLVM/MLIR Installation
 
-Set `MLIR_DIR` environment variable to directory with MLIR CMake files:
+1. Set `MLIR_DIR` environment variable to directory with MLIR CMake files:
 ```
 export MLIR_DIR=<workdir>/circt/llvm/build/lib/cmake/mlir/
 ```
+2. Open the file:
+`<workdir>/circt/llvm/clang/include/clang/Driver/Options.td`;
+3. Locate the following line:
+```
+defm float_store : BooleanFFlag<"float-store">, Group<clang_ignored_gcc_optimization_f_Group>;
+```
+4. Insert the following line after:
+```
+defm lifetime_dse : BooleanFFlag<"lifetime-dse">, Group<clang_ignored_f_Group>;
+```
+5. Open the file:
+`<workdir>/circt/llvm/build/lib/cmake/mlir/MLIR/MLIRConfig.cmake`;
+6. Locate the following line:
+`set(MLIR_INCLUDE_DIRS "/home/ivan/circt/llvm/mlir/include;/home/ivan/circt/llvm/build/tools/mlir/include")`;
+7. Replace it with the following line:
+`set(MLIR_INCLUDE_DIRS "/home/ivan/circt/llvm/mlir/include;/home/ivan/circt/llvm/build/tools/mlir/include;/home/ivan/circt/llvm/llvm/include;/home/ivan/circt/llvm/build/include")`;
 
 ##### Release
 
@@ -151,32 +167,21 @@ cd <workdir>/circt
 mkdir llvm/build
 cd llvm/build
 cmake -G Ninja ../llvm \
-    -DLLVM_ENABLE_PROJECTS=mlir \
-    -DLLVM_BUILD_EXAMPLES=ON \
-    -DLLVM_TARGETS_TO_BUILD="X86;RISCV" \
-    -DCMAKE_BUILD_TYPE=Release \
+    -DLLVM_ENABLE_PROJECTS="mlir;clang;clang-tools-extra;lld" \
+    -DLLVM_TARGETS_TO_BUILD="X86" \
+    -DCMAKE_BUILD_TYPE="Release" \
     -DLLVM_ENABLE_ASSERTIONS=ON \
     -DCMAKE_C_COMPILER=clang \
     -DCMAKE_CXX_COMPILER=clang++ \
-    -DLLVM_ENABLE_LLD=ON
+    -DLLVM_ENABLE_LLD=ON \
+    -DLLVM_PARALLEL_LINK_JOBS=$(nproc) \
+    -DLLVM_PARALLEL_COMPILE_JOBS=$(nproc)
 ninja
 ```
 
-##### Debug (Release with Debug Info)
+##### Release with Debug Info
 
-1. Open the file `<workdir>/circt/llvm/clang/include/clang/Driver/Options.td`;
-2. Locate the following line:
-```
-defm float_store : BooleanFFlag<"float-store">, Group<clang_ignored_gcc_optimization_f_Group>;
-```
-3. Insert the following line after:
-```
-defm lifetime_dse : BooleanFFlag<"lifetime-dse">, Group<clang_ignored_f_Group>;
-```
-
-(This is needed because clang does not have flag `fno-lifetime-dse`).
-
-Then type the following commands:
+Type the following commands:
 ```
 cd <workdir>/circt
 mkdir llvm/build
@@ -184,11 +189,11 @@ cd llvm/build
 cmake -G Ninja ../llvm \
   -DLLVM_ENABLE_PROJECTS="mlir;clang;clang-tools-extra;lld" \
   -DLLVM_BUILD_EXAMPLES=ON \
-  -DLLVM_TARGETS_TO_BUILD="X86;RISCV" \
+  -DLLVM_TARGETS_TO_BUILD="X86" \
   -DCMAKE_BUILD_TYPE="RelWithDebInfo" \
   -DLLVM_ENABLE_ASSERTIONS=ON \
-  -DCMAKE_C_COMPILER=$(which clang) \
-  -DCMAKE_CXX_COMPILER=$(which clang++) \
+  -DCMAKE_C_COMPILER=clang \
+  -DCMAKE_CXX_COMPILER=clang++ \
   -DLLVM_BUILD_LLVM_DYLIB=ON \
   -DLLVM_LINK_LLVM_DYLIB=ON \
   -DBUILD_SHARED_LIBS=OFF \
@@ -197,8 +202,8 @@ cmake -G Ninja ../llvm \
   -DLLVM_OPTIMIZED_TABLEGEN=ON \
   -DLLVM_USE_NEWPM=ON \
   -DCMAKE_EXE_LINKER_FLAGS='-Wl,-no-keep-memory' \
-  -DLLVM_PARALLEL_LINK_JOBS=4 \
-  -DLLVM_PARALLEL_COMPILE_JOBS=4
+  -DLLVM_PARALLEL_LINK_JOBS=$(nproc) \
+  -DLLVM_PARALLEL_COMPILE_JOBS=$(nproc)
 ninja
 ```
 
@@ -225,7 +230,7 @@ cmake -G Ninja .. \
 ninja
 ```
 
-##### Debug (Release with Debug Info)
+##### Release with Debug Info
 
 Type the following commands:
 ```
@@ -237,8 +242,8 @@ cmake -G Ninja .. \
     -DLLVM_ENABLE_ASSERTIONS=ON \
     -DMLIR_DIR=$PWD/../llvm/build/lib/cmake/mlir \
     -DLLVM_DIR=$PWD/../llvm/build/lib/cmake/llvm \
-    -DCMAKE_C_COMPILER=$(which clang) \
-    -DCMAKE_CXX_COMPILER=$(which clang++) \
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++ \
     -DVERILATOR_DISABLE=ON \
     -DLLVM_BUILD_LLVM_DYLIB=ON \
     -DLLVM_LINK_LLVM_DYLIB=ON \
@@ -248,26 +253,10 @@ cmake -G Ninja .. \
     -DLLVM_OPTIMIZED_TABLEGEN=ON \
     -DLLVM_USE_NEWPM=ON \
     -DCMAKE_EXE_LINKER_FLAGS='-Wl,-no-keep-memory' \
-    -DLLVM_PARALLEL_LINK_JOBS=4 \
-    -DLLVM_PARALLEL_COMPILE_JOBS=4
+    -DLLVM_PARALLEL_LINK_JOBS=$(nproc) \
+    -DLLVM_PARALLEL_COMPILE_JOBS=$(nproc)
 ninja
 ```
-
-### C++ CTemplate Installation
-
-```
-cd <workdir>
-git clone https://github.com/OlafvdSpek/ctemplate.git
-cd ctemplate
-./autogen.sh
-./configure --prefix=/usr
-make
-sudo make install
-```
-If you would like to install CTemplate to a non-standard location, please
-specify `--prefix` option of `configure` script to installation directory
-you want and set `CT_DIR` environment variable to it too.
-
 
 ## Working in Command Line
 
@@ -280,6 +269,7 @@ cd utopia-hls
 export UTOPIA_HLS_HOME=<workdir>/utopia-hls
 ```
 Please keep `UTOPIA_HLS_HOME` variable and its value in your system permanently.
+
 ### Building Project
 
 ```
