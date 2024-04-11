@@ -8,6 +8,13 @@
 #include "mlir/IR/Dialect.h"
 #include "mlir/Transforms/DialectConversion.h"
 
+template<>
+struct std::hash<std::pair<mlir::Operation *, unsigned>> {
+    size_t operator() (const std::pair<mlir::Operation *, unsigned> &pair) const noexcept {
+        return std::hash<mlir::Operation *>()(pair.first) + std::hash<unsigned>()(pair.second);
+    }
+};
+
 namespace mlir::dfcir {
 
 #define GEN_PASS_DECL_DFCIRTOFIRRTLPASS
@@ -43,17 +50,21 @@ namespace mlir::dfcir {
     public:
         using OpConversionPattern<OperationType>::OpConversionPattern;
         using ConvertedOps = mlir::DenseSet<mlir::Operation *>;
+        using OffsetMap = std::unordered_map<std::pair<mlir::Operation *, unsigned>, signed>;
 
         mutable ConvertedOps *convertedOps;
         const LatencyConfig *latencyConfig;
+        OffsetMap *offsetMap;
 
         FIRRTLOpConversionPattern(MLIRContext *context,
                                   TypeConverter &typeConverter,
                                   ConvertedOps *convertedOps,
-                                  LatencyConfig *latencyConfig)
+                                  LatencyConfig *latencyConfig,
+                                  OffsetMap *offsetMap)
                 : OpConversionPattern<OperationType>(typeConverter, context),
                   convertedOps(convertedOps),
-                  latencyConfig(latencyConfig) {
+                  latencyConfig(latencyConfig),
+                  offsetMap(offsetMap) {
             // Required to allow root updates, which imply recursive
             // pattern application.
             //Pattern::setHasBoundedRewriteRecursion(true);
@@ -271,11 +282,12 @@ namespace mlir::dfcir {
 
         void remapUses(AddOp &oldOp, OpAdaptor &adaptor,
                        InstanceOp &newOp, ConversionPatternRewriter &rewriter) const override {
-            rewriter.create<ConnectOp>(rewriter.getUnknownLoc(), newOp.getResult(1), adaptor.getFirst());
-            rewriter.create<ConnectOp>(rewriter.getUnknownLoc(), newOp.getResult(2), adaptor.getSecond());
-            rewriter.create<ConnectOp>(rewriter.getUnknownLoc(),
-                                       newOp.getResult(3),
-                                       circt::firrtl::utils::getClockVarFromOpBlock(newOp));
+            using circt::firrtl::utils::createConnect;
+            using circt::firrtl::utils::getClockVarFromOpBlock;
+            createConnect(rewriter, newOp.getResult(1), adaptor.getFirst(), (*offsetMap)[std::make_pair(oldOp, 0)]);
+            createConnect(rewriter, newOp.getResult(2), adaptor.getSecond(), (*offsetMap)[std::make_pair(oldOp, 1)]);
+            createConnect(rewriter, newOp.getResult(3), getClockVarFromOpBlock(newOp));
+
             for (auto &operand : llvm::make_early_inc_range(oldOp.getRes().getUses())) {
                 operand.set(newOp.getResult(0));
             }
@@ -394,11 +406,12 @@ namespace mlir::dfcir {
         }
 
         void remapUses(MulOp &oldOp, OpAdaptor &adaptor, InstanceOp &newOp, ConversionPatternRewriter &rewriter) const override {
-            rewriter.create<ConnectOp>(rewriter.getUnknownLoc(), newOp.getResult(1), adaptor.getFirst());
-            rewriter.create<ConnectOp>(rewriter.getUnknownLoc(), newOp.getResult(2), adaptor.getSecond());
-            rewriter.create<ConnectOp>(rewriter.getUnknownLoc(),
-                                       newOp.getResult(3),
-                                       circt::firrtl::utils::getClockVarFromOpBlock(newOp));
+            using circt::firrtl::utils::createConnect;
+            using circt::firrtl::utils::getClockVarFromOpBlock;
+            createConnect(rewriter, newOp.getResult(1), adaptor.getFirst(), (*offsetMap)[std::make_pair(oldOp, 0)]);
+            createConnect(rewriter, newOp.getResult(2), adaptor.getSecond(), (*offsetMap)[std::make_pair(oldOp, 1)]);
+            createConnect(rewriter, newOp.getResult(3), getClockVarFromOpBlock(newOp));
+
             for (auto &operand : llvm::make_early_inc_range(oldOp.getRes().getUses())) {
                 operand.set(newOp.getResult(0));
             }
@@ -440,9 +453,29 @@ namespace mlir::dfcir {
         }
     };
 
+    class OffsetOpConversionPattern : public FIRRTLOpConversionPattern<OffsetOp> {
+    public:
+        using FIRRTLOpConversionPattern<OffsetOp>::FIRRTLOpConversionPattern;
+        using OpAdaptor = typename OffsetOp::Adaptor;
+
+        LogicalResult matchAndRewrite(OffsetOp offsetOp, OpAdaptor adaptor,
+                                      ConversionPatternRewriter &rewriter) const override {
+            int offset = adaptor.getOffset().getInt();
+
+            for (auto &operand : llvm::make_early_inc_range(offsetOp.getRes().getUses())) {
+                operand.set(offsetOp.getOperand());
+                (*offsetMap)[std::make_pair(operand.getOwner(), operand.getOperandNumber())] = offset;
+            }
+
+            rewriter.eraseOp(offsetOp);
+            return mlir::success();
+        }
+    };
+
     class DFCIRToFIRRTLPass : public impl::DFCIRToFIRRTLPassBase<DFCIRToFIRRTLPass> {
     public:
         using ConvertedOps = mlir::DenseSet<mlir::Operation *>;
+        using OffsetMap = std::unordered_map<std::pair<mlir::Operation *, unsigned>, signed>;
 
         explicit DFCIRToFIRRTLPass(const DFCIRToFIRRTLPassOptions &options)
                 : impl::DFCIRToFIRRTLPassBase<DFCIRToFIRRTLPass>(options) { }
@@ -457,6 +490,7 @@ namespace mlir::dfcir {
             // TODO: Implement 'FIRRTLTypeConverter' completely.
             FIRRTLTypeConverter typeConverter;
             ConvertedOps convertedOps;
+            OffsetMap offsetMap;
 
             // Convert the kernel first to get a FIRRTL-circuit.
             RewritePatternSet patterns(&getContext());
@@ -465,7 +499,9 @@ namespace mlir::dfcir {
                     &getContext(),
                     typeConverter,
                     &convertedOps,
-                    latencyConfig);
+                    latencyConfig,
+                    &offsetMap
+                    );
 
             // Apply partial conversion.
             if (failed(applyPartialConversion(getOperation(),
@@ -479,13 +515,16 @@ namespace mlir::dfcir {
             target.addIllegalDialect<DFCIRDialect>();
             target.addIllegalOp<UnrealizedConversionCastOp>();
             patterns.add<
+                    OffsetOpConversionPattern,
                     AddOpConversionPattern,
                     MulOpConversionPattern,
                     ConnectOpConversionPattern>(
                     &getContext(),
                     typeConverter,
                     &convertedOps,
-                    latencyConfig);
+                    latencyConfig,
+                    &offsetMap
+                    );
 
             // Apply partial conversion.
             if (failed(applyPartialConversion(getOperation(),

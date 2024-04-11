@@ -113,6 +113,22 @@ namespace circt::firrtl::utils {
     Value getClockVarFromOpBlock(Operation *op) {
         return getClockVar(op->getBlock());
     }
+
+    ConnectOp createConnect(OpBuilder &builder, Value destination, Value source, int offset) {
+        auto connect = builder.create<ConnectOp>(builder.getUnknownLoc(), destination, source);
+        connect->setAttr(CONNECT_OFFSET_ATTR, builder.getI32IntegerAttr(offset));
+        return connect;
+    }
+
+    int getConnectOffset(ConnectOp connect) {
+        return connect->getAttr(CONNECT_OFFSET_ATTR).cast<IntegerAttr>().getInt();
+    }
+
+    int setConnectOffset(ConnectOp connect, int offset) {
+        connect->setAttr(CONNECT_OFFSET_ATTR, mlir::IntegerAttr::get(mlir::IntegerType::get(connect.getContext(), 32, mlir::IntegerType::Signed), offset));
+        return getConnectOffset(connect);
+    }
+
 } // namespace circt::firrtl::utils
 
 namespace mlir::dfcir::utils {
@@ -125,11 +141,11 @@ namespace mlir::dfcir::utils {
         return this->op == node.op && this->latency == node.latency && this->arg_ind == node.arg_ind;
     }
 
-    Channel::Channel(Node source, Node target, Value val, unsigned val_ind, Operation *connect_op)
+    Channel::Channel(Node source, Node target, Value val, unsigned val_ind, Operation *connect_op, int offset)
                     : source(source), target(target),
-                      val(val), val_ind(val_ind), connect_op(connect_op) {}
+                      val(val), val_ind(val_ind), connect_op(connect_op), offset(offset) {}
 
-    Channel::Channel() : source(), target(), val(), val_ind(0), connect_op() {}
+    Channel::Channel() : source(), target(), val(), val_ind(0), connect_op(nullptr), offset(0) {}
 
     bool Channel::operator ==(const Channel &channel) const {
         return this->source == channel.source && this->target == channel.target &&
@@ -147,6 +163,7 @@ namespace mlir::dfcir::utils {
         using circt::firrtl::InstanceOp;
         using circt::firrtl::WireOp;
         using circt::firrtl::utils::isAStartWire;
+        using circt::firrtl::utils::getConnectOffset;
 
         assert(module);
 
@@ -154,7 +171,9 @@ namespace mlir::dfcir::utils {
             if (!(arg.getType().isa<circt::firrtl::ClockType>())) {
                 Node newNode(nullptr, 0, arg.getArgNumber());
                 nodes.insert(newNode);
-                start_nodes.insert(newNode);
+                if (module.getPortDirection(arg.getArgNumber()) == circt::firrtl::Direction::In) {
+                    start_nodes.insert(newNode);
+                }
             }
         }
 
@@ -181,7 +200,8 @@ namespace mlir::dfcir::utils {
                     });
 
                     if (found == nodes.end()) continue;
-                    Channel newChan(*found, newNode, operand, index, connectInfo.second);
+                    Channel newChan(*found, newNode, operand, index, connectInfo.second,
+                                    getConnectOffset(llvm::cast<circt::firrtl::ConnectOp>(connectInfo.second)));
                     outputs[*found].insert(newChan);
                     inputs[newNode].insert(newChan);
                 }
@@ -199,6 +219,9 @@ namespace mlir::dfcir::utils {
         using circt::firrtl::FExtModuleOp;
         using circt::firrtl::InstanceOp;
         using circt::firrtl::ConnectOp;
+        using circt::firrtl::utils::createConnect;
+        using circt::firrtl::utils::getClockVarFromOpBlock;
+
         OpBuilder builder(&ctx);
         for (auto &[channel, latency] : buffers) {
             builder.setInsertionPoint(channel.target.op);
@@ -207,12 +230,8 @@ namespace mlir::dfcir::utils {
             ConnectOp castedConnect = llvm::dyn_cast<ConnectOp>(channel.connect_op);
             // Take the original connectee operand and bind it to a newly created 'ConnectOp'
             Value connecteeVal = castedConnect.getSrc();
-            builder.create<ConnectOp>(builder.getUnknownLoc(),
-                                      instance.getResult(1),
-                                      connecteeVal);
-            builder.create<ConnectOp>(builder.getUnknownLoc(),
-                                      instance.getResult(2),
-                                      circt::firrtl::utils::getClockVarFromOpBlock(instance));
+            createConnect(builder, instance.getResult(1), connecteeVal);
+            createConnect(builder, instance.getResult(2), getClockVarFromOpBlock(instance));
             // Set the original connectee operand to the newly created 'ConnectOp''s result.
             castedConnect.setOperand(1, instance.getResult(0));
         }

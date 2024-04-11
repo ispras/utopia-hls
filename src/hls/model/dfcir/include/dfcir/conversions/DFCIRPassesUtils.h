@@ -26,7 +26,8 @@
 #define CLOCK_ARG "clk"
 
 #define TYPE_SIZE_PARAM "size"
-#define INSTANCE_LATENCY_ATTR "_latency"
+#define INSTANCE_LATENCY_ATTR "__latency"
+#define CONNECT_OFFSET_ATTR "__offset"
 
 namespace mlir::dfcir::utils {
     struct Node;
@@ -34,8 +35,8 @@ namespace mlir::dfcir::utils {
     struct Graph;
 } // namespace mlir::dfcir::utils
 
-typedef std::unordered_map<mlir::dfcir::utils::Node, unsigned> Latencies;
-typedef std::unordered_map<mlir::dfcir::utils::Channel, unsigned> Buffers;
+typedef std::unordered_map<mlir::dfcir::utils::Node, int> Latencies;
+typedef std::unordered_map<mlir::dfcir::utils::Channel, int> Buffers;
 
 namespace circt::firrtl::utils {
 
@@ -53,6 +54,9 @@ namespace circt::firrtl::utils {
     std::pair<Value, Operation *> unrollConnectChain(Value value);
     Value getClockVar(Block *block);
     Value getClockVarFromOpBlock(Operation *op);
+    ConnectOp createConnect(OpBuilder &builder, Value destination, Value source, int offset = 0);
+    int getConnectOffset(ConnectOp connect);
+    int setConnectOffset(ConnectOp connect, int offset);
 } // namespace circt::firrtl::utils
 
 namespace mlir::utils {
@@ -90,7 +94,8 @@ namespace mlir::dfcir::utils {
         Value val;
         unsigned val_ind;
         Operation *connect_op;
-        Channel(Node source, Node target, Value val, unsigned val_ind, Operation *connect_op);
+        int offset;
+        Channel(Node source, Node target, Value val, unsigned val_ind, Operation *connect_op, int offset = 0);
         Channel();
         Channel(const Channel &) = default;
         ~Channel() = default;

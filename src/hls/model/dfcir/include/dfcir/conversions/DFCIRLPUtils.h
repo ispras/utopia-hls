@@ -93,6 +93,7 @@ namespace mlir::dfcir::utils::lp {
     class LPProblem final {
     public:
         explicit LPProblem();
+        ~LPProblem();
         int addVariable();
         void addConstraint(size_t count, int *vars, double *coeffs, OpType op, double rhs);
         int solve();

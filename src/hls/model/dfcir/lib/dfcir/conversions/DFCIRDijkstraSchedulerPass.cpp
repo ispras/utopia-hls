@@ -1,6 +1,5 @@
 #include "dfcir/conversions/DFCIRPasses.h"
 #include "dfcir/conversions/DFCIRPassesUtils.h"
-#include "circt/Dialect/FIRRTL/FIRRTLOps.h"
 #include "circt/Dialect/FIRRTL/Passes.h"
 #include "circt/Support/LLVM.h"
 #include "mlir/IR/Dialect.h"
@@ -25,7 +24,7 @@ namespace mlir::dfcir {
         public:
             explicit ChannelComp(Latencies &map) : map(map) {}
             bool operator() (const Channel &lhs, const Channel &rhs) const {
-                return map[lhs.source] + lhs.source.latency < map[rhs.source] + rhs.source.latency;
+                return map[lhs.source] + int(lhs.source.latency) + lhs.offset < map[rhs.source] + int(rhs.source.latency) + rhs.offset;
             }
         };
 
@@ -36,7 +35,7 @@ namespace mlir::dfcir {
             std::priority_queue<Channel, std::vector<Channel>, ChannelComp> chanQueue((ChannelComp(map)));
 
             auto visitChannel = [&] (const Channel &channel) {
-                map[channel.target] = std::max(map[channel.target], map[channel.source] + channel.source.latency);
+                map[channel.target] = std::max(map[channel.target], map[channel.source] + int(channel.source.latency) + channel.offset);
             };
 
             auto visitNode = [&] (const Node &node) {
@@ -60,7 +59,7 @@ namespace mlir::dfcir {
 
             for (const Node &node : graph.nodes) {
                 for (const Channel &channel : graph.inputs[node]) {
-                    unsigned delta = map[channel.target] - (map[channel.source] + channel.source.latency);
+                    int delta = map[channel.target] - (map[channel.source] + int(channel.source.latency) + channel.offset);
                     if (delta) {
                         buffers[channel] = delta;
                     }

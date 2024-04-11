@@ -79,9 +79,9 @@ def ConnectOp : DFCIR_Op<"connect", []> {
 def OffsetOp : DFCIR_Op<"offset", []> {
 	let arguments = (ins
 		Stream:$stream,
-		Variable:$offset);
+        Builtin_IntegerAttr:$offset);
 		
-	let assemblyFormat = "`(` $stream `:` type($stream) `,` $offset `:` type ($offset) `)` attr-dict `:` type($res)";
+	let assemblyFormat = "`(` $stream `:` type($stream) `,` $offset `)` attr-dict `:` type($res)";
 
 	let results = (outs Stream:$res);
 }

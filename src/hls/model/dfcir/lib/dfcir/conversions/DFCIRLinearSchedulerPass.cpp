@@ -39,9 +39,9 @@ namespace mlir::dfcir {
             int *vars = new int[2] { _nodeMap[chan.target], _nodeMap[chan.source] };
             double *coeffs = new double[2] { 1.0, -1.0 };
 
-            // t_next >= t_prev + prev_latency
+            // t_next >= t_prev + prev_latency + next_prev_offset
             _problem.addConstraint(2, vars, coeffs, OpType::GreaterOrEqual,
-                                   chan.source.latency);
+                                   (int(chan.source.latency) + chan.offset));
         }
 
         int addDeltaConstraint(const Channel &chan) {
@@ -51,7 +51,6 @@ namespace mlir::dfcir {
 
             // delta_t = t_next - t_prev
             _problem.addConstraint(3, vars, coeffs, OpType::Equal, 0);
-
             return delta_id;
         }
 
@@ -61,8 +60,11 @@ namespace mlir::dfcir {
             int *vars = new int[3] { buf_id, _nodeMap[chan.target], _nodeMap[chan.source] };
             double *coeffs = new double[3] { 1.0, -1.0, 1.0 };
 
-            // buf_next_prev = t_next - (t_prev + prev_latency)
-            _problem.addConstraint(3, vars, coeffs, OpType::Equal, -1.0 * chan.source.latency);
+            // buf_next_prev = t_next - (t_prev + prev_latency + next_prev_offset)
+            _problem.addConstraint(3, vars, coeffs, OpType::Equal, -1.0 * (int(chan.source.latency) + chan.offset));
+
+            // buf_next_prev >= 0
+            _problem.addConstraint(1, new int[1] { buf_id }, new double[1] { 1.0 }, OpType::GreaterOrEqual, 0);
         }
 
         LPProblem _problem;
@@ -104,7 +106,7 @@ namespace mlir::dfcir {
                 for (const auto &[chan, id] : _bufMap) {
                     // lp_solve positions start with 1.
                     // TODO: Can we make such a cast?
-                    unsigned latency = (unsigned) result[id - 1];
+                    int latency = result[id - 1];
                     if (latency) {
                         buffers[chan] = latency;
                     }

@@ -97,4 +97,8 @@ namespace mlir::dfcir::utils::lp {
     }
 
     LPProblem::LPProblem() : _current_col(1), _current_con(1), _lp(::make_lp(0, 0)) {}
+
+    LPProblem::~LPProblem() {
+        delete_lp(_lp);
+    }
 } // namespace mlir::dfcir::utils::lp
