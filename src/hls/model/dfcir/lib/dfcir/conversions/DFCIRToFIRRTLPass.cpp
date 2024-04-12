@@ -55,16 +55,19 @@ namespace mlir::dfcir {
         mutable ConvertedOps *convertedOps;
         const LatencyConfig *latencyConfig;
         OffsetMap *offsetMap;
+        ModuleArgMap *moduleArgMap;
 
         FIRRTLOpConversionPattern(MLIRContext *context,
                                   TypeConverter &typeConverter,
                                   ConvertedOps *convertedOps,
                                   LatencyConfig *latencyConfig,
-                                  OffsetMap *offsetMap)
+                                  OffsetMap *offsetMap,
+                                  ModuleArgMap *moduleArgMap)
                 : OpConversionPattern<OperationType>(typeConverter, context),
                   convertedOps(convertedOps),
                   latencyConfig(latencyConfig),
-                  offsetMap(offsetMap) {
+                  offsetMap(offsetMap),
+                  moduleArgMap(moduleArgMap) {
             // Required to allow root updates, which imply recursive
             // pattern application.
             //Pattern::setHasBoundedRewriteRecursion(true);
@@ -100,21 +103,18 @@ namespace mlir::dfcir {
             // Collect info on inputs and outputs.
             SmallVector<Operation *> ports;
             SmallVector<circt::firrtl::PortInfo> modulePorts;
+            unsigned argInd = 0;
             for (Operation &op : kernelBlock->getOperations()) {
-                if (llvm::isa<InputOp, OutputOp>(op)) {
+                if (auto named = llvm::dyn_cast<NamedOpVal>(op)) {
+                    (*moduleArgMap)[&op] = argInd++;
+                    llvm::StringRef name = named.getValueName();
                     ports.push_back(&op);
                     Type converted = getTypeConverter()->convertType(op.getResult(0).getType());
-                    if (llvm::isa<InputOp>(op)) {
-                        modulePorts.emplace_back(
-                                mlir::StringAttr::get(getContext(), llvm::cast<InputOp>(op).getName()),
-                                converted,
-                                circt::firrtl::Direction::In);
-                    } else {
-                        modulePorts.emplace_back(
-                                mlir::StringAttr::get(getContext(), llvm::cast<OutputOp>(op).getName()),
-                                converted,
-                                circt::firrtl::Direction::Out);
-                    }
+                    modulePorts.emplace_back(
+                            mlir::StringAttr::get(getContext(), name),
+                            converted,
+                            (llvm::isa<InputOp, ScalarInputOp>(op)) ? circt::firrtl::Direction::In :
+                                                                      circt::firrtl::Direction::Out);
                 }
             }
 
@@ -140,8 +140,6 @@ namespace mlir::dfcir {
                 for (auto &operand : llvm::make_early_inc_range(ports[index]->getResult(0).getUses())) {
                     operand.set(arg);
                 }
-                // TODO: Maybe move to specific pattern?
-                rewriter.eraseOp(ports[index]);
             }
 
             // Empty arguments assumed.
@@ -152,6 +150,88 @@ namespace mlir::dfcir {
             rewriter.restoreInsertionPoint(save);
             rewriter.replaceOp(kernelOp, circuitOp);
 
+            return mlir::success();
+        }
+    };
+
+    class InputOpConversionPattern : public FIRRTLOpConversionPattern<InputOp> {
+    public:
+        using FIRRTLOpConversionPattern<InputOp>::FIRRTLOpConversionPattern;
+        using OpAdaptor = typename InputOp::Adaptor;
+
+        LogicalResult matchAndRewrite(InputOp inputOp, OpAdaptor adaptor,
+                                      ConversionPatternRewriter &rewriter) const override {
+            // TODO: Add control stream functionality.
+            rewriter.eraseOp(inputOp);
+            return mlir::success();
+        }
+    };
+
+    class ScalarInputOpConversionPattern : public FIRRTLOpConversionPattern<ScalarInputOp> {
+    public:
+        using FIRRTLOpConversionPattern<ScalarInputOp>::FIRRTLOpConversionPattern;
+        using OpAdaptor = typename ScalarInputOp::Adaptor;
+
+        LogicalResult matchAndRewrite(ScalarInputOp scalarInputOp, OpAdaptor adaptor,
+                                      ConversionPatternRewriter &rewriter) const override {
+            rewriter.eraseOp(scalarInputOp);
+            return mlir::success();
+        }
+    };
+
+    class OutputOpConversionPattern : public FIRRTLOpConversionPattern<OutputOp> {
+    public:
+        using FIRRTLOpConversionPattern<OutputOp>::FIRRTLOpConversionPattern;
+        using OpAdaptor = typename OutputOp::Adaptor;
+
+        LogicalResult matchAndRewrite(OutputOp outputOp, OpAdaptor adaptor,
+                                      ConversionPatternRewriter &rewriter) const override {
+            using circt::firrtl::utils::createConnect;
+            using circt::firrtl::utils::getBlockArgumentFromOpBlock;
+
+            // TODO: Add control stream functionality.
+            if (outputOp.getStream()) {
+                createConnect(rewriter, getBlockArgumentFromOpBlock(outputOp, (*moduleArgMap)[outputOp]), adaptor.getStream());
+            }
+            rewriter.eraseOp(outputOp);
+            return mlir::success();
+        }
+    };
+
+    class ConstOpConversionPattern : public FIRRTLOpConversionPattern<OutputOp> {
+    public:
+        using FIRRTLOpConversionPattern<OutputOp>::FIRRTLOpConversionPattern;
+        using OpAdaptor = typename OutputOp::Adaptor;
+
+        LogicalResult matchAndRewrite(OutputOp outputOp, OpAdaptor adaptor,
+                                      ConversionPatternRewriter &rewriter) const override {
+            using circt::firrtl::utils::createConnect;
+            using circt::firrtl::utils::getBlockArgumentFromOpBlock;
+
+            // TODO: Add control stream functionality.
+            if (outputOp.getStream()) {
+                createConnect(rewriter, getBlockArgumentFromOpBlock(outputOp, (*moduleArgMap)[outputOp]), adaptor.getStream());
+            }
+            rewriter.eraseOp(outputOp);
+            return mlir::success();
+        }
+    };
+
+    class ScalarOutputOpConversionPattern : public FIRRTLOpConversionPattern<ScalarOutputOp> {
+    public:
+        using FIRRTLOpConversionPattern<ScalarOutputOp>::FIRRTLOpConversionPattern;
+        using OpAdaptor = typename ScalarOutputOp::Adaptor;
+
+        LogicalResult matchAndRewrite(ScalarOutputOp scalarOutputOp, OpAdaptor adaptor,
+                                      ConversionPatternRewriter &rewriter) const override {
+            using circt::firrtl::utils::createConnect;
+            using circt::firrtl::utils::getBlockArgumentFromOpBlock;
+
+            // TODO: Add control stream functionality.
+            if (scalarOutputOp.getStream()) {
+                createConnect(rewriter, getBlockArgumentFromOpBlock(scalarOutputOp, (*moduleArgMap)[scalarOutputOp]), adaptor.getStream());
+            }
+            rewriter.eraseOp(scalarOutputOp);
             return mlir::success();
         }
     };
@@ -491,6 +571,7 @@ namespace mlir::dfcir {
             FIRRTLTypeConverter typeConverter;
             ConvertedOps convertedOps;
             OffsetMap offsetMap;
+            ModuleArgMap moduleArgMap;
 
             // Convert the kernel first to get a FIRRTL-circuit.
             RewritePatternSet patterns(&getContext());
@@ -500,7 +581,8 @@ namespace mlir::dfcir {
                     typeConverter,
                     &convertedOps,
                     latencyConfig,
-                    &offsetMap
+                    &offsetMap,
+                    &moduleArgMap
                     );
 
             // Apply partial conversion.
@@ -515,6 +597,10 @@ namespace mlir::dfcir {
             target.addIllegalDialect<DFCIRDialect>();
             target.addIllegalOp<UnrealizedConversionCastOp>();
             patterns.add<
+                    InputOpConversionPattern,
+                    ScalarInputOpConversionPattern,
+                    OutputOpConversionPattern,
+                    ScalarOutputOpConversionPattern,
                     OffsetOpConversionPattern,
                     AddOpConversionPattern,
                     MulOpConversionPattern,
@@ -523,7 +609,8 @@ namespace mlir::dfcir {
                     typeConverter,
                     &convertedOps,
                     latencyConfig,
-                    &offsetMap
+                    &offsetMap,
+                    &moduleArgMap
                     );
 
             // Apply partial conversion.

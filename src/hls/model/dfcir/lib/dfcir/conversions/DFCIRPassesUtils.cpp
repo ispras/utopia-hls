@@ -101,9 +101,17 @@ namespace circt::firrtl::utils {
         return std::make_pair(cur_val, connect_op);
     }
 
+    Value getBlockArgument(Block *block, unsigned ind) {
+        return block->getArgument(ind);
+    }
+
+    Value getBlockArgumentFromOpBlock(Operation *op, unsigned ind) {
+        return getBlockArgument(op->getBlock(), ind);
+    }
+
     Value getClockVar(Block *block) {
 
-        BlockArgument arg = block->getArgument(block->getNumArguments() - 1);
+        Value arg = getBlockArgument(block, block->getNumArguments() - 1);
         if (arg.getType().isa<ClockType>()) {
             return arg;
         }
@@ -179,7 +187,7 @@ namespace mlir::dfcir::utils {
 
         for (InstanceOp instance : module.getBodyBlock()->getOps<InstanceOp>()) {
 
-            Operation *op = instance.operator Operation *();
+            Operation *op = instance.getOperation();
             unsigned latency = static_cast<Ops>(instance.getReferencedModule()->getAttr(INSTANCE_LATENCY_ATTR).cast<IntegerAttr>().getUInt());
 
             Node newNode(op, latency);

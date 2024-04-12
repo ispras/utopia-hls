@@ -2,8 +2,9 @@ add_subdirectory(conversions)
 
 add_mlir_dialect_library(MLIRDFCIR
         DFCIRDialect.cpp
-        DFCIROperations.cpp
         DFCIRTypes.cpp
+        DFCIROpInterfaces.cpp
+        DFCIROperations.cpp
         ${CONV_LIBS}
 
         ADDITIONAL_HEADER_DIRS

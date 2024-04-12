@@ -54,6 +54,10 @@ void mlir::dfcir::ScalarInputOp::print(::mlir::OpAsmPrinter &_odsPrinter) {
     _odsPrinter.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
 }
 
+llvm::StringRef mlir::dfcir::ScalarInputOp::getValueName() {
+    return getName();
+}
+
 ::mlir::ParseResult mlir::dfcir::ScalarOutputOp::parse(::mlir::OpAsmParser &parser, ::mlir::OperationState &result) {
     ::mlir::Type resRawTypes[1];
     ::llvm::ArrayRef<::mlir::Type> resTypes(resRawTypes);
@@ -152,6 +156,10 @@ void mlir::dfcir::ScalarOutputOp::print(::mlir::OpAsmPrinter &_odsPrinter) {
     _odsPrinter.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
 }
 
+llvm::StringRef mlir::dfcir::ScalarOutputOp::getValueName() {
+    return getName();
+}
+
 ::mlir::ParseResult mlir::dfcir::InputOp::parse(::mlir::OpAsmParser &parser, ::mlir::OperationState &result) {
     ::mlir::Type resRawTypes[1];
     ::llvm::ArrayRef<::mlir::Type> resTypes(resRawTypes);
@@ -245,6 +253,10 @@ void mlir::dfcir::InputOp::print(::mlir::OpAsmPrinter &_odsPrinter) {
     ::llvm::SmallVector<::llvm::StringRef, 2> elidedAttrs;
     elidedAttrs.push_back("name");
     _odsPrinter.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
+}
+
+llvm::StringRef mlir::dfcir::InputOp::getValueName() {
+    return getName();
 }
 
 ::mlir::ParseResult mlir::dfcir::OutputOp::parse(::mlir::OpAsmParser &parser, ::mlir::OperationState &result) {
@@ -387,6 +399,10 @@ void mlir::dfcir::OutputOp::print(::mlir::OpAsmPrinter &_odsPrinter) {
     elidedAttrs.push_back("operand_segment_sizes");
     elidedAttrs.push_back("name");
     _odsPrinter.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
+}
+
+llvm::StringRef mlir::dfcir::OutputOp::getValueName() {
+    return getName();
 }
 
 #define GET_OP_CLASSES

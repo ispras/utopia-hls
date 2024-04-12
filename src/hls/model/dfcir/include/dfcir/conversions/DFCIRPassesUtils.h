@@ -37,6 +37,7 @@ namespace mlir::dfcir::utils {
 
 typedef std::unordered_map<mlir::dfcir::utils::Node, int> Latencies;
 typedef std::unordered_map<mlir::dfcir::utils::Channel, int> Buffers;
+typedef std::unordered_map<mlir::Operation *, unsigned> ModuleArgMap;
 
 namespace circt::firrtl::utils {
 
@@ -52,6 +53,8 @@ namespace circt::firrtl::utils {
     FExtModuleOp findOrCreateBufferModule(OpBuilder &builder, Type type, Location loc, unsigned stages);
     bool isAStartWire(Operation *op);
     std::pair<Value, Operation *> unrollConnectChain(Value value);
+    Value getBlockArgument(Block *block, unsigned ind);
+    Value getBlockArgumentFromOpBlock(Operation *op, unsigned ind);
     Value getClockVar(Block *block);
     Value getClockVarFromOpBlock(Operation *op);
     ConnectOp createConnect(OpBuilder &builder, Value destination, Value source, int offset = 0);

@@ -3,6 +3,7 @@
 	
 include "DFCIRDialect.td"
 include "DFCIRTypes.td"
+include "DFCIROpInterfaces.td"
 include "mlir/IR/OpBase.td"
 include "mlir/IR/DialectBase.td"
 include "mlir/IR/AttrTypeBase.td"
@@ -23,7 +24,7 @@ def KernelOp : DFCIR_Op<"kernel", [NoRegionArguments, NoTerminator, SingleBlock]
     let assemblyFormat = "$name $body attr-dict";
 }
 
-def ScalarInputOp : DFCIR_Op<"scalarInput", []> {
+def ScalarInputOp : DFCIR_Op<"scalarInput", [DeclareOpInterfaceMethods<NamedOpVal>]> {
 	let arguments = (ins
 		StrAttr:$name);
 		
@@ -31,9 +32,13 @@ def ScalarInputOp : DFCIR_Op<"scalarInput", []> {
     let hasCustomAssemblyFormat = 1;
 
 	let results = (outs Scalar:$res);
+
+    let extraClassDeclaration = [{
+        llvm::StringRef getValueName();
+    }];
 }
 
-def ScalarOutputOp : DFCIR_Op<"scalarOutput", []> {
+def ScalarOutputOp : DFCIR_Op<"scalarOutput", [DeclareOpInterfaceMethods<NamedOpVal>]> {
 	let arguments = (ins
 		StrAttr:$name,
 		Optional<Stream>:$stream);
@@ -42,9 +47,13 @@ def ScalarOutputOp : DFCIR_Op<"scalarOutput", []> {
     let hasCustomAssemblyFormat = 1;
 
 	let results = (outs Scalar:$res);
+
+    let extraClassDeclaration = [{
+        llvm::StringRef getValueName();
+    }];
 }
 
-def InputOp : DFCIR_Op<"input", []> {
+def InputOp : DFCIR_Op<"input", [DeclareOpInterfaceMethods<NamedOpVal>]> {
 	let arguments = (ins
 		StrAttr:$name,
 		Optional<Stream>:$ctrl);
@@ -53,9 +62,13 @@ def InputOp : DFCIR_Op<"input", []> {
     let hasCustomAssemblyFormat = 1;
 
     let results = (outs Stream:$res);
+
+    let extraClassDeclaration = [{
+        llvm::StringRef getValueName();
+    }];
 }
 
-def OutputOp : DFCIR_Op<"output", [AttrSizedOperandSegments]> {
+def OutputOp : DFCIR_Op<"output", [AttrSizedOperandSegments, DeclareOpInterfaceMethods<NamedOpVal>]> {
 	let arguments = (ins
 		StrAttr:$name,
 		Optional<Stream>:$ctrl,
@@ -65,6 +78,10 @@ def OutputOp : DFCIR_Op<"output", [AttrSizedOperandSegments]> {
     let hasCustomAssemblyFormat = 1;
 
     let results = (outs Stream:$res);
+
+    let extraClassDeclaration = [{
+        llvm::StringRef getValueName();
+    }];
 }
 
 def ConnectOp : DFCIR_Op<"connect", []> {

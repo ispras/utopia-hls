@@ -9,6 +9,7 @@
 
 #include "dfcir/DFCIRDialect.h"
 #include "dfcir/DFCIRTypes.h"
+#include "dfcir/DFCIROpInterfaces.h"
 #define GET_OP_CLASSES
 #include "dfcir/DFCIROperations.h.inc"
 
