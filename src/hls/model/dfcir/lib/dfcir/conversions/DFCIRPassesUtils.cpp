@@ -170,6 +170,7 @@ namespace mlir::dfcir::utils {
      Graph::Graph(FModuleOp module) : Graph() {
         using circt::firrtl::InstanceOp;
         using circt::firrtl::WireOp;
+        using circt::firrtl::ConstantOp;
         using circt::firrtl::utils::isAStartWire;
         using circt::firrtl::utils::getConnectOffset;
 
@@ -185,7 +186,14 @@ namespace mlir::dfcir::utils {
             }
         }
 
-        for (InstanceOp instance : module.getBodyBlock()->getOps<InstanceOp>()) {
+        Block *block = module.getBodyBlock();
+        for (ConstantOp constOp : block->getOps<ConstantOp>()) {
+            Node newNode(constOp);
+            nodes.insert(newNode);
+            start_nodes.insert(newNode);
+        }
+
+        for (InstanceOp instance : block->getOps<InstanceOp>()) {
 
             Operation *op = instance.getOperation();
             unsigned latency = static_cast<Ops>(instance.getReferencedModule()->getAttr(INSTANCE_LATENCY_ATTR).cast<IntegerAttr>().getUInt());

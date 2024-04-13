@@ -8,6 +8,8 @@
 #include "mlir/IR/Dialect.h"
 #include "mlir/Transforms/DialectConversion.h"
 
+#include <iostream>
+
 template<>
 struct std::hash<std::pair<mlir::Operation *, unsigned>> {
     size_t operator() (const std::pair<mlir::Operation *, unsigned> &pair) const noexcept {
@@ -25,6 +27,23 @@ namespace mlir::dfcir {
     public:
         FIRRTLTypeConverter() {
             addConversion([](Type type) -> Type { return type; });
+            addConversion([](DFCIRScalarType type) -> circt::firrtl::IntType {
+                Type scalarType = type.getScalarType();
+                if (scalarType.isa<DFCIRFixedType>()) {
+                    DFCIRFixedType fixedType = llvm::cast<DFCIRFixedType>(scalarType);
+                    unsigned width = fixedType.getIntegerBits() + fixedType.getFractionBits();
+                    if (fixedType.getSign()) {
+                        return circt::firrtl::SIntType::get(fixedType.getContext(), width);
+                    } else {
+                        return circt::firrtl::UIntType::get(fixedType.getContext(), width);
+                    }
+                } else if (scalarType.isa<DFCIRFloatType>()) {
+                    DFCIRFloatType floatType = llvm::cast<DFCIRFloatType>(scalarType);
+                    unsigned width = floatType.getExponentBits() + floatType.getFractionBits();
+                    return circt::firrtl::UIntType::get(floatType.getContext(), width);
+                }
+                return {};
+            });
             addConversion([](DFCIRStreamType type) -> circt::firrtl::IntType {
                 Type streamType = type.getStreamType();
                 if (streamType.isa<DFCIRFixedType>()) {
@@ -198,25 +217,6 @@ namespace mlir::dfcir {
         }
     };
 
-    class ConstOpConversionPattern : public FIRRTLOpConversionPattern<OutputOp> {
-    public:
-        using FIRRTLOpConversionPattern<OutputOp>::FIRRTLOpConversionPattern;
-        using OpAdaptor = typename OutputOp::Adaptor;
-
-        LogicalResult matchAndRewrite(OutputOp outputOp, OpAdaptor adaptor,
-                                      ConversionPatternRewriter &rewriter) const override {
-            using circt::firrtl::utils::createConnect;
-            using circt::firrtl::utils::getBlockArgumentFromOpBlock;
-
-            // TODO: Add control stream functionality.
-            if (outputOp.getStream()) {
-                createConnect(rewriter, getBlockArgumentFromOpBlock(outputOp, (*moduleArgMap)[outputOp]), adaptor.getStream());
-            }
-            rewriter.eraseOp(outputOp);
-            return mlir::success();
-        }
-    };
-
     class ScalarOutputOpConversionPattern : public FIRRTLOpConversionPattern<ScalarOutputOp> {
     public:
         using FIRRTLOpConversionPattern<ScalarOutputOp>::FIRRTLOpConversionPattern;
@@ -235,6 +235,41 @@ namespace mlir::dfcir {
             return mlir::success();
         }
     };
+
+    class ConstOpConversionPattern : public FIRRTLOpConversionPattern<ConstOp> {
+    public:
+        using FIRRTLOpConversionPattern<ConstOp>::FIRRTLOpConversionPattern;
+        using OpAdaptor = typename ConstOp::Adaptor;
+
+        LogicalResult matchAndRewrite(ConstOp constOp, OpAdaptor adaptor,
+                                      ConversionPatternRewriter &rewriter) const override {
+            using circt::firrtl::ConstantOp;
+            using circt::firrtl::UIntType;
+            using circt::firrtl::SIntType;
+            using circt::firrtl::IntType;
+            auto castedInt = llvm::dyn_cast<mlir::IntegerAttr>(constOp.getValue());
+            auto castedFloat = llvm::dyn_cast<mlir::FloatAttr>(constOp.getValue());
+            if (castedInt) {
+                int32_t width = castedInt.getType().getIntOrFloatBitWidth();
+                Type newType;
+                if (castedInt.getType().isSignedInteger()) {
+                    newType = SIntType::get(getContext(), width, true);
+                } else {
+                    newType = UIntType::get(getContext(), width, true);
+                }
+                auto newOp = rewriter.create<ConstantOp>(rewriter.getUnknownLoc(), newType, castedInt);
+                for (auto &operand : llvm::make_early_inc_range(constOp->getResult(0).getUses())) {
+                    operand.set(newOp.getResult());
+                }
+            } else if (castedFloat) {
+                // TODO: Add float functionality.
+                assert(false && "No floats yet");
+            }
+            rewriter.eraseOp(constOp);
+            return mlir::success();
+        }
+    };
+
 
     template<typename OperationType, typename AdaptorType>
     class SchedulableOpConversionPattern {
@@ -601,6 +636,7 @@ namespace mlir::dfcir {
                     ScalarInputOpConversionPattern,
                     OutputOpConversionPattern,
                     ScalarOutputOpConversionPattern,
+                    ConstOpConversionPattern,
                     OffsetOpConversionPattern,
                     AddOpConversionPattern,
                     MulOpConversionPattern,
