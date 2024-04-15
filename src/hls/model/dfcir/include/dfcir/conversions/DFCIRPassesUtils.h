@@ -83,8 +83,9 @@ namespace mlir::dfcir::utils {
     struct Node {
         Operation *op;
         unsigned latency;
+        bool is_const;
         long arg_ind;
-        explicit Node(Operation *op, unsigned latency = 0, long arg_ind = -1);
+        explicit Node(Operation *op, unsigned latency = 0, bool is_const = false, long arg_ind = -1);
         Node();
         Node(const Node &node) = default;
         ~Node() = default;
@@ -135,6 +136,8 @@ namespace mlir::dfcir::utils {
 
         explicit Graph();
 
+        auto findNode(const std::pair<Value, Operation *> &connectInfo);
+
         explicit Graph(FModuleOp module);
 
         explicit Graph(CircuitOp circuit, StringRef name = StringRef());
@@ -142,6 +145,7 @@ namespace mlir::dfcir::utils {
         explicit Graph(ModuleOp op, StringRef name = StringRef());
     };
 
+    void insertBuffer(OpBuilder &builder, circt::firrtl::InstanceOp buf, const Channel &channel);
     void insertBuffers(mlir::MLIRContext &ctx, const Buffers &buffers);
 
 } // namespace mlir::dfcir::utils

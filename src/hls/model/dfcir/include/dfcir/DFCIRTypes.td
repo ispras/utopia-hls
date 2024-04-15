@@ -51,13 +51,16 @@ def Scalar : DFCIR_DialectType<"DFCIRScalar", "scalar"> {
     let assemblyFormat = "`<` qualified($scalarType) `>`";
 }
 
-def Const : DFCIR_DialectType<"DFCIRConstant", "const">;
+def Const : DFCIR_DialectType<"DFCIRConstant", "const"> {
+    let parameters = (ins "Type":$constType);
+    let assemblyFormat = "`<` qualified($constType) `>`";
+}
 
 def ConvertVariable : TypeConstraint<Or<[Scalar.predicate, Const.predicate]>, "convertVariable">;
 
 def CastVariable : TypeConstraint<Or<[Stream.predicate, Scalar.predicate]>, "castVariable">;
 
-def Variable : TypeConstraint<Or<[Stream.predicate, Scalar.predicate, Const.predicate]>, "variable">;
+def Variable : AnyTypeOf<[Stream, Scalar, Const]>;
 
 def CounterChain : DFCIR_DialectType<"DFCIRCounterChain", "cchain">;
 	

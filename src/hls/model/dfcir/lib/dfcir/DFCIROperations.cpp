@@ -405,6 +405,80 @@ llvm::StringRef mlir::dfcir::OutputOp::getValueName() {
     return getName();
 }
 
+::mlir::ParseResult mlir::dfcir::MuxOp::parse(OpAsmParser &parser, OperationState &result) {
+    OpAsmParser::UnresolvedOperand control;
+    SmallVector<OpAsmParser::UnresolvedOperand, 16> vars;
+    Type controlType, varType;
+
+    if (parser.parseLParen() || parser.parseOperand(control) || parser.parseColon() ||
+        parser.parseType(controlType) || parser.parseComma() || parser.parseOperandList(vars) ||
+        parser.parseColon() || parser.parseType(varType) || parser.parseRParen() ||
+        parser.parseOptionalAttrDict(result.attributes))
+        return failure();
+    
+    if (parser.resolveOperand(control, controlType, result.operands))
+        return failure();
+
+    result.addTypes(varType);
+
+    return parser.resolveOperands(vars, varType, result.operands);
+}
+
+void mlir::dfcir::MuxOp::print(OpAsmPrinter &p) {
+    p << "(" << getControl() << ": " << getControl().getType() << ", ";
+    p.printOperands(getVars());
+    p << ": " << getType() << ") ";
+    p.printOptionalAttrDict((*this)->getAttrs());
+}
+
+::mlir::ParseResult mlir::dfcir::ConstantOp::parse(::mlir::OpAsmParser &parser, ::mlir::OperationState &result) {
+    ::mlir::Type resRawTypes[1];
+    ::llvm::ArrayRef<::mlir::Type> resTypes(resRawTypes);
+    ::mlir::Attribute valueAttr;
+    if (parser.parseLess())
+        return ::mlir::failure();
+
+    {
+        mlir::Type constType;
+        if (parser.parseCustomTypeWithFallback(constType))
+            return ::mlir::failure();
+        ::mlir::dfcir::DFCIRConstantType type = mlir::dfcir::DFCIRConstantType::get(result.getContext(), constType);
+        resRawTypes[0] = type;
+    }
+    if (parser.parseGreater())
+        return ::mlir::failure();
+
+    if (parser.parseAttribute(valueAttr, ::mlir::Type{}))
+        return ::mlir::failure();
+    if (valueAttr) result.attributes.append("value", valueAttr);
+    {
+        auto loc = parser.getCurrentLocation();(void)loc;
+        if (parser.parseOptionalAttrDict(result.attributes))
+            return ::mlir::failure();
+    }
+    result.addTypes(resTypes);
+    return ::mlir::success();
+}
+
+void mlir::dfcir::ConstantOp::print(::mlir::OpAsmPrinter &_odsPrinter) {
+    _odsPrinter << "<";
+    {
+        auto type = getRes().getType().getConstType();
+        _odsPrinter << type;
+//        auto type = getRes().getType();
+//        if (auto validType = ::llvm::dyn_cast<::mlir::dfcir::DFCIRConstantType>(type))
+//            _odsPrinter.printStrippedAttrOrType(validType);
+//        else
+//            _odsPrinter << type;
+    }
+    _odsPrinter << ">";
+    _odsPrinter << ' ';
+    _odsPrinter.printAttribute(getValueAttr());
+    ::llvm::SmallVector<::llvm::StringRef, 2> elidedAttrs;
+    elidedAttrs.push_back("value");
+    _odsPrinter.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
+}
+
 #define GET_OP_CLASSES
 #include "dfcir/DFCIROperations.cpp.inc"
 

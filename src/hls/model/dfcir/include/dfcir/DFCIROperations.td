@@ -114,11 +114,12 @@ def ConvertOp : DFCIR_Op<"convert", []> {
 def MuxOp : DFCIR_Op<"mux", []> {
 	let arguments = (ins
 		Stream:$control,
-		Variadic<Stream>:$streams);
+		Variadic<Variable>:$vars);
 		
-	let assemblyFormat = "`(` $control `:` type($control) `,` $streams `:` type($streams) `)` attr-dict `:` type($res)";	
-		
-	let results = (outs Stream:$res);
+	//let assemblyFormat = "`(` $control `:` type($control) `,` $vars `:` type($vars) `)` attr-dict `:` type($res)";
+    let hasCustomAssemblyFormat = 1;
+
+	let results = (outs Variable:$res);
 }
 
 def LessOp : DFCIR_Op<"less", []> {
@@ -267,37 +268,38 @@ def DivOp : DFCIR_Op<"div", []> {
 	let results = (outs Variable:$res);
 }
 
-def CreateCCOp : DFCIR_Op<"createCc", []> {
-	let results = (outs CounterChain);
-}
+//def CreateCCOp : DFCIR_Op<"createCc", []> {
+//	let results = (outs CounterChain);
+//}
 
-def AddCounterOp : DFCIR_Op<"addCounter", []> {
-	let arguments = (ins
-		CounterChain:$chain,
-		Const:$step,
-		Variable:$max);
-	
-	let assemblyFormat = "`(` $chain `,` $step `,` $max `:` type($max) `)` attr-dict `:` type($res)";
-	
-	let results = (outs Stream:$res);
-}
+//def AddCounterOp : DFCIR_Op<"addCounter", []> {
+//	let arguments = (ins
+//		CounterChain:$chain,
+//		Const:$step,
+//		Variable:$max);
 
-def SimpleCounterOp : DFCIR_Op<"simpleCounter", []> {
-	let arguments = (ins
-		Const:$width,
-		Variable:$max);
-	
-	let assemblyFormat = "`<` type($res) `>` `(` $width `,` $max `:` type($max) `)` attr-dict";
-	
-	let results = (outs Stream:$res);
-}
+//	let assemblyFormat = "`(` $chain `,` $step `,` $max `:` type($max) `)` attr-dict `:` type($res)";
 
-def ConstOp : DFCIR_Op<"constOp", []> {
+//	let results = (outs Stream:$res);
+//}
+
+//def SimpleCounterOp : DFCIR_Op<"simpleCounter", []> {
+//	let arguments = (ins
+//		Const:$width,
+//		Variable:$max);
+	
+//	let assemblyFormat = "`<` type($res) `>` `(` $width `,` $max `:` type($max) `)` attr-dict";
+	
+//	let results = (outs Stream:$res);
+//}
+
+def ConstantOp : DFCIR_Op<"constant", []> {
 	let arguments = (ins AnyAttrOf<[Builtin_IntegerAttr, Builtin_FloatAttr]>:$value);
 	
-	let assemblyFormat = " $value attr-dict";
-	
-	let results = (outs Const:$res);
+	//let assemblyFormat = "`<` type($res) `>` $value attr-dict";
+    let hasCustomAssemblyFormat = 1;
+
+    let results = (outs Const:$res);
 }
 
 def CastOp : DFCIR_Op<"cast", []> {

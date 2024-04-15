@@ -8,8 +8,6 @@
 #include "mlir/IR/Dialect.h"
 #include "mlir/Transforms/DialectConversion.h"
 
-#include <iostream>
-
 template<>
 struct std::hash<std::pair<mlir::Operation *, unsigned>> {
     size_t operator() (const std::pair<mlir::Operation *, unsigned> &pair) const noexcept {
@@ -27,15 +25,32 @@ namespace mlir::dfcir {
     public:
         FIRRTLTypeConverter() {
             addConversion([](Type type) -> Type { return type; });
+            addConversion([](DFCIRConstantType type) -> circt::firrtl::IntType {
+               Type constType = type.getConstType();
+                if (constType.isa<DFCIRFixedType>()) {
+                    DFCIRFixedType fixedType = llvm::cast<DFCIRFixedType>(constType);
+                    unsigned width = fixedType.getIntegerBits() + fixedType.getFractionBits();
+                    if (fixedType.getSign()) {
+                        return circt::firrtl::SIntType::get(fixedType.getContext(), width);
+                    } else {
+                        return circt::firrtl::UIntType::get(fixedType.getContext(), width);
+                    }
+                } else if (constType.isa<DFCIRFloatType>()) {
+                    DFCIRFloatType floatType = llvm::cast<DFCIRFloatType>(constType);
+                    unsigned width = floatType.getExponentBits() + floatType.getFractionBits();
+                    return circt::firrtl::UIntType::get(floatType.getContext(), width);
+                }
+                return {};
+            });
             addConversion([](DFCIRScalarType type) -> circt::firrtl::IntType {
                 Type scalarType = type.getScalarType();
                 if (scalarType.isa<DFCIRFixedType>()) {
                     DFCIRFixedType fixedType = llvm::cast<DFCIRFixedType>(scalarType);
                     unsigned width = fixedType.getIntegerBits() + fixedType.getFractionBits();
                     if (fixedType.getSign()) {
-                        return circt::firrtl::SIntType::get(fixedType.getContext(), width);
+                        return circt::firrtl::SIntType::get(fixedType.getContext(), width, true);
                     } else {
-                        return circt::firrtl::UIntType::get(fixedType.getContext(), width);
+                        return circt::firrtl::UIntType::get(fixedType.getContext(), width, true);
                     }
                 } else if (scalarType.isa<DFCIRFloatType>()) {
                     DFCIRFloatType floatType = llvm::cast<DFCIRFloatType>(scalarType);
@@ -103,9 +118,6 @@ namespace mlir::dfcir {
         using CircuitOp = circt::firrtl::CircuitOp;
         using FModuleOp = circt::firrtl::FModuleOp;
         using ConventionAttr = circt::firrtl::ConventionAttr;
-        using PortInfo = circt::firrtl::PortInfo;
-        using SpecialConstantOp = circt::firrtl::SpecialConstantOp;
-        using ClockType = circt::firrtl::ClockType;
         using InputOp = mlir::dfcir::InputOp;
         using OutputOp = mlir::dfcir::OutputOp;
 
@@ -236,12 +248,12 @@ namespace mlir::dfcir {
         }
     };
 
-    class ConstOpConversionPattern : public FIRRTLOpConversionPattern<ConstOp> {
+    class ConstantOpConversionPattern : public FIRRTLOpConversionPattern<ConstantOp> {
     public:
-        using FIRRTLOpConversionPattern<ConstOp>::FIRRTLOpConversionPattern;
-        using OpAdaptor = typename ConstOp::Adaptor;
+        using FIRRTLOpConversionPattern<ConstantOp>::FIRRTLOpConversionPattern;
+        using OpAdaptor = typename ConstantOp::Adaptor;
 
-        LogicalResult matchAndRewrite(ConstOp constOp, OpAdaptor adaptor,
+        LogicalResult matchAndRewrite(ConstantOp constOp, OpAdaptor adaptor,
                                       ConversionPatternRewriter &rewriter) const override {
             using circt::firrtl::ConstantOp;
             using circt::firrtl::UIntType;
@@ -250,13 +262,7 @@ namespace mlir::dfcir {
             auto castedInt = llvm::dyn_cast<mlir::IntegerAttr>(constOp.getValue());
             auto castedFloat = llvm::dyn_cast<mlir::FloatAttr>(constOp.getValue());
             if (castedInt) {
-                int32_t width = castedInt.getType().getIntOrFloatBitWidth();
-                Type newType;
-                if (castedInt.getType().isSignedInteger()) {
-                    newType = SIntType::get(getContext(), width, true);
-                } else {
-                    newType = UIntType::get(getContext(), width, true);
-                }
+                Type newType = getTypeConverter()->convertType(constOp.getRes().getType());
                 auto newOp = rewriter.create<ConstantOp>(rewriter.getUnknownLoc(), newType, castedInt);
                 for (auto &operand : llvm::make_early_inc_range(constOp->getResult(0).getUses())) {
                     operand.set(newOp.getResult());
@@ -308,16 +314,13 @@ namespace mlir::dfcir {
         using OpAdaptor = typename AddOp::Adaptor;
         using FExtModuleOp = circt::firrtl::FExtModuleOp;
         using InstanceOp = circt::firrtl::InstanceOp;
-        using ConnectOp = circt::firrtl::ConnectOp;
         using IntType = circt::firrtl::IntType;
-        using SIntType = circt::firrtl::SIntType;
-        using UIntType = circt::firrtl::UIntType;
 
         std::string constructModuleName(const AddOp &op, OpAdaptor &adaptor) const override {
             Type type = op->getResult(0).getType();
             Type convType = getTypeConverter()->convertType(type);
 
-            bool isFloat = false;
+            bool isFloat;
 
             std::string name = ADD_MODULE"_";
             llvm::raw_string_ostream nameStream(name);
@@ -413,7 +416,7 @@ namespace mlir::dfcir {
                                       ConversionPatternRewriter &rewriter) const override {
             FExtModuleOp module = findOrCreateModule(addOp, adaptor, rewriter);
 
-            InstanceOp newOp = rewriter.create<InstanceOp>(
+            auto newOp = rewriter.create<InstanceOp>(
                     addOp.getLoc(),
                     module,
                     "placeholder");
@@ -440,7 +443,7 @@ namespace mlir::dfcir {
             Type type = op->getResult(0).getType();
             Type convType = getTypeConverter()->convertType(type);
 
-            bool isFloat = false;
+            bool isFloat;
 
             std::string name = MUL_MODULE"_";
             llvm::raw_string_ostream nameStream(name);
@@ -538,7 +541,7 @@ namespace mlir::dfcir {
             // unsigned latency = latencyConfig->find(MUL)->second;
             FExtModuleOp module = findOrCreateModule(mulOp, adaptor, rewriter);
 
-            InstanceOp newOp = rewriter.create<InstanceOp>(
+            auto newOp = rewriter.create<InstanceOp>(
                     mulOp.getLoc(),
                     module,
                     "placeholder");
@@ -558,11 +561,11 @@ namespace mlir::dfcir {
 
         LogicalResult matchAndRewrite(ConnectOp connectOp, OpAdaptor adaptor,
                                       ConversionPatternRewriter &rewriter) const override {
-            auto newOp = rewriter.create<circt::firrtl::ConnectOp>(
-                    connectOp.getLoc(),
-                    adaptor.getConnecting(),
-                    adaptor.getConnectee()
-            );
+            using circt::firrtl::utils::createConnect;
+
+            auto newOp = createConnect(rewriter,
+                                                 adaptor.getConnecting(),
+                                                 adaptor.getConnectee());
             rewriter.replaceOp(connectOp, newOp);
             return mlir::success();
         }
@@ -583,6 +586,22 @@ namespace mlir::dfcir {
             }
 
             rewriter.eraseOp(offsetOp);
+            return mlir::success();
+        }
+    };
+
+    class MuxOpConversionPattern : public FIRRTLOpConversionPattern<MuxOp> {
+    public:
+        using FIRRTLOpConversionPattern<MuxOp>::FIRRTLOpConversionPattern;
+        using OpAdaptor = typename MuxOp::Adaptor;
+
+        LogicalResult matchAndRewrite(MuxOp muxOp, OpAdaptor adaptor,
+                                      ConversionPatternRewriter &rewriter) const override {
+            auto newOp = rewriter.create<circt::firrtl::MultibitMuxOp>(rewriter.getUnknownLoc(), adaptor.getControl(), adaptor.getVars());
+            for (auto &operand : llvm::make_early_inc_range(muxOp.getRes().getUses())) {
+                operand.set(newOp.getResult());
+            }
+            rewriter.eraseOp(muxOp);
             return mlir::success();
         }
     };
@@ -636,8 +655,9 @@ namespace mlir::dfcir {
                     ScalarInputOpConversionPattern,
                     OutputOpConversionPattern,
                     ScalarOutputOpConversionPattern,
-                    ConstOpConversionPattern,
+                    ConstantOpConversionPattern,
                     OffsetOpConversionPattern,
+                    MuxOpConversionPattern,
                     AddOpConversionPattern,
                     MulOpConversionPattern,
                     ConnectOpConversionPattern>(

@@ -60,7 +60,7 @@ namespace mlir::dfcir {
             for (const Node &node : graph.nodes) {
                 for (const Channel &channel : graph.inputs[node]) {
                     int delta = map[channel.target] - (map[channel.source] + int(channel.source.latency) + channel.offset);
-                    if (delta) {
+                    if (!channel.source.is_const && delta) {
                         buffers[channel] = delta;
                     }
                 }

@@ -107,7 +107,7 @@ namespace mlir::dfcir {
                     // lp_solve positions start with 1.
                     // TODO: Can we make such a cast?
                     int latency = result[id - 1];
-                    if (latency) {
+                    if (!chan.source.is_const && latency) {
                         buffers[chan] = latency;
                     }
                 }
