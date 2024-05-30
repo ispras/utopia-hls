@@ -4,24 +4,49 @@ cmake_minimum_required(VERSION 3.13)
 
 project(Utopia VERSION 0.0)
 
-# TODO: Maybe move to hls/model/dfcir?
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Check if UTOPIA_HLS_HOME env var is set
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+# Check if CIRCT build directory var is set.
+if(DEFINED CIRCT_BIN_HOME)
+  message(STATUS "CIRCT_BIN_HOME: ${CIRCT_BIN_HOME}")
+  list(APPEND CMAKE_PREFIX_PATH "${CIRCT_BIN_HOME}")
+else()
+  message(FATAL_ERROR "CIRCT_BIN_HOME var is not set!")
+endif()
+
+# Check if UTOPIA_HLS_HOME env var is set.
 if(DEFINED ENV{UTOPIA_HLS_HOME})
   message(STATUS "UTOPIA_HLS_HOME: $ENV{UTOPIA_HLS_HOME}")
 else()
   message(FATAL_ERROR "UTOPIA_HLS_HOME env var is not set!")
 endif()
 
-find_package(MLIR REQUIRED CONFIG)
+find_package(CIRCT REQUIRED CONFIG)
+
+message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+message(STATUS "Using MLIRConfig.cmake in: ${MLIR_DIR}")
+message(STATUS "Using CIRCTConfig.cmake in: ${CIRCT_DIR}")
+
 set_property(TARGET LLVMSupport APPEND
   PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${LLVM_INCLUDE_DIRS}")
 set_property(TARGET MLIRSupport APPEND
   PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${MLIR_INCLUDE_DIRS}")
+
+list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
+list(APPEND CMAKE_MODULE_PATH "${MLIR_CMAKE_DIR}")
+list(APPEND CMAKE_MODULE_PATH "${CIRCT_CMAKE_DIR}")
+
+set(LLVM_RUNTIME_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/bin)
+set(LLVM_LIBRARY_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/lib)
+set(MLIR_BINARY_DIR ${CMAKE_BINARY_DIR})
+
+include(TableGen)
+include(AddLLVM)
+include(AddMLIR)
+include(HandleLLVMOptions)
 
 include(UtopiaFindHelper)
 set_local_from_env(CTemplate_ROOT CT_DIR)

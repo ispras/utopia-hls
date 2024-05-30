@@ -19,9 +19,9 @@ def KernelOp : DFCIR_Op<"kernel", [NoRegionArguments, NoTerminator, SingleBlock]
 	let arguments = (ins
 		StrAttr:$name);
 
-    let regions = (region SizedRegion<1>:$body);
+  let regions = (region SizedRegion<1>:$body);
 
-    let assemblyFormat = "$name $body attr-dict";
+  let assemblyFormat = "$name $body attr-dict";
 }
 
 def ScalarInputOp : DFCIR_Op<"scalarInput", [DeclareOpInterfaceMethods<NamedOpVal>]> {
@@ -29,13 +29,13 @@ def ScalarInputOp : DFCIR_Op<"scalarInput", [DeclareOpInterfaceMethods<NamedOpVa
 		StrAttr:$name);
 		
 	//let assemblyFormat = "`<` type($res) `>` `(` $name `)` attr-dict";
-    let hasCustomAssemblyFormat = 1;
+  let hasCustomAssemblyFormat = 1;
 
 	let results = (outs Scalar:$res);
 
-    let extraClassDeclaration = [{
-        llvm::StringRef getValueName();
-    }];
+  let extraClassDeclaration = [{
+    llvm::StringRef getValueName();
+  }];
 }
 
 def ScalarOutputOp : DFCIR_Op<"scalarOutput", [DeclareOpInterfaceMethods<NamedOpVal>]> {
@@ -44,13 +44,13 @@ def ScalarOutputOp : DFCIR_Op<"scalarOutput", [DeclareOpInterfaceMethods<NamedOp
 		Optional<Stream>:$stream);
 	
 	//let assemblyFormat = "`<` type($res) `>` `(` $name `)` (`<` `=` $stream^ `:` type($stream))? attr-dict";
-    let hasCustomAssemblyFormat = 1;
+  let hasCustomAssemblyFormat = 1;
 
 	let results = (outs Scalar:$res);
 
-    let extraClassDeclaration = [{
-        llvm::StringRef getValueName();
-    }];
+  let extraClassDeclaration = [{
+    llvm::StringRef getValueName();
+  }];
 }
 
 def InputOp : DFCIR_Op<"input", [DeclareOpInterfaceMethods<NamedOpVal>]> {
@@ -59,13 +59,13 @@ def InputOp : DFCIR_Op<"input", [DeclareOpInterfaceMethods<NamedOpVal>]> {
 		Optional<Stream>:$ctrl);
 		
 	//let assemblyFormat = "`<` type($res) `>` `(` $name (`,` $ctrl^ `:` type($ctrl))? `)` attr-dict";
-    let hasCustomAssemblyFormat = 1;
+  let hasCustomAssemblyFormat = 1;
 
-    let results = (outs Stream:$res);
+  let results = (outs Stream:$res);
 
-    let extraClassDeclaration = [{
-        llvm::StringRef getValueName();
-    }];
+  let extraClassDeclaration = [{
+    llvm::StringRef getValueName();
+  }];
 }
 
 def OutputOp : DFCIR_Op<"output", [AttrSizedOperandSegments, DeclareOpInterfaceMethods<NamedOpVal>]> {
@@ -75,13 +75,13 @@ def OutputOp : DFCIR_Op<"output", [AttrSizedOperandSegments, DeclareOpInterfaceM
 		Optional<Stream>:$stream);
 	
 	//let assemblyFormat = "`<` type($res) `>` `(` $name (`,` $ctrl^ `:` type($ctrl))? `)` (`<` `=` $stream^ `:` type($stream))? attr-dict";
-    let hasCustomAssemblyFormat = 1;
+  let hasCustomAssemblyFormat = 1;
 
-    let results = (outs Stream:$res);
+  let results = (outs Stream:$res);
 
-    let extraClassDeclaration = [{
-        llvm::StringRef getValueName();
-    }];
+  let extraClassDeclaration = [{
+    llvm::StringRef getValueName();
+  }];
 }
 
 def ConnectOp : DFCIR_Op<"connect", []> {
@@ -96,9 +96,10 @@ def ConnectOp : DFCIR_Op<"connect", []> {
 def OffsetOp : DFCIR_Op<"offset", []> {
 	let arguments = (ins
 		Stream:$stream,
-        Builtin_IntegerAttr:$offset);
+    Builtin_IntegerAttr:$offset);
 		
-	let assemblyFormat = "`(` $stream `:` type($stream) `,` $offset `)` attr-dict `:` type($res)";
+	//let assemblyFormat = "`(` $stream `:` type($stream) `,` $offset `)` attr-dict `:` type($res)";
+  let hasCustomAssemblyFormat = 1;
 
 	let results = (outs Stream:$res);
 }
@@ -117,7 +118,7 @@ def MuxOp : DFCIR_Op<"mux", []> {
 		Variadic<Variable>:$vars);
 		
 	//let assemblyFormat = "`(` $control `:` type($control) `,` $vars `:` type($vars) `)` attr-dict `:` type($res)";
-    let hasCustomAssemblyFormat = 1;
+  let hasCustomAssemblyFormat = 1;
 
 	let results = (outs Variable:$res);
 }
@@ -215,7 +216,7 @@ def XorOp : DFCIR_Op<"xor", []> {
 def NotOp : DFCIR_Op<"not", [SameOperandsAndResultType, ]> {
 	let arguments = (ins Variable:$first);
 		
-	let assemblyFormat = "$first attr-dict `:` type($res)";
+	let assemblyFormat = "`(` $first `:` type($first) `)` attr-dict `:` type($res)";
 	
 	let results = (outs Variable:$res);
 }
@@ -223,7 +224,7 @@ def NotOp : DFCIR_Op<"not", [SameOperandsAndResultType, ]> {
 def NegOp : DFCIR_Op<"neg", [SameOperandsAndResultType, ]> {
 	let arguments = (ins Variable:$first);
 	
-	let assemblyFormat = "$first attr-dict `:` type($res)";
+	let assemblyFormat = "`(` $first `:` type($first) `)` attr-dict `:` type($res)";
 	
 	let results = (outs Variable:$res);
 }

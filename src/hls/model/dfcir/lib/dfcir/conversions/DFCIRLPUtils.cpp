@@ -1,104 +1,105 @@
 #include "dfcir/conversions/DFCIRLPUtils.h"
 
 namespace mlir::dfcir::utils::lp {
-    LPVariable::LPVariable(int id) : id(id) {}
 
-    bool LPVariable::operator==(const mlir::dfcir::utils::lp::LPVariable &other) const {
-        return id == other.id;
-    }
+LPVariable::LPVariable(int id) : id(id) {}
 
-    LPConstraint::LPConstraint(int id, size_t count, int *vars, double *coeffs, OpType op, double rhs): id(id), count(count), vars(vars),coeffs(coeffs), op(op), rhs(rhs) { }
+bool
+LPVariable::operator==(const mlir::dfcir::utils::lp::LPVariable &other) const {
+  return id == other.id;
+}
 
-    LPConstraint::LPConstraint(const LPConstraint &other) : id(other.id), count(other.count), op(other.op), rhs(other.rhs) {
-        vars = new int[count];
-        coeffs = new double[count];
+LPConstraint::LPConstraint(int id, size_t count, int *vars, double *coeffs,
+                           OpType op, double rhs) : id(id), count(count),
+                                                    vars(vars), coeffs(coeffs),
+                                                    op(op), rhs(rhs) {}
 
-        for (size_t index = 0; index < count; ++index) {
-            vars[index] = other.vars[index];
-            coeffs[index] = other.coeffs[index];
-        }
-    }
+LPConstraint::LPConstraint(const LPConstraint &other) : id(other.id),
+                                                        count(other.count),
+                                                        op(other.op),
+                                                        rhs(other.rhs) {
+  vars = new int[count];
+  coeffs = new double[count];
 
-    LPConstraint::~LPConstraint() {
-        delete []vars;
-        delete []coeffs;
-    }
+  for (size_t index = 0; index < count; ++index) {
+    vars[index] = other.vars[index];
+    coeffs[index] = other.coeffs[index];
+  }
+}
 
-    bool LPConstraint::operator==(const mlir::dfcir::utils::lp::LPConstraint &other) const {
-//        if (count != other.count) {
-//            return false;
-//        }
-//
-//        for (size_t index = 0; index < count; ++index) {
-//            if (vars[index] != other.vars[index] || coeffs[index] != other.coeffs[index]) {
-//                return false;
-//            }
-//        }
-//
-//        return op == other.op && rhs == other.rhs;
-        // TODO: Fix in the future.
-        return id == other.id;
-    }
+LPConstraint::~LPConstraint() {
+  delete[]vars;
+  delete[]coeffs;
+}
 
-    int LPProblem::addVariable() {
-        auto it = variables.emplace(_current_col++);
-        assert(it.second);
-        return it.first->id;
-    }
+bool LPConstraint::operator==(
+        const mlir::dfcir::utils::lp::LPConstraint &other) const {
+  // TODO: Fix in the future.
+  return id == other.id;
+}
 
-    void LPProblem::addConstraint(size_t count, int *vars, double *coeffs, OpType op,
-                                          double rhs) {
-        auto it = constraints.emplace(_current_con++, count, vars, coeffs, op, rhs);
-        assert(it.second);
-    }
+int LPProblem::addVariable() {
+  auto it = variables.emplace(currentCol++);
+  assert(it.second);
+  return it.first->id;
+}
 
-    void LPProblem::finalizeInit() {
-        for (const LPVariable &var : variables) {
-            ::add_column(_lp, NULL);
-        }
+void
+LPProblem::addConstraint(size_t count, int *vars, double *coeffs, OpType op,
+                         double rhs) {
+  auto it = constraints.emplace(currentCon++, count, vars, coeffs, op, rhs);
+  assert(it.second);
+}
 
-        ::set_add_rowmode(_lp, TRUE);
+void LPProblem::finalizeInit() {
+  for (const LPVariable &var: variables) {
+    ::add_column(lp, NULL);
+  }
 
-        for (const LPConstraint &cons : constraints) {
-            assert(::add_constraintex(_lp, cons.count, cons.coeffs,
-                                      cons.vars, cons.op, cons.rhs) &&
-                                      "Constraint creation error!");
-        }
+  ::set_add_rowmode(lp, TRUE);
 
-        ::set_add_rowmode(_lp, FALSE);
-    }
+  for (const LPConstraint &cons: constraints) {
+    unsigned char successful = ::add_constraintex(lp, cons.count, cons.coeffs,
+                                                  cons.vars, cons.op, cons.rhs);
+    assert(successful && "Constraint creation error!");
+  }
 
-    int LPProblem::solve() {
-        finalizeInit();
+  ::set_add_rowmode(lp, FALSE);
+}
 
-        return ::solve(_lp);
-    }
+int LPProblem::solve() {
+  finalizeInit();
 
-    void LPProblem::setMin() {
-        ::set_minim(_lp);
-    }
-    void LPProblem::setMax() {
-        ::set_maxim(_lp);
-    }
+  return ::solve(lp);
+}
 
-    void LPProblem::setObjective(size_t count, int *vars, double *coeffs) {
-        ::set_obj_fnex(_lp, count, coeffs, vars);
-    }
+void LPProblem::setMin() {
+  ::set_minim(lp);
+}
 
-    int LPProblem::getResults(double **result) {
-        int size = ::get_Ncolumns(_lp);
-        *result = new double[size];
-        ::get_variables(_lp, *result);
-        return size;
-    }
+void LPProblem::setMax() {
+  ::set_maxim(lp);
+}
 
-    void LPProblem::lessMessages() {
-        ::set_verbose(_lp, Verbosity::Critical);
-    }
+void LPProblem::setObjective(size_t count, int *vars, double *coeffs) {
+  ::set_obj_fnex(lp, count, coeffs, vars);
+}
 
-    LPProblem::LPProblem() : _current_col(1), _current_con(1), _lp(::make_lp(0, 0)) {}
+int LPProblem::getResults(double **result) {
+  int size = ::get_Ncolumns(lp);
+  *result = new double[size];
+  ::get_variables(lp, *result);
+  return size;
+}
 
-    LPProblem::~LPProblem() {
-        delete_lp(_lp);
-    }
+void LPProblem::lessMessages() {
+  ::set_verbose(lp, Verbosity::Critical);
+}
+
+LPProblem::LPProblem() : currentCol(1), currentCon(1), lp(::make_lp(0, 0)) {}
+
+LPProblem::~LPProblem() {
+  delete_lp(lp);
+}
+
 } // namespace mlir::dfcir::utils::lp

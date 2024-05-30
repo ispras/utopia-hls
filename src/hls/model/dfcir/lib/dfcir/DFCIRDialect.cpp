@@ -2,7 +2,7 @@
 #include "dfcir/DFCIRDialect.cpp.inc"
 
 void mlir::dfcir::DFCIRDialect::initialize() {
-    registerOperations();
-    registerTypes();
+  registerOperations();
+  registerTypes();
 }
 
