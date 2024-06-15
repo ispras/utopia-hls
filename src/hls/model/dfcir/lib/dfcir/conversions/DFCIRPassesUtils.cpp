@@ -197,6 +197,8 @@ Graph::Graph(FModuleOp module) : Graph() {
   using circt::firrtl::ConnectOp;
   using circt::firrtl::MultibitMuxOp;
   using circt::firrtl::ConstantOp;
+  using circt::firrtl::ShlPrimOp;
+  using circt::firrtl::ShrPrimOp;
   using circt::firrtl::utils::isAStartWire;
   using circt::firrtl::utils::getConnectOffset;
   using circt::firrtl::utils::unrollConnectChain;
@@ -265,6 +267,17 @@ Graph::Graph(FModuleOp module) : Graph() {
           inputs[newNode].insert(newChan);
         }
       }
+    } else if (llvm::isa<ShlPrimOp, ShrPrimOp>(&op)) {
+      Node newNode(&op);
+      nodes.insert(newNode);
+      auto operand = op.getOperand(0);
+      auto connectInfo = unrollConnectChain(operand);
+      auto found = findNode(connectInfo);
+      if (found == nodes.end()) continue;
+      Channel newChan(*found, newNode, operand, 0, connectInfo.second,
+                      0);
+      outputs[*found].insert(newChan);
+      inputs[newNode].insert(newChan);
     }
   }
 }

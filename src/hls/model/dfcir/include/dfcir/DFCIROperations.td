@@ -269,6 +269,26 @@ def DivOp : DFCIR_Op<"div", []> {
 	let results = (outs Variable:$res);
 }
 
+def ShiftLeftOp : DFCIR_Op<"shl", []> {
+	let arguments = (ins 
+	    Variable:$first,
+		Builtin_IntegerAttr:$bits);
+	
+	let assemblyFormat = "`(` $first `:` type($first) `,` $bits `)` attr-dict `:` type($res)";
+	
+	let results = (outs Variable:$res);
+}
+
+def ShiftRightOp : DFCIR_Op<"shr", []> {
+	let arguments = (ins 
+	    Variable:$first,
+		Builtin_IntegerAttr:$bits);
+	
+	let assemblyFormat = "`(` $first `:` type($first) `,` $bits `)` attr-dict `:` type($res)";
+	
+	let results = (outs Variable:$res);
+}
+
 //def CreateCCOp : DFCIR_Op<"createCc", []> {
 //	let results = (outs CounterChain);
 //}

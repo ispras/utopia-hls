@@ -1,6 +1,7 @@
 add_subdirectory(parser/hil)
 add_subdirectory(model/mlir)
 add_subdirectory(model/dfcir)
+add_subdirectory(model/dfcxx)
 
 add_library(HLS OBJECT
   compiler/compiler.cpp

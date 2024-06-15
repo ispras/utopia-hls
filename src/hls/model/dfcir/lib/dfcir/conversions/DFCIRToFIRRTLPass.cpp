@@ -484,7 +484,6 @@ public:                                                                         
     auto outTypeWidth = llvm::cast<SVSynthesisable>(innerType).getBitWidth();                       \
     auto firstTypeWidth = llvm::cast<SVSynthesisable>(firstInnerType).getBitWidth();                \
     auto secondTypeWidth = llvm::cast<SVSynthesisable>(secondInnerType).getBitWidth();              \
-    assert(outTypeWidth == firstTypeWidth && outTypeWidth == secondTypeWidth);                      \
                                                                                                     \
     bool isFloat = innerType.isa<DFCIRFloatType>();                                                 \
     unsigned latency = latencyConfig->find(                                                         \
@@ -495,7 +494,7 @@ public:                                                                         
             circt::firrtl::ConventionAttr::get(rewriter.getContext(),                               \
                                                circt::firrtl::Convention::Internal),                \
             ports,                                                                                  \
-            StringRef(name));                                                                      \
+            StringRef(name));                                                                       \
     module->setAttr(INSTANCE_LATENCY_ATTR,                                                          \
                     mlir::IntegerAttr::get(attrType, latency));                                     \
     return module;                                                                                  \
@@ -645,6 +644,59 @@ DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(Eq, EQ) // EqOpConversionPattern.
 
 DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(NotEq, NEQ) // NotEqOpConversionPattern.
 
+
+class ShiftLeftOpConversionPattern : public FIRRTLOpConversionPattern<ShiftLeftOp> {
+public:
+  using FIRRTLOpConversionPattern<ShiftLeftOp>::FIRRTLOpConversionPattern;
+  using OpAdaptor = typename ShiftLeftOp::Adaptor;
+  using ShlPrimOp = circt::firrtl::ShlPrimOp;
+
+  LogicalResult matchAndRewrite(ShiftLeftOp shiftLeftOp, OpAdaptor adaptor,
+                                ConversionPatternRewriter &rewriter) const override {
+    auto newOp = rewriter.create<ShlPrimOp>(
+            shiftLeftOp.getLoc(),
+			getTypeConverter()->convertType(shiftLeftOp->getResult(0).getType()),
+            adaptor.getFirst(),
+            adaptor.getBits());
+    
+    for (auto &operand: llvm::make_early_inc_range(shiftLeftOp.getRes().getUses())) {
+	  (*oldTypeMap)[std::make_pair(operand.getOwner(),
+                                   operand.getOperandNumber())] =
+              operand.get().getType();
+      operand.set(newOp->getResult(0));
+    }
+
+    rewriter.eraseOp(shiftLeftOp);
+    return mlir::success();
+  }
+};
+
+class ShiftRightOpConversionPattern : public FIRRTLOpConversionPattern<ShiftRightOp> {
+public:
+  using FIRRTLOpConversionPattern<ShiftRightOp>::FIRRTLOpConversionPattern;
+  using OpAdaptor = typename ShiftRightOp::Adaptor;
+  using ShrPrimOp = circt::firrtl::ShrPrimOp;
+
+  LogicalResult matchAndRewrite(ShiftRightOp shiftRightOp, OpAdaptor adaptor,
+                                ConversionPatternRewriter &rewriter) const override {
+    auto newOp = rewriter.create<ShrPrimOp>(
+            shiftRightOp.getLoc(),
+			getTypeConverter()->convertType(shiftRightOp->getResult(0).getType()),
+            adaptor.getFirst(),
+            adaptor.getBits());
+    
+    for (auto &operand: llvm::make_early_inc_range(shiftRightOp.getRes().getUses())) {
+      (*oldTypeMap)[std::make_pair(operand.getOwner(),
+                                   operand.getOperandNumber())] =
+              operand.get().getType();
+      operand.set(newOp->getResult(0));
+    }
+
+    rewriter.eraseOp(shiftRightOp);
+    return mlir::success();
+  }
+};
+
 class ConnectOpConversionPattern : public FIRRTLOpConversionPattern<ConnectOp> {
 public:
   using FIRRTLOpConversionPattern<ConnectOp>::FIRRTLOpConversionPattern;
@@ -778,6 +830,8 @@ public:
             MoreEqOpConversionPattern,
             EqOpConversionPattern,
             NotEqOpConversionPattern,
+            ShiftLeftOpConversionPattern,
+            ShiftRightOpConversionPattern,
             ConnectOpConversionPattern>(
             &getContext(),
             typeConverter,

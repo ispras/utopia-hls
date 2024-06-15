@@ -12,9 +12,13 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 # Check if CIRCT build directory var is set.
 if(DEFINED CIRCT_BIN_HOME)
   message(STATUS "CIRCT_BIN_HOME: ${CIRCT_BIN_HOME}")
-  list(APPEND CMAKE_PREFIX_PATH "${CIRCT_BIN_HOME}")
-else()
-  message(FATAL_ERROR "CIRCT_BIN_HOME var is not set!")
+  list(INSERT CMAKE_PREFIX_PATH 0 "${CIRCT_BIN_HOME}")
+endif()
+
+# Check if LLVM build directory var is set.
+if(DEFINED LLVM_BIN_HOME)
+  message(STATUS "LLVM_BIN_HOME: ${LLVM_BIN_HOME}")
+  list(INSERT CMAKE_PREFIX_PATH 0 "${LLVM_BIN_HOME}")
 endif()
 
 # Check if UTOPIA_HLS_HOME env var is set.
@@ -24,6 +28,8 @@ else()
   message(FATAL_ERROR "UTOPIA_HLS_HOME env var is not set!")
 endif()
 
+find_package(LLVM REQUIRED CONFIG)
+find_package(MLIR REQUIRED CONFIG)
 find_package(CIRCT REQUIRED CONFIG)
 
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")

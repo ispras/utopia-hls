@@ -37,5 +37,5 @@ target_include_directories(MLIRDFCIR
         $<INSTALL_INTERFACE:include>
         )
 
-add_library(DFCIR::MLIRDFCIR ALIAS MLIRDFCIR)
+add_library(Utopia::MLIRDFCIR ALIAS MLIRDFCIR)
 
