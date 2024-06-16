@@ -138,4 +138,9 @@ void DFVariable::connect(const DFVariable &connectee) {
   impl->connect(*(connectee.impl));
 }
 
+DFVariable &DFVariable::operator=(const DFVariable &var) {
+  impl = var.impl;
+  return *this;
+}
+
 } // namespace dfcxx

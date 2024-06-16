@@ -49,7 +49,7 @@ add_executable(${TEST_TARGET}
   hls/model/dfcxx/muxmul.cpp
   hls/model/dfcxx/addconst.cpp
   hls/model/dfcxx/movingsum.cpp
-  #hls/model/dfcxx/idct.cpp
+  hls/model/dfcxx/idct.cpp
   test_main.cpp
   #utils/graph_traverse_test.cpp
 )

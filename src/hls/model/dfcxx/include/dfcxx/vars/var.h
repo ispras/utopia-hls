@@ -94,6 +94,8 @@ private:
 public:
   DFVariable(DFVariableImpl *impl);
 
+  DFVariable(const DFVariable &) = default;
+
   DFVariableImpl *getImpl() const;
 
   std::string_view getName() const;
@@ -143,6 +145,8 @@ public:
   bool isConstant() const;
 
   void connect(const DFVariable &connectee);
+
+  DFVariable &operator=(const DFVariable &var);
 };
 
 } // namespace dfcxx

@@ -40,4 +40,9 @@ bool DFType::isFloat() const {
   return impl->isFloat();
 }
 
+DFType &DFType::operator=(const DFType &type) {
+  impl = type.impl;
+  return *this;
+}
+
 } // namespace dfcxx

@@ -37,6 +37,8 @@ private:
 public:
   DFType(DFTypeImpl *impl);
 
+  DFType(const DFType &) = default;
+
   DFTypeImpl *getImpl() const;
 
   uint16_t getTotalBits() const;
@@ -48,6 +50,8 @@ public:
   bool isFixed() const;
 
   bool isFloat() const;
+
+  DFType &operator=(const DFType &type);
 };
 
 } // namespace dfcxx
