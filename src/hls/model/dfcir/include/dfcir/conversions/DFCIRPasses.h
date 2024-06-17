@@ -39,7 +39,8 @@ enum Ops {
   EQ_INT,
   EQ_FLOAT,
   NEQ_INT,
-  NEQ_FLOAT
+  NEQ_FLOAT,
+  COUNT
 };
 
 } // namespace mlir::dfcir

@@ -41,6 +41,7 @@ bool Kernel::compile(const DFLatencyConfig &config, const Scheduler &sched) {
 
 bool Kernel::compile(const DFLatencyConfig &config, const std::string &filePath,
                      const Scheduler &sched) {
+  if (filePath.empty()) { return compile(config, sched); }
   DFCIRBuilder builder(config);
   auto compiled = builder.buildModule(this);
   std::error_code ec;

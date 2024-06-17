@@ -1,7 +1,0 @@
-actor seven7 ( [ int --> complex ] x = i.j + const lambda () : old y endlambda )
-six6 ==> eight8:
-a.b.c : initialize ==> z: [let p = 5: proc () do endproc endlet , { id }] do
-choose tmp in list var int job ; key = 1 do endchoose 
-ford.mazda[model] := 13;
-endinitialize
-end

@@ -9,6 +9,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+##===----------------------------------------------------------------------===//
+## CMake command line arguments handling
+
+# It is assumed that either "CMAKE_PREFIX_PATH" or "CIRCT_BIN_HOME" is explictly provided. 
+
 # Check if CIRCT build directory var is set.
 if(DEFINED CIRCT_BIN_HOME)
   message(STATUS "CIRCT_BIN_HOME: ${CIRCT_BIN_HOME}")
@@ -28,9 +33,28 @@ else()
   message(FATAL_ERROR "UTOPIA_HLS_HOME env var is not set!")
 endif()
 
-find_package(LLVM REQUIRED CONFIG)
-find_package(MLIR REQUIRED CONFIG)
+# "INCLUDE_DIRS" is optional and may be ommited.
+if(DEFINED INCLUDE_DIRS)
+  message(STATUS "INCLUDE_DIRS: ${INCLUDE_DIRS}")
+endif()
+
+# "SRC_FILES" has to be explicitly provided.
+if(DEFINED SRC_FILES)
+  message(STATUS "SRC_FILES: ${SRC_FILES}")
+else()
+  message(FATAL_ERROR "SRC_FILES var is not set!")
+endif()
+
+# Unless explicit binary name is provided, "umain" is used.
+if(NOT DEFINED OUT)
+    set(OUT umain)
+endif()
+
+##===----------------------------------------------------------------------===//
+
 find_package(CIRCT REQUIRED CONFIG)
+find_package(MLIR REQUIRED CONFIG)
+find_package(LLVM REQUIRED CONFIG)
 
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 message(STATUS "Using MLIRConfig.cmake in: ${MLIR_DIR}")
@@ -54,15 +78,15 @@ include(AddLLVM)
 include(AddMLIR)
 include(HandleLLVMOptions)
 
-include(UtopiaFindHelper)
-set_local_from_env(CTemplate_ROOT CT_DIR)
-set_local_from_env(XercesC_ROOT XERCES_DIR)
-set_local_from_env(Z3_ROOT Z3_DIR)
+#include(UtopiaFindHelper)
+#set_local_from_env(CTemplate_ROOT CT_DIR)
+#set_local_from_env(XercesC_ROOT XERCES_DIR)
+#set_local_from_env(Z3_ROOT Z3_DIR)
 
 find_package(LpSolve REQUIRED)
-find_package(Z3 REQUIRED)
-find_package(XercesC REQUIRED)
-find_package(CTemplate REQUIRED COMPONENTS nothreads)
+#find_package(Z3 REQUIRED)
+#find_package(XercesC REQUIRED)
+#find_package(CTemplate REQUIRED COMPONENTS nothreads)
 
 add_subdirectory(lib)
 add_subdirectory(src)

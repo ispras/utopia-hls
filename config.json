@@ -1,13 +1,11 @@
 {
   "rtl": {
-    "premap-lib"  : "abc"
+    "premap-lib"         : "abc"
   },
   "hls": {
-    "output-dir"  : "./output/",
-    "output-dot"  : "test.dot",
-    "output-mlir" : "test.mlir",
-    "output-test" : "test_tb.v",
-    "output-lib"  : "test_lib.v",
-    "output-top"  : "test_top.v"
+    "config"             : "",
+    "dijkstra_scheduler" : true,
+    "lp_scheduler"       : false,
+    "out"                : ""
   }
 }

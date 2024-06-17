@@ -35,7 +35,9 @@ enum Ops {
   EQ_INT,
   EQ_FLOAT,
   NEQ_INT,
-  NEQ_FLOAT
+  NEQ_FLOAT,
+  INC_COUNT,
+  COUNT = INC_COUNT - 1
 };
 
 enum Scheduler {

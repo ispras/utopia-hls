@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "dfcxx/typedefs.h"
+
 #include "CLI/CLI.hpp"
 #include "nlohmann/json.hpp"
 
@@ -15,6 +17,37 @@
 #include <iostream>
 #include <string>
 #include <vector>
+
+//===----------------------------------------------------------------------===//
+// CLI macro definitions
+
+#define CLI_FLAG(FLAG) "-" FLAG
+#define CLI_FLAG_E(FLAG) CLI_FLAG(FLAG)
+
+#define CLI_ARG(ARG) "--" ARG
+#define CLI_ARG_E(ARG) CLI_ARG(ARG)
+
+//===----------------------------------------------------------------------===//
+// JSON config fields' definitions
+
+#define HLS_ID_JSON "hls"
+#define CONFIG_JSON "config"
+#define SCHEDULER_JSON "scheduler"
+#define DIJKSTRA_SCHEDULER_JSON "dijkstra_scheduler"
+#define LP_SCHEDULER_JSON "lp_scheduler"
+#define OUT_JSON "out"
+
+//===----------------------------------------------------------------------===//
+// CLI args/flags definitions
+
+#define HLS_CMD "hls"
+#define CONFIG_ARG CLI_ARG("config")
+#define SCHEDULER_GROUP "scheduler"
+#define DIJKSTRA_SCHEDULER_FLAG CLI_FLAG("d")
+#define LP_SCHEDULER_FLAG CLI_FLAG("l")
+#define OUT_ARG CLI_ARG("out")
+
+//===----------------------------------------------------------------------===//
 
 using Json = nlohmann::json;
 
@@ -72,10 +105,6 @@ public:
   }
 
 protected:
-  static std::string cli(const std::string &option) {
-    return "--" + option;
-  }
-
   static void get(Json json, const std::string &key, std::string &value) {
     if (json.contains(key)) {
       value = json[key].get<std::string>();
@@ -126,55 +155,35 @@ protected:
 };
 
 struct HlsOptions final : public AppOptions {
-  static constexpr const char *ID = "hls";
-
-  static constexpr const char *OUTPUT_DIR  = "output-dir";
-  static constexpr const char *OUTPUT_DOT  = "output-dot";
-  static constexpr const char *OUTPUT_MLIR = "output-mlir";
-  static constexpr const char *OUTPUT_LIB  = "output-lib";
-  static constexpr const char *OUTPUT_TOP  = "output-top";
-  static constexpr const char *OUTPUT_TEST = "output-test";
 
   HlsOptions(AppOptions &parent):
-      AppOptions(parent, ID, "High-level synthesis") {
+      AppOptions(parent, HLS_CMD, "High-level synthesis") {
 
     // Named options.
-    options->add_option(cli(OUTPUT_DIR),  outDir,  "Output directory")
+    options->add_option(CONFIG_ARG, latConfigFile, "JSON latency configuration path")
            ->expected(1);
-    options->add_option(cli(OUTPUT_DOT),  outDot,  "Output DOT file")
-           ->expected(0, 1);
-    options->add_option(cli(OUTPUT_MLIR), outMlir, "Output MLIR file")
-           ->expected(1);
-    options->add_option(cli(OUTPUT_LIB),  outLib,  "Output Verilog library file")
-           ->expected(1);
-    options->add_option(cli(OUTPUT_TOP),  outTop,  "Output Verilog top file")
-          ->expected(1);
-    options->add_option(cli(OUTPUT_TEST), outTest, "Output test file")
-           ->expected(0, 1);
+    
+    auto schedGroup = options->add_option_group(SCHEDULER_GROUP);
+    schedGroup->add_flag(DIJKSTRA_SCHEDULER_FLAG, dijkstraScheduler, "Use ASAP greedy (\"Dijkstra\") scheduler");
+    schedGroup->add_flag(LP_SCHEDULER_FLAG,       lpScheduler,       "Use Linear Programming (lpsolve-55) scheduler");
+    schedGroup->require_option(1); 
 
-    // Input file(s).
-    options->allow_extras();
-  }
-
-  std::vector<std::string> files() const {
-    return options->remaining();
+    options->add_option(OUT_ARG,    outFile,       "Output file path (default: standard output stream)")
+           ->expected(0, 1);
   }
 
   void fromJson(Json json) override {
-    get(json, OUTPUT_DIR,  outDir);
-    get(json, OUTPUT_DOT,  outDot);
-    get(json, OUTPUT_MLIR, outMlir);
-    get(json, OUTPUT_LIB,  outLib);
-    get(json, OUTPUT_TOP,  outTop);
-    get(json, OUTPUT_TEST, outTest);
+    get(json, CONFIG_JSON,             latConfigFile);
+    get(json, DIJKSTRA_SCHEDULER_JSON, dijkstraScheduler);
+    get(json, LP_SCHEDULER_JSON,       lpScheduler);
+    get(json, OUT_JSON,                outFile);
   }
 
-  std::string outDir;
-  std::string outDot;
-  std::string outMlir;
-  std::string outLib;
-  std::string outTop;
-  std::string outTest;
+  std::string latConfigFile;
+  DFLatencyConfig latConfig;
+  std::string outFile;
+  bool dijkstraScheduler;
+  bool lpScheduler;
 };
 
 struct Options final : public AppOptions {
@@ -186,12 +195,57 @@ struct Options final : public AppOptions {
     options->set_help_all_flag("-H,--help-all", "Print the extended help message and exit");
     options->set_version_flag("-v,--version", version, "Print the tool version");
   }
+  
+  dfcxx::Ops convertFieldToEnum(const std::string field) {
+    if (field == "ADD_INT")       { return dfcxx::ADD_INT; }       else
+    if (field == "ADD_FLOAT")     { return dfcxx::ADD_FLOAT; }     else
+    if (field == "SUB_INT")       { return dfcxx::SUB_INT; }       else
+    if (field == "SUB_FLOAT")     { return dfcxx::SUB_FLOAT; }     else
+    if (field == "MUL_INT")       { return dfcxx::MUL_INT; }       else
+    if (field == "MUL_FLOAT")     { return dfcxx::MUL_FLOAT; }     else
+    if (field == "DIV_INT")       { return dfcxx::DIV_INT; }       else
+    if (field == "DIV_FLOAT")     { return dfcxx::DIV_FLOAT; }     else
+    if (field == "AND_INT")       { return dfcxx::AND_INT; }       else
+    if (field == "AND_FLOAT")     { return dfcxx::AND_FLOAT; }     else
+    if (field == "OR_INT")        { return dfcxx::OR_INT; }        else
+    if (field == "OR_FLOAT")      { return dfcxx::OR_FLOAT; }      else
+    if (field == "XOR_INT")       { return dfcxx::XOR_INT; }       else
+    if (field == "XOR_FLOAT")     { return dfcxx::XOR_FLOAT; }     else
+    if (field == "NOT_INT")       { return dfcxx::NOT_INT; }       else
+    if (field == "NOT_FLOAT")     { return dfcxx::NOT_FLOAT; }     else
+    if (field == "NEG_INT")       { return dfcxx::NEG_INT; }       else
+    if (field == "NEG_FLOAT")     { return dfcxx::NEG_FLOAT; }     else
+    if (field == "LESS_INT")      { return dfcxx::LESS_INT; }      else
+    if (field == "LESS_FLOAT")    { return dfcxx::LESS_FLOAT; }    else
+    if (field == "LESS_EQ_INT")   { return dfcxx::LESS_EQ_INT; }   else
+    if (field == "LESS_EQ_FLOAT") { return dfcxx::LESS_EQ_FLOAT; } else
+    if (field == "MORE_INT")      { return dfcxx::MORE_INT; }      else
+    if (field == "MORE_FLOAT")    { return dfcxx::MORE_FLOAT; }    else
+    if (field == "MORE_EQ_INT")   { return dfcxx::MORE_EQ_INT; }   else
+    if (field == "MORE_EQ_FLOAT") { return dfcxx::MORE_EQ_FLOAT; } else
+    if (field == "EQ_INT")        { return dfcxx::EQ_INT; }        else
+    if (field == "EQ_FLOAT")      { return dfcxx::EQ_FLOAT; }      else
+    if (field == "NEQ_INT")       { return dfcxx::NEQ_INT; }       else
+    if (field == "NEQ_FLOAT")     { return dfcxx::NEQ_FLOAT; }     else
+    return dfcxx::ADD_INT;
+  }
+
+  void parseLatencyConfig(const std::string config) {
+    std::ifstream in(config);
+    if (!in.good()) { return; }
+    auto json = Json::parse(in);
+    for (auto &[key, val] : json.items()) {
+      hls.latConfig[convertFieldToEnum(key)] = val;
+    }
+  }
 
   void initialize(const std::string &config, int argc, char **argv) {
     // Read the JSON configuration.
     read(config);
     // Command line is of higher priority.
     parse(argc, argv);
+    // Parse latency configuration.
+    parseLatencyConfig(hls.latConfigFile);
   }
 
   int exit(const CLI::Error &e) const {
@@ -199,7 +253,7 @@ struct Options final : public AppOptions {
   }
 
   void fromJson(Json json) override {
-    hls.fromJson(json[HlsOptions::ID]);
+    hls.fromJson(json[HLS_ID_JSON]);
   }
 
   HlsOptions hls;

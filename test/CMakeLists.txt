@@ -63,7 +63,7 @@ endif()
 
 target_compile_definitions(${TEST_TARGET}
   PUBLIC
-  NULLDEVICE="${NULLDEVICE}"
+    NULLDEVICE="${NULLDEVICE}"
 )
 
 target_include_directories(${TEST_TARGET} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
