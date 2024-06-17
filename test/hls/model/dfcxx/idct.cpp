@@ -138,5 +138,5 @@ TEST(DFCxxTest, IDCT_1_Dijkstra) {
           {dfcxx::MUL_INT, 3},
           {dfcxx::SUB_INT, 1}
   };
-  EXPECT_EQ(kernel.compile(config, dfcxx::Dijkstra), true);
+  EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::Dijkstra), true);
 }
