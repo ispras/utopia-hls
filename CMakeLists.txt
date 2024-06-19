@@ -52,9 +52,9 @@ endif()
 
 ##===----------------------------------------------------------------------===//
 
-find_package(CIRCT REQUIRED CONFIG)
-find_package(MLIR REQUIRED CONFIG)
 find_package(LLVM REQUIRED CONFIG)
+find_package(MLIR REQUIRED CONFIG)
+find_package(CIRCT REQUIRED CONFIG)
 
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 message(STATUS "Using MLIRConfig.cmake in: ${MLIR_DIR}")
