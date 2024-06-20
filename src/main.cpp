@@ -9,13 +9,10 @@
 #include "config.h"
 #include "dfcxx/DFCXX.h"
 #include "options.h"
-#include "utils/string.h"
 
 #include "easylogging++.h"
 
-#include <fstream>
 #include <iostream>
-#include <map>
 #include <memory>
 #include <sstream>
 #include <string>

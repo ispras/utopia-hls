@@ -12,19 +12,10 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 ##===----------------------------------------------------------------------===//
 ## CMake command line arguments handling
 
-# It is assumed that either "CMAKE_PREFIX_PATH" or "CIRCT_BIN_HOME" is explictly provided. 
+# It is assumed that unless CIRCT & LLVM dependencies are installed into default system paths,
+# "CMAKE_PREFIX_PATH" is explicitly provided to specify these dependencies. 
 
-# Check if CIRCT build directory var is set.
-if(DEFINED CIRCT_BIN_HOME)
-  message(STATUS "CIRCT_BIN_HOME: ${CIRCT_BIN_HOME}")
-  list(INSERT CMAKE_PREFIX_PATH 0 "${CIRCT_BIN_HOME}")
-endif()
-
-# Check if LLVM build directory var is set.
-if(DEFINED LLVM_BIN_HOME)
-  message(STATUS "LLVM_BIN_HOME: ${LLVM_BIN_HOME}")
-  list(INSERT CMAKE_PREFIX_PATH 0 "${LLVM_BIN_HOME}")
-endif()
+message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 
 # Check if UTOPIA_HLS_HOME env var is set.
 if(DEFINED ENV{UTOPIA_HLS_HOME})
@@ -78,15 +69,7 @@ include(AddLLVM)
 include(AddMLIR)
 include(HandleLLVMOptions)
 
-#include(UtopiaFindHelper)
-#set_local_from_env(CTemplate_ROOT CT_DIR)
-#set_local_from_env(XercesC_ROOT XERCES_DIR)
-#set_local_from_env(Z3_ROOT Z3_DIR)
-
 find_package(LpSolve REQUIRED)
-#find_package(Z3 REQUIRED)
-#find_package(XercesC REQUIRED)
-#find_package(CTemplate REQUIRED COMPONENTS nothreads)
 
 add_subdirectory(lib)
 add_subdirectory(src)
