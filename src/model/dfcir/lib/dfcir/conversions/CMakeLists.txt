@@ -1,6 +1,6 @@
 set(PASSES 
         conversions/DFCIRToFIRRTLPass.cpp
-        conversions/DFCIRDijkstraSchedulerPass.cpp
+        conversions/DFCIRASAPSchedulerPass.cpp
         conversions/DFCIRLinearSchedulerPass.cpp
         conversions/DFCIRLPUtils.cpp)
 set(CONV_LIBS

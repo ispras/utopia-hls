@@ -1,11 +1,11 @@
 {
   "rtl": {
-    "premap-lib"         : "abc"
+    "premap-lib"     : "abc"
   },
   "hls": {
-    "config"             : "",
-    "dijkstra_scheduler" : true,
-    "lp_scheduler"       : false,
-    "out"                : ""
+    "config"         : "",
+    "asap_scheduler" : true,
+    "lp_scheduler"   : false,
+    "out"            : ""
   }
 }

@@ -15,27 +15,13 @@ def DFCIRToFIRRTLPass: Pass<"dfcir-to-firrtl-pass", "::mlir::ModuleOp"> {
     let constructor = "::mlir::dfcir::createDFCIRToFIRRTLPass()";
 }
 
-def DFCIRDijkstraSchedulerPass: Pass<"dfcir-dijkstra-scheduler-pass", "::mlir::ModuleOp"> {
-    let summary = "Schedule operations with Dijkstra algorithm.";
-    //let options = [
-    //    Option<"latencyConfig",
-    //           "latencyConfig",
-    //           "LatencyConfig *",
-    //           "nullptr",
-    //           "Latency configuration for operations to schedule.">
-    //];
-    let constructor = "::mlir::dfcir::createDFCIRDijkstraSchedulerPass()";
+def DFCIRASAPSchedulerPass: Pass<"dfcir-asap-scheduler-pass", "::mlir::ModuleOp"> {
+    let summary = "Schedule operations with a greedy as-soon-as-possible algorithm.";
+    let constructor = "::mlir::dfcir::createDFCIRASAPSchedulerPass()";
 }
 
 def DFCIRLinearSchedulerPass: Pass<"dfcir-linear-scheduler-pass", "::mlir::ModuleOp"> {
     let summary = "Schedule operations with linear programming algorithm.";
-    //let options = [
-    //    Option<"latencyConfig",
-    //           "latencyConfig",
-    //           "LatencyConfig *",
-    //           "nullptr",
-    //           "Latency configuration for operations to schedule.">
-    //];
     let constructor = "::mlir::dfcir::createDFCIRLinearSchedulerPass()";
 }
 

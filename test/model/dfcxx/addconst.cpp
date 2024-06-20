@@ -30,7 +30,7 @@ TEST(DFCxx, AddConst_add_int_2_ASAP) {
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 2}
   };
-  EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::Dijkstra), true);
+  EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::ASAP), true);
 }
 
 TEST(DFCxx, AddConst_add_int_2_Linear) {

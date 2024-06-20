@@ -42,7 +42,7 @@ enum Ops {
 
 enum Scheduler {
   Linear = 0,
-  Dijkstra
+  ASAP
 };
 
 } // namespace dfcxx

@@ -55,7 +55,7 @@ using mlir::Pass;
 
 unique_ptr<Pass> createDFCIRToFIRRTLPass(LatencyConfig *config = nullptr);
 
-unique_ptr<Pass> createDFCIRDijkstraSchedulerPass();
+unique_ptr<Pass> createDFCIRASAPSchedulerPass();
 
 unique_ptr<Pass> createDFCIRLinearSchedulerPass();
 

@@ -22,8 +22,8 @@ bool DFCIRConverter::convertAndPrint(mlir::ModuleOp module,
     case Linear:
       pm.addPass(mlir::dfcir::createDFCIRLinearSchedulerPass());
       break;
-    case Dijkstra:
-      pm.addPass(mlir::dfcir::createDFCIRDijkstraSchedulerPass());
+    case ASAP:
+      pm.addPass(mlir::dfcir::createDFCIRASAPSchedulerPass());
       break;
   }
   pm.addPass(circt::createLowerFIRRTLToHWPass());

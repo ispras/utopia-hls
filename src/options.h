@@ -33,7 +33,7 @@
 #define HLS_ID_JSON "hls"
 #define CONFIG_JSON "config"
 #define SCHEDULER_JSON "scheduler"
-#define DIJKSTRA_SCHEDULER_JSON "dijkstra_scheduler"
+#define ASAP_SCHEDULER_JSON "asap_scheduler"
 #define LP_SCHEDULER_JSON "lp_scheduler"
 #define OUT_JSON "out"
 
@@ -43,7 +43,7 @@
 #define HLS_CMD "hls"
 #define CONFIG_ARG CLI_ARG("config")
 #define SCHEDULER_GROUP "scheduler"
-#define DIJKSTRA_SCHEDULER_FLAG CLI_FLAG("d")
+#define ASAP_SCHEDULER_FLAG CLI_FLAG("a")
 #define LP_SCHEDULER_FLAG CLI_FLAG("l")
 #define OUT_ARG CLI_ARG("out")
 
@@ -164,8 +164,8 @@ struct HlsOptions final : public AppOptions {
            ->expected(1);
     
     auto schedGroup = options->add_option_group(SCHEDULER_GROUP);
-    schedGroup->add_flag(DIJKSTRA_SCHEDULER_FLAG, dijkstraScheduler, "Use ASAP greedy (\"Dijkstra\") scheduler");
-    schedGroup->add_flag(LP_SCHEDULER_FLAG,       lpScheduler,       "Use Linear Programming (lpsolve-55) scheduler");
+    schedGroup->add_flag(ASAP_SCHEDULER_FLAG, asapScheduler, "Use greedy as-soon-as-possible scheduler");
+    schedGroup->add_flag(LP_SCHEDULER_FLAG,   lpScheduler,   "Use Linear Programming scheduler");
     schedGroup->require_option(1); 
 
     options->add_option(OUT_ARG,    outFile,       "Output file path (default: standard output stream)")
@@ -173,16 +173,16 @@ struct HlsOptions final : public AppOptions {
   }
 
   void fromJson(Json json) override {
-    get(json, CONFIG_JSON,             latConfigFile);
-    get(json, DIJKSTRA_SCHEDULER_JSON, dijkstraScheduler);
-    get(json, LP_SCHEDULER_JSON,       lpScheduler);
-    get(json, OUT_JSON,                outFile);
+    get(json, CONFIG_JSON,         latConfigFile);
+    get(json, ASAP_SCHEDULER_JSON, asapScheduler);
+    get(json, LP_SCHEDULER_JSON,   lpScheduler);
+    get(json, OUT_JSON,            outFile);
   }
 
   std::string latConfigFile;
   DFLatencyConfig latConfig;
   std::string outFile;
-  bool dijkstraScheduler;
+  bool asapScheduler;
   bool lpScheduler;
 };
 

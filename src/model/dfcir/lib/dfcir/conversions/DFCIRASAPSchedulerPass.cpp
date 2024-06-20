@@ -9,13 +9,13 @@
 
 
 namespace mlir::dfcir {
-#define GEN_PASS_DECL_DFCIRDIJKSTRASCHEDULERPASS
-#define GEN_PASS_DEF_DFCIRDIJKSTRASCHEDULERPASS
+#define GEN_PASS_DECL_DFCIRASAPSCHEDULERPASS
+#define GEN_PASS_DEF_DFCIRASAPSCHEDULERPASS
 
 #include "dfcir/conversions/DFCIRPasses.h.inc"
 
-class DFCIRDijkstraSchedulerPass
-        : public impl::DFCIRDijkstraSchedulerPassBase<DFCIRDijkstraSchedulerPass> {
+class DFCIRASAPSchedulerPass
+        : public impl::DFCIRASAPSchedulerPassBase<DFCIRASAPSchedulerPass> {
   using Node = utils::Node;
   using Channel = utils::Channel;
   using Graph = utils::Graph;
@@ -95,8 +95,8 @@ public:
   }
 };
 
-std::unique_ptr<mlir::Pass> createDFCIRDijkstraSchedulerPass() {
-  return std::make_unique<DFCIRDijkstraSchedulerPass>();
+std::unique_ptr<mlir::Pass> createDFCIRASAPSchedulerPass() {
+  return std::make_unique<DFCIRASAPSchedulerPass>();
 }
 
 } // namespace mlir::dfcir

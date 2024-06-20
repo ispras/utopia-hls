@@ -37,11 +37,11 @@ std::unique_ptr<dfcxx::Kernel> start();
 
 int hlsMain(HlsContext &context) {
   auto kernel = start();
-  bool useDijkstra = context.options.dijkstraScheduler;
+  bool useASAP = context.options.asapScheduler;
   kernel->compile(context.options.latConfig,
                   context.options.outFile,
-                  (useDijkstra) ? dfcxx::Scheduler::Dijkstra 
-                                : dfcxx::Scheduler::Linear);
+                  (useASAP) ? dfcxx::Scheduler::ASAP 
+                            : dfcxx::Scheduler::Linear);
   return 0;
 }
 

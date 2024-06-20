@@ -138,5 +138,5 @@ TEST(DFCxx, IDCT_add_int_1_mul_int_3_sub_int_1_ASAP) {
           {dfcxx::MUL_INT, 3},
           {dfcxx::SUB_INT, 1}
   };
-  EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::Dijkstra), true);
+  EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::ASAP), true);
 }

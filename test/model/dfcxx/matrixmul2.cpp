@@ -55,7 +55,7 @@ TEST(DFCxx, MatrixMul2_add_int_2_mul_int_3_ASAP) {
           {dfcxx::ADD_INT, 2},
           {dfcxx::MUL_INT, 3},
   };
-  EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::Dijkstra), true);
+  EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::ASAP), true);
 }
 
 TEST(DFCxx, MatrixMul2_add_int_2_mul_int_3_Linear) {
