@@ -140,3 +140,13 @@ TEST(DFCxx, IDCT_add_int_1_mul_int_3_sub_int_1_ASAP) {
   };
   EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::ASAP), true);
 }
+
+TEST(DFCxx, IDCT_add_int_1_mul_int_3_sub_int_1_Linear) {
+  IDCT kernel;
+  DFLatencyConfig config = {
+          {dfcxx::ADD_INT, 1},
+          {dfcxx::MUL_INT, 3},
+          {dfcxx::SUB_INT, 1}
+  };
+  EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::Linear), true);
+}
