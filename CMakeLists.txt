@@ -17,21 +17,14 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 
-# Check if UTOPIA_HLS_HOME env var is set.
-if(DEFINED ENV{UTOPIA_HLS_HOME})
-  message(STATUS "UTOPIA_HLS_HOME: $ENV{UTOPIA_HLS_HOME}")
-else()
-  message(FATAL_ERROR "UTOPIA_HLS_HOME env var is not set!")
-endif()
-
 # "INCLUDE_DIRS" is optional and may be ommited.
 if(DEFINED INCLUDE_DIRS)
-  message(STATUS "INCLUDE_DIRS: ${INCLUDE_DIRS}")
+  message(STATUS "Kernel include directories: ${INCLUDE_DIRS}")
 endif()
 
 # "SRC_FILES" has to be explicitly provided.
 if(DEFINED SRC_FILES)
-  message(STATUS "SRC_FILES: ${SRC_FILES}")
+  message(STATUS "Kernel source files: ${SRC_FILES}")
 else()
   message(FATAL_ERROR "SRC_FILES var is not set!")
 endif()
@@ -40,6 +33,8 @@ endif()
 if(NOT DEFINED OUT)
     set(OUT umain)
 endif()
+
+message(STATUS "Output binary name: ${OUT}")
 
 ##===----------------------------------------------------------------------===//
 

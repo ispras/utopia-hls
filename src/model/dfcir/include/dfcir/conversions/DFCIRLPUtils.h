@@ -90,7 +90,6 @@ struct std::hash<mlir::dfcir::utils::lp::LPConstraint> {
   using LPConstraint = mlir::dfcir::utils::lp::LPConstraint;
 
   size_t operator()(const LPConstraint &cons) const noexcept {
-    // TODO: Fix in the future.
     return cons.id;
   }
 };
@@ -100,7 +99,6 @@ namespace mlir::dfcir::utils::lp {
 class LPProblem final {
 private:
   int currentCol;
-  // TODO: Change in the future.
   int currentCon;
   lprec *lp;
   std::unordered_set<LPVariable> variables;

@@ -11,15 +11,15 @@ add_subdirectory(model)
 ##===----------------------------------------------------------------------===//
 ## User-defined code compilation
 
-add_library(uuser ${SRC_FILES})
-target_include_directories(uuser
+add_library(ukernel ${SRC_FILES})
+target_include_directories(ukernel
   PUBLIC
     ${INCLUDE_DIRS})
 
-target_link_libraries(uuser
+target_link_libraries(ukernel
   PUBLIC
     Utopia::DFCXX)
-add_library(Utopia::User ALIAS uuser)
+add_library(Utopia::Kernel ALIAS ukernel)
 
 ##===----------------------------------------------------------------------===//
 
@@ -39,7 +39,7 @@ target_include_directories(umain
 
 target_link_libraries(umain
   PRIVATE
-    Utopia::User
+    Utopia::Kernel
     Utopia::DFCXX
     easyloggingpp
     CLI

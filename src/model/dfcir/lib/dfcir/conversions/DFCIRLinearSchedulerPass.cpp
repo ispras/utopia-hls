@@ -8,7 +8,7 @@
 
 #include <unordered_set>
 #include <unordered_map>
-#include <iostream> // TODO: Replace with a normal logger.
+#include <iostream> // TODO: Replace with a normal logger (issue #13 https://github.com/ispras/utopia-hls/issues/13).
 
 namespace mlir::dfcir {
 
@@ -113,7 +113,6 @@ private:
       problem.getResults(&result);
       for (const auto &[chan, id]: _bufMap) {
         // lp_solve positions start with 1.
-        // TODO: Can we make such a cast?
         int latency = result[id - 1];
         if (!chan.source.isConst && latency) {
           buffers[chan] = latency;
@@ -122,6 +121,7 @@ private:
       delete[]result;
     } else {
       // TODO: Replace with a legit logger?
+      // Issue #13 (https://github.com/ispras/utopia-hls/issues/13).
       std::cout << status;
     }
 

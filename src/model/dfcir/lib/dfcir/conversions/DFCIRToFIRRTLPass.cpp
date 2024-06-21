@@ -216,6 +216,7 @@ public:
   LogicalResult matchAndRewrite(InputOp inputOp, OpAdaptor adaptor,
                                 ConversionPatternRewriter &rewriter) const override {
     // TODO: Add control stream functionality.
+    // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
     rewriter.eraseOp(inputOp);
     return mlir::success();
   }
@@ -245,6 +246,7 @@ public:
     using circt::firrtl::utils::getBlockArgumentFromOpBlock;
 
     // TODO: Add control stream functionality.
+    // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
     if (outputOp.getStream()) {
       createConnect(rewriter,
                     getBlockArgumentFromOpBlock(outputOp,
@@ -269,6 +271,7 @@ public:
     using circt::firrtl::utils::getBlockArgumentFromOpBlock;
 
     // TODO: Add control stream functionality.
+    // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
     if (scalarOutputOp.getStream()) {
       createConnect(rewriter,
                     getBlockArgumentFromOpBlock(scalarOutputOp,
@@ -302,6 +305,7 @@ public:
                                           newType, castedInt);
     } else if (castedFloat) {
       // TODO: Add float functionality.
+      // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
       assert(false && "No floats yet");
     }
     for (auto &operand: llvm::make_early_inc_range(
@@ -387,6 +391,7 @@ for (unsigned id = 0; id < op->getNumResults(); ++id) {                      \
 }                                                                            \
 return name;
 
+// Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
 #define GET_OP_SV_PARAMS(CTX, ATTR_TYPE, LATENCY, WIDTH) {      \
 //circt::firrtl::ParamDeclAttr::get(                              \
 //        CTX,                                                    \
@@ -655,12 +660,12 @@ public:
                                 ConversionPatternRewriter &rewriter) const override {
     auto newOp = rewriter.create<ShlPrimOp>(
             shiftLeftOp.getLoc(),
-			getTypeConverter()->convertType(shiftLeftOp->getResult(0).getType()),
+      getTypeConverter()->convertType(shiftLeftOp->getResult(0).getType()),
             adaptor.getFirst(),
             adaptor.getBits());
     
     for (auto &operand: llvm::make_early_inc_range(shiftLeftOp.getRes().getUses())) {
-	  (*oldTypeMap)[std::make_pair(operand.getOwner(),
+    (*oldTypeMap)[std::make_pair(operand.getOwner(),
                                    operand.getOperandNumber())] =
               operand.get().getType();
       operand.set(newOp->getResult(0));
@@ -681,7 +686,7 @@ public:
                                 ConversionPatternRewriter &rewriter) const override {
     auto newOp = rewriter.create<ShrPrimOp>(
             shiftRightOp.getLoc(),
-			getTypeConverter()->convertType(shiftRightOp->getResult(0).getType()),
+      getTypeConverter()->convertType(shiftRightOp->getResult(0).getType()),
             adaptor.getFirst(),
             adaptor.getBits());
     
@@ -776,6 +781,7 @@ public:
     target.addLegalDialect<circt::firrtl::FIRRTLDialect>();
 
     // TODO: Implement 'FIRRTLTypeConverter' completely.
+    // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
     FIRRTLTypeConverter typeConverter;
     ConvertedOps convertedOps;
     OffsetMap offsetMap;

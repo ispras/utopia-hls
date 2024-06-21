@@ -53,7 +53,7 @@ LPProblem::addConstraint(size_t count, int *vars, double *coeffs, OpType op,
 
 void LPProblem::finalizeInit() {
   for (const LPVariable &var: variables) {
-    ::add_column(lp, NULL);
+    ::add_column(lp, NULL);  // Issue #8 (https://github.com/ispras/utopia-hls/issues/8).
   }
 
   ::set_add_rowmode(lp, TRUE);

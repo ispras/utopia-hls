@@ -30,73 +30,88 @@ def SVSynthesisable : TypeInterface<"SVSynthesisable"> {
 }
 
 class DFCIR_DialectType<string typeName, string typeMnemonic, list<Trait> traits = []> 
-	: TypeDef<DFCIR_Dialect, typeName, traits> {
-	let mnemonic = typeMnemonic;
+  : TypeDef<DFCIR_Dialect, typeName, traits> {
+  let mnemonic = typeMnemonic;
 }
 
 def Fixed : DFCIR_DialectType<"DFCIRFixed", "fixed", [DeclareTypeInterfaceMethods<SVSynthesisable>]> {
-	let parameters = (ins
-		"bool":$sign,
-		"unsigned":$integerBits,
-		"unsigned":$fractionBits);
+  let parameters = (ins
+    "bool":$sign,
+    "unsigned":$integerBits,
+    "unsigned":$fractionBits
+  );
+
   let extraClassDeclaration = [{
     void printSVSignature(llvm::raw_string_ostream &out);
     uint64_t getBitWidth();
   }];
-	let assemblyFormat = "`<` $sign `,` $integerBits `,` $fractionBits `>`";
+
+  let assemblyFormat = "`<` $sign `,` $integerBits `,` $fractionBits `>`";
 }
 
 def Float : DFCIR_DialectType<"DFCIRFloat", "float", [DeclareTypeInterfaceMethods<SVSynthesisable>]> {
-	let parameters = (ins
-		"unsigned":$exponentBits,
-		"unsigned":$fractionBits);
+  let parameters = (ins
+    "unsigned":$exponentBits,
+    "unsigned":$fractionBits
+  );
+
   let extraClassDeclaration = [{
     void printSVSignature(llvm::raw_string_ostream &out);
     uint64_t getBitWidth();
   }];
-	let assemblyFormat = "`<` $exponentBits `,` $fractionBits `>`";
+
+  let assemblyFormat = "`<` $exponentBits `,` $fractionBits `>`";
 }
 
 def RawBits : DFCIR_DialectType<"DFCIRRawBits", "rawbits", [DeclareTypeInterfaceMethods<SVSynthesisable>]> {
-	let parameters = (ins "unsigned":$bits);
-	let assemblyFormat = "`<` $bits `>`";
+  let parameters = (ins "unsigned":$bits);
+  
   let extraClassDeclaration = [{
     void printSVSignature(llvm::raw_string_ostream &out);
     uint64_t getBitWidth();
   }];
+
+  let assemblyFormat = "`<` $bits `>`";
 }
 
 def Primitive : TypeConstraint<Or<[Fixed.predicate, Float.predicate, RawBits.predicate]>, "primitive">;
 
 def Complex : DFCIR_DialectType<"DFCIRComplex", "complex"> {
-	let parameters = (ins "Type":$complexType);
-	let assemblyFormat = "`<` qualified($complexType) `>`";
+  let parameters = (ins "Type":$complexType);
+
+  let assemblyFormat = "`<` qualified($complexType) `>`";
 }
 
 def Streamable : TypeConstraint<Or<[Primitive.predicate, Complex.predicate]>, "streamable">;
 
 def Stream : DFCIR_DialectType<"DFCIRStream", "stream", [DeclareTypeInterfaceMethods<DFType>]> {
-	let parameters = (ins "Type":$streamType);
-  let assemblyFormat = "`<` qualified($streamType) `>`";
+  let parameters = (ins "Type":$streamType);
+  
   let extraClassDeclaration = [{
     mlir::Type getDFType();
   }];
+
+  let assemblyFormat = "`<` qualified($streamType) `>`";
 }
 
 def Scalar : DFCIR_DialectType<"DFCIRScalar", "scalar", [DeclareTypeInterfaceMethods<DFType>]> {
-	let parameters = (ins "Type":$scalarType);
-  let assemblyFormat = "`<` qualified($scalarType) `>`";
+  let parameters = (ins "Type":$scalarType);
+  
   let extraClassDeclaration = [{
     mlir::Type getDFType();
   }];
+
+  let assemblyFormat = "`<` qualified($scalarType) `>`";
 }
 
 def Const : DFCIR_DialectType<"DFCIRConstant", "const", [DeclareTypeInterfaceMethods<DFType>]> {
   let parameters = (ins "Type":$constType);
-  let assemblyFormat = "`<` qualified($constType) `>`";
+  
   let extraClassDeclaration = [{
     mlir::Type getDFType();
   }];
+
+  let assemblyFormat = "`<` qualified($constType) `>`";
 }
 
 def ConvertVariable : TypeConstraint<Or<[Scalar.predicate, Const.predicate]>, "convertVariable">;
@@ -106,8 +121,10 @@ def CastVariable : TypeConstraint<Or<[Stream.predicate, Scalar.predicate]>, "cas
 def Variable : AnyTypeOf<[Stream, Scalar, Const]>;
 
 def CounterChain : DFCIR_DialectType<"DFCIRCounterChain", "cchain">;
-	
+  
 def Entity : TypeConstraint<Or<[Variable.predicate, CounterChain.predicate]>, "entity">;
 
-	
+// Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
+// Type system rework required.
+  
 #endif // DFCIR_Types
