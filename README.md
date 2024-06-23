@@ -91,7 +91,7 @@ That's it: both CIRCT and LLVM can be used now.
 
 ### Compiling CIRCT & LLVM from Scratch
 
-MLIR is included in CIRCT in the form of a `git`-submodule, so the compilation process starts with cloning the CIRCT repository into some directory `CIRCT_DIR`.
+MLIR is included in CIRCT in the form of a `git`-submodule, so the compilation process starts with cloning the CIRCT repository (with the selected version `<VERSION>`) into some directory `CIRCT_DIR`.
 ```bash
 cd <WORKDIR>
 git clone --depth 1 --branch firtool-<VERSION> https://github.com/llvm/circt/ <CIRCT_DIR>
@@ -135,7 +135,7 @@ Other standard CMake variables/options may also be specified to affect the final
 
 Here is an example of a fully-formed CMake buildsystem-generation script (directory `build` may be changed for any other directory):
 ```bash
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=~/firtool-1.72.0 -DINCLUDE_DIRS=~ -DSRC_FILES="~/utopia-user/simple.cpp;~/utopia-user/buf.cpp"
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=~/firtool-1.72.0 -DINCLUDE_DIRS=~ -DSRC_FILES="~/utopia-user/simple.cpp;~/utopia-user/buf.cpp" -DOUT=executable
 ```
 
 To start the compilation process, a simple `cmake --build`-command is used.
@@ -154,6 +154,14 @@ This function will be called from internal Utopia HLS to get the pointer to the 
 
 Kernel-object be a valid DFCxx kernel, instantiating a class derived from `dfcxx::Kernel` class.
 
+Here is an example of a valid `start`-function definition (some kernel named `Polynomial2` is used):
+```cpp
+std::unique_ptr<dfcxx::Kernel> start() {
+  Polynomial2 *kernel = new Polynomial2();
+  return std::unique_ptr<dfcxx::Kernel>(kernel);
+}
+```
+
 ## Usage
 
 ### CLI
@@ -169,7 +177,7 @@ The list of arguments for `hls`-mode is presented below:
 * `-h,--help`: *optional* flag; used to print the help-message about other arguments.
 * `--config <PATH>`: *required* filesystem-path option; used to specify the file for a JSON latency configuration file. Its format is presented in *JSON Configuration* section.
 * `--out <NAME>`: *optional* filesystem-path option; used to specify the destination file for the output SystemVerilog to be generated in. If the name isn't provided or the provided name is an empty string, standard output stream is used.
-* `-a` or `-l`: *required* flag; used to specify the chosen scheduling strategy - either as-soon-as-possible or linear programming. Exactly one of these flags has to be specified.
+* `-a` or `-l`: *required* flag; used to specify the chosen scheduling strategy - either as-soon-as-possible or linear programming. **Exactly one of these flags has to be specified**.
 
 Here is an example of an Utopia HLS CLI call:
 ```bash
@@ -200,7 +208,7 @@ The list of all computational operations is provided below:
 * `EQ` - "equal" comparison
 * `NEQ` - "not equal" comparison
 
-JSON configuration structure states that for every operation with a specific configuration (each pair is represented as a separate JSON-field) present in the kernel, operation's latency will be provided. 
+JSON configuration structure states that for every operation with a specific configuration (each pair is represented as a separate JSON-field with `_` between pair's elements) present in the kernel, operation's latency will be provided. 
 
 Here is an example of a JSON configuration file:
 ```json
