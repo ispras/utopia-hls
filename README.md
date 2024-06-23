@@ -61,7 +61,7 @@ It is recommended to use Utopia HLS on Debian-based operating systems (e.g. Ubun
 * `ninja-build` (preferred) or `make`
 
 The following command can be used to install all of these dependencies regardless of what exactly will be used to compile Utopia HLS:
-```
+```bash
 sudo apt install cmake build-essential clang g++ gcc liblpsolve55-dev lld make ninja-build
 ```
 
@@ -89,10 +89,10 @@ Remove all the `"CIRCT*"`-entries from the corresponding `foreach`-statement and
 
 That's it: both CIRCT and LLVM can be used now.
 
-### Compiling CIRCT & LLVM from scratch
+### Compiling CIRCT & LLVM from Scratch
 
 MLIR is included in CIRCT in the form of a `git`-submodule, so the compilation process starts with cloning the CIRCT repository into some directory `CIRCT_DIR`.
-```
+```bash
 cd <WORKDIR>
 git clone --depth 1 --branch firtool-<VERSION> https://github.com/llvm/circt/ <CIRCT_DIR>
 cd <CIRCT_DIR>
@@ -104,7 +104,7 @@ Now that `llvm`-subdirectory has been initialized, we may build MLIR in some dir
 
 The following commands are used to build the simplest MLIR revision, which allows debugging - `RelWithDebInfo` may be changed for `Release` or `Debug` if the user deems it so.
 
-```
+```bash
 cd llvm
 cmake -S llvm -B <LLVM_BUILD_DIR> -G Ninja -DLLVM_ENABLE_PROJECTS="mlir" -DLLVM_TARGETS_TO_BUILD="host" -DLLVM_ENABLE_ASSERTIONS=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 cmake --build <LLVM_BUILD_DIR>
@@ -113,12 +113,14 @@ cmake --build <LLVM_BUILD_DIR>
 This process is going to take a while.
 After building MLIR, it can be used to build CIRCT in some directory `<CIRCT_BUILD_DIR>`.
 
-```
+```bash
 cd <CIRCT_DIR>
 cmake -S . -B <CIRCT_BUILD_DIR> -G Ninja -DMLIR_DIR=<LLVM_BUILD_DIR>/lib/cmake/mlir -DLLVM_DIR=<LLVM_BUILD_DIR>/lib/cmake/llvm -DLLVM_ENABLE_ASSERTIONS=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 cmake --build <CIRCT_BUILD_DIR>
 ```
-## Project compilation
+## Project Compilation
+
+### Commands
 
 Utopia HLS is a CMake-based project, so the compilation can be set via as much as two commands.
 
@@ -132,14 +134,25 @@ CMake buildsystem-generation script accepts a number of required and optional ar
 Other standard CMake variables/options may also be specified to affect the final compilation process.
 
 Here is an example of a fully-formed CMake buildsystem-generation script (directory `build` may be changed for any other directory):
-```
+```bash
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=~/firtool-1.72.0 -DINCLUDE_DIRS=~ -DSRC_FILES="~/utopia-user/simple.cpp;~/utopia-user/buf.cpp"
 ```
 
 To start the compilation process, a simple `cmake --build`-command is used.
-```
+```bash
 cmake --build build
 ```
+
+### User-Defined Kernel Structure
+
+User-defined kernels are comprised of valid C++ headers and source files. One of the provided source files has to define a function with the following signature:
+```cpp
+std::unique_ptr<dfcxx::Kernel> start();
+```
+
+This function will be called from internal Utopia HLS to get the pointer to the top-level DFCxx kernel. 
+
+Kernel-object be a valid DFCxx kernel, instantiating a class derived from `dfcxx::Kernel` class.
 
 ## Usage
 
@@ -159,7 +172,7 @@ The list of arguments for `hls`-mode is presented below:
 * `-a` or `-l`: *required* flag; used to specify the chosen scheduling strategy - either as-soon-as-possible or linear programming. Exactly one of these flags has to be specified.
 
 Here is an example of an Utopia HLS CLI call:
-```
+```bash
 umain hls --config ~/utopia-user/config.json --out ~/outFile -a
 ```
 
@@ -171,26 +184,26 @@ Currently each operation has two specifications: for integer values (`INT`) and 
 
 The list of all computational operations is provided below:
 
-* ADD - Addition
-* SUB - Subtraction
-* MUL - Multiplication
-* DIV - Division
-* AND - Logical conjunction
-* OR - Logical disjunction
-* XOR - Exclusive logical disjunction
-* NOT - Logical inversion
-* NEG - Negation
-* LESS - "less" comparison
-* LESS_EQ - "less or equal" comparison
-* MORE - "more" comparison 
-* MORE_EQ - "more or equal" comparison
-* EQ - "equal" comparison
-* NEQ - "not equal" comparison
+* `ADD` - Addition
+* `SUB` - Subtraction
+* `MUL` - Multiplication
+* `DIV` - Division
+* `AND` - Logical conjunction
+* `OR` - Logical disjunction
+* `XOR` - Exclusive logical disjunction
+* `NOT` - Logical inversion
+* `NEG` - Negation
+* `LESS` - "less" comparison
+* `LESS_EQ` - "less or equal" comparison
+* `MORE` - "more" comparison 
+* `MORE_EQ` - "more or equal" comparison
+* `EQ` - "equal" comparison
+* `NEQ` - "not equal" comparison
 
 JSON configuration structure states that for every operation with a specific configuration (each pair is represented as a separate JSON-field) present in the kernel, operation's latency will be provided. 
 
 Here is an example of a JSON configuration file:
-```
+```json
 {
   "MUL_INT": 3,
   "ADD_INT": 1,
@@ -202,6 +215,6 @@ Here is an example of a JSON configuration file:
 
 WORK IN PROGRESS
 
-## DFCxx documentation
+## DFCxx Documentation
 
 WORK IN PROGRESS
