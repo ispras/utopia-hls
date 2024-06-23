@@ -17,7 +17,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 
-# "INCLUDE_DIRS" is optional and may be ommited.
+# "INCLUDE_DIRS" is optional and may be omitted.
 if(DEFINED INCLUDE_DIRS)
   message(STATUS "Kernel include directories: ${INCLUDE_DIRS}")
 endif()

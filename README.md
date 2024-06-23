@@ -8,7 +8,7 @@ With the use of its domain-specific language, DFCxx, a streaming computation dat
 
 DFCxx provides a library of C++ classes (like `Stream`, `Scalar`, `Kernel`), allowing relations between objects to represent the computational logic of a streaming computer.
 
-By inheriting `dfcxx::Kernel` abstract class and implementing at least a single constructor this new class represents the main unit of computation, <i>kernel</i>.
+By inheriting from abstract class `dfcxx::Kernel` and implementing at least a single constructor, this new class represents the main unit of computation, <i>kernel</i>.
 
 ```cpp
 #include "dfcxx/DFCXX.h"
@@ -43,7 +43,7 @@ When the Utopia HLS binary executable is compiled, its integrated command line i
 
 ## Licensing and Distribution
 
-Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+Utopia HLS is distributed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
 ## Coding Style
 
@@ -53,7 +53,7 @@ See `CODE_STYLE.md` for more details.
 
 ### Packages
 
-It is recommended to use Utopia HLS on Debian-based operating systems (e.g. Ubuntu 20.04). The required dependencies' package names are specific to `apt` package manager, present in Debian-based operating systems, and are presented below:
+It is recommended to use Utopia HLS on Debian-based operating systems (e.g. Ubuntu 20.04). The required dependencies' package names are specific to `apt` package manager, present in Debian-based operating systems, and are specified below:
 * `cmake` ver. 3.13 or higher
 * `build-essential`
 * `clang` + `lld` or `g++` + `gcc` as a C/C++ compiler
@@ -73,7 +73,7 @@ Utopia HLS utilizes SystemVerilog-generation capabilities from CIRCT project, wh
 
 For both CIRCT and MLIR projects it is possible to download precompiled libraries (this approach is more convenient and saves time), but both projects can also be compiled from sources.
 
-Precompiled releases of CIRCT include the precompiled LLVM MLIR release as well: visit the corresponding [page](https://github.com/llvm/circt/releases) to see all available releases. 
+Precompiled releases of CIRCT include the precompiled LLVM MLIR releases as well: visit the corresponding [page](https://github.com/llvm/circt/releases) to see all available releases. 
 
 **Note that <ins>it's the libraries that are required</ins>, not the binary executables.**<br>
 Look for the archives which have the following names:
@@ -102,7 +102,7 @@ git submodule update
 
 Now that `llvm`-subdirectory has been initialized, we may build MLIR in some directory `<LLVM_BUILD_DIR>`.
 
-The following command is used to build the simplest MLIR revision, which allows debugging - `RelWithDebInfo` may be changed for `Release` or `Debug` if the user deems it so.
+The following commands are used to build the simplest MLIR revision, which allows debugging - `RelWithDebInfo` may be changed for `Release` or `Debug` if the user deems it so.
 
 ```
 cd llvm
@@ -120,11 +120,83 @@ cmake --build <CIRCT_BUILD_DIR>
 ```
 ## Project compilation
 
-WORK IN PROGRESS
+Utopia HLS is a CMake-based project, so the compilation can be set via as much as two commands.
+
+CMake buildsystem-generation script accepts a number of required and optional arguments (prefixed with `-D`), which are presented below:
+
+* `CMAKE_PREFIX_PATH`: standard CMake variable; *optional* (quoted) semicolon-separated list of filesystem paths; is used to locate installed CIRCT and MLIR packages. In case a precompiled CIRCT release is used, specifying a path to its unarchived top-level directory is enough (e.g. `-DCMAKE_PREFIX_PATH=~/firtool-1.72.0`). In case CIRCT and MLIR are compiled manually, **paths to each independent build (not source) directory have to be specified** (e.g. `-DCMAKE_PREFIX_PATH-"~/circt/build;~/circt/llvm/build"`). This variable may be omitted if CIRCT and MLIR are installed in default system paths.
+* `INCLUDE_DIRS`: (quoted) *optional* semicolon-separated list of filesystem paths; is used to specify include directories for user-defined kernels to be added to the Utopia HLS compilation.
+* `SRC_FILES`: (quoted) *required* semicolon-separated list of filesystem paths; is used to specify source files for user-defined kernels to be added to the Utopia HLS compilation.
+* `OUT`: *optional* string; used to specify a custom name for the final Utopia HLS executable. Unless it is explicitly provided, the final executable will be named `umain`.
+
+Other standard CMake variables/options may also be specified to affect the final compilation process.
+
+Here is an example of a fully-formed CMake buildsystem-generation script (directory `build` may be changed for any other directory):
+```
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=~/firtool-1.72.0 -DINCLUDE_DIRS=~ -DSRC_FILES="~/utopia-user/simple.cpp;~/utopia-user/buf.cpp"
+```
+
+To start the compilation process, a simple `cmake --build`-command is used.
+```
+cmake --build build
+```
 
 ## Usage
 
-WORK IN PROGRESS
+### CLI
+
+The compiled Utopia HLS executable has a CLI to accept a number of parameters affecting the final output. Utopia HLS CLI is based on a hierarchical structure of subcommands, namely *modes*.
+
+For the executable there are three general arguments: `-h,--help`, `-H,--help-all` and `-v,--version` for printing simple and extended help-messages, and printing current executable's version respectively.
+
+Unless neither of the three arguments is used, first argument is the mode which the executable has to function in. Currently there is only one available mode `hls`.
+
+The list of arguments for `hls`-mode is presented below:
+
+* `-h,--help`: *optional* flag; used to print the help-message about other arguments.
+* `--config <PATH>`: *required* filesystem-path option; used to specify the file for a JSON latency configuration file. Its format is presented in *JSON Configuration* section.
+* `--out <NAME>`: *optional* filesystem-path option; used to specify the destination file for the output SystemVerilog to be generated in. If the name isn't provided or the provided name is an empty string, standard output stream is used.
+* `-a` or `-l`: *required* flag; used to specify the chosen scheduling strategy - either as-soon-as-possible or linear programming. Exactly one of these flags has to be specified.
+
+Here is an example of an Utopia HLS CLI call:
+```
+umain hls --config ~/utopia-user/config.json --out ~/outFile -a
+```
+
+### JSON Configuration
+
+Latency configuration for each computational operation used in a DFCxx kernel is provided via a JSON file.
+
+Currently each operation has two specifications: for integer values (`INT`) and floating point (`FLOAT`) values. 
+
+The list of all computational operations is provided below:
+
+* ADD - Addition
+* SUB - Subtraction
+* MUL - Multiplication
+* DIV - Division
+* AND - Logical conjunction
+* OR - Logical disjunction
+* XOR - Exclusive logical disjunction
+* NOT - Logical inversion
+* NEG - Negation
+* LESS - "less" comparison
+* LESS_EQ - "less or equal" comparison
+* MORE - "more" comparison 
+* MORE_EQ - "more or equal" comparison
+* EQ - "equal" comparison
+* NEQ - "not equal" comparison
+
+JSON configuration structure states that for every operation with a specific configuration (each pair is represented as a separate JSON-field) present in the kernel, operation's latency will be provided. 
+
+Here is an example of a JSON configuration file:
+```
+{
+  "MUL_INT": 3,
+  "ADD_INT": 1,
+  "SUB_INT": 1
+}
+```
 
 ## Testing
 
@@ -133,5 +205,3 @@ WORK IN PROGRESS
 ## DFCxx documentation
 
 WORK IN PROGRESS
-
-
