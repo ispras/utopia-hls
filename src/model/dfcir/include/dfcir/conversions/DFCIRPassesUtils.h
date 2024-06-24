@@ -27,12 +27,10 @@
 #define EQ_MODULE "__EQ"
 #define NEQ_MODULE "__NEQ"
 
-
 #define FLOAT_SPEC "FLOAT"
 #define INT_SPEC "INT"
 #define UINT_SPEC "UINT"
 #define SINT_SPEC "SINT"
-
 
 #define BUF_MODULE "__FIFO"
 #define STAGES_PARAM "stages"

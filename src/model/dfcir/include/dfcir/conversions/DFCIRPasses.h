@@ -47,7 +47,6 @@ enum Ops {
 
 typedef std::unordered_map<mlir::dfcir::Ops, unsigned> LatencyConfig;
 
-
 namespace mlir::dfcir {
 
 using std::unique_ptr;
