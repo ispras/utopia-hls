@@ -1,3 +1,11 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia HLS Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
 #include "dfcxx/graph.h"
 #include "dfcxx/kernstorage.h"
 #include "dfcxx/types/types.h"
@@ -18,7 +26,6 @@ DFTypeImpl &DFConstant::getType() {
 }
 
 DFVariableImpl &DFConstant::operator+(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar;
   if (rhs.isConstant()) {
     ConstantValue val{};
@@ -46,7 +53,6 @@ DFVariableImpl &DFConstant::operator+(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFConstant::operator-(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar;
   if (rhs.isConstant()) {
     ConstantValue val{};
@@ -74,7 +80,6 @@ DFVariableImpl &DFConstant::operator-(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFConstant::operator*(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar;
   if (rhs.isConstant()) {
     ConstantValue val{};
@@ -102,7 +107,6 @@ DFVariableImpl &DFConstant::operator*(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFConstant::operator/(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar;
   if (rhs.isConstant()) {
     ConstantValue val{};
@@ -130,7 +134,6 @@ DFVariableImpl &DFConstant::operator/(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFConstant::operator&(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar;
   if (rhs.isConstant()) {
     ConstantValue val{};
@@ -158,7 +161,6 @@ DFVariableImpl &DFConstant::operator&(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFConstant::operator|(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar;
   if (rhs.isConstant()) {
     ConstantValue val{};
@@ -186,7 +188,6 @@ DFVariableImpl &DFConstant::operator|(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFConstant::operator^(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar;
   if (rhs.isConstant()) {
     ConstantValue val{};
@@ -256,7 +257,6 @@ DFVariableImpl &DFConstant::operator-() {
 }
 
 DFVariableImpl &DFConstant::operator<(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar;
   DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildBool());
   if (rhs.isConstant()) {
@@ -288,7 +288,6 @@ DFVariableImpl &DFConstant::operator<(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFConstant::operator<=(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar;
   DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildBool());
   if (rhs.isConstant()) {
@@ -320,7 +319,6 @@ DFVariableImpl &DFConstant::operator<=(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFConstant::operator>(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar;
   DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildBool());
   if (rhs.isConstant()) {
@@ -352,7 +350,6 @@ DFVariableImpl &DFConstant::operator>(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFConstant::operator>=(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar;
   DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildBool());
   if (rhs.isConstant()) {
@@ -384,7 +381,6 @@ DFVariableImpl &DFConstant::operator>=(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFConstant::operator==(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar;
   DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildBool());
   if (rhs.isConstant()) {
@@ -416,7 +412,6 @@ DFVariableImpl &DFConstant::operator==(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFConstant::operator!=(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar;
   DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildBool());
   if (rhs.isConstant()) {

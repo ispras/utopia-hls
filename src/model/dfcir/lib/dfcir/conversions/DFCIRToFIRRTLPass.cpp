@@ -1,3 +1,11 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia HLS Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
 #include "dfcir/conversions/DFCIRPasses.h"
 #include "dfcir/conversions/DFCIRPassesUtils.h"
 #include "circt/Dialect/FIRRTL/FIRRTLDialect.h"
@@ -121,11 +129,9 @@ public:
             moduleArgMap(moduleArgMap) {
     // Required to allow root updates, which imply recursive
     // pattern application.
-    //Pattern::setHasBoundedRewriteRecursion(true);
     this->setHasBoundedRewriteRecursion(true);
   }
 };
-
 
 class KernelOpConversionPattern : public FIRRTLOpConversionPattern<KernelOp> {
 public:
@@ -168,7 +174,6 @@ public:
     }
 
     // Add explicit clock argument.
-
     modulePorts.emplace_back(
             mlir::StringAttr::get(rewriter.getContext(), CLOCK_ARG),
             circt::firrtl::ClockType::get(rewriter.getContext()),
@@ -184,7 +189,6 @@ public:
             modulePorts);
 
     // Replace the input-/output-operations' results with block arguments.
-
     for (size_t index = 0; index < ports.size(); ++index) {
       BlockArgument arg = fModuleOp.getArgument(index);
       for (auto &operand: llvm::make_early_inc_range(
@@ -198,9 +202,7 @@ public:
 
     // Empty arguments assumed.
     rewriter.mergeBlocks(kernelBlock,
-                         fModuleOp.getBodyBlock()
-            //,fModuleOp.getBodyBlock()->getArguments()
-    );
+                         fModuleOp.getBodyBlock());
     rewriter.restoreInsertionPoint(save);
     rewriter.replaceOp(kernelOp, circuitOp);
 
@@ -374,14 +376,14 @@ for (unsigned id = 0; id < op->getNumOperands(); ++id) {                     \
   nameStream << "_IN_";                                                      \
   Type oldType = (*oldTypeMap)[std::make_pair(op, id)];                      \
   Type innerType = llvm::cast<DFType>(oldType).getDFType();                  \
-  llvm::cast<SVSynthesisable>(innerType).printSVSignature(nameStream);       \
+  llvm::cast<SVSynthesizable>(innerType).printSVSignature(nameStream);       \
 }                                                                            \
                                                                              \
 for (unsigned id = 0; id < op->getNumResults(); ++id) {                      \
   nameStream << "_OUT_";                                                     \
   Type oldType = (*oldTypeMap)[std::make_pair(op, id)];                      \
   Type innerType = llvm::cast<DFType>(oldType).getDFType();                  \
-  llvm::cast<SVSynthesisable>(innerType).printSVSignature(nameStream);       \
+  llvm::cast<SVSynthesizable>(innerType).printSVSignature(nameStream);       \
   bool isFloat = innerType.isa<DFCIRFloatType>();                            \
   if (isFloat) {                                                             \
     nameStream << "_" << latencyConfig->find(CAT_E(OP_NAME,_FLOAT))->second; \
@@ -486,9 +488,9 @@ public:                                                                         
                                   rewriter.getContext());                                           \
     IntegerType attrType = mlir::IntegerType::get(rewriter.getContext(), 32,                        \
                                                   mlir::IntegerType::Unsigned);                     \
-    auto outTypeWidth = llvm::cast<SVSynthesisable>(innerType).getBitWidth();                       \
-    auto firstTypeWidth = llvm::cast<SVSynthesisable>(firstInnerType).getBitWidth();                \
-    auto secondTypeWidth = llvm::cast<SVSynthesisable>(secondInnerType).getBitWidth();              \
+    auto outTypeWidth = llvm::cast<SVSynthesizable>(innerType).getBitWidth();                       \
+    auto firstTypeWidth = llvm::cast<SVSynthesizable>(firstInnerType).getBitWidth();                \
+    auto secondTypeWidth = llvm::cast<SVSynthesizable>(secondInnerType).getBitWidth();              \
                                                                                                     \
     bool isFloat = innerType.isa<DFCIRFloatType>();                                                 \
     unsigned latency = latencyConfig->find(                                                         \
@@ -581,8 +583,8 @@ public:                                                                         
                                   rewriter.getContext());                                           \
     IntegerType attrType = mlir::IntegerType::get(rewriter.getContext(), 32,                        \
                                                   mlir::IntegerType::Unsigned);                     \
-    auto outTypeWidth = llvm::cast<SVSynthesisable>(innerType).getBitWidth();                       \
-    auto firstTypeWidth = llvm::cast<SVSynthesisable>(firstInnerType).getBitWidth();                \
+    auto outTypeWidth = llvm::cast<SVSynthesizable>(innerType).getBitWidth();                       \
+    auto firstTypeWidth = llvm::cast<SVSynthesizable>(firstInnerType).getBitWidth();                \
     assert(outTypeWidth == firstTypeWidth);                                                         \
                                                                                                     \
     bool isFloat = innerType.isa<DFCIRFloatType>();                                                 \
@@ -648,7 +650,6 @@ DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(MoreEq, MORE_EQ) // MoreEqOpConversionPa
 DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(Eq, EQ) // EqOpConversionPattern.
 
 DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(NotEq, NEQ) // NotEqOpConversionPattern.
-
 
 class ShiftLeftOpConversionPattern : public FIRRTLOpConversionPattern<ShiftLeftOp> {
 public:

@@ -1,3 +1,11 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia HLS Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
 #ifndef DFCIR_Types
 #define DFCIR_Types
 
@@ -17,7 +25,7 @@ def DFType : TypeInterface<"DFType"> {
 
 }
 
-def SVSynthesisable : TypeInterface<"SVSynthesisable"> {
+def SVSynthesizable : TypeInterface<"SVSynthesizable"> {
   let cppNamespace = "mlir::dfcir";
 
   let methods = [
@@ -34,7 +42,7 @@ class DFCIR_DialectType<string typeName, string typeMnemonic, list<Trait> traits
   let mnemonic = typeMnemonic;
 }
 
-def Fixed : DFCIR_DialectType<"DFCIRFixed", "fixed", [DeclareTypeInterfaceMethods<SVSynthesisable>]> {
+def Fixed : DFCIR_DialectType<"DFCIRFixed", "fixed", [DeclareTypeInterfaceMethods<SVSynthesizable>]> {
   let parameters = (ins
     "bool":$sign,
     "unsigned":$integerBits,
@@ -49,7 +57,7 @@ def Fixed : DFCIR_DialectType<"DFCIRFixed", "fixed", [DeclareTypeInterfaceMethod
   let assemblyFormat = "`<` $sign `,` $integerBits `,` $fractionBits `>`";
 }
 
-def Float : DFCIR_DialectType<"DFCIRFloat", "float", [DeclareTypeInterfaceMethods<SVSynthesisable>]> {
+def Float : DFCIR_DialectType<"DFCIRFloat", "float", [DeclareTypeInterfaceMethods<SVSynthesizable>]> {
   let parameters = (ins
     "unsigned":$exponentBits,
     "unsigned":$fractionBits
@@ -63,7 +71,7 @@ def Float : DFCIR_DialectType<"DFCIRFloat", "float", [DeclareTypeInterfaceMethod
   let assemblyFormat = "`<` $exponentBits `,` $fractionBits `>`";
 }
 
-def RawBits : DFCIR_DialectType<"DFCIRRawBits", "rawbits", [DeclareTypeInterfaceMethods<SVSynthesisable>]> {
+def RawBits : DFCIR_DialectType<"DFCIRRawBits", "rawbits", [DeclareTypeInterfaceMethods<SVSynthesizable>]> {
   let parameters = (ins "unsigned":$bits);
   
   let extraClassDeclaration = [{

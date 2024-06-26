@@ -1,3 +1,11 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia HLS Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
 #ifndef DFCIR_PASSES_UTILS_H
 #define DFCIR_PASSES_UTILS_H
 
@@ -56,7 +64,6 @@ template <typename OpTy>
 inline CircuitOp findCircuit(const OpTy &op) {
   return op->template getParentOfType<CircuitOp>();
 }
-
 
 inline FExtModuleOp createBufferModule(OpBuilder &builder,
                                        llvm::StringRef name, Type type,

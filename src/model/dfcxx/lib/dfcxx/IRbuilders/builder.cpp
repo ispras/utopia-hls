@@ -1,3 +1,11 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia HLS Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
 #include "circt/Dialect/FIRRTL/FIRRTLDialect.h"
 #include "circt/Dialect/SV/SVDialect.h"
 #include "dfcxx/IRbuilders/builder.h"
@@ -9,7 +17,7 @@ DFCIRBuilder::DFCIRBuilder(const DFLatencyConfig &config) : ctx(),
                                                             config(config),
                                                             builder(&ctx),
                                                             conv(&ctx) {
-  // We are allowed to initialize '_builder'-field before loading
+  // We are allowed to initialize 'builder'-field before loading
   // dialects as OpBuilder only stores the pointer to MLIRContext
   // and doesn't check any of its state.
   ctx.getOrLoadDialect<mlir::dfcir::DFCIRDialect>();
@@ -51,8 +59,6 @@ mlir::ModuleOp DFCIRBuilder::buildModule(dfcxx::Kernel *kern) {
   mlir::OpBuilder builder(&ctx);
   module = buildModule(kern, builder);
 
-  // !!!!!!!!!!DEBUG!!!!!!!!!!
-  //module->dump();
   return module.get();
 }
 

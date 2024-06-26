@@ -1,3 +1,11 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia HLS Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
 #include "dfcxx/graph.h"
 #include "dfcxx/kernstorage.h"
 #include "dfcxx/varbuilders/builder.h"
@@ -32,7 +40,6 @@ bool DFVariableImpl::isConstant() const {
 }
 
 void DFVariableImpl::connect(dfcxx::DFVariableImpl &connectee) {
-  //if (getType() != connectee.getType()) { throw std::exception(); }
   helper.addChannel(&connectee, this, 0, true);
 }
 

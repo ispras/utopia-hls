@@ -1,12 +1,12 @@
 //===----------------------------------------------------------------------===//
 //
-// Part of the Utopia EDA Project, under the Apache License v2.0
+// Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
-// The configured options and settings for Utopia EDA
+// The configured options and settings for Utopia HLS
 #define VERSION_MAJOR @Utopia_VERSION_MAJOR@
 #define VERSION_MINOR @Utopia_VERSION_MINOR@
 

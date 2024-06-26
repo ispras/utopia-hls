@@ -31,7 +31,7 @@ endif()
 
 # Unless explicit binary name is provided, "umain" is used.
 if(NOT DEFINED OUT)
-    set(OUT umain)
+  set(OUT umain)
 endif()
 
 message(STATUS "Output binary name: ${OUT}")

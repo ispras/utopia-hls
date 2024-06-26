@@ -1,7 +1,4 @@
 {
-  "rtl": {
-    "premap-lib"     : "abc"
-  },
   "hls": {
     "config"         : "",
     "asap_scheduler" : false,

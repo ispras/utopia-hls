@@ -1,3 +1,11 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia HLS Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
 #include "dfcir/conversions/DFCIRPasses.h"
 #include "dfcir/conversions/DFCIRPassesUtils.h"
 #include "dfcir/conversions/DFCIRLPUtils.h"
@@ -118,15 +126,15 @@ private:
           buffers[chan] = latency;
         }
       }
-      delete[]result;
+      delete []result;
     } else {
       // TODO: Replace with a legit logger?
       // Issue #13 (https://github.com/ispras/utopia-hls/issues/13).
       std::cout << status;
     }
 
-    delete[]delta_ids;
-    delete[]delta_coeffs;
+    delete []delta_ids;
+    delete []delta_coeffs;
     return buffers;
   }
 

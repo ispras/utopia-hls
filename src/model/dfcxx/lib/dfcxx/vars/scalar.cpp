@@ -1,3 +1,11 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia HLS Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
 #include "dfcxx/graph.h"
 #include "dfcxx/kernstorage.h"
 #include "dfcxx/varbuilders/builder.h"
@@ -15,7 +23,6 @@ DFTypeImpl &DFScalar::getType() {
 }
 
 DFVariableImpl &DFScalar::operator+(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar = helper.varBuilder.buildStream("", IODirection::NONE, helper,
                                                          type);
   helper.storage.addVariable(newVar);
@@ -26,7 +33,6 @@ DFVariableImpl &DFScalar::operator+(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFScalar::operator-(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar = helper.varBuilder.buildStream("", IODirection::NONE, helper,
                                                          type);
   helper.storage.addVariable(newVar);
@@ -37,7 +43,6 @@ DFVariableImpl &DFScalar::operator-(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFScalar::operator*(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar = helper.varBuilder.buildStream("", IODirection::NONE, helper,
                                                          type);
   helper.storage.addVariable(newVar);
@@ -48,7 +53,6 @@ DFVariableImpl &DFScalar::operator*(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFScalar::operator/(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar = helper.varBuilder.buildStream("", IODirection::NONE, helper,
                                                          type);
   helper.storage.addVariable(newVar);
@@ -59,7 +63,6 @@ DFVariableImpl &DFScalar::operator/(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFScalar::operator&(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar = helper.varBuilder.buildStream("", IODirection::NONE, helper,
                                                          type);
   helper.storage.addVariable(newVar);
@@ -70,7 +73,6 @@ DFVariableImpl &DFScalar::operator&(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFScalar::operator|(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar = helper.varBuilder.buildStream("", IODirection::NONE, helper,
                                                          type);
   helper.storage.addVariable(newVar);
@@ -81,7 +83,6 @@ DFVariableImpl &DFScalar::operator|(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFScalar::operator^(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFVariableImpl *newVar = helper.varBuilder.buildStream("", IODirection::NONE, helper,
                                                          type);
   helper.storage.addVariable(newVar);
@@ -110,7 +111,6 @@ DFVariableImpl &DFScalar::operator-() {
 }
 
 DFVariableImpl &DFScalar::operator<(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildBool());
   DFVariableImpl *newVar = helper.varBuilder.buildStream("", IODirection::NONE, helper,
                                                          *newType);
@@ -122,7 +122,6 @@ DFVariableImpl &DFScalar::operator<(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFScalar::operator<=(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildBool());
   DFVariableImpl *newVar = helper.varBuilder.buildStream("", IODirection::NONE, helper,
                                                          *newType);
@@ -134,7 +133,6 @@ DFVariableImpl &DFScalar::operator<=(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFScalar::operator>(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildBool());
   DFVariableImpl *newVar = helper.varBuilder.buildStream("", IODirection::NONE, helper,
                                                          *newType);
@@ -146,7 +144,6 @@ DFVariableImpl &DFScalar::operator>(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFScalar::operator>=(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildBool());
   DFVariableImpl *newVar = helper.varBuilder.buildStream("", IODirection::NONE, helper,
                                                          *newType);
@@ -158,7 +155,6 @@ DFVariableImpl &DFScalar::operator>=(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFScalar::operator==(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildBool());
   DFVariableImpl *newVar = helper.varBuilder.buildStream("", IODirection::NONE, helper,
                                                          *newType);
@@ -170,7 +166,6 @@ DFVariableImpl &DFScalar::operator==(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl &DFScalar::operator!=(DFVariableImpl &rhs) {
-  //if (type != rhs.getType()) { throw std::exception(); }
   DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildBool());
   DFVariableImpl *newVar = helper.varBuilder.buildStream("", IODirection::NONE, helper,
                                                          *newType);
