@@ -12,8 +12,7 @@ namespace mlir::dfcir::utils::lp {
 
 LPVariable::LPVariable(int id) : id(id) {}
 
-bool
-LPVariable::operator==(const mlir::dfcir::utils::lp::LPVariable &other) const {
+bool LPVariable::operator==(const LPVariable &other) const {
   return id == other.id;
 }
 
@@ -40,8 +39,7 @@ LPConstraint::~LPConstraint() {
   delete []coeffs;
 }
 
-bool LPConstraint::operator==(
-        const mlir::dfcir::utils::lp::LPConstraint &other) const {
+bool LPConstraint::operator==(const LPConstraint &other) const {
   // TODO: Fix in the future.
   return id == other.id;
 }
@@ -52,16 +50,16 @@ int LPProblem::addVariable() {
   return it.first->id;
 }
 
-void
-LPProblem::addConstraint(size_t count, int *vars, double *coeffs, OpType op,
-                         double rhs) {
+void LPProblem::addConstraint(size_t count, int *vars, double *coeffs,
+                              OpType op, double rhs) {
   auto it = constraints.emplace(currentCon++, count, vars, coeffs, op, rhs);
   assert(it.second);
 }
 
 void LPProblem::finalizeInit() {
   for (const LPVariable &var: variables) {
-    ::add_column(lp, NULL);  // Issue #8 (https://github.com/ispras/utopia-hls/issues/8).
+    // Issue #8 (https://github.com/ispras/utopia-hls/issues/8).
+    ::add_column(lp, NULL);  
   }
 
   ::set_add_rowmode(lp, TRUE);

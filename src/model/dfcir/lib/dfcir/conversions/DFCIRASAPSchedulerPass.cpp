@@ -22,7 +22,7 @@ namespace mlir::dfcir {
 #include "dfcir/conversions/DFCIRPasses.h.inc"
 
 class DFCIRASAPSchedulerPass
-        : public impl::DFCIRASAPSchedulerPassBase<DFCIRASAPSchedulerPass> {
+  : public impl::DFCIRASAPSchedulerPassBase<DFCIRASAPSchedulerPass> {
   using Node = utils::Node;
   using Channel = utils::Channel;
   using Graph = utils::Graph;
@@ -43,16 +43,17 @@ private:
 
   Buffers schedule(Graph &graph) {
     Latencies map;
-    std::priority_queue<Channel, std::vector<Channel>, ChannelComp> chanQueue(
-            (ChannelComp(map)));
+    using ChannelQueue = std::priority_queue<
+      Channel, std::vector<Channel>, ChannelComp>;
+    ChannelQueue chanQueue((ChannelComp(map)));
 
     auto visitChannel =
-            [&](const Channel &channel) {
-              map[channel.target] = std::max(map[channel.target],
-                                             map[channel.source] +
-                                             int(channel.source.latency) +
-                                             channel.offset);
-            };
+      [&](const Channel &channel) {
+        map[channel.target] = std::max(map[channel.target],
+                                       map[channel.source] +
+                                       int(channel.source.latency) +
+                                       channel.offset);
+    };
 
     auto visitNode = [&](const Node &node) {
       for (const Channel &out: graph.outputs[node]) {
@@ -77,7 +78,7 @@ private:
       for (const Channel &channel: graph.inputs[node]) {
         int delta = map[channel.target] -
                     (map[channel.source] + int(channel.source.latency) +
-                     channel.offset);
+                    channel.offset);
         if (!channel.source.isConst && delta) {
           buffers[channel] = delta;
         }

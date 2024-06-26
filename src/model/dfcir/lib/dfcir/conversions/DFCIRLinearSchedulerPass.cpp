@@ -16,7 +16,9 @@
 
 #include <unordered_set>
 #include <unordered_map>
-#include <iostream> // TODO: Replace with a normal logger (issue #13 https://github.com/ispras/utopia-hls/issues/13).
+// TODO: Replace with a normal logger.
+// Issue #13 (https://github.com/ispras/utopia-hls/issues/13).
+#include <iostream>  
 
 namespace mlir::dfcir {
 
@@ -26,7 +28,7 @@ namespace mlir::dfcir {
 #include "dfcir/conversions/DFCIRPasses.h.inc"
 
 class DFCIRLinearSchedulerPass
-        : public impl::DFCIRLinearSchedulerPassBase<DFCIRLinearSchedulerPass> {
+  : public impl::DFCIRLinearSchedulerPassBase<DFCIRLinearSchedulerPass> {
   using Node = utils::Node;
   using Channel = utils::Channel;
   using Graph = utils::Graph;

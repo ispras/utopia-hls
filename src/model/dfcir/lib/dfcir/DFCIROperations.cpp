@@ -9,575 +9,424 @@
 #include "dfcir/DFCIRDialect.h"
 #include "dfcir/DFCIROperations.h"
 
-::mlir::ParseResult
-mlir::dfcir::ScalarInputOp::parse(::mlir::OpAsmParser &parser,
-                                  ::mlir::OperationState &result) {
-  ::mlir::Type resRawTypes[1];
-  ::llvm::ArrayRef<::mlir::Type> resTypes(resRawTypes);
-  ::mlir::StringAttr nameAttr;
-  if (parser.parseLess())
-    return ::mlir::failure();
+namespace mlir::dfcir {
 
-  {
-    mlir::Type scalarType;
-    if (parser.parseCustomTypeWithFallback(scalarType))
-      return ::mlir::failure();
-    ::mlir::dfcir::DFCIRScalarType type = mlir::dfcir::DFCIRScalarType::get(
-            result.getContext(), scalarType);
-    resRawTypes[0] = type;
-  }
-  if (parser.parseGreater())
-    return ::mlir::failure();
-  if (parser.parseLParen())
-    return ::mlir::failure();
+ParseResult ScalarInputOp::parse(OpAsmParser &parser,
+                                 OperationState &result) {
+  Type resRawTypes[1];
+  llvm::ArrayRef<Type> resTypes(resRawTypes);
+  StringAttr nameAttr;
+  
+  if (parser.parseLess()) { return failure(); }
+
+  Type scalarType;
+  if (parser.parseCustomTypeWithFallback(scalarType)) { return failure(); }
+  DFCIRScalarType type = DFCIRScalarType::get(result.getContext(), scalarType);
+  resRawTypes[0] = type;
+
+  if (parser.parseGreater() || parser.parseLParen()) { return failure(); }
 
   if (parser.parseCustomAttributeWithFallback(
           nameAttr,
-          parser.getBuilder().getType<::mlir::NoneType>())) {
-    return ::mlir::failure();
-  }
+          parser.getBuilder().getType<NoneType>())) { return failure(); }
   if (nameAttr) result.attributes.append("name", nameAttr);
-  if (parser.parseRParen())
-    return ::mlir::failure();
-  {
-    auto loc = parser.getCurrentLocation();
-    (void) loc;
-    if (parser.parseOptionalAttrDict(result.attributes))
-      return ::mlir::failure();
-  }
+
+  if (parser.parseRParen()) { return failure(); }
+
+  if (parser.parseOptionalAttrDict(result.attributes)) { return failure(); }
+  
   result.addTypes(resTypes);
-  return ::mlir::success();
+  return success();
 }
 
-void mlir::dfcir::ScalarInputOp::print(::mlir::OpAsmPrinter &_odsPrinter) {
-  _odsPrinter << "<";
-  {
-    auto type = getRes().getType().getScalarType();
-    _odsPrinter << type;
-  }
-  _odsPrinter << ">";
-  _odsPrinter << ' ' << "(";
-  _odsPrinter.printAttributeWithoutType(getNameAttr());
-  _odsPrinter << ")";
-  ::llvm::SmallVector<::llvm::StringRef, 2> elidedAttrs;
+void ScalarInputOp::print(OpAsmPrinter &printer) {
+  printer << "<";
+  printer << getRes().getType().getScalarType();
+  printer << ">" << ' ' << "(";
+  printer.printAttributeWithoutType(getNameAttr());
+  printer << ")";
+  llvm::SmallVector<llvm::StringRef, 2> elidedAttrs;
   elidedAttrs.push_back("name");
-  _odsPrinter.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
+  printer.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
 }
 
-llvm::StringRef mlir::dfcir::ScalarInputOp::getValueName() {
+llvm::StringRef ScalarInputOp::getValueName() {
   return getName();
 }
 
-::mlir::ParseResult
-mlir::dfcir::ScalarOutputOp::parse(::mlir::OpAsmParser &parser,
-                                   ::mlir::OperationState &result) {
-  ::mlir::Type resRawTypes[1];
-  ::llvm::ArrayRef<::mlir::Type> resTypes(resRawTypes);
-  ::mlir::StringAttr nameAttr;
-  ::llvm::SmallVector<::mlir::OpAsmParser::UnresolvedOperand, 4> streamOperands;
-  ::llvm::SMLoc streamOperandsLoc;
-  (void) streamOperandsLoc;
-  ::llvm::SmallVector<::mlir::Type, 1> streamTypes;
-  if (parser.parseLess())
-    return ::mlir::failure();
+ParseResult ScalarOutputOp::parse(OpAsmParser &parser,
+                                  OperationState &result) {
+  Type resRawTypes[1];
+  llvm::ArrayRef<Type> resTypes(resRawTypes);
+  StringAttr nameAttr;
+  llvm::SmallVector<OpAsmParser::UnresolvedOperand, 4> streamOperands;
+  llvm::SMLoc streamOperandsLoc;
+  llvm::SmallVector<Type, 1> streamTypes;
+  
+  if (parser.parseLess()) { return failure(); }
 
-  {
-    mlir::Type scalarType;
-    if (parser.parseCustomTypeWithFallback(scalarType))
-      return ::mlir::failure();
-    ::mlir::dfcir::DFCIRScalarType type = mlir::dfcir::DFCIRScalarType::get(
-            result.getContext(), scalarType);
-    resRawTypes[0] = type;
-  }
-  if (parser.parseGreater())
-    return ::mlir::failure();
-  if (parser.parseLParen())
-    return ::mlir::failure();
+  Type scalarType;
+  if (parser.parseCustomTypeWithFallback(scalarType)) { return failure(); }
+  DFCIRScalarType type = DFCIRScalarType::get(result.getContext(), scalarType);
+  resRawTypes[0] = type;
+
+  if (parser.parseGreater() || parser.parseLParen()) { return failure(); }
 
   if (parser.parseCustomAttributeWithFallback(
           nameAttr,
-          parser.getBuilder().getType<::mlir::NoneType>())) {
-    return ::mlir::failure();
-  }
+          parser.getBuilder().getType<NoneType>())) { return failure(); }
   if (nameAttr) result.attributes.append("name", nameAttr);
-  if (parser.parseRParen())
-    return ::mlir::failure();
-  if (::mlir::succeeded(parser.parseOptionalLess())) {
-    if (parser.parseEqual())
-      return ::mlir::failure();
+  
+  if (parser.parseRParen()) { return failure(); }
 
-    {
-      streamOperandsLoc = parser.getCurrentLocation();
-      ::mlir::OpAsmParser::UnresolvedOperand operand;
-      ::mlir::OptionalParseResult parseResult =
-              parser.parseOptionalOperand(operand);
-      if (parseResult.has_value()) {
-        if (failed(*parseResult))
-          return ::mlir::failure();
-        streamOperands.push_back(operand);
-      }
+  if (succeeded(parser.parseOptionalLess())) {
+    if (parser.parseEqual()) { return failure(); }
+
+    streamOperandsLoc = parser.getCurrentLocation();
+    OpAsmParser::UnresolvedOperand operand;
+    OptionalParseResult parseResult = parser.parseOptionalOperand(operand);
+    if (parseResult.has_value()) {
+      if (failed(*parseResult)) { return failure(); }
+      streamOperands.push_back(operand);
     }
-    if (parser.parseColon())
-      return ::mlir::failure();
+    
+    if (parser.parseColon()) { return failure(); }
 
-    {
-      ::mlir::Type optionalType;
-      ::mlir::OptionalParseResult parseResult =
-              parser.parseOptionalType(optionalType);
-      if (parseResult.has_value()) {
-        if (failed(*parseResult))
-          return ::mlir::failure();
-        streamTypes.push_back(optionalType);
-      }
+    Type optionalType;
+    parseResult = parser.parseOptionalType(optionalType);
+    if (parseResult.has_value()) {
+      if (failed(*parseResult)) { return failure(); }
+      streamTypes.push_back(optionalType);
     }
   }
-  {
-    auto loc = parser.getCurrentLocation();
-    (void) loc;
-    if (parser.parseOptionalAttrDict(result.attributes))
-      return ::mlir::failure();
-  }
+
+  if (parser.parseOptionalAttrDict(result.attributes)) { return failure(); }
+
   result.addTypes(resTypes);
   if (parser.resolveOperands(streamOperands, streamTypes, streamOperandsLoc,
-                             result.operands))
-    return ::mlir::failure();
-  return ::mlir::success();
+                             result.operands)) { return failure(); }
+  return success();
 }
 
-void mlir::dfcir::ScalarOutputOp::print(::mlir::OpAsmPrinter &_odsPrinter) {
-  _odsPrinter << "<";
-  {
-    auto type = getRes().getType().getScalarType();
-    _odsPrinter << type;
+void ScalarOutputOp::print(OpAsmPrinter &printer) {
+  printer << "<";
+  printer << getRes().getType().getScalarType();
+  printer << ">" << ' ' << "(";
+  printer.printAttributeWithoutType(getNameAttr());
+  printer << ")";
+  if (Value value = getStream()) {
+    printer << ' ' << "<" << "=" << ' ';
+    printer << value;
+    printer << ' ' << ":" << ' ';
+    printer << llvm::ArrayRef<Type>(value.getType());
   }
-  _odsPrinter << ">";
-  _odsPrinter << ' ' << "(";
-  _odsPrinter.printAttributeWithoutType(getNameAttr());
-  _odsPrinter << ")";
-  if (getStream()) {
-    _odsPrinter << ' ' << "<";
-    _odsPrinter << "=";
-    _odsPrinter << ' ';
-    if (::mlir::Value value = getStream())
-      _odsPrinter << value;
-    _odsPrinter << ' ' << ":";
-    _odsPrinter << ' ';
-    _odsPrinter << (getStream() ? ::llvm::ArrayRef<::mlir::Type>(
-            getStream().getType()) : ::llvm::ArrayRef<::mlir::Type>());
-  }
-  ::llvm::SmallVector<::llvm::StringRef, 2> elidedAttrs;
+  llvm::SmallVector<llvm::StringRef, 2> elidedAttrs;
   elidedAttrs.push_back("name");
-  _odsPrinter.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
+  printer.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
 }
 
-llvm::StringRef mlir::dfcir::ScalarOutputOp::getValueName() {
+llvm::StringRef ScalarOutputOp::getValueName() {
   return getName();
 }
 
-::mlir::ParseResult mlir::dfcir::InputOp::parse(
-        ::mlir::OpAsmParser &parser,
-        ::mlir::OperationState &result) {
-  ::mlir::Type resRawTypes[1];
-  ::llvm::ArrayRef<::mlir::Type> resTypes(resRawTypes);
-  ::mlir::StringAttr nameAttr;
-  ::llvm::SmallVector<::mlir::OpAsmParser::UnresolvedOperand, 4> ctrlOperands;
-  ::llvm::SMLoc ctrlOperandsLoc;
-  (void) ctrlOperandsLoc;
-  ::llvm::SmallVector<::mlir::Type, 1> ctrlTypes;
+ParseResult InputOp::parse(OpAsmParser &parser, OperationState &result) {
+  Type resRawTypes[1];
+  llvm::ArrayRef<Type> resTypes(resRawTypes);
+  StringAttr nameAttr;
+  llvm::SmallVector<OpAsmParser::UnresolvedOperand, 4> ctrlOperands;
+  llvm::SMLoc ctrlOperandsLoc;
+  llvm::SmallVector<Type, 1> ctrlTypes;
 
-  if (parser.parseLess())
-    return ::mlir::failure();
-  {
-    mlir::Type streamType;
-    if (parser.parseCustomTypeWithFallback(streamType))
-      return ::mlir::failure();
-    ::mlir::dfcir::DFCIRStreamType type = mlir::dfcir::DFCIRStreamType::get(
-            result.getContext(), streamType);
-    resRawTypes[0] = type;
-  }
-  if (parser.parseGreater())
-    return ::mlir::failure();
-  if (parser.parseLParen())
-    return ::mlir::failure();
+  if (parser.parseLess()) { return failure(); }
+  
+  Type streamType;
+  if (parser.parseCustomTypeWithFallback(streamType)) { return failure(); }
+  DFCIRStreamType type = DFCIRStreamType::get(result.getContext(), streamType);
+  resRawTypes[0] = type;
+
+  if (parser.parseGreater() || parser.parseLParen()) { return failure(); }
 
   if (parser.parseCustomAttributeWithFallback(
           nameAttr,
-          parser.getBuilder().getType<::mlir::NoneType>())) {
-    return ::mlir::failure();
-  }
+          parser.getBuilder().getType<NoneType>())) { return failure(); }
   if (nameAttr) result.attributes.append("name", nameAttr);
-  if (::mlir::succeeded(parser.parseOptionalComma())) {
-
-    {
-      ctrlOperandsLoc = parser.getCurrentLocation();
-      ::mlir::OpAsmParser::UnresolvedOperand operand;
-      ::mlir::OptionalParseResult parseResult =
-              parser.parseOptionalOperand(operand);
-      if (parseResult.has_value()) {
-        if (failed(*parseResult))
-          return ::mlir::failure();
-        ctrlOperands.push_back(operand);
-      }
+  
+  if (succeeded(parser.parseOptionalComma())) {
+    ctrlOperandsLoc = parser.getCurrentLocation();
+    OpAsmParser::UnresolvedOperand operand;
+    OptionalParseResult parseResult = parser.parseOptionalOperand(operand);
+    if (parseResult.has_value()) {
+      if (failed(*parseResult)) { return failure(); }
+      ctrlOperands.push_back(operand);
     }
-    if (parser.parseColon())
-      return ::mlir::failure();
+    
+    if (parser.parseColon()) { return failure(); }
 
-    {
-      ::mlir::Type optionalType;
-      ::mlir::OptionalParseResult parseResult =
-              parser.parseOptionalType(optionalType);
-      if (parseResult.has_value()) {
-        if (failed(*parseResult))
-          return ::mlir::failure();
-        ctrlTypes.push_back(optionalType);
-      }
+    Type optionalType;
+    parseResult = parser.parseOptionalType(optionalType);
+    if (parseResult.has_value()) {
+      if (failed(*parseResult)) { return failure(); }
+      ctrlTypes.push_back(optionalType);
     }
   }
-  if (parser.parseRParen())
-    return ::mlir::failure();
-  {
-    auto loc = parser.getCurrentLocation();
-    (void) loc;
-    if (parser.parseOptionalAttrDict(result.attributes))
-      return ::mlir::failure();
-  }
+
+  if (parser.parseRParen()) { return failure(); }
+  
+  if (parser.parseOptionalAttrDict(result.attributes)) { return failure(); }
+
   result.addTypes(resTypes);
   if (parser.resolveOperands(ctrlOperands, ctrlTypes, ctrlOperandsLoc,
-                             result.operands))
-    return ::mlir::failure();
-  return ::mlir::success();
+                             result.operands)) { return failure(); }
+  return success();
 }
 
-void mlir::dfcir::InputOp::print(::mlir::OpAsmPrinter &_odsPrinter) {
-  _odsPrinter << "<";
-  {
-    auto type = getRes().getType().getStreamType();
-    _odsPrinter << type;
+void InputOp::print(OpAsmPrinter &printer) {
+  printer << "<";
+  printer << getRes().getType().getStreamType();
+  printer << ">" << ' ' << "(";
+  printer.printAttributeWithoutType(getNameAttr());
+  if (Value value = getCtrl()) {
+    printer << "," << ' ';
+    printer << value;
+    printer << ' ' << ":" << ' ';
+    printer << llvm::ArrayRef<Type>(value.getType());
   }
-  _odsPrinter << ">";
-  _odsPrinter << ' ' << "(";
-  _odsPrinter.printAttributeWithoutType(getNameAttr());
-  if (getCtrl()) {
-    _odsPrinter << ",";
-    _odsPrinter << ' ';
-    if (::mlir::Value value = getCtrl())
-      _odsPrinter << value;
-    _odsPrinter << ' ' << ":";
-    _odsPrinter << ' ';
-    _odsPrinter
-            << (getCtrl() ? ::llvm::ArrayRef<::mlir::Type>(getCtrl().getType())
-                          : ::llvm::ArrayRef<::mlir::Type>());
-  }
-  _odsPrinter << ")";
-  ::llvm::SmallVector<::llvm::StringRef, 2> elidedAttrs;
+  printer << ")";
+  llvm::SmallVector<::llvm::StringRef, 2> elidedAttrs;
   elidedAttrs.push_back("name");
-  _odsPrinter.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
+  printer.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
 }
 
-llvm::StringRef mlir::dfcir::InputOp::getValueName() {
+StringRef InputOp::getValueName() {
   return getName();
 }
 
-::mlir::ParseResult mlir::dfcir::OutputOp::parse(
-        ::mlir::OpAsmParser &parser,
-        ::mlir::OperationState &result) {
-  ::mlir::Type resRawTypes[1];
-  ::llvm::ArrayRef<::mlir::Type> resTypes(resRawTypes);
-  ::mlir::StringAttr nameAttr;
-  ::llvm::SmallVector<::mlir::OpAsmParser::UnresolvedOperand, 4> ctrlOperands;
-  ::llvm::SMLoc ctrlOperandsLoc;
-  (void) ctrlOperandsLoc;
-  ::llvm::SmallVector<::mlir::Type, 1> ctrlTypes;
-  ::llvm::SmallVector<::mlir::OpAsmParser::UnresolvedOperand, 4> streamOperands;
-  ::llvm::SMLoc streamOperandsLoc;
-  (void) streamOperandsLoc;
-  ::llvm::SmallVector<::mlir::Type, 1> streamTypes;
-  if (parser.parseLess())
-    return ::mlir::failure();
+ParseResult OutputOp::parse(OpAsmParser &parser, OperationState &result) {
+  Type resRawTypes[1];
+  llvm::ArrayRef<Type> resTypes(resRawTypes);
+  StringAttr nameAttr;
+  llvm::SmallVector<OpAsmParser::UnresolvedOperand, 4> ctrlOperands;
+  llvm::SMLoc ctrlOperandsLoc;
+  llvm::SmallVector<Type, 1> ctrlTypes;
+  llvm::SmallVector<OpAsmParser::UnresolvedOperand, 4> streamOperands;
+  llvm::SMLoc streamOperandsLoc;
+  llvm::SmallVector<Type, 1> streamTypes;
+  
+  if (parser.parseLess()) { return failure(); }
 
-  {
-    mlir::Type streamType;
-    if (parser.parseCustomTypeWithFallback(streamType))
-      return ::mlir::failure();
-    ::mlir::dfcir::DFCIRStreamType type = mlir::dfcir::DFCIRStreamType::get(
-            result.getContext(), streamType);
-    resRawTypes[0] = type;
-  }
-  if (parser.parseGreater())
-    return ::mlir::failure();
-  if (parser.parseLParen())
-    return ::mlir::failure();
+  Type streamType;
+  if (parser.parseCustomTypeWithFallback(streamType)) { return failure(); }
+  DFCIRStreamType type = DFCIRStreamType::get(result.getContext(), streamType);
+  resRawTypes[0] = type;
+
+  if (parser.parseGreater() || parser.parseLParen()) { return failure(); }
 
   if (parser.parseCustomAttributeWithFallback(nameAttr,
-                                              parser.getBuilder().getType<
-                                                      ::mlir::NoneType>())) {
-    return ::mlir::failure();
-  }
+          parser.getBuilder().getType<NoneType>())) { return failure(); }
   if (nameAttr) result.attributes.append("name", nameAttr);
-  if (::mlir::succeeded(parser.parseOptionalComma())) {
 
-    {
-      ctrlOperandsLoc = parser.getCurrentLocation();
-      ::mlir::OpAsmParser::UnresolvedOperand operand;
-      ::mlir::OptionalParseResult parseResult =
-              parser.parseOptionalOperand(operand);
-      if (parseResult.has_value()) {
-        if (failed(*parseResult))
-          return ::mlir::failure();
-        ctrlOperands.push_back(operand);
-      }
+  if (succeeded(parser.parseOptionalComma())) {
+    ctrlOperandsLoc = parser.getCurrentLocation();
+    OpAsmParser::UnresolvedOperand operand;
+    OptionalParseResult parseResult = parser.parseOptionalOperand(operand);
+    if (parseResult.has_value()) {
+      if (failed(*parseResult)) { return failure(); }
+      ctrlOperands.push_back(operand);
     }
-    if (parser.parseColon())
-      return ::mlir::failure();
+    
+    if (parser.parseColon()) { return failure(); }
 
-    {
-      ::mlir::Type optionalType;
-      ::mlir::OptionalParseResult parseResult =
-              parser.parseOptionalType(optionalType);
-      if (parseResult.has_value()) {
-        if (failed(*parseResult))
-          return ::mlir::failure();
+    Type optionalType;
+    parseResult = parser.parseOptionalType(optionalType);
+    if (parseResult.has_value()) {
+      if (failed(*parseResult)) { return failure(); }
         ctrlTypes.push_back(optionalType);
-      }
     }
   }
-  if (parser.parseRParen())
-    return ::mlir::failure();
-  if (::mlir::succeeded(parser.parseOptionalLess())) {
-    if (parser.parseEqual())
-      return ::mlir::failure();
 
-    {
-      streamOperandsLoc = parser.getCurrentLocation();
-      ::mlir::OpAsmParser::UnresolvedOperand operand;
-      ::mlir::OptionalParseResult parseResult =
-              parser.parseOptionalOperand(operand);
-      if (parseResult.has_value()) {
-        if (failed(*parseResult))
-          return ::mlir::failure();
-        streamOperands.push_back(operand);
-      }
-    }
-    if (parser.parseColon())
-      return ::mlir::failure();
+  if (parser.parseRParen()) { return failure(); }
 
-    {
-      ::mlir::Type optionalType;
-      ::mlir::OptionalParseResult parseResult =
-              parser.parseOptionalType(optionalType);
-      if (parseResult.has_value()) {
-        if (failed(*parseResult))
-          return ::mlir::failure();
-        streamTypes.push_back(optionalType);
-      }
+  if (succeeded(parser.parseOptionalLess())) {
+    if (parser.parseEqual()) { return failure(); }
+
+    streamOperandsLoc = parser.getCurrentLocation();
+    OpAsmParser::UnresolvedOperand operand;
+    OptionalParseResult parseResult = parser.parseOptionalOperand(operand);
+    if (parseResult.has_value()) {
+      if (failed(*parseResult)) { return failure(); }
+      streamOperands.push_back(operand);
+    }
+
+    if (parser.parseColon()) { return failure(); }
+
+    Type optionalType;
+    parseResult = parser.parseOptionalType(optionalType);
+    if (parseResult.has_value()) {
+      if (failed(*parseResult)) { return failure(); }
+      streamTypes.push_back(optionalType);
     }
   }
-  {
-    auto loc = parser.getCurrentLocation();
-    (void) loc;
-    if (parser.parseOptionalAttrDict(result.attributes))
-      return ::mlir::failure();
-  }
+
+  if (parser.parseOptionalAttrDict(result.attributes)) { return failure(); }
+
   result.addAttribute("operand_segment_sizes",
                       parser.getBuilder().getDenseI32ArrayAttr(
                               {static_cast<int32_t>(ctrlOperands.size()),
                                static_cast<int32_t>(streamOperands.size())}));
   result.addTypes(resTypes);
   if (parser.resolveOperands(ctrlOperands, ctrlTypes, ctrlOperandsLoc,
-                             result.operands))
-    return ::mlir::failure();
+                             result.operands)) { return failure(); }
   if (parser.resolveOperands(streamOperands, streamTypes, streamOperandsLoc,
-                             result.operands))
-    return ::mlir::failure();
-  return ::mlir::success();
+                             result.operands)) { return failure(); }
+  return success();
 }
 
-void mlir::dfcir::OutputOp::print(::mlir::OpAsmPrinter &_odsPrinter) {
-  _odsPrinter << "<";
-  {
-    auto type = getRes().getType().getStreamType();
-    _odsPrinter << type;
+void OutputOp::print(OpAsmPrinter &printer) {
+  printer << "<";
+  printer << getRes().getType().getStreamType();
+  printer << ">" << ' ' << "(";
+  printer.printAttributeWithoutType(getNameAttr());
+  if (Value value = getCtrl()) {
+    printer << "," << ' ';
+    printer << value;
+    printer << ' ' << ":" << ' ';
+    printer << llvm::ArrayRef<Type>(value.getType());
   }
-  _odsPrinter << ">";
-  _odsPrinter << ' ' << "(";
-  _odsPrinter.printAttributeWithoutType(getNameAttr());
-  if (getCtrl()) {
-    _odsPrinter << ",";
-    _odsPrinter << ' ';
-    if (::mlir::Value value = getCtrl())
-      _odsPrinter << value;
-    _odsPrinter << ' ' << ":";
-    _odsPrinter << ' ';
-    _odsPrinter
-            << (getCtrl() ? ::llvm::ArrayRef<::mlir::Type>(getCtrl().getType())
-                          : ::llvm::ArrayRef<::mlir::Type>());
+  printer << ")";
+  if (Value value = getStream()) {
+    printer << ' ' << "<" << "=" << ' ';
+    printer << value;
+    printer << ' ' << ":" << ' ';
+    printer << llvm::ArrayRef<Type>(value.getType());
   }
-  _odsPrinter << ")";
-  if (getStream()) {
-    _odsPrinter << ' ' << "<";
-    _odsPrinter << "=";
-    _odsPrinter << ' ';
-    if (::mlir::Value value = getStream())
-      _odsPrinter << value;
-    _odsPrinter << ' ' << ":";
-    _odsPrinter << ' ';
-    _odsPrinter << (getStream() ? ::llvm::ArrayRef<::mlir::Type>(
-            getStream().getType()) : ::llvm::ArrayRef<::mlir::Type>());
-  }
-  ::llvm::SmallVector<::llvm::StringRef, 2> elidedAttrs;
+  llvm::SmallVector<::llvm::StringRef, 2> elidedAttrs;
   elidedAttrs.push_back("operand_segment_sizes");
   elidedAttrs.push_back("name");
-  _odsPrinter.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
+  printer.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
 }
 
-llvm::StringRef mlir::dfcir::OutputOp::getValueName() {
+llvm::StringRef OutputOp::getValueName() {
   return getName();
 }
 
-::mlir::ParseResult
-mlir::dfcir::MuxOp::parse(OpAsmParser &parser, OperationState &result) {
+ParseResult MuxOp::parse(OpAsmParser &parser, OperationState &result) {
   OpAsmParser::UnresolvedOperand control;
   SmallVector<OpAsmParser::UnresolvedOperand, 16> vars;
   Type controlType, varType;
 
   if (parser.parseLParen() || parser.parseOperand(control) ||
-      parser.parseColon() ||
-      parser.parseType(controlType) || parser.parseComma() ||
-      parser.parseOperandList(vars) ||
+      parser.parseColon() || parser.parseType(controlType) || 
+      parser.parseComma() || parser.parseOperandList(vars) ||
       parser.parseRParen() || parser.parseColon() ||
       parser.parseType(varType) ||
-      parser.parseOptionalAttrDict(result.attributes))
-    return failure();
+      parser.parseOptionalAttrDict(result.attributes)) { return failure(); }
 
-  if (parser.resolveOperand(control, controlType, result.operands))
-    return failure();
+  if (parser.resolveOperand(control, controlType, 
+                            result.operands)) { return failure(); }
 
   result.addTypes(varType);
-
   return parser.resolveOperands(vars, varType, result.operands);
 }
 
-void mlir::dfcir::MuxOp::print(OpAsmPrinter &p) {
-  p << "(" << getControl() << ": " << getControl().getType() << ", ";
+void MuxOp::print(OpAsmPrinter &p) {
+  Value value = getControl();
+  p << "(" << value << ": " << value.getType() << ", ";
   p.printOperands(getVars());
   p << ") : " << getType();
   p.printOptionalAttrDict((*this)->getAttrs());
 }
 
-::mlir::ParseResult mlir::dfcir::ConstantOp::parse(
-        ::mlir::OpAsmParser &parser,
-        ::mlir::OperationState &result) {
-  ::mlir::Type resRawTypes[1];
-  ::llvm::ArrayRef<::mlir::Type> resTypes(resRawTypes);
-  ::mlir::Attribute valueAttr;
-  if (parser.parseLess())
-    return ::mlir::failure();
+ParseResult ConstantOp::parse(OpAsmParser &parser, OperationState &result) {
+  Type resRawTypes[1];
+  llvm::ArrayRef<Type> resTypes(resRawTypes);
+  Attribute valueAttr;
 
-  {
-    mlir::Type constType;
-    if (parser.parseCustomTypeWithFallback(constType))
-      return ::mlir::failure();
-    ::mlir::dfcir::DFCIRConstantType type = mlir::dfcir::DFCIRConstantType::get(
-            result.getContext(), constType);
-    resRawTypes[0] = type;
-  }
-  if (parser.parseGreater())
-    return ::mlir::failure();
+  if (parser.parseLess()) { return failure(); }
 
-  if (parser.parseAttribute(valueAttr, ::mlir::Type{}))
-    return ::mlir::failure();
+  Type constType;
+  if (parser.parseCustomTypeWithFallback(constType)) { return failure(); }
+  DFCIRConstantType type = DFCIRConstantType::get(result.getContext(), 
+                                                  constType);
+  resRawTypes[0] = type;
+
+  if (parser.parseGreater()) { return failure(); }
+
+  if (parser.parseAttribute(valueAttr, Type{})) { return failure(); }
   if (valueAttr) result.attributes.append("value", valueAttr);
-  {
-    auto loc = parser.getCurrentLocation();
-    (void) loc;
-    if (parser.parseOptionalAttrDict(result.attributes))
-      return ::mlir::failure();
-  }
+
+  if (parser.parseOptionalAttrDict(result.attributes)) { return failure(); }
   result.addTypes(resTypes);
-  return ::mlir::success();
+  return success();
 }
 
-void mlir::dfcir::ConstantOp::print(::mlir::OpAsmPrinter &_odsPrinter) {
-  _odsPrinter << "<";
-  {
-    auto type = getRes().getType().getConstType();
-    _odsPrinter << type;
-  }
-  _odsPrinter << ">";
-  _odsPrinter << ' ';
-  _odsPrinter.printAttribute(getValueAttr());
-  ::llvm::SmallVector<::llvm::StringRef, 2> elidedAttrs;
+void ConstantOp::print(OpAsmPrinter &printer) {
+  printer << "<";
+  printer << getRes().getType().getConstType();
+  printer << ">" << ' ';
+  printer.printAttribute(getValueAttr());
+  llvm::SmallVector<::llvm::StringRef, 2> elidedAttrs;
   elidedAttrs.push_back("value");
-  _odsPrinter.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
+  printer.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
 }
 
-::mlir::ParseResult mlir::dfcir::OffsetOp::parse(::mlir::OpAsmParser &parser,
-                                                 ::mlir::OperationState &result)
-                                                 {
-  ::mlir::OpAsmParser::UnresolvedOperand strRawOpers[1];
-  ::llvm::ArrayRef<::mlir::OpAsmParser::UnresolvedOperand> strOpers(strRawOpers);
-  ::llvm::SMLoc streamOperandsLoc;
-  (void)streamOperandsLoc;
-  ::mlir::Type streamRawTypes[1];
-  ::llvm::ArrayRef<::mlir::Type> streamTypes(streamRawTypes);
-  ::mlir::IntegerAttr offsetAttr;
-  ::mlir::Type resRawTypes[1];
-  ::llvm::ArrayRef<::mlir::Type> resTypes(resRawTypes);
-  if (parser.parseLParen())
-    return ::mlir::failure();
+ParseResult OffsetOp::parse(OpAsmParser &parser, OperationState &result) {
+  OpAsmParser::UnresolvedOperand strRawOpers[1];
+  llvm::ArrayRef<OpAsmParser::UnresolvedOperand> strOpers(strRawOpers);
+  llvm::SMLoc streamOperandsLoc;
+  Type streamRawTypes[1];
+  llvm::ArrayRef<Type> streamTypes(streamRawTypes);
+  IntegerAttr offsetAttr;
+  Type resRawTypes[1];
+  llvm::ArrayRef<Type> resTypes(resRawTypes);
+
+  if (parser.parseLParen()) { return failure(); }
 
   streamOperandsLoc = parser.getCurrentLocation();
   if (parser.parseOperand(strRawOpers[0]) || parser.parseComma() ||
-      parser.parseCustomAttributeWithFallback(offsetAttr, ::mlir::Type{}))
-    return ::mlir::failure();
+      parser.parseCustomAttributeWithFallback(offsetAttr, 
+                                              Type{})) { return failure(); }
 
   if (offsetAttr)
     result.getOrAddProperties<OffsetOp::Properties>().offset = offsetAttr;
-  if (parser.parseRParen())
-    return ::mlir::failure();
-  {
-    auto loc = parser.getCurrentLocation();(void)loc;
-    if (parser.parseOptionalAttrDict(result.attributes))
-      return ::mlir::failure();
-    if (failed(verifyInherentAttrs(result.name, result.attributes, [&]() {
-      return parser.emitError(loc) << "'" <<
-             result.name.getStringRef() << "' op ";
-    })))
-      return ::mlir::failure();
-  }
-  if (parser.parseColon())
-    return ::mlir::failure();
+  
+  if (parser.parseRParen()) { return failure(); }
+  
+  auto loc = parser.getCurrentLocation();
+  if (parser.parseOptionalAttrDict(result.attributes)) { return failure(); }
+  if (failed(verifyInherentAttrs(result.name, result.attributes, [&]() {
+    return parser.emitError(loc) << "'" 
+                                 << result.name.getStringRef() << "' op ";
+    }))) { return failure(); }
 
-  {
-    ::mlir::dfcir::DFCIRStreamType type;
-    if (parser.parseCustomTypeWithFallback(type))
-      return ::mlir::failure();
-    resRawTypes[0] = type;
-    streamRawTypes[0] = type;
-  }
+  if (parser.parseColon()) { return failure(); }
+
+  DFCIRStreamType type;
+  if (parser.parseCustomTypeWithFallback(type)) { return failure(); }
+  resRawTypes[0] = type;
+  streamRawTypes[0] = type;
+
   result.addTypes(resTypes);
   if (parser.resolveOperands(strOpers, streamTypes, streamOperandsLoc,
-                             result.operands))
-    return ::mlir::failure();
-  return ::mlir::success();
+                             result.operands)) { return failure(); }
+  return success();
 }
 
-void mlir::dfcir::OffsetOp::print(::mlir::OpAsmPrinter &_odsPrinter) {
-  _odsPrinter << "(" << getStream() << ", ";
-  _odsPrinter.printStrippedAttrOrType(getOffsetAttr());
-  _odsPrinter << ")";
+void mlir::dfcir::OffsetOp::print(OpAsmPrinter &printer) {
+  printer << "(" << getStream() << ", ";
+  printer.printStrippedAttrOrType(getOffsetAttr());
+  printer << ")";
   ::llvm::SmallVector<::llvm::StringRef, 2> elidedAttrs;
   elidedAttrs.push_back("offset");
-  _odsPrinter.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
-  _odsPrinter << " : ";
-  {
-    auto type = getRes().getType();
-    if (auto validType = ::llvm::dyn_cast<::mlir::dfcir::DFCIRStreamType>(type))
-      _odsPrinter.printStrippedAttrOrType(validType);
-    else
-      _odsPrinter << type;
-  }
+  printer.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
+  printer << " : ";
+  auto type = getRes().getType();
+  if (auto validType = llvm::dyn_cast<DFCIRStreamType>(type)) {
+    printer.printStrippedAttrOrType(validType);
+  } else
+    printer << type;
 }
+
+} // namespace mlir::dfcir
 
 #define GET_OP_CLASSES
 

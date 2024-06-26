@@ -12,9 +12,9 @@
 
 namespace circt::firrtl::utils {
 
-inline FExtModuleOp
-createBufferModule(OpBuilder &builder, llvm::StringRef name, Type type,
-                   Location loc, unsigned stages) {
+inline FExtModuleOp createBufferModule(OpBuilder &builder,
+                                       llvm::StringRef name, Type type,
+                                       Location loc, unsigned stages) {
   SmallVector<circt::firrtl::PortInfo> ports = {
           circt::firrtl::PortInfo(
                   mlir::StringAttr::get(builder.getContext(), "res1"),
@@ -38,29 +38,34 @@ createBufferModule(OpBuilder &builder, llvm::StringRef name, Type type,
           circt::firrtl::ConventionAttr::get(builder.getContext(),
                                              Convention::Internal),
           ports,
-          StringRef(name),                             // TODO: Change in the future.
+          StringRef(name),
           mlir::ArrayAttr());
 }
 
-inline FExtModuleOp
-createBufferModuleWithTypeName(OpBuilder &builder, Type type, Location loc,
-                               unsigned stages) {
+inline FExtModuleOp createBufferModuleWithTypeName(OpBuilder &builder,
+                                                   Type type, Location loc,
+                                                   unsigned stages) {
+  using circt::firrtl::getBitWidth;
+  using circt::firrtl::FIRRTLBaseType;
+
   std::string name = BUF_MODULE;
   llvm::raw_string_ostream nameStream(name);
-  auto width = circt::firrtl::getBitWidth(llvm::dyn_cast<circt::firrtl::FIRRTLBaseType>(type));
+  auto width = getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(type));
   assert(width.has_value());
   nameStream << "_IN_" << *width << "_OUT_" << *width << "_" << stages;
   return createBufferModule(builder, name, type, loc, stages);
 }
 
-FExtModuleOp
-findOrCreateBufferModule(OpBuilder &builder, Type type, Location loc,
-                         unsigned stages) {
+FExtModuleOp findOrCreateBufferModule(OpBuilder &builder, Type type,
+                                      Location loc, unsigned stages) {
+  using circt::firrtl::getBitWidth;
+  using circt::firrtl::FIRRTLBaseType;
+
   CircuitOp circuit = findCircuit(builder.getInsertionPoint());
   Block *block = circuit.getBodyBlock();
   std::string name = BUF_MODULE;
   llvm::raw_string_ostream nameStream(name);
-  auto width = circt::firrtl::getBitWidth(llvm::dyn_cast<circt::firrtl::FIRRTLBaseType>(type));
+  auto width = getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(type));
   assert(width.has_value());
   nameStream << "_IN_" << *width << "_OUT_" << *width << "_" << stages;
 
@@ -130,8 +135,8 @@ Value getClockVarFromOpBlock(Operation *op) {
   return getClockVar(op->getBlock());
 }
 
-ConnectOp
-createConnect(OpBuilder &builder, Value destination, Value source, int offset) {
+ConnectOp createConnect(OpBuilder &builder, Value destination,
+                        Value source, int offset) {
   auto connect = builder.create<ConnectOp>(builder.getUnknownLoc(), destination,
                                            source);
   connect->setAttr(CONNECT_OFFSET_ATTR, builder.getI32IntegerAttr(offset));
@@ -262,7 +267,6 @@ Graph::Graph(FModuleOp module) : Graph() {
            index < count; ++index) {
         auto operand = instanceOp.getResult(index);
         if (!directions[index] && !(operand.getType().isa<ClockType>())) {
-          // TODO: Check that all block arguments cases are handled properly.
           auto connectInfo = unrollConnectChain(operand);
 
           auto found = findNode(connectInfo);

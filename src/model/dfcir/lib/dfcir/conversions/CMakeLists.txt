@@ -1,9 +1,12 @@
 set(PASSES 
-        conversions/DFCIRToFIRRTLPass.cpp
-        conversions/DFCIRASAPSchedulerPass.cpp
-        conversions/DFCIRLinearSchedulerPass.cpp
-        conversions/DFCIRLPUtils.cpp)
+  conversions/DFCIRToFIRRTLPass.cpp
+  conversions/DFCIRASAPSchedulerPass.cpp
+  conversions/DFCIRLinearSchedulerPass.cpp
+  conversions/DFCIRLPUtils.cpp
+)
+
 set(CONV_LIBS
-        ${PASSES}
-        conversions/DFCIRPassesUtils.cpp
-        PARENT_SCOPE)
+  ${PASSES}
+  conversions/DFCIRPassesUtils.cpp
+  PARENT_SCOPE
+)

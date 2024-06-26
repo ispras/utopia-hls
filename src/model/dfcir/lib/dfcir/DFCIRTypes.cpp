@@ -13,41 +13,46 @@
 #include "mlir/IR/DialectImplementation.h"
 #include "dfcir/DFCIRTypeInterfaces.cpp.inc" // Cannot enforce header sorting.
 
-void mlir::dfcir::DFCIRFixedType::printSVSignature(llvm::raw_string_ostream &out) {
-  out << "fix_" << getSign() << "_" << getIntegerBits() << "_" << getFractionBits();
+namespace mlir::dfcir {
+
+void DFCIRFixedType::printSVSignature(llvm::raw_string_ostream &out) {
+  out << "fix_" << getSign() << "_" 
+      << getIntegerBits() << "_" << getFractionBits();
 }
 
-uint64_t mlir::dfcir::DFCIRFixedType::getBitWidth() {
+uint64_t DFCIRFixedType::getBitWidth() {
   return getIntegerBits() + getFractionBits();
 }
 
-void mlir::dfcir::DFCIRFloatType::printSVSignature(llvm::raw_string_ostream &out) {
+void DFCIRFloatType::printSVSignature(llvm::raw_string_ostream &out) {
   out << "flt_" << getExponentBits() << "_" << getFractionBits();
 }
 
-uint64_t mlir::dfcir::DFCIRFloatType::getBitWidth() {
+uint64_t DFCIRFloatType::getBitWidth() {
   return getExponentBits() + getFractionBits();
 }
 
-void mlir::dfcir::DFCIRRawBitsType::printSVSignature(llvm::raw_string_ostream &out) {
+void DFCIRRawBitsType::printSVSignature(llvm::raw_string_ostream &out) {
   out << "bits_" << getBits();
 }
 
-uint64_t mlir::dfcir::DFCIRRawBitsType::getBitWidth() {
+uint64_t DFCIRRawBitsType::getBitWidth() {
   return getBits();
 }
 
-mlir::Type mlir::dfcir::DFCIRStreamType::getDFType() {
+Type DFCIRStreamType::getDFType() {
   return getStreamType();
 }
 
-mlir::Type mlir::dfcir::DFCIRScalarType::getDFType() {
+Type DFCIRScalarType::getDFType() {
   return getScalarType();
 }
 
-mlir::Type mlir::dfcir::DFCIRConstantType::getDFType() {
+Type DFCIRConstantType::getDFType() {
   return getConstType();
 }
+
+} // namespace mlir::dfcir
 
 #define GET_TYPEDEF_CLASSES
 
