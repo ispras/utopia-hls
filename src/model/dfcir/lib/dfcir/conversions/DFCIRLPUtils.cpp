@@ -36,8 +36,8 @@ LPConstraint::LPConstraint(const LPConstraint &other) : id(other.id),
 }
 
 LPConstraint::~LPConstraint() {
-  delete[]vars;
-  delete[]coeffs;
+  delete []vars;
+  delete []coeffs;
 }
 
 bool LPConstraint::operator==(

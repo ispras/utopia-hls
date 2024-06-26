@@ -15,7 +15,6 @@
 
 #include <queue>
 
-
 namespace mlir::dfcir {
 #define GEN_PASS_DECL_DFCIRASAPSCHEDULERPASS
 #define GEN_PASS_DEF_DFCIRASAPSCHEDULERPASS

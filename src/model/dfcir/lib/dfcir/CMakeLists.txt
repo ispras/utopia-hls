@@ -11,7 +11,6 @@ add_mlir_dialect_library(MLIRDFCIR
         DFCIRPassesIncGen
         )
 
-
 target_include_directories(MLIRDFCIR
         PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>

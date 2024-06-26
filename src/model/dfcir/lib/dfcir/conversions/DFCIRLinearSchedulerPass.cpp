@@ -37,7 +37,7 @@ class DFCIRLinearSchedulerPass
 private:
 
   void synchronizeInput(const Node &node) {
-    int *var = new int[1]{_nodeMap[node]};
+    int *var = new int[1]{nodeMap[node]};
     double *coeff = new double[1]{1.0};
 
     // t_source = 0
@@ -45,7 +45,7 @@ private:
   }
 
   void addLatencyConstraint(const Channel &chan) {
-    int *vars = new int[2]{_nodeMap[chan.target], _nodeMap[chan.source]};
+    int *vars = new int[2]{nodeMap[chan.target], nodeMap[chan.source]};
     double *coeffs = new double[2]{1.0, -1.0};
 
     // t_next >= t_prev + prev_latency + next_prev_offset
@@ -54,22 +54,22 @@ private:
   }
 
   int addDeltaConstraint(const Channel &chan) {
-    int delta_id = problem.addVariable();
-    int *vars = new int[3]{delta_id, _nodeMap[chan.target],
-                           _nodeMap[chan.source]};
+    int deltaID = problem.addVariable();
+    int *vars = new int[3]{deltaID, nodeMap[chan.target],
+                           nodeMap[chan.source]};
     double *coeffs = new double[3]{1.0, -1.0, 1.0};
 
     // delta_t = t_next - t_prev
     problem.addConstraint(3, vars, coeffs, OpType::Equal, 0);
-    return delta_id;
+    return deltaID;
   }
 
   void addBufferConstraint(const Channel &chan) {
-    int buf_id = problem.addVariable();
-    _bufMap[chan] = buf_id;
-    int *vars = new int[3]{buf_id,
-                           _nodeMap[chan.target],
-                           _nodeMap[chan.source]};
+    int bufID = problem.addVariable();
+    bufMap[chan] = bufID;
+    int *vars = new int[3]{bufID,
+                           nodeMap[chan.target],
+                           nodeMap[chan.source]};
     double *coeffs = new double[3]{1.0, -1.0, 1.0};
 
     // buf_next_prev = t_next - (t_prev + prev_latency + next_prev_offset)
@@ -78,39 +78,39 @@ private:
 
     // buf_next_prev >= 0
     problem.addConstraint(1,
-                          new int[1]{buf_id},
+                          new int[1]{bufID},
                           new double[1]{1.0},
                           OpType::GreaterOrEqual, 0);
   }
 
   LPProblem problem;
-  std::unordered_map<Node, int> _nodeMap;
-  std::unordered_map<Channel, int> _bufMap;
+  std::unordered_map<Node, int> nodeMap;
+  std::unordered_map<Channel, int> bufMap;
 
   Buffers schedule(Graph &graph) {
     size_t chanCount = 0;
     for (const Node &node: graph.nodes) {
       chanCount += graph.inputs[node].size();
-      _nodeMap[node] = problem.addVariable();
+      nodeMap[node] = problem.addVariable();
       if (graph.startNodes.find(node) != graph.startNodes.end()) {
         synchronizeInput(node);
       }
     }
-    int *delta_ids = new int[chanCount];
-    double *delta_coeffs = new double[chanCount];
+    int *deltaIDs = new int[chanCount];
+    double *deltaCoeffs = new double[chanCount];
     int curr_id = 0;
     for (const Node &node: graph.nodes) {
       for (const Channel &chan: graph.inputs[node]) {
         addLatencyConstraint(chan);
-        delta_coeffs[curr_id] = 1.0;
-        delta_ids[curr_id++] = addDeltaConstraint(chan);
+        deltaCoeffs[curr_id] = 1.0;
+        deltaIDs[curr_id++] = addDeltaConstraint(chan);
         addBufferConstraint(chan);
       }
     }
 
     // Minimize deltas.
     problem.setMin();
-    problem.setObjective(chanCount, delta_ids, delta_coeffs);
+    problem.setObjective(chanCount, deltaIDs, deltaCoeffs);
     problem.lessMessages();
     int status = problem.solve();
 
@@ -119,7 +119,7 @@ private:
     if (status == Status::Optimal || status == Status::Suboptimal) {
       double *result;
       problem.getResults(&result);
-      for (const auto &[chan, id]: _bufMap) {
+      for (const auto &[chan, id]: bufMap) {
         // lp_solve positions start with 1.
         int latency = result[id - 1];
         if (!chan.source.isConst && latency) {
@@ -133,8 +133,8 @@ private:
       std::cout << status;
     }
 
-    delete []delta_ids;
-    delete []delta_coeffs;
+    delete []deltaIDs;
+    delete []deltaCoeffs;
     return buffers;
   }
 
