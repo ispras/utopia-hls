@@ -29,9 +29,9 @@
 #define NOT_MODULE "__NOT"
 #define NEG_MODULE "__NEG"
 #define LESS_MODULE "__LESS"
-#define LESS_EQ_MODULE "__LESS_EQ"
-#define MORE_MODULE "__MORE"
-#define MORE_EQ_MODULE "__MORE_EQ"
+#define LESSEQ_MODULE "__LESSEQ"
+#define GREATER_MODULE "__GREATER"
+#define GREATEREQ_MODULE "__GREATEREQ"
 #define EQ_MODULE "__EQ"
 #define NEQ_MODULE "__NEQ"
 

@@ -312,7 +312,7 @@ DFVariableImpl &DFConstant::operator<=(DFVariableImpl &rhs) {
                                            *newType);
   }
   helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::LESS_EQ, NodeData{});
+  helper.addNode(newVar, OpType::LESSEQ, NodeData{});
   helper.addChannel(this, newVar, 0, false);
   helper.addChannel(&rhs, newVar, 1, false);
   return *newVar;
@@ -343,7 +343,7 @@ DFVariableImpl &DFConstant::operator>(DFVariableImpl &rhs) {
                                            *newType);
   }
   helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::MORE, NodeData{});
+  helper.addNode(newVar, OpType::GREATER, NodeData{});
   helper.addChannel(this, newVar, 0, false);
   helper.addChannel(&rhs, newVar, 1, false);
   return *newVar;
@@ -374,7 +374,7 @@ DFVariableImpl &DFConstant::operator>=(DFVariableImpl &rhs) {
                                            *newType);
   }
   helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::MORE_EQ, NodeData{});
+  helper.addNode(newVar, OpType::GREATEREQ, NodeData{});
   helper.addChannel(this, newVar, 0, false);
   helper.addChannel(&rhs, newVar, 1, false);
   return *newVar;

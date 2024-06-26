@@ -207,6 +207,54 @@ void DFCIRBuilder::translate(dfcxx::Node node, dfcxx::Graph *graph,
       map[node] = newOp.getResult();
       break;
     }
+    case LESS: {
+      Node first = ins[0].source;
+      Node second = ins[1].source;
+      auto newOp = builder.create<mlir::dfcir::LessOp>(loc, conv[node.var],
+                                                       map[first], map[second]);
+      map[node] = newOp.getResult();
+      break;
+    }
+    case LESSEQ: {
+      Node first = ins[0].source;
+      Node second = ins[1].source;
+      auto newOp = builder.create<mlir::dfcir::LessEqOp>(loc, conv[node.var],
+                                                         map[first], map[second]);
+      map[node] = newOp.getResult();
+      break;
+    }
+    case GREATER: {
+      Node first = ins[0].source;
+      Node second = ins[1].source;
+      auto newOp = builder.create<mlir::dfcir::GreaterOp>(loc, conv[node.var],
+                                                          map[first], map[second]);
+      map[node] = newOp.getResult();
+      break;
+    }
+    case GREATEREQ: {
+      Node first = ins[0].source;
+      Node second = ins[1].source;
+      auto newOp = builder.create<mlir::dfcir::GreaterEqOp>(loc, conv[node.var],
+                                                            map[first], map[second]);
+      map[node] = newOp.getResult();
+      break;
+    }
+    case EQ: {
+      Node first = ins[0].source;
+      Node second = ins[1].source;
+      auto newOp = builder.create<mlir::dfcir::EqOp>(loc, conv[node.var],
+                                                     map[first], map[second]);
+      map[node] = newOp.getResult();
+      break;
+    }
+    case NEQ: {
+      Node first = ins[0].source;
+      Node second = ins[1].source;
+      auto newOp = builder.create<mlir::dfcir::NotEqOp>(loc, conv[node.var],
+                                                        map[first], map[second]);
+      map[node] = newOp.getResult();
+      break;
+    }
     case SHL: {
       Node first = ins[0].source;
       auto attrType = mlir::IntegerType::get(builder.getContext(), 32,

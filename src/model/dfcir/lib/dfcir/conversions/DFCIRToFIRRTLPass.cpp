@@ -641,11 +641,11 @@ DECL_SCHED_UNARY_ARITH_OP_CONV_PATTERN(Neg, NEG)   // NegOpConversionPattern.
 
 DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(Less, LESS) // LessOpConversionPattern.
 
-DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(LessEq, LESS_EQ) // LessEqOpConversionPattern.
+DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(LessEq, LESSEQ) // LessEqOpConversionPattern.
 
-DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(More, MORE) // MoreOpConversionPattern.
+DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(Greater, GREATER) // GreaterOpConversionPattern.
 
-DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(MoreEq, MORE_EQ) // MoreEqOpConversionPattern.
+DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(GreaterEq, GREATEREQ) // GreaterEqOpConversionPattern.
 
 DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(Eq, EQ) // EqOpConversionPattern.
 
@@ -833,8 +833,8 @@ public:
             NegOpConversionPattern,
             LessOpConversionPattern,
             LessEqOpConversionPattern,
-            MoreOpConversionPattern,
-            MoreEqOpConversionPattern,
+            GreaterOpConversionPattern,
+            GreaterEqOpConversionPattern,
             EqOpConversionPattern,
             NotEqOpConversionPattern,
             ShiftLeftOpConversionPattern,

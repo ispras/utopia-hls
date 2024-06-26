@@ -155,7 +155,7 @@ def LessEqOp : DFCIR_Op<"lessEq", []> {
   let results = (outs Variable:$res);
 }
 
-def MoreOp : DFCIR_Op<"more", []> {
+def GreaterOp : DFCIR_Op<"greater", []> {
   let arguments = (ins
     Variable:$first,
     Variable:$second
@@ -166,7 +166,7 @@ def MoreOp : DFCIR_Op<"more", []> {
   let results = (outs Variable:$res);
 }
 
-def MoreEqOp : DFCIR_Op<"moreEq", []> {
+def GreaterEqOp : DFCIR_Op<"greaterEq", []> {
   let arguments = (ins
     Variable:$first,
     Variable:$second

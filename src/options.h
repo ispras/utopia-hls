@@ -197,36 +197,36 @@ struct Options final : public AppOptions {
   }
   
   dfcxx::Ops convertFieldToEnum(const std::string field) {
-    if (field == "ADD_INT")       { return dfcxx::ADD_INT; }       else
-    if (field == "ADD_FLOAT")     { return dfcxx::ADD_FLOAT; }     else
-    if (field == "SUB_INT")       { return dfcxx::SUB_INT; }       else
-    if (field == "SUB_FLOAT")     { return dfcxx::SUB_FLOAT; }     else
-    if (field == "MUL_INT")       { return dfcxx::MUL_INT; }       else
-    if (field == "MUL_FLOAT")     { return dfcxx::MUL_FLOAT; }     else
-    if (field == "DIV_INT")       { return dfcxx::DIV_INT; }       else
-    if (field == "DIV_FLOAT")     { return dfcxx::DIV_FLOAT; }     else
-    if (field == "AND_INT")       { return dfcxx::AND_INT; }       else
-    if (field == "AND_FLOAT")     { return dfcxx::AND_FLOAT; }     else
-    if (field == "OR_INT")        { return dfcxx::OR_INT; }        else
-    if (field == "OR_FLOAT")      { return dfcxx::OR_FLOAT; }      else
-    if (field == "XOR_INT")       { return dfcxx::XOR_INT; }       else
-    if (field == "XOR_FLOAT")     { return dfcxx::XOR_FLOAT; }     else
-    if (field == "NOT_INT")       { return dfcxx::NOT_INT; }       else
-    if (field == "NOT_FLOAT")     { return dfcxx::NOT_FLOAT; }     else
-    if (field == "NEG_INT")       { return dfcxx::NEG_INT; }       else
-    if (field == "NEG_FLOAT")     { return dfcxx::NEG_FLOAT; }     else
-    if (field == "LESS_INT")      { return dfcxx::LESS_INT; }      else
-    if (field == "LESS_FLOAT")    { return dfcxx::LESS_FLOAT; }    else
-    if (field == "LESS_EQ_INT")   { return dfcxx::LESS_EQ_INT; }   else
-    if (field == "LESS_EQ_FLOAT") { return dfcxx::LESS_EQ_FLOAT; } else
-    if (field == "MORE_INT")      { return dfcxx::MORE_INT; }      else
-    if (field == "MORE_FLOAT")    { return dfcxx::MORE_FLOAT; }    else
-    if (field == "MORE_EQ_INT")   { return dfcxx::MORE_EQ_INT; }   else
-    if (field == "MORE_EQ_FLOAT") { return dfcxx::MORE_EQ_FLOAT; } else
-    if (field == "EQ_INT")        { return dfcxx::EQ_INT; }        else
-    if (field == "EQ_FLOAT")      { return dfcxx::EQ_FLOAT; }      else
-    if (field == "NEQ_INT")       { return dfcxx::NEQ_INT; }       else
-    if (field == "NEQ_FLOAT")     { return dfcxx::NEQ_FLOAT; }     else
+    if (field == "ADD_INT")         { return dfcxx::ADD_INT; }          else
+    if (field == "ADD_FLOAT")       { return dfcxx::ADD_FLOAT; }        else
+    if (field == "SUB_INT")         { return dfcxx::SUB_INT; }          else
+    if (field == "SUB_FLOAT")       { return dfcxx::SUB_FLOAT; }        else
+    if (field == "MUL_INT")         { return dfcxx::MUL_INT; }          else
+    if (field == "MUL_FLOAT")       { return dfcxx::MUL_FLOAT; }        else
+    if (field == "DIV_INT")         { return dfcxx::DIV_INT; }          else
+    if (field == "DIV_FLOAT")       { return dfcxx::DIV_FLOAT; }        else
+    if (field == "AND_INT")         { return dfcxx::AND_INT; }          else
+    if (field == "AND_FLOAT")       { return dfcxx::AND_FLOAT; }        else
+    if (field == "OR_INT")          { return dfcxx::OR_INT; }           else
+    if (field == "OR_FLOAT")        { return dfcxx::OR_FLOAT; }         else
+    if (field == "XOR_INT")         { return dfcxx::XOR_INT; }          else
+    if (field == "XOR_FLOAT")       { return dfcxx::XOR_FLOAT; }        else
+    if (field == "NOT_INT")         { return dfcxx::NOT_INT; }          else
+    if (field == "NOT_FLOAT")       { return dfcxx::NOT_FLOAT; }        else
+    if (field == "NEG_INT")         { return dfcxx::NEG_INT; }          else
+    if (field == "NEG_FLOAT")       { return dfcxx::NEG_FLOAT; }        else
+    if (field == "LESS_INT")        { return dfcxx::LESS_INT; }         else
+    if (field == "LESS_FLOAT")      { return dfcxx::LESS_FLOAT; }       else
+    if (field == "LESSEQ_INT")      { return dfcxx::LESSEQ_INT; }       else
+    if (field == "LESSEQ_FLOAT")    { return dfcxx::LESSEQ_FLOAT; }     else
+    if (field == "GREATER_INT")     { return dfcxx::GREATER_INT; }      else
+    if (field == "GREATER_FLOAT")   { return dfcxx::GREATER_FLOAT; }    else
+    if (field == "GREATEREQ_INT")   { return dfcxx::GREATEREQ_INT; }    else
+    if (field == "GREATEREQ_FLOAT") { return dfcxx::GREATEREQ_FLOAT; }  else
+    if (field == "EQ_INT")          { return dfcxx::EQ_INT; }           else
+    if (field == "EQ_FLOAT")        { return dfcxx::EQ_FLOAT; }         else
+    if (field == "NEQ_INT")         { return dfcxx::NEQ_INT; }          else
+    if (field == "NEQ_FLOAT")       { return dfcxx::NEQ_FLOAT; }        else
     return dfcxx::ADD_INT;
   }
 

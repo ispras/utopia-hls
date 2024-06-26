@@ -204,9 +204,9 @@ The list of all computational operations is provided below:
 * `NOT` - Logical inversion
 * `NEG` - Negation
 * `LESS` - "less" comparison
-* `LESS_EQ` - "less or equal" comparison
-* `MORE` - "more" comparison 
-* `MORE_EQ` - "more or equal" comparison
+* `LESSEQ` - "less or equal" comparison
+* `GREATER` - "greater" comparison 
+* `GREATEREQ` - "greater or equal" comparison
 * `EQ` - "equal" comparison
 * `NEQ` - "not equal" comparison
 
