@@ -38,6 +38,6 @@ Some of them:
  */
 ```
 
-13. All the includes should be listed in the following order: 1) project's own
+13. All includes should be listed in the following order: 1) project's own
 includes; 2) side library includes; 3) system includes. Includes should be
 sorted in alphabetical order at every category.
