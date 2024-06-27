@@ -22,10 +22,10 @@ public:
 
     const DFType &type = dfUInt(32);
     DFVariable x = io.input("x", type);
-    DFVariable x_minus = offset(x, -1);
-    DFVariable x_plus = offset(x, 1);
-    DFVariable sum1 = x_minus + x;
-    DFVariable sum2 = sum1 + x_plus;
+    DFVariable xMinus = offset(x, -1);
+    DFVariable xPlus = offset(x, 1);
+    DFVariable sum1 = xMinus + x;
+    DFVariable sum2 = sum1 + xPlus;
     DFVariable out = io.output("out", type);
     out.connect(sum2);
   }

@@ -10,7 +10,7 @@
 
 #include "gtest/gtest.h"
 
-TEST(DFCxx, MovingSum_add_int_2_ASAP) {
+TEST(DFCxx, MovingSumAddInt2Asap) {
   MovingSum kernel;
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 2}
@@ -18,7 +18,7 @@ TEST(DFCxx, MovingSum_add_int_2_ASAP) {
   EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::ASAP), true);
 }
 
-TEST(DFCxx, MovingSum_add_int_2_Linear) {
+TEST(DFCxx, MovingSumAddInt2Linear) {
   MovingSum kernel;
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 2}
@@ -26,7 +26,7 @@ TEST(DFCxx, MovingSum_add_int_2_Linear) {
   EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::Linear), true);
 }
 
-TEST(DFCxx, MovingSum_add_int_8_ASAP) {
+TEST(DFCxx, MovingSumAddInt8Asap) {
   MovingSum kernel;
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 8}
@@ -34,7 +34,7 @@ TEST(DFCxx, MovingSum_add_int_8_ASAP) {
   EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::ASAP), true);
 }
 
-TEST(DFCxx, MovingSum_add_int_8_Linear) {
+TEST(DFCxx, MovingSumAddInt8Linear) {
   MovingSum kernel;
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 8}

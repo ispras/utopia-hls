@@ -10,13 +10,15 @@ DFCxx provides a library of C++ classes (like `Stream`, `Scalar`, `Kernel`), all
 
 By inheriting from abstract class `dfcxx::Kernel` and implementing at least a single constructor, this new class represents the main unit of computation, <i>kernel</i>.
 
+The following code describes a kernel for the pipelined computation of a second-order polynomial ***x<sup>2</sup> + 2 * x*** for unsigned 32-bit integer values.
+
 ```cpp
 #include "dfcxx/DFCXX.h"
 
 class Polynomial2 : public dfcxx::Kernel {
 public:
   std::string_view getName() override {
-    return "Polynomial2";
+    return "Polynomial2"; // Explicitly set kernel's name.
   }
 
   ~Polynomial2() override = default;
@@ -25,13 +27,13 @@ public:
     using dfcxx::DFType;
     using dfcxx::DFVariable;
 
-    const DFType &type = dfUInt(32);
-    DFVariable x = io.input("x", type);
-    DFVariable square = x * x;
-    DFVariable result = square + x;
-    DFVariable test = result + x;
-    DFVariable out = io.output("out", type);
-    out.connect(test);
+    const DFType &type = dfUInt(32); // Unsigned 32-bit integer type declaration.
+    DFVariable x = io.input("x", type); // Input stream named "x" is declared.
+    DFVariable squared = x * x; // "x * x" is computed.
+    DFVariable squaredPlusX = squared + x; // "x" is added to "x * x".
+    DFVariable result = squaredPlusX + x; // "x" is added to "x * x + x".
+    DFVariable out = io.output("out", type); // Output stream named "out" is declared.
+    out.connect(result); // "out" stream is connected to the result of computation.
   }
 };
 ```
@@ -78,27 +80,53 @@ For both CIRCT and MLIR projects it is possible to download precompiled librarie
 
 Precompiled releases of CIRCT include the precompiled LLVM MLIR releases as well: visit the corresponding [page](https://github.com/llvm/circt/releases) to see all available releases.
 
-**Note that <ins>it's the libraries that are required</ins>, not the binary executables.**<br>
+Note that <ins>it's the libraries that are required</ins>, not the binary executables.<br>
 Look for the archives which have the following names:
 `circt-full-static-<ARCH>` or `circt-full-shared-<ARCH>` for static and dynamic libraries respectively.
 
-**Current releases have an inconsistency in their configuration files:**<br>
-after downloading the chosen release archive, extract the files inside and look for the file `lib/cmake/mlir/MLIRTargets.mlir`.
+<ins>Current releases have an inconsistency in their configuration files</ins>, requiring manual editing of configuration files - this process is described below:
 
-Open `MLIRTargets.mlir` with a text editor of your choice and look the `_NOT_FOUND_MESSAGE_targets` near the end of the file:<br>
+1. Downloading the chosen release archive and extract the files.
+2. Find the file `lib/cmake/mlir/MLIRTargets.mlir`and open it with a text editor of your choice.
+3. Look for the `_NOT_FOUND_MESSAGE_targets` near the end of the file:<br>
 for 1.72.0, it's line **3012** for `circt-full-static-linux-x64`-archive and line **3008** for `circt-full-shared-linux-x64.tar`-archive.
+4. Remove all the `"CIRCT*"`-entries from the corresponding `foreach`-statement and save the file.
 
-Remove all the `"CIRCT*"`-entries from the corresponding `foreach`-statement and save the file.
+The `foreach`-statement before editing the file:
+
+```
+# Make sure the targets which have been exported in some other
+# export set exist.
+unset(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE_targets)
+foreach(_target "LLVMSupport" "LLVMCore" "LLVMMC" "LLVMTarget" "LLVMAsmParser" "LLVMBinaryFormat" "LLVMBitReader" "LLVMBitWriter" "LLVMFrontendOpenMP" "LLVMTransformUtils" "LLVMTargetParser" "LLVMIRReader" "LLVMipo" "LLVMLinker" "LLVMPasses" "LLVMMCParser" "LLVMLineEditor" "LLVMTableGen" "LLVMAnalysis" "LLVMCoroutines" "LLVMAggressiveInstCombine" "LLVMInstCombine" "LLVMScalarOpts" "LLVMVectorize" "LLVMExecutionEngine" "LLVMObject" "LLVMOrcJIT" "LLVMJITLink" "LLVMX86CodeGen" "LLVMX86Desc" "LLVMX86Info" "LLVMX86AsmParser" "LLVMX86Disassembler" "CIRCTAffineToLoopSchedule" "CIRCTArcToLLVM" "CIRCTCalyxToFSM" "CIRCTCalyxToHW" "CIRCTCalyxNative" "CIRCTCombToArith" "CIRCTCombToLLVM" "CIRCTCombToSMT" "CIRCTConvertToArcs" "CIRCTDCToHW" "CIRCTExportChiselInterface" "CIRCTExportVerilog" "CIRCTFIRRTLToHW" "CIRCTFSMToSV" "CIRCTHandshakeToDC" "CIRCTHandshakeToHW" "CIRCTHWArithToHW" "CIRCTHWToLLHD" "CIRCTHWToLLVM" "CIRCTHWToBTOR2" "CIRCTHWToSMT" "CIRCTHWToSV" "CIRCTHWToSystemC" "CIRCTLLHDToLLVM" "CIRCTLoopScheduleToCalyx" "CIRCTMooreToCore" "CIRCTPipelineToHW" "CIRCTSCFToCalyx" "CIRCTSeqToSV" "CIRCTSimToSV" "CIRCTCFToHandshake" "CIRCTVerifToSMT" "CIRCTVerifToSV" "CIRCTExportFIRRTL" "CIRCTComb" "CIRCTCombTransforms" "CIRCTDebug" "CIRCTESI" "CIRCTFIRRTL" "CIRCTImportFIRFile" "CIRCTMSFT" "CIRCTMSFTTransforms" "CIRCTHW" "CIRCTLLHD" "CIRCTMoore" "CIRCTOM" "CIRCTOMEvaluator" "CIRCTSeq" "CIRCTSeqTransforms" "CIRCTSV" "CIRCTSVTransforms" "CIRCTFSM" "CIRCTFSMTransforms" "CIRCTHandshake" "CIRCTHandshakeTransforms" "CIRCTHWArith" "CIRCTVerif" "CIRCTLTL" "CIRCTEmit" "CIRCTFirtool" )
+  if(NOT TARGET "${_target}" )
+    set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE_targets "${${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE_targets} ${_target}")
+  endif()
+endforeach()
+```
+
+The `foreach`-statement after editing the file:
+
+```
+# Make sure the targets which have been exported in some other
+# export set exist.
+unset(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE_targets)
+foreach(_target "LLVMSupport" "LLVMCore" "LLVMMC" "LLVMTarget" "LLVMAsmParser" "LLVMBinaryFormat" "LLVMBitReader" "LLVMBitWriter" "LLVMFrontendOpenMP" "LLVMTransformUtils" "LLVMTargetParser" "LLVMIRReader" "LLVMipo" "LLVMLinker" "LLVMPasses" "LLVMMCParser" "LLVMLineEditor" "LLVMTableGen" "LLVMAnalysis" "LLVMCoroutines" "LLVMAggressiveInstCombine" "LLVMInstCombine" "LLVMScalarOpts" "LLVMVectorize" "LLVMExecutionEngine" "LLVMObject" "LLVMOrcJIT" "LLVMJITLink" "LLVMX86CodeGen" "LLVMX86Desc" "LLVMX86Info" "LLVMX86AsmParser" "LLVMX86Disassembler"  )
+  if(NOT TARGET "${_target}" )
+    set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE_targets "${${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE_targets} ${_target}")
+  endif()
+endforeach()
+```
 
 That's it: both CIRCT and LLVM can be used now.
 
 ### Compiling CIRCT & LLVM from Scratch
 
-MLIR is included in CIRCT in the form of a Git submodule, so the compilation process starts with cloning the CIRCT repository (with the selected version `<VERSION>`) into some directory `CIRCT_DIR`.
+MLIR is included in CIRCT in the form of a Git submodule, so the compilation process starts with cloning the CIRCT repository into some directory `CIRCT_DIR`.
 
 ```bash
 cd <WORKDIR>
-git clone --depth 1 --branch firtool-<VERSION> https://github.com/llvm/circt/ <CIRCT_DIR>
+git clone --depth 1 --branch firtool-1.72.0 https://github.com/llvm/circt/ <CIRCT_DIR>
 cd <CIRCT_DIR>
 git submodule init
 git submodule update
@@ -197,7 +225,7 @@ umain hls --config ~/utopia-user/config.json --out ~/outFile -a
 
 ### JSON Configuration
 
-Latency configuration for each computational operation used in a DFCxx kernel is provided via a JSON file.
+Latency configuration for each computational operation (number of pipeline stages) used in a DFCxx kernel is provided via a JSON file.
 
 Currently each operation has two specifications: for integer values (`INT`) and floating point (`FLOAT`) values. 
 
@@ -221,7 +249,7 @@ The list of all computational operations is provided below:
 
 JSON configuration structure states that for every operation with a specific configuration (each pair is represented as a separate JSON-field with `_` between pair's elements) present in the kernel, operation's latency will be provided. 
 
-Here is an example of a JSON configuration file:
+Here is an example of a JSON configuration file, containing latencies for multiplication, addition and subtraction of integer numbers:
 
 ```json
 {

@@ -10,7 +10,7 @@
 
 #include "gtest/gtest.h"
 
-TEST(DFCxx, Scalar3_add_int_2_mul_int_3_ASAP) {
+TEST(DFCxx, Scalar3AddInt2MulInt3Asap) {
   Scalar3 kernel;
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 2},
@@ -19,7 +19,7 @@ TEST(DFCxx, Scalar3_add_int_2_mul_int_3_ASAP) {
   EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::ASAP), true);
 }
 
-TEST(DFCxx, Scalar_add_int_2_mul_int_3_Linear) {
+TEST(DFCxx, Scalar3AddInt2MulInt3Linear) {
   Scalar3 kernel;
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 2},

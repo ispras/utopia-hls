@@ -22,10 +22,10 @@ public:
 
     const DFType &type = dfUInt(32);
     DFVariable x = io.input("x", type);
-    DFVariable square = x * x;
-    DFVariable result = square + x;
-    DFVariable test = result + x;
+    DFVariable squared = x * x;
+    DFVariable squaredPlusX = squared + x;
+    DFVariable result = squaredPlusX + x;
     DFVariable out = io.output("out", type);
-    out.connect(test);
+    out.connect(result);
   }
 };

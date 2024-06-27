@@ -10,7 +10,7 @@
 
 #include "gtest/gtest.h"
 
-TEST(DFCxx, IDCT_add_int_1_mul_int_3_sub_int_1_ASAP) {
+TEST(DFCxx, IdctAsap) {
   IDCT kernel;
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 1},
@@ -22,7 +22,7 @@ TEST(DFCxx, IDCT_add_int_1_mul_int_3_sub_int_1_ASAP) {
 
 // Issue #7 (https://github.com/ispras/utopia-hls/issues/7).
 
-// TEST(DFCxx, IDCT_add_int_1_mul_int_3_sub_int_1_Linear) {
+// TEST(DFCxx, IdctLinear) {
 //   IDCT kernel;
 //   DFLatencyConfig config = {
 //           {dfcxx::ADD_INT, 1},

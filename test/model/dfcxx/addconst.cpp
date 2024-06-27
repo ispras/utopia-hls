@@ -10,7 +10,7 @@
 
 #include "gtest/gtest.h"
 
-TEST(DFCxx, AddConst_add_int_2_ASAP) {
+TEST(DFCxx, AddConstAddInt2Asap) {
   AddConst kernel;
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 2}
@@ -18,7 +18,7 @@ TEST(DFCxx, AddConst_add_int_2_ASAP) {
   EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::ASAP), true);
 }
 
-TEST(DFCxx, AddConst_add_int_2_Linear) {
+TEST(DFCxx, AddConstAddInt2Linear) {
   AddConst kernel;
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 2}

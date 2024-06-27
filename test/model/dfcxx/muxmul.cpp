@@ -10,7 +10,7 @@
 
 #include "gtest/gtest.h"
 
-TEST(DFCxx, MuxMul_add_int_2_mul_int_3_ASAP) {
+TEST(DFCxx, MuxMulAddInt2MulInt3Asap) {
   MuxMul kernel;
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 2},
@@ -19,7 +19,7 @@ TEST(DFCxx, MuxMul_add_int_2_mul_int_3_ASAP) {
   EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::ASAP), true);
 }
 
-TEST(DFCxx, MuxMul_add_int_2_mul_int_3_Linear) {
+TEST(DFCxx, MuxMulAddInt2MulInt3Linear) {
   MuxMul kernel;
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 2},

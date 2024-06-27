@@ -10,7 +10,7 @@
 
 #include "gtest/gtest.h"
 
-TEST(DFCxx, Polynomial2_add_int_2_mul_int_3_ASAP) {
+TEST(DFCxx, Polynomial2AddInt2MulInt3Asap) {
   Polynomial2 kernel;
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 2},
@@ -19,7 +19,7 @@ TEST(DFCxx, Polynomial2_add_int_2_mul_int_3_ASAP) {
   EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::ASAP), true);
 }
 
-TEST(DFCxx, Polynomial2_add_int_2_mul_int_3_Linear) {
+TEST(DFCxx, Polynomial2AddInt2MulInt3Linear) {
   Polynomial2 kernel;
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 2},
@@ -28,7 +28,7 @@ TEST(DFCxx, Polynomial2_add_int_2_mul_int_3_Linear) {
   EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::Linear), true);
 }
 
-TEST(DFCxx, Polynomial2_add_int_8_mul_int_15_ASAP) {
+TEST(DFCxx, Polynomial2AddInt8MulInt15Asap) {
   Polynomial2 kernel;
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 8},
@@ -37,7 +37,7 @@ TEST(DFCxx, Polynomial2_add_int_8_mul_int_15_ASAP) {
   EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::ASAP), true);
 }
 
-TEST(DFCxx, Polynomial2_add_int_8_mul_int_15_Linear) {
+TEST(DFCxx, Polynomial2AddInt8MulInt15Linear) {
   Polynomial2 kernel;
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 8},
