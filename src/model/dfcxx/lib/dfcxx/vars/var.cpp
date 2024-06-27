@@ -14,10 +14,9 @@
 namespace dfcxx {
 
 DFVariableImpl::DFVariableImpl(const std::string &name, IODirection direction,
-                               GraphHelper &helper) :
-        name(name),
-        direction(direction),
-        helper(helper) {}
+                               GraphHelper &helper) : name(name),
+                                                      direction(direction),
+                                                      helper(helper) {}
 
 std::string_view DFVariableImpl::getName() const {
   return name;

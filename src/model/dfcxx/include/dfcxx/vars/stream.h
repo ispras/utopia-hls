@@ -19,11 +19,12 @@ class DFCIRBuilder;
 class DFStream : DFVariableImpl {
   friend VarBuilder;
   friend DFCIRBuilder;
+
 private:
   DFTypeImpl &type;
 
-  DFStream(const std::string &name, IODirection direction, GraphHelper &helper,
-           DFTypeImpl &type);
+  DFStream(const std::string &name, IODirection direction,
+           GraphHelper &helper, DFTypeImpl &type);
 
 public:
   ~DFStream() override = default;

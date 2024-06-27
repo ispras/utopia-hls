@@ -28,7 +28,7 @@ namespace mlir::dfcir {
 #include "dfcir/conversions/DFCIRPasses.h.inc"
 
 class DFCIRLinearSchedulerPass
-  : public impl::DFCIRLinearSchedulerPassBase<DFCIRLinearSchedulerPass> {
+    : public impl::DFCIRLinearSchedulerPassBase<DFCIRLinearSchedulerPass> {
   using Node = utils::Node;
   using Channel = utils::Channel;
   using Graph = utils::Graph;
@@ -37,7 +37,6 @@ class DFCIRLinearSchedulerPass
   using Status = utils::lp::Status;
 
 private:
-
   void synchronizeInput(const Node &node) {
     int *var = new int[1]{nodeMap[node]};
     double *coeff = new double[1]{1.0};
@@ -52,7 +51,7 @@ private:
 
     // t_next >= t_prev + prev_latency + next_prev_offset
     problem.addConstraint(2, vars, coeffs, OpType::GreaterOrEqual,
-                          (int(chan.source.latency) + chan.offset));
+                          int(chan.source.latency) + chan.offset);
   }
 
   int addDeltaConstraint(const Channel &chan) {
@@ -76,12 +75,10 @@ private:
 
     // buf_next_prev = t_next - (t_prev + prev_latency + next_prev_offset)
     problem.addConstraint(3, vars, coeffs, OpType::Equal,
-                           -1.0 * (int(chan.source.latency) + chan.offset));
+                          -1.0 * (int(chan.source.latency) + chan.offset));
 
     // buf_next_prev >= 0
-    problem.addConstraint(1,
-                          new int[1]{bufID},
-                          new double[1]{1.0},
+    problem.addConstraint(1, new int[1]{bufID}, new double[1]{1.0},
                           OpType::GreaterOrEqual, 0);
   }
 
@@ -98,6 +95,7 @@ private:
         synchronizeInput(node);
       }
     }
+
     int *deltaIDs = new int[chanCount];
     double *deltaCoeffs = new double[chanCount];
     int curr_id = 0;
@@ -140,11 +138,8 @@ private:
     return buffers;
   }
 
-
 public:
-
   void runOnOperation() override {
-
     // Convert kernel into graph.
     Graph graph(llvm::dyn_cast<ModuleOp>(getOperation()));
 

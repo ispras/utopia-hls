@@ -22,6 +22,7 @@ class TypeBuilder;
 
 class FixedType : DFTypeImpl {
   friend TypeBuilder;
+
 private:
   SignMode mode;
   uint8_t intBits;

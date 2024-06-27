@@ -27,8 +27,8 @@ ParseResult ScalarInputOp::parse(OpAsmParser &parser,
   if (parser.parseGreater() || parser.parseLParen()) { return failure(); }
 
   if (parser.parseCustomAttributeWithFallback(
-          nameAttr,
-          parser.getBuilder().getType<NoneType>())) { return failure(); }
+      nameAttr,
+      parser.getBuilder().getType<NoneType>())) { return failure(); }
   if (nameAttr) result.attributes.append("name", nameAttr);
 
   if (parser.parseRParen()) { return failure(); }
@@ -73,8 +73,8 @@ ParseResult ScalarOutputOp::parse(OpAsmParser &parser,
   if (parser.parseGreater() || parser.parseLParen()) { return failure(); }
 
   if (parser.parseCustomAttributeWithFallback(
-          nameAttr,
-          parser.getBuilder().getType<NoneType>())) { return failure(); }
+      nameAttr,
+      parser.getBuilder().getType<NoneType>())) { return failure(); }
   if (nameAttr) result.attributes.append("name", nameAttr);
   
   if (parser.parseRParen()) { return failure(); }
@@ -147,8 +147,8 @@ ParseResult InputOp::parse(OpAsmParser &parser, OperationState &result) {
   if (parser.parseGreater() || parser.parseLParen()) { return failure(); }
 
   if (parser.parseCustomAttributeWithFallback(
-          nameAttr,
-          parser.getBuilder().getType<NoneType>())) { return failure(); }
+      nameAttr,
+      parser.getBuilder().getType<NoneType>())) { return failure(); }
   if (nameAttr) result.attributes.append("name", nameAttr);
   
   if (succeeded(parser.parseOptionalComma())) {
@@ -221,8 +221,9 @@ ParseResult OutputOp::parse(OpAsmParser &parser, OperationState &result) {
 
   if (parser.parseGreater() || parser.parseLParen()) { return failure(); }
 
-  if (parser.parseCustomAttributeWithFallback(nameAttr,
-          parser.getBuilder().getType<NoneType>())) { return failure(); }
+  if (parser.parseCustomAttributeWithFallback(
+      nameAttr,
+      parser.getBuilder().getType<NoneType>())) { return failure(); }
   if (nameAttr) result.attributes.append("name", nameAttr);
 
   if (succeeded(parser.parseOptionalComma())) {

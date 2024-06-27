@@ -12,6 +12,7 @@
 include "mlir/IR/OpBase.td"
 
 def NamedOpVal : OpInterface<"NamedOpVal"> {
+
   let cppNamespace = "mlir::dfcir";
 
   let methods = [
@@ -19,7 +20,6 @@ def NamedOpVal : OpInterface<"NamedOpVal"> {
     "llvm::StringRef", "getValueName", (ins),
     /*methodBody=*/[{ return $_op.getName(); }]>
   ];
-
 }
 
 #endif // DFCIR_Op_Interfaces

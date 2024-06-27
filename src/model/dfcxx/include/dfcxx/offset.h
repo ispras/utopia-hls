@@ -19,6 +19,7 @@ class Kernel;
 
 class Offset {
   friend Kernel;
+
 private:
   Graph &graph;
   GraphHelper helper;

@@ -29,6 +29,7 @@ class DFCIRBuilder;
 
 class Kernel {
   friend DFCIRBuilder;
+
 protected:
   IO io;
   Offset offset;

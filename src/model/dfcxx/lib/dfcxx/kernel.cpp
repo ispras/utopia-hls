@@ -47,7 +47,8 @@ bool Kernel::compile(const DFLatencyConfig &config, const Scheduler &sched) {
   return DFCIRConverter(config).convertAndPrint(compiled, out, sched);
 }
 
-bool Kernel::compile(const DFLatencyConfig &config, const std::string &filePath,
+bool Kernel::compile(const DFLatencyConfig &config,
+                     const std::string &filePath,
                      const Scheduler &sched) {
   if (filePath.empty()) { return compile(config, sched); }
   DFCIRBuilder builder(config);
@@ -60,3 +61,4 @@ bool Kernel::compile(const DFLatencyConfig &config, const std::string &filePath,
 }
 
 } // namespace dfcxx
+

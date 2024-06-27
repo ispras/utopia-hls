@@ -15,7 +15,6 @@
 
 #include <unordered_set>
 
-
 namespace mlir::dfcir::utils::lp {
 
 // Values from lp_lib.h .
@@ -72,8 +71,8 @@ public:
   OpType op;
   double rhs;
 
-  LPConstraint(int id, size_t count, int *vars, double *coeffs, OpType op,
-               double rhs);
+  LPConstraint(int id, size_t count, int *vars,
+               double *coeffs, OpType op, double rhs);
 
   LPConstraint(const LPConstraint &other);
 

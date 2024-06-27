@@ -7,8 +7,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "dfcxx/converter.h"
-#include "mlir/Pass/PassManager.h"
+
 #include "circt/Conversion/Passes.h"
+#include "mlir/Pass/PassManager.h"
 
 namespace dfcxx {
 

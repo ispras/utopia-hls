@@ -23,8 +23,8 @@ class DFScalar : DFVariableImpl {
 private:
   DFTypeImpl &type;
 
-  DFScalar(const std::string &name, IODirection direction, GraphHelper &helper,
-           DFTypeImpl &type);
+  DFScalar(const std::string &name, IODirection direction,
+           GraphHelper &helper, DFTypeImpl &type);
 
 public:
   ~DFScalar() override = default;

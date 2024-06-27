@@ -12,12 +12,14 @@
 namespace dfcxx {
 
 Control::Control(Graph &graph, TypeBuilder &typeBuilder, VarBuilder &varBuilder,
-                 KernStorage &storage) : graph(graph), helper(graph, typeBuilder,
-                                                              varBuilder,
-                                                              storage),
-                 varBuilder(varBuilder), storage(storage) {}
+                 KernStorage &storage) : graph(graph),
+                                         helper(graph, typeBuilder,
+                                                varBuilder, storage),
+                                         varBuilder(varBuilder),
+                                         storage(storage) {}
 
-DFVariable Control::mux(DFVariable ctrl, std::initializer_list<DFVariable> args) {
+DFVariable Control::mux(DFVariable ctrl,
+                        std::initializer_list<DFVariable> args) {
   const DFVariable *argsData = args.begin();
   unsigned argsCount = args.size();
   DFVariable var = helper.varBuilder.buildMuxCopy(argsData[0], helper);

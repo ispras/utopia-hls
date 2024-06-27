@@ -11,7 +11,7 @@
 namespace dfcxx {
 
 DFTypeImpl *TypeBuilder::buildFixed(dfcxx::SignMode mode, uint8_t intBits,
-                                uint8_t fracBits) {
+                                    uint8_t fracBits) {
   return new FixedType(mode, intBits, fracBits);
 }
 
@@ -26,10 +26,14 @@ DFTypeImpl *TypeBuilder::buildFloat(uint8_t expBits, uint8_t fracBits) {
 DFTypeImpl *TypeBuilder::buildShiftedType(DFTypeImpl &type, int8_t shift) {
   if (type.isFixed()) {
     FixedType &casted = (FixedType &) (type);
-    return buildFixed(casted.getSign(), uint8_t(int16_t(casted.getIntBits()) + shift), casted.getFracBits());
+    return buildFixed(
+        casted.getSign(),
+        uint8_t(int16_t(casted.getIntBits()) + shift), casted.getFracBits());
   } else {
     FloatType &casted = (FloatType &) (type);
-    return buildFloat(casted.getExpBits(), uint8_t(uint16_t(casted.getFracBits()) + shift));
+    return buildFloat(
+        casted.getExpBits(),
+        uint8_t(uint16_t(casted.getFracBits()) + shift));
   }
 }
 

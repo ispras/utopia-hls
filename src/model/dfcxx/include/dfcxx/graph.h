@@ -46,6 +46,7 @@ class Graph {
   friend Constant;
   friend Control;
   friend DFCIRBuilder;
+
 private:
   std::unordered_set<Node> nodes;
   std::unordered_set<Node> startNodes;
@@ -61,11 +62,11 @@ private:
 
   void addNode(const DFVariable &var, OpType type, NodeData data);
 
-  void addChannel(DFVariableImpl *source, DFVariableImpl *target, unsigned opInd,
-                  bool connect);
+  void addChannel(DFVariableImpl *source, DFVariableImpl *target,
+                  unsigned opInd, bool connect);
 
-  void addChannel(const DFVariable &source, const DFVariable &target, unsigned opInd,
-                  bool connect);
+  void addChannel(const DFVariable &source, const DFVariable &target,
+                  unsigned opInd, bool connect);
 };
 
 class GraphHelper {
@@ -73,11 +74,12 @@ class GraphHelper {
   friend Offset;
   friend Constant;
   friend Control;
+
 private:
   Graph &graph;
 
-  GraphHelper(Graph &graph, TypeBuilder &typeBuilder, VarBuilder &varBuilder,
-              KernStorage &storage);
+  GraphHelper(Graph &graph, TypeBuilder &typeBuilder,
+              VarBuilder &varBuilder, KernStorage &storage);
 
 public:
   TypeBuilder &typeBuilder;
@@ -88,11 +90,11 @@ public:
 
   void addNode(const DFVariable &var, OpType type, NodeData data);
 
-  void addChannel(DFVariableImpl *source, DFVariableImpl *target, unsigned opInd,
-                  bool connect);
+  void addChannel(DFVariableImpl *source, DFVariableImpl *target,
+                  unsigned opInd, bool connect);
 
-  void addChannel(const DFVariable &source, const DFVariable &target, unsigned opInd,
-                  bool connect);
+  void addChannel(const DFVariable &source, const DFVariable &target,
+                  unsigned opInd, bool connect);
 };
 
 } // namespace dfcxx

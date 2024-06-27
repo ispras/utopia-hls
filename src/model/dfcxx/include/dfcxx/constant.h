@@ -19,14 +19,15 @@ class Kernel;
 
 class Constant {
   friend Kernel;
+
 private:
   Graph &graph;
   GraphHelper helper;
   VarBuilder &varBuilder;
   KernStorage &storage;
 
-  Constant(Graph &graph, TypeBuilder &typeBuilder, VarBuilder &varBuilder,
-           KernStorage &storage);
+  Constant(Graph &graph, TypeBuilder &typeBuilder,
+           VarBuilder &varBuilder, KernStorage &storage);
 
 public:
   DFVariable var(const DFType &type, int64_t value);

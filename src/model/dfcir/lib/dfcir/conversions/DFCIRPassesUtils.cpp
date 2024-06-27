@@ -16,30 +16,30 @@ inline FExtModuleOp createBufferModule(OpBuilder &builder,
                                        llvm::StringRef name, Type type,
                                        Location loc, unsigned stages) {
   SmallVector<circt::firrtl::PortInfo> ports = {
-          circt::firrtl::PortInfo(
-                  mlir::StringAttr::get(builder.getContext(), "res1"),
-                  type,
-                  circt::firrtl::Direction::Out),
-          circt::firrtl::PortInfo(
-                  mlir::StringAttr::get(builder.getContext(), "arg1"),
-                  type,
-                  circt::firrtl::Direction::In),
-          circt::firrtl::PortInfo(
-                  mlir::StringAttr::get(builder.getContext(), "clk"),
-                  circt::firrtl::ClockType::get(builder.getContext()),
-                  circt::firrtl::Direction::In)
+    circt::firrtl::PortInfo(
+        mlir::StringAttr::get(builder.getContext(), "res1"),
+        type,
+        circt::firrtl::Direction::Out),
+    circt::firrtl::PortInfo(
+        mlir::StringAttr::get(builder.getContext(), "arg1"),
+        type,
+        circt::firrtl::Direction::In),
+    circt::firrtl::PortInfo(
+        mlir::StringAttr::get(builder.getContext(), "clk"),
+        circt::firrtl::ClockType::get(builder.getContext()),
+        circt::firrtl::Direction::In)
   };
-  auto typeWidth = circt::firrtl::getBitWidth(
-          llvm::dyn_cast<FIRRTLBaseType>(type));
+  auto typeWidth =
+      circt::firrtl::getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(type));
   assert(typeWidth.has_value());
   return builder.create<FExtModuleOp>(
-          loc,
-          mlir::StringAttr::get(builder.getContext(), name),
-          circt::firrtl::ConventionAttr::get(builder.getContext(),
-                                             Convention::Internal),
-          ports,
-          StringRef(name),
-          mlir::ArrayAttr());
+      loc,
+      mlir::StringAttr::get(builder.getContext(), name),
+      circt::firrtl::ConventionAttr::get(builder.getContext(),
+                                         Convention::Internal),
+      ports,
+      StringRef(name),
+      mlir::ArrayAttr());
 }
 
 inline FExtModuleOp createBufferModuleWithTypeName(OpBuilder &builder,
@@ -69,16 +69,17 @@ FExtModuleOp findOrCreateBufferModule(OpBuilder &builder, Type type,
   assert(width.has_value());
   nameStream << "_IN_" << *width << "_OUT_" << *width << "_" << stages;
 
-  for (auto op = block->op_begin<FExtModuleOp>();
-       op != block->op_end<FExtModuleOp>(); ++op) {
+  auto begin = block->op_begin<FExtModuleOp>();
+  auto end = block->op_end<FExtModuleOp>();
+  for (auto op = begin; op != end; ++op) {
     if ((*op).getModuleName() == name) {
       return *op;
     }
   }
   auto save = builder.saveInsertionPoint();
   builder.setInsertionPointToStart(block);
-  FExtModuleOp result = createBufferModuleWithTypeName(builder, type, loc,
-                                                       stages);
+  FExtModuleOp result = createBufferModuleWithTypeName(builder, type,
+                                                       loc, stages);
   builder.restoreInsertionPoint(save);
   return result;
 }
@@ -123,7 +124,6 @@ Value getBlockArgumentFromOpBlock(Operation *op, unsigned ind) {
 }
 
 Value getClockVar(Block *block) {
-
   Value arg = getBlockArgument(block, block->getNumArguments() - 1);
   if (arg.getType().isa<ClockType>()) {
     return arg;
@@ -137,21 +137,24 @@ Value getClockVarFromOpBlock(Operation *op) {
 
 ConnectOp createConnect(OpBuilder &builder, Value destination,
                         Value source, int offset) {
-  auto connect = builder.create<ConnectOp>(builder.getUnknownLoc(), destination,
-                                           source);
+  auto connect = builder.create<ConnectOp>(builder.getUnknownLoc(),
+                                           destination, source);
   connect->setAttr(CONNECT_OFFSET_ATTR, builder.getI32IntegerAttr(offset));
   return connect;
 }
 
 int getConnectOffset(ConnectOp connect) {
-  return (connect && connect->hasAttr(CONNECT_OFFSET_ATTR)) ? connect->getAttr(
-          CONNECT_OFFSET_ATTR).cast<IntegerAttr>().getInt() : 0;
+  return (connect && connect->hasAttr(CONNECT_OFFSET_ATTR))
+      ? connect->getAttr(CONNECT_OFFSET_ATTR).cast<IntegerAttr>().getInt()
+      : 0;
 }
 
 int setConnectOffset(ConnectOp connect, int offset) {
-  connect->setAttr(CONNECT_OFFSET_ATTR, mlir::IntegerAttr::get(
-          mlir::IntegerType::get(connect.getContext(), 32,
-                                 mlir::IntegerType::Signed), offset));
+  connect->setAttr(
+      CONNECT_OFFSET_ATTR,
+      mlir::IntegerAttr::get(mlir::IntegerType::get(connect.getContext(), 32,
+                                                    mlir::IntegerType::Signed),
+                             offset));
   return getConnectOffset(connect);
 }
 
@@ -159,9 +162,9 @@ int setConnectOffset(ConnectOp connect, int offset) {
 
 namespace mlir::dfcir::utils {
 
-Node::Node(Operation *op, unsigned latency, bool isConst,
-           long argInd) : op(op), latency(latency), isConst(isConst),
-                          argInd(argInd) {}
+Node::Node(Operation *op, unsigned latency,
+           bool isConst, long argInd) : op(op), latency(latency),
+                                        isConst(isConst), argInd(argInd) {}
 
 Node::Node() : Node(nullptr) {}
 
@@ -170,13 +173,14 @@ bool Node::operator==(const Node &node) const {
          this->isConst == node.isConst && this->argInd == node.argInd;
 }
 
-Channel::Channel(Node source, Node target, Value val, unsigned valInd,
-                 Operation *connectOp, int offset)
-        : source(source), target(target),
-          val(val), valInd(valInd), connectOp(connectOp), offset(offset) {}
+Channel::Channel(Node source, Node target, Value val,
+                 unsigned valInd, Operation *connectOp,
+                 int offset) : source(source), target(target),
+                               val(val), valInd(valInd), 
+                               connectOp(connectOp), offset(offset) {}
 
-Channel::Channel()
-        : source(), target(), val(), valInd(0), connectOp(nullptr), offset(0) {}
+Channel::Channel() : source(), target(), val(),
+                     valInd(0), connectOp(nullptr), offset(0) {}
 
 bool Channel::operator==(const Channel &channel) const {
   return this->source == channel.source && this->target == channel.target &&
@@ -194,14 +198,13 @@ auto Graph::findNode(const std::pair<Value, Operation *> &connectInfo) {
   bool isArg = connectInfo.first.isa<BlockArgument>();
   const Value &val = connectInfo.first;
   return std::find_if(nodes.begin(), nodes.end(),
-                      [&](const Node &n) {
-                        if (isArg) {
-                          return n.argInd ==
-                                 val.cast<BlockArgument>().getArgNumber();
-                        } else {
-                          return n.op == val.getDefiningOp();
-                        }
-                      });
+      [&](const Node &n) {
+        if (isArg) {
+          return n.argInd == val.cast<BlockArgument>().getArgNumber();
+        } else {
+          return n.op == val.getDefiningOp();
+        }
+      });
 }
 
 Graph::Graph(FModuleOp module) : Graph() {
@@ -232,7 +235,6 @@ Graph::Graph(FModuleOp module) : Graph() {
   }
 
   for (Operation &op: module.getBodyBlock()->getOperations()) {
-
     if (auto constOp = llvm::dyn_cast<ConstantOp>(&op)) {
       Node newNode(constOp, 0, true);
       nodes.insert(newNode);
@@ -241,7 +243,8 @@ Graph::Graph(FModuleOp module) : Graph() {
       Node newNode(muxOp);
       nodes.insert(newNode);
       for (size_t index = 0, count = muxOp.getOperands().size();
-           index < count; ++index) {
+           index < count;
+           ++index) {
         auto operand = muxOp.getOperand(index);
         if (!llvm::isa<ClockType>(operand.getType())) {
           auto connectInfo = unrollConnectChain(operand);
@@ -249,22 +252,23 @@ Graph::Graph(FModuleOp module) : Graph() {
           auto found = findNode(connectInfo);
 
           if (found == nodes.end()) continue;
-          Channel newChan(*found, newNode, operand, index, connectInfo.second,
-                          0);
+          Channel newChan(*found, newNode, operand,
+                          index, connectInfo.second, 0);
           outputs[*found].insert(newChan);
           inputs[newNode].insert(newChan);
         }
       }
     } else if (auto instanceOp = llvm::dyn_cast<InstanceOp>(&op)) {
-
       auto instModule = instanceOp.getReferencedModule(instanceGraph);
-      unsigned latency = instModule->getAttr(
-              INSTANCE_LATENCY_ATTR).cast<IntegerAttr>().getUInt();
+      unsigned latency =
+          instModule->getAttr(INSTANCE_LATENCY_ATTR)
+              .cast<IntegerAttr>().getUInt();
       Node newNode(instanceOp, latency);
       nodes.insert(newNode);
       auto directions = instanceOp.getPortDirections();
       for (size_t index = 0, count = instanceOp.getResults().size();
-           index < count; ++index) {
+           index < count;
+           ++index) {
         auto operand = instanceOp.getResult(index);
         if (!directions[index] && !(operand.getType().isa<ClockType>())) {
           auto connectInfo = unrollConnectChain(operand);
@@ -272,9 +276,10 @@ Graph::Graph(FModuleOp module) : Graph() {
           auto found = findNode(connectInfo);
 
           if (found == nodes.end()) continue;
-          Channel newChan(*found, newNode, operand, index, connectInfo.second,
-                          getConnectOffset(
-                                  llvm::cast<ConnectOp>(connectInfo.second)));
+          int connectOffset =
+              getConnectOffset(llvm::cast<ConnectOp>(connectInfo.second));
+          Channel newChan(*found, newNode, operand, index, 
+                          connectInfo.second, connectOffset);
           outputs[*found].insert(newChan);
           inputs[newNode].insert(newChan);
         }
@@ -286,8 +291,8 @@ Graph::Graph(FModuleOp module) : Graph() {
       auto connectInfo = unrollConnectChain(operand);
       auto found = findNode(connectInfo);
       if (found == nodes.end()) continue;
-      Channel newChan(*found, newNode, operand, 0, connectInfo.second,
-                      0);
+      Channel newChan(*found, newNode, operand,
+                      0, connectInfo.second, 0);
       outputs[*found].insert(newChan);
       inputs[newNode].insert(newChan);
     }
@@ -295,12 +300,13 @@ Graph::Graph(FModuleOp module) : Graph() {
 }
 
 Graph::Graph(CircuitOp circuit, StringRef name)
-        : Graph(llvm::dyn_cast<FModuleOp>(circuit.lookupSymbol(
-        name.empty() ? circuit.CircuitOp::getName() : name))) {}
-
+    : Graph(llvm::dyn_cast<FModuleOp>(circuit.lookupSymbol(
+        name.empty() 
+          ? circuit.CircuitOp::getName() 
+          : name))) {}
 
 Graph::Graph(ModuleOp op, StringRef name)
-        : Graph(mlir::utils::findFirstOccurence<CircuitOp>(op), name) {}
+    : Graph(mlir::utils::findFirstOccurence<CircuitOp>(op), name) {}
 
 void insertBuffer(OpBuilder &builder, circt::firrtl::InstanceOp buf,
                   const Channel &channel) {

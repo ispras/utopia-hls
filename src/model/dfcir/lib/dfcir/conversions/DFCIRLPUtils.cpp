@@ -40,7 +40,6 @@ LPConstraint::~LPConstraint() {
 }
 
 bool LPConstraint::operator==(const LPConstraint &other) const {
-  // TODO: Fix in the future.
   return id == other.id;
 }
 
@@ -50,8 +49,8 @@ int LPProblem::addVariable() {
   return it.first->id;
 }
 
-void LPProblem::addConstraint(size_t count, int *vars, double *coeffs,
-                              OpType op, double rhs) {
+void LPProblem::addConstraint(size_t count, int *vars,
+                              double *coeffs, OpType op, double rhs) {
   auto it = constraints.emplace(currentCon++, count, vars, coeffs, op, rhs);
   assert(it.second);
 }

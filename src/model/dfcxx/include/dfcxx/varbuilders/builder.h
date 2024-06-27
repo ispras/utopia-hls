@@ -15,32 +15,25 @@ namespace dfcxx {
 
 class VarBuilder {
 public:
-  DFVariableImpl *
-  buildStream(const std::string &name, IODirection direction, GraphHelper &helper,
-              DFTypeImpl &type);
+  DFVariableImpl * buildStream(const std::string &name, IODirection direction,
+                               GraphHelper &helper, DFTypeImpl &type);
 
-  DFVariableImpl *
-  buildScalar(const std::string &name, IODirection direction, GraphHelper &helper,
-              DFTypeImpl &type);
+  DFVariableImpl * buildScalar(const std::string &name, IODirection direction,
+                               GraphHelper &helper, DFTypeImpl &type);
 
-  DFVariableImpl *
-  buildConstant(GraphHelper &helper, DFTypeImpl &type, ConstantTypeKind kind,
-                ConstantValue value);
+  DFVariableImpl * buildConstant(GraphHelper &helper, DFTypeImpl &type,
+                                 ConstantTypeKind kind, ConstantValue value);
 
-  DFVariable
-  buildStream(const std::string &name, IODirection direction, GraphHelper &helper,
-              const DFType &type);
+  DFVariable buildStream(const std::string &name, IODirection direction,
+                         GraphHelper &helper, const DFType &type);
 
-  DFVariable
-  buildScalar(const std::string &name, IODirection direction, GraphHelper &helper,
-              const DFType &type);
+  DFVariable buildScalar(const std::string &name, IODirection direction,
+                         GraphHelper &helper, const DFType &type);
 
-  DFVariable
-  buildConstant(GraphHelper &helper, const DFType &type, ConstantTypeKind kind,
-                ConstantValue value);
+  DFVariable buildConstant(GraphHelper &helper, const DFType &type,
+                           ConstantTypeKind kind, ConstantValue value);
 
-  DFVariable
-  buildMuxCopy(const DFVariable &var, GraphHelper &helper);
+  DFVariable buildMuxCopy(const DFVariable &var, GraphHelper &helper);
 };
 
 } // namespace dfcxx

@@ -10,18 +10,19 @@
 #define DFCIR_Operations
   
 include "DFCIRDialect.td"
-include "DFCIRTypes.td"
 include "DFCIROpInterfaces.td"
-include "mlir/IR/OpBase.td"
-include "mlir/IR/DialectBase.td"
+include "DFCIRTypes.td"
+
+include "mlir/Interfaces/InferTypeOpInterface.td"
 include "mlir/IR/AttrTypeBase.td"
 include "mlir/IR/BuiltinAttributes.td"
-include "mlir/Interfaces/InferTypeOpInterface.td"
+include "mlir/IR/DialectBase.td"
+include "mlir/IR/OpBase.td"
 
 class DFCIR_Op<string name, list<Trait> traits = []> : Op<DFCIR_Dialect, name, traits>;
 
-
-def KernelOp : DFCIR_Op<"kernel", [NoRegionArguments, NoTerminator, SingleBlock]> {
+def KernelOp : DFCIR_Op<"kernel", 
+    [NoRegionArguments, NoTerminator, SingleBlock]> {
   let summary = "Defines a dataflow kernel.";
 
   let arguments = (ins
@@ -33,11 +34,12 @@ def KernelOp : DFCIR_Op<"kernel", [NoRegionArguments, NoTerminator, SingleBlock]
   let assemblyFormat = "$name $body attr-dict";
 }
 
-def ScalarInputOp : DFCIR_Op<"scalarInput", [DeclareOpInterfaceMethods<NamedOpVal>]> {
+def ScalarInputOp : DFCIR_Op<"scalarInput",
+    [DeclareOpInterfaceMethods<NamedOpVal>]> {
   let arguments = (ins
     StrAttr:$name
   );
-    
+
   let hasCustomAssemblyFormat = 1;
 
   let results = (outs Scalar:$res);
@@ -47,12 +49,13 @@ def ScalarInputOp : DFCIR_Op<"scalarInput", [DeclareOpInterfaceMethods<NamedOpVa
   }];
 }
 
-def ScalarOutputOp : DFCIR_Op<"scalarOutput", [DeclareOpInterfaceMethods<NamedOpVal>]> {
+def ScalarOutputOp : DFCIR_Op<"scalarOutput", 
+    [DeclareOpInterfaceMethods<NamedOpVal>]> {
   let arguments = (ins
     StrAttr:$name,
     Optional<Stream>:$stream
   );
-  
+
   let hasCustomAssemblyFormat = 1;
 
   let results = (outs Scalar:$res);
@@ -62,12 +65,13 @@ def ScalarOutputOp : DFCIR_Op<"scalarOutput", [DeclareOpInterfaceMethods<NamedOp
   }];
 }
 
-def InputOp : DFCIR_Op<"input", [DeclareOpInterfaceMethods<NamedOpVal>]> {
+def InputOp : DFCIR_Op<"input",
+    [DeclareOpInterfaceMethods<NamedOpVal>]> {
   let arguments = (ins
     StrAttr:$name,
     Optional<Stream>:$ctrl
   );
-    
+
   let hasCustomAssemblyFormat = 1;
 
   let results = (outs Stream:$res);
@@ -77,13 +81,14 @@ def InputOp : DFCIR_Op<"input", [DeclareOpInterfaceMethods<NamedOpVal>]> {
   }];
 }
 
-def OutputOp : DFCIR_Op<"output", [AttrSizedOperandSegments, DeclareOpInterfaceMethods<NamedOpVal>]> {
+def OutputOp : DFCIR_Op<"output", 
+    [AttrSizedOperandSegments, DeclareOpInterfaceMethods<NamedOpVal>]> {
   let arguments = (ins
     StrAttr:$name,
     Optional<Stream>:$ctrl,
     Optional<Stream>:$stream
   );
-  
+
   let hasCustomAssemblyFormat = 1;
 
   let results = (outs Stream:$res);
@@ -95,12 +100,11 @@ def OutputOp : DFCIR_Op<"output", [AttrSizedOperandSegments, DeclareOpInterfaceM
 
 def ConnectOp : DFCIR_Op<"connect", []> {
   let arguments = (ins
-    Variable:$connecting,
-    Variable:$connectee
+    Variable:$dest,
+    Variable:$src
   );
-    
-  let assemblyFormat = "`(` $connecting `:` type($connecting) `,` $connectee `:` type($connectee) `)` attr-dict";
 
+  let assemblyFormat = "`(` $dest `:` type($dest) `,` $src `:` type($src) `)` attr-dict";
 }
 
 def OffsetOp : DFCIR_Op<"offset", []> {
@@ -108,7 +112,7 @@ def OffsetOp : DFCIR_Op<"offset", []> {
     Stream:$stream,
     Builtin_IntegerAttr:$offset
   );
-    
+
   let hasCustomAssemblyFormat = 1;
 
   let results = (outs Stream:$res);
@@ -116,9 +120,9 @@ def OffsetOp : DFCIR_Op<"offset", []> {
 
 def ConvertOp : DFCIR_Op<"convert", []> {
   let arguments = (ins ConvertVariable:$var);
-  
+
   let assemblyFormat = "`(` $var `:` type($var) `)` attr-dict `:` type($res)";
-  
+
   let results = (outs Stream:$res); 
 }
 
@@ -127,7 +131,7 @@ def MuxOp : DFCIR_Op<"mux", []> {
     Stream:$control,
     Variadic<Variable>:$vars
   );
-    
+
   let hasCustomAssemblyFormat = 1;
 
   let results = (outs Variable:$res);
@@ -138,9 +142,9 @@ def LessOp : DFCIR_Op<"less", []> {
     Variable:$first,
     Variable:$second
   );
-    
+
   let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-  
+
   let results = (outs Variable:$res);
 }
 
@@ -149,9 +153,9 @@ def LessEqOp : DFCIR_Op<"lessEq", []> {
     Variable:$first,
     Variable:$second
   );
-    
+
   let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-  
+
   let results = (outs Variable:$res);
 }
 
@@ -160,9 +164,9 @@ def GreaterOp : DFCIR_Op<"greater", []> {
     Variable:$first,
     Variable:$second
   );
-    
+
   let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-  
+
   let results = (outs Variable:$res);
 }
 
@@ -171,9 +175,9 @@ def GreaterEqOp : DFCIR_Op<"greaterEq", []> {
     Variable:$first,
     Variable:$second
   );
-    
+
   let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-  
+
   let results = (outs Variable:$res);
 }
 
@@ -182,9 +186,9 @@ def EqOp : DFCIR_Op<"eq", []> {
     Variable:$first,
     Variable:$second
   );
-    
+
   let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-  
+
   let results = (outs Variable:$res);
 }
 
@@ -193,9 +197,9 @@ def NotEqOp : DFCIR_Op<"notEq", []> {
     Variable:$first,
     Variable:$second
   );
-    
+
   let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-  
+
   let results = (outs Variable:$res);
 }
 
@@ -204,9 +208,9 @@ def AndOp : DFCIR_Op<"and", []> {
     Variable:$first,
     Variable:$second
   );
-    
+
   let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-  
+
   let results = (outs Variable:$res);
 }
 
@@ -215,9 +219,9 @@ def OrOp : DFCIR_Op<"or", []> {
     Variable:$first,
     Variable:$second
   );
-    
+
   let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-  
+
   let results = (outs Variable:$res);
 }
 
@@ -226,25 +230,25 @@ def XorOp : DFCIR_Op<"xor", []> {
     Variable:$first,
     Variable:$second
   );
-    
+
   let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-  
+
   let results = (outs Variable:$res);
 }
 
 def NotOp : DFCIR_Op<"not", [SameOperandsAndResultType, ]> {
   let arguments = (ins Variable:$first);
-    
+
   let assemblyFormat = "`(` $first `:` type($first) `)` attr-dict `:` type($res)";
-  
+
   let results = (outs Variable:$res);
 }
 
 def NegOp : DFCIR_Op<"neg", [SameOperandsAndResultType, ]> {
   let arguments = (ins Variable:$first);
-  
+
   let assemblyFormat = "`(` $first `:` type($first) `)` attr-dict `:` type($res)";
-  
+
   let results = (outs Variable:$res);
 }
 
@@ -253,9 +257,9 @@ def AddOp : DFCIR_Op<"add", []> {
     Variable:$first,
     Variable:$second
   );
-    
+
   let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-  
+
   let results = (outs Variable:$res);
 }
 
@@ -264,9 +268,9 @@ def SubOp : DFCIR_Op<"sub", []> {
     Variable:$first,
     Variable:$second
   );
-    
+
   let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-  
+
   let results = (outs Variable:$res);
 }
 
@@ -275,9 +279,9 @@ def MulOp : DFCIR_Op<"mul", []> {
     Variable:$first,
     Variable:$second
   );
-    
+
   let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-  
+
   let results = (outs Variable:$res);
 }
 
@@ -286,9 +290,9 @@ def DivOp : DFCIR_Op<"div", []> {
     Variable:$first,
     Variable:$second
   );
-    
+
   let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-  
+
   let results = (outs Variable:$res);
 }
 
@@ -297,9 +301,9 @@ def ShiftLeftOp : DFCIR_Op<"shl", []> {
     Variable:$first,
     Builtin_IntegerAttr:$bits
   );
-  
+
   let assemblyFormat = "`(` $first `:` type($first) `,` $bits `)` attr-dict `:` type($res)";
-  
+
   let results = (outs Variable:$res);
 }
 
@@ -308,15 +312,16 @@ def ShiftRightOp : DFCIR_Op<"shr", []> {
     Variable:$first,
     Builtin_IntegerAttr:$bits
   );
-  
+
   let assemblyFormat = "`(` $first `:` type($first) `,` $bits `)` attr-dict `:` type($res)";
-  
+
   let results = (outs Variable:$res);
 }
 
 def ConstantOp : DFCIR_Op<"constant", []> {
-  let arguments = (ins AnyAttrOf<[Builtin_IntegerAttr, Builtin_FloatAttr]>:$value);
-  
+  let arguments = (ins AnyAttrOf<[Builtin_IntegerAttr,
+                                  Builtin_FloatAttr]>:$value);
+
   let hasCustomAssemblyFormat = 1;
 
   let results = (outs Const:$res);
@@ -324,9 +329,9 @@ def ConstantOp : DFCIR_Op<"constant", []> {
 
 def CastOp : DFCIR_Op<"cast", []> {
   let arguments = (ins CastVariable:$var);
-  
+
   let assemblyFormat = "`<` type($res) `>` `(` $var `:` type($var) `)` attr-dict";
-  
+
   let results = (outs CastVariable:$res);
 }
 

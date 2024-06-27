@@ -16,10 +16,8 @@ namespace dfcxx {
 
 DFConstant::DFConstant(GraphHelper &helper, dfcxx::DFTypeImpl &type,
                        ConstantTypeKind kind, ConstantValue value) :
-        DFVariableImpl("", IODirection::NONE, helper),
-        type(type),
-        kind(kind),
-        value(value) {}
+                       DFVariableImpl("", IODirection::NONE, helper),
+                       type(type), kind(kind), value(value) {}
 
 DFTypeImpl &DFConstant::getType() {
   return type;
@@ -146,7 +144,8 @@ DFVariableImpl &DFConstant::operator&(DFVariableImpl &rhs) {
         val.uint_ = value.uint_ & casted.value.uint_;
         break;
       case FLOAT:
-        // TODO: FIX.
+        // TODO: For discussion.
+        // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
         break;
     }
     newVar = helper.varBuilder.buildConstant(helper, type, kind, val);
@@ -173,7 +172,8 @@ DFVariableImpl &DFConstant::operator|(DFVariableImpl &rhs) {
         val.uint_ = value.uint_ | casted.value.uint_;
         break;
       case FLOAT:
-        // TODO: FIX.
+        // TODO: For discussion.
+        // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
         break;
     }
     newVar = helper.varBuilder.buildConstant(helper, type, kind, val);
@@ -200,7 +200,8 @@ DFVariableImpl &DFConstant::operator^(DFVariableImpl &rhs) {
         val.uint_ = value.uint_ | casted.value.uint_;
         break;
       case FLOAT:
-        // TODO: FIX.
+        // TODO: For discussion.
+        // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
         break;
     }
     newVar = helper.varBuilder.buildConstant(helper, type, kind, val);
@@ -225,7 +226,8 @@ DFVariableImpl &DFConstant::operator!() {
       val.uint_ = ~value.uint_;
       break;
     case FLOAT:
-      // TODO: FIX.
+      // TODO: For discussion.
+      // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
       break;
   }
   newVar = helper.varBuilder.buildConstant(helper, type, kind, val);
@@ -453,10 +455,12 @@ DFVariableImpl &DFConstant::operator<<(uint8_t bits) {
       val.uint_ = value.uint_ << bits;
       break;
     case FLOAT:
-    // TODO: FIX.
+      // TODO: For discussion.
+      // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
       break;
   }
-  DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildShiftedType(type, bits));
+  DFTypeImpl *newType = helper.storage.addType(
+      helper.typeBuilder.buildShiftedType(type, bits));
   newVar = helper.varBuilder.buildConstant(helper, *newType, kind, val);
   helper.storage.addVariable(newVar);
   helper.addNode(newVar, OpType::SHL, NodeData{.bitShift=bits});
@@ -475,10 +479,12 @@ DFVariableImpl &DFConstant::operator>>(uint8_t bits) {
       val.uint_ = value.uint_ >> bits;
       break;
     case FLOAT:
-    // TODO: FIX.
+      // TODO: For discussion.
+      // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
       break;
   }
-  DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildShiftedType(type, int8_t(bits) * -1));
+  DFTypeImpl *newType = helper.storage.addType(
+      helper.typeBuilder.buildShiftedType(type, int8_t(bits) * -1));
   newVar = helper.varBuilder.buildConstant(helper, *newType, kind, val);
   helper.storage.addVariable(newVar);
   helper.addNode(newVar, OpType::SHR, NodeData{.bitShift=bits});

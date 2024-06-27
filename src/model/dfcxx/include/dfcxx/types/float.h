@@ -17,6 +17,7 @@ class TypeBuilder;
 
 class FloatType : DFTypeImpl {
   friend TypeBuilder;
+
 private:
   uint8_t expBits;
   uint8_t fracBits;

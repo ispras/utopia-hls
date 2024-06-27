@@ -37,8 +37,8 @@ private:
   ConstantTypeKind kind;
   ConstantValue value;
 
-  DFConstant(GraphHelper &helper, DFTypeImpl &type, ConstantTypeKind kind,
-             ConstantValue value);
+  DFConstant(GraphHelper &helper, DFTypeImpl &type,
+             ConstantTypeKind kind, ConstantValue value);
 
 public:
   ~DFConstant() override = default;

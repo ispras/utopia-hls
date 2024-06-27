@@ -50,7 +50,8 @@ public:
 protected:
   GraphHelper &helper;
 
-  DFVariableImpl(const std::string &name, IODirection direction, GraphHelper &helper);
+  DFVariableImpl(const std::string &name, IODirection direction,
+                 GraphHelper &helper);
 
   std::string_view getName() const;
 

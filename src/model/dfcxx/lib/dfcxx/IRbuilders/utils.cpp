@@ -219,7 +219,8 @@ void DFCIRBuilder::translate(dfcxx::Node node, dfcxx::Graph *graph,
       Node first = ins[0].source;
       Node second = ins[1].source;
       auto newOp = builder.create<mlir::dfcir::LessEqOp>(loc, conv[node.var],
-                                                         map[first], map[second]);
+                                                         map[first],
+                                                         map[second]);
       map[node] = newOp.getResult();
       break;
     }
@@ -227,7 +228,8 @@ void DFCIRBuilder::translate(dfcxx::Node node, dfcxx::Graph *graph,
       Node first = ins[0].source;
       Node second = ins[1].source;
       auto newOp = builder.create<mlir::dfcir::GreaterOp>(loc, conv[node.var],
-                                                          map[first], map[second]);
+                                                          map[first],
+                                                          map[second]);
       map[node] = newOp.getResult();
       break;
     }
@@ -235,7 +237,8 @@ void DFCIRBuilder::translate(dfcxx::Node node, dfcxx::Graph *graph,
       Node first = ins[0].source;
       Node second = ins[1].source;
       auto newOp = builder.create<mlir::dfcir::GreaterEqOp>(loc, conv[node.var],
-                                                            map[first], map[second]);
+                                                            map[first],
+                                                            map[second]);
       map[node] = newOp.getResult();
       break;
     }
@@ -243,7 +246,8 @@ void DFCIRBuilder::translate(dfcxx::Node node, dfcxx::Graph *graph,
       Node first = ins[0].source;
       Node second = ins[1].source;
       auto newOp = builder.create<mlir::dfcir::EqOp>(loc, conv[node.var],
-                                                     map[first], map[second]);
+                                                     map[first],
+                                                     map[second]);
       map[node] = newOp.getResult();
       break;
     }
@@ -251,7 +255,8 @@ void DFCIRBuilder::translate(dfcxx::Node node, dfcxx::Graph *graph,
       Node first = ins[0].source;
       Node second = ins[1].source;
       auto newOp = builder.create<mlir::dfcir::NotEqOp>(loc, conv[node.var],
-                                                        map[first], map[second]);
+                                                        map[first],
+                                                        map[second]);
       map[node] = newOp.getResult();
       break;
     }

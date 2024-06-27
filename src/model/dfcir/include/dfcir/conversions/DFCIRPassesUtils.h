@@ -121,8 +121,8 @@ struct Node {
   bool isConst;
   long argInd;
 
-  explicit Node(Operation *op, unsigned latency = 0, bool isConst = false,
-                long argInd = -1);
+  explicit Node(Operation *op, unsigned latency = 0,
+                bool isConst = false, long argInd = -1);
 
   Node();
 

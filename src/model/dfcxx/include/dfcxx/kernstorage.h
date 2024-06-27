@@ -20,6 +20,7 @@ class KernStorage {
 private:
   std::unordered_set<DFTypeImpl *> types;
   std::unordered_set<DFVariableImpl *> variables;
+
 public:
   DFTypeImpl *addType(DFTypeImpl *type);
 

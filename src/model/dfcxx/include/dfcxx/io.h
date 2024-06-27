@@ -20,13 +20,15 @@ class Kernel;
 
 class IO {
   friend Kernel;
+
 private:
   Graph &graph;
   GraphHelper helper;
   VarBuilder &varBuilder;
   KernStorage &storage;
 
-  IO(Graph &graph, TypeBuilder &typeBuilder, VarBuilder &builder, KernStorage &storage);
+  IO(Graph &graph, TypeBuilder &typeBuilder,
+     VarBuilder &builder, KernStorage &storage);
 
 public:
   DFVariable input(const std::string &name, const DFType &type);

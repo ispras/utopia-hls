@@ -13,6 +13,7 @@
 #include "dfcxx/IRbuilders/converter.h"
 #include "dfcxx/kernel.h"
 #include "dfcxx/typedefs.h"
+
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
 
@@ -28,7 +29,6 @@ private:
   std::unordered_map<Node, mlir::Value> map;
   mlir::OwningOpRef<mlir::ModuleOp> module;
   DFCIRTypeConverter conv;
-
   std::unordered_map<Node, llvm::SmallVector<mlir::Value>> muxMap;
 
   void buildKernelBody(Graph *graph, mlir::OpBuilder &builder);

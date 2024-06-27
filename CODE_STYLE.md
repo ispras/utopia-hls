@@ -15,16 +15,16 @@ Some of them:
 6. Use lowercase_underscore_separated style for names of source files;
 7. Use UpperCamelCase style for names of classes/enums/structures/unions;
 8. Use lowerCamelCase for names of functions/methods/objects/variables;
-9. "{" symbol should be at the same line as the related operator has;
+9. "{" symbol should be on the same line as the related operator;
 10. "using namespace" is forbidden;
 11. Source files should have header comments (set the `<yearnum>` here):
 
 ```cpp
 //===----------------------------------------------------------------------===//
 //
-// Part of the Utopia EDA Project, under the Apache License v2.0
+// Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright <yearnum> ISP RAS (http://www.ispras.ru)
+// Copyright <yearnum>-<yearnum> ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 ```

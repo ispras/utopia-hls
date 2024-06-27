@@ -22,7 +22,7 @@ namespace mlir::dfcir {
 #include "dfcir/conversions/DFCIRPasses.h.inc"
 
 class DFCIRASAPSchedulerPass
-  : public impl::DFCIRASAPSchedulerPassBase<DFCIRASAPSchedulerPass> {
+    : public impl::DFCIRASAPSchedulerPassBase<DFCIRASAPSchedulerPass> {
   using Node = utils::Node;
   using Channel = utils::Channel;
   using Graph = utils::Graph;
@@ -30,6 +30,7 @@ class DFCIRASAPSchedulerPass
   class ChannelComp final {
   private:
     Latencies &map;
+
   public:
     explicit ChannelComp(Latencies &map) : map(map) {}
 
@@ -40,11 +41,10 @@ class DFCIRASAPSchedulerPass
   };
 
 private:
-
   Buffers schedule(Graph &graph) {
     Latencies map;
-    using ChannelQueue = std::priority_queue<
-      Channel, std::vector<Channel>, ChannelComp>;
+    using ChannelQueue = 
+        std::priority_queue<Channel, std::vector<Channel>, ChannelComp>;
     ChannelQueue chanQueue((ChannelComp(map)));
 
     auto visitChannel =
@@ -77,21 +77,19 @@ private:
     for (const Node &node: graph.nodes) {
       for (const Channel &channel: graph.inputs[node]) {
         int delta = map[channel.target] -
-                    (map[channel.source] + int(channel.source.latency) +
-                    channel.offset);
+                    (map[channel.source] +
+                     int(channel.source.latency) +
+                     channel.offset);
         if (!channel.source.isConst && delta) {
           buffers[channel] = delta;
         }
       }
     }
-
     return buffers;
   }
 
 public:
-
   void runOnOperation() override {
-
     // Convert kernel into graph.
     Graph graph(llvm::dyn_cast<ModuleOp>(getOperation()));
 
