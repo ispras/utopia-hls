@@ -40,7 +40,12 @@ target_compile_definitions(utest
     NULLDEVICE="${NULLDEVICE}"
 )
 
-target_include_directories(utest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(utest
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/examples
+)
+
 target_link_libraries(utest
   PRIVATE
     gtest_main

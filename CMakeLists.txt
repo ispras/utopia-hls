@@ -7,6 +7,9 @@ project(Utopia VERSION 0.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+## Suppresses "add_custom_command"-warnings with Ninja generator.
+cmake_policy(SET CMP0116 NEW)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 ##===----------------------------------------------------------------------===//
@@ -33,6 +36,9 @@ endif()
 if(NOT DEFINED OUT)
   set(OUT umain)
 endif()
+
+# Unless "BUILD_TESTS" is explicitly set to "ON", tests will not be built.
+option(BUILD_TESTS OFF)
 
 message(STATUS "Output binary name: ${OUT}")
 
@@ -69,4 +75,9 @@ find_package(LpSolve REQUIRED)
 add_subdirectory(lib)
 add_subdirectory(src)
 
-add_subdirectory(test)
+if(${BUILD_TESTS} STREQUAL "ON")
+  add_subdirectory(test)
+  message(STATUS "Building tests: YES")
+else()
+  message(STATUS "Building tests: NO")
+endif()

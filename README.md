@@ -132,12 +132,13 @@ CMake buildsystem-generation script accepts a number of required and optional ar
 * `CMAKE_PREFIX_PATH`: standard CMake variable; *optional* (quoted) semicolon-separated list of filesystem paths; is used to locate installed CIRCT and MLIR packages. In case a precompiled CIRCT release is used, specifying a path to its unarchived top-level directory is enough (e.g. `-DCMAKE_PREFIX_PATH=~/firtool-1.72.0`). In case CIRCT and MLIR are compiled manually, **paths to each independent build (not source) directory have to be specified** (e.g. `-DCMAKE_PREFIX_PATH-"~/circt/build;~/circt/llvm/build"`). This variable may be omitted if CIRCT and MLIR are installed in default system paths.
 * `INCLUDE_DIRS`: (quoted) *optional* semicolon-separated list of filesystem paths; is used to specify include directories for user-defined kernels to be added to the Utopia HLS compilation.
 * `OUT`: *optional* string; used to specify a custom name for the final Utopia HLS executable. Unless it is explicitly provided, the final executable will be named `umain`.
+* `BUILD_TESTS`: *optional* binary (`ON`/`OFF`) variable; switched to `OFF` by default; is used to enable tests compilation (target `test/utest`). Values other than `ON` are interpreted as `OFF`.
 
 Other standard CMake variables/options may also be specified to affect the final compilation process.
 
 Here is an example of a fully-formed CMake buildsystem-generation script (directory `build` may be changed for any other directory):
 ```bash
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=~/firtool-1.72.0 -DINCLUDE_DIRS=~ -DSRC_FILES="~/utopia-user/simple.cpp;~/utopia-user/buf.cpp" -DOUT=executable
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=~/firtool-1.72.0 -DINCLUDE_DIRS=~ -DSRC_FILES="~/utopia-user/simple.cpp;~/utopia-user/buf.cpp" -DOUT=executable -DBUILD_TESTS=ON
 ```
 
 To start the compilation process, a simple `cmake --build`-command is used.
