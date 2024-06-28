@@ -22,7 +22,7 @@ DFCIRConverter::DFCIRConverter(const DFLatencyConfig &config) {
 }
 
 bool DFCIRConverter::convertAndPrint(mlir::ModuleOp module,
-                                     llvm::raw_fd_ostream &out,
+                                     OutputStreams &outputStreams,
                                      const Scheduler &sched) {
   mlir::MLIRContext *context = module.getContext();
   mlir::PassManager pm(context);
@@ -37,7 +37,7 @@ bool DFCIRConverter::convertAndPrint(mlir::ModuleOp module,
   }
   pm.addPass(circt::createLowerFIRRTLToHWPass());
   pm.addPass(circt::createLowerSeqToSVPass());
-  pm.addPass(circt::createExportVerilogPass(out));
+  pm.addPass(circt::createExportVerilogPass(*(outputStreams[SV_OUT_ID])));
   auto result = pm.run(module);
   return result.succeeded();
 }
