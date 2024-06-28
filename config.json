@@ -1,13 +1,8 @@
 {
-  "rtl": {
-    "premap-lib"  : "abc"
-  },
   "hls": {
-    "output-dir"  : "./output/",
-    "output-dot"  : "test.dot",
-    "output-mlir" : "test.mlir",
-    "output-test" : "test_tb.v",
-    "output-lib"  : "test_lib.v",
-    "output-top"  : "test_top.v"
+    "config"         : "",
+    "asap_scheduler" : false,
+    "lp_scheduler"   : false,
+    "out"            : ""
   }
 }

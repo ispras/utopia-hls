@@ -7,4 +7,3 @@ add_library(Json INTERFACE)
 target_include_directories(Json INTERFACE json)
 
 add_subdirectory(easyloggingpp)
-add_subdirectory(minisat)

@@ -1,4 +1,0 @@
-import all liba ; 
-actor qwerty [ abc < kilo ] ( abcd ; fde23 ) ald ==> dla 
-time ui67 : 
-end 

@@ -1,0 +1,10 @@
+set(DFCXX_TESTS
+  model/dfcxx/polynomial2.cpp
+  model/dfcxx/scalar3.cpp
+  model/dfcxx/matrixmul2.cpp
+  model/dfcxx/muxmul.cpp
+  model/dfcxx/addconst.cpp
+  model/dfcxx/movingsum.cpp
+  model/dfcxx/idct.cpp
+  PARENT_SCOPE
+)

@@ -1,13 +1,11 @@
-build
-src/build
-*.cnf
+## Ignore
+.*
 *.dot
 *.log
-.cproject
-.project
-.vscode
-CMakeLists.txt.user
-a.out
-annealing.txt
-estimation.txt
-output/test/dfc/*
+build/*
+
+## Allow
+!.git
+!.gitconfig
+!.gitignore
+!.gitmodules

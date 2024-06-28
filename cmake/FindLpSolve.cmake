@@ -15,100 +15,103 @@ SET(LPSOLVE_LIBRARIES "" CACHE STRING "Full path to the lpsolve55 library (inclu
 MARK_AS_ADVANCED(LPSOLVE_LIBRARIES)
 
 SET(LPSOLVE_INCLUDE_TRIAL_PATH
-    /sw/include
-    /usr/include
-    /usr/local/include
-    /opt/include
-    /opt/local/include
-    C:/Program\ Files
-    )
+  /sw/include
+  /usr/include
+  /usr/local/include
+  /opt/include
+  /opt/local/include
+  C:/Program\ Files
+)
 
 FIND_PATH(LPSOLVE_INCLUDE_PATH lpsolve/lp_lib.h ${LPSOLVE_INCLUDE_PATH} ${LPSOLVE_INCLUDE_TRIAL_PATH})
 IF (LPSOLVE_INCLUDE_PATH)
-    STRING(REGEX REPLACE "lpsolve/*$" "" LPSOLVE_INCLUDE_PATH ${LPSOLVE_INCLUDE_PATH})
-    SET(LPSOLVE_INCLUDE_DIR ${LPSOLVE_INCLUDE_PATH} CACHE STRING "Full path to the lpsolve headers" FORCE)
+  STRING(REGEX REPLACE "lpsolve/*$" "" LPSOLVE_INCLUDE_PATH ${LPSOLVE_INCLUDE_PATH})
+  SET(LPSOLVE_INCLUDE_DIR ${LPSOLVE_INCLUDE_PATH} CACHE STRING "Full path to the lpsolve headers" FORCE)
 
-    GET_FILENAME_COMPONENT(LPSOLVE_INSTALL_BASE_PATH ${LPSOLVE_INCLUDE_DIR} PATH)
+  GET_FILENAME_COMPONENT(LPSOLVE_INSTALL_BASE_PATH ${LPSOLVE_INCLUDE_DIR} PATH)
 
-    SET(LPSOLVE_LIB_TRIALPATH
-        ${LPSOLVE_INCLUDE_DIR}
-        ${LPSOLVE_INSTALL_BASE_PATH}/lib
-        /usr/lib/
-        /usr/local/lib
-        /opt/lib
-        )
+  SET(LPSOLVE_LIB_TRIALPATH
+    ${LPSOLVE_INCLUDE_DIR}
+    ${LPSOLVE_INSTALL_BASE_PATH}/lib
+    /usr/lib/
+    /usr/local/lib
+    /opt/lib
+  )
 
-    FIND_LIBRARY(LPSOLVE_LIBRARY_PATH
-        NAMES lpsolve55
-        PATHS ${LPSOLVE_LIBRARIES} ${LPSOLVE_LIB_TRIALPATH}
-        PATH_SUFFIXES lp_solve lpsolve)
-    SET(LPSOLVE_LIBRARIES ${LPSOLVE_LIBRARY_PATH} CACHE STRING "Full path to the lpsolve55 library (including the library)" FORCE)
-    IF (LPSOLVE_LIBRARIES)
-        SET(LPSOLVE_FOUND TRUE)
+  FIND_LIBRARY(LPSOLVE_LIBRARY_PATH
+    NAMES lpsolve55
+    PATHS ${LPSOLVE_LIBRARIES} ${LPSOLVE_LIB_TRIALPATH}
+    PATH_SUFFIXES lp_solve lpsolve
+  )
 
-        ## Try to find out if lpsolve can link standalone
-        SET(LPSOLVE_TRY_CODE
-            "#include <lpsolve/lp_lib.h>
-             int main(int /*argc*/, char** /*argv*/) {
-                int major, minor, release, build;
+  SET(LPSOLVE_LIBRARIES ${LPSOLVE_LIBRARY_PATH} CACHE STRING "Full path to the lpsolve55 library (including the library)" FORCE)
+  IF (LPSOLVE_LIBRARIES)
+    SET(LPSOLVE_FOUND TRUE)
 
-                lp_solve_version(&major, &minor, &release, &build);
+    ## Try to find out if lpsolve can link standalone
+    SET(LPSOLVE_TRY_CODE
+      "#include <lpsolve/lp_lib.h>
+       int main(int /*argc*/, char** /*argv*/) {
+         int major, minor, release, build;
 
-                return 0;
-             }")
+         lp_solve_version(&major, &minor, &release, &build);
 
-        SET(CMAKE_REQUIRED_INCLUDES ${LPSOLVE_INCLUDE_DIR})
-        SET(CMAKE_REQUIRED_LIBRARIES ${LPSOLVE_LIBRARIES})
-        CHECK_CXX_SOURCE_COMPILES("${LPSOLVE_TRY_CODE}" LPSOLVE_LINKS_ALONE)
-        SET(CMAKE_REQUIRED_LIBRARIES "")
-        SET(CMAKE_REQUIRED_INCLUDES "")
+         return 0;
+       }"
+    )
 
-        ## Try to find out if lpsolve can link with some extra libs
-        IF (NOT LPSOLVE_LINKS_ALONE)
-            FIND_LIBRARY(LPSOLVE_LIB_DL ${CMAKE_DL_LIBS})
-            FIND_LIBRARY(LPSOLVE_LIB_COLAMD "colamd")
+    SET(CMAKE_REQUIRED_INCLUDES ${LPSOLVE_INCLUDE_DIR})
+    SET(CMAKE_REQUIRED_LIBRARIES ${LPSOLVE_LIBRARIES})
+    CHECK_CXX_SOURCE_COMPILES("${LPSOLVE_TRY_CODE}" LPSOLVE_LINKS_ALONE)
+    SET(CMAKE_REQUIRED_LIBRARIES "")
+    SET(CMAKE_REQUIRED_INCLUDES "")
 
-            LIST(APPEND LPSOLVE_LIBRARIES "${LPSOLVE_LIB_DL}" "${LPSOLVE_LIB_COLAMD}")
+    ## Try to find out if lpsolve can link with some extra libs
+    IF (NOT LPSOLVE_LINKS_ALONE)
+      FIND_LIBRARY(LPSOLVE_LIB_DL ${CMAKE_DL_LIBS})
+      FIND_LIBRARY(LPSOLVE_LIB_COLAMD "colamd")
 
-            SET(CMAKE_REQUIRED_INCLUDES ${LPSOLVE_INCLUDE_DIR})
-            SET(CMAKE_REQUIRED_LIBRARIES ${LPSOLVE_LIBRARIES})
-            CHECK_CXX_SOURCE_COMPILES("${LPSOLVE_TRY_CODE}" LPSOLVE_LINKS_WITH_EXTRA_LIBS)
-            SET(CMAKE_REQUIRED_LIBRARIES "")
-            SET(CMAKE_REQUIRED_INCLUDES "")
+      LIST(APPEND LPSOLVE_LIBRARIES "${LPSOLVE_LIB_DL}" "${LPSOLVE_LIB_COLAMD}")
 
-            IF (NOT LPSOLVE_LINKS_WITH_EXTRA_LIBS)
-                MESSAGE(STATUS "Could not link against lpsolve55!")
-            ENDIF()
-        ENDIF()
+      SET(CMAKE_REQUIRED_INCLUDES ${LPSOLVE_INCLUDE_DIR})
+      SET(CMAKE_REQUIRED_LIBRARIES ${LPSOLVE_LIBRARIES})
+      CHECK_CXX_SOURCE_COMPILES("${LPSOLVE_TRY_CODE}" LPSOLVE_LINKS_WITH_EXTRA_LIBS)
+      SET(CMAKE_REQUIRED_LIBRARIES "")
+      SET(CMAKE_REQUIRED_INCLUDES "")
+
+      IF (NOT LPSOLVE_LINKS_WITH_EXTRA_LIBS)
+        MESSAGE(STATUS "Could not link against lpsolve55!")
+      ENDIF()
     ENDIF()
+  ENDIF()
 ENDIF()
 
 IF (LPSOLVE_LINKS_ALONE OR LPSOLVE_LINKS_WITH_EXTRA_LIBS)
-    SET(LPSOLVE_LINKS TRUE)
+  SET(LPSOLVE_LINKS TRUE)
 ENDIF()
 
 INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(LpSolve DEFAULT_MSG
-    LPSOLVE_LIBRARIES
-    LPSOLVE_INCLUDE_PATH
-    LPSOLVE_LINKS
-    )
+  LPSOLVE_LIBRARIES
+  LPSOLVE_INCLUDE_PATH
+  LPSOLVE_LINKS
+)
 
 IF(LPSOLVE_FOUND)
-    SET(LpSolve_FOUND TRUE)
-    SET(LpSolve_INCLUDE_DIRS ${LPSOLVE_INCLUDE_PATH})
+  SET(LpSolve_FOUND TRUE)
+  SET(LpSolve_INCLUDE_DIRS ${LPSOLVE_INCLUDE_PATH})
 
-    IF(NOT LpSolve_LIBRARIES)
-        SET(LpSolve_LIBRARIES ${LPSOLVE_LIBRARIES})
-    ENDIF()
+  IF(NOT LpSolve_LIBRARIES)
+    SET(LpSolve_LIBRARIES ${LPSOLVE_LIBRARIES})
+  ENDIF()
 
-    IF(NOT TARGET LpSolve::LpSolve)
-        ADD_LIBRARY(LpSolve::LpSolve UNKNOWN IMPORTED)
-        SET_TARGET_PROPERTIES(LpSolve::LpSolve PROPERTIES
-            INTERFACE_INCLUDE_DIRECTORIES "${LpSolve_INCLUDE_DIRS}"
-            INTERFACE_LINK_LIBRARIES "$<LINK_ONLY:${CMAKE_DL_LIBS}>;$<LINK_ONLY:colamd>"
-            IMPORTED_LINK_INTERFACE_LANGUAGES "C"
-            IMPORTED_LOCATION "${LPSOLVE_LIBRARY_PATH}"
-        )
-    ENDIF()
+  IF(NOT TARGET LpSolve::LpSolve)
+    ADD_LIBRARY(LpSolve::LpSolve UNKNOWN IMPORTED)
+    SET_TARGET_PROPERTIES(LpSolve::LpSolve PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES "${LpSolve_INCLUDE_DIRS}"
+      INTERFACE_LINK_LIBRARIES "$<LINK_ONLY:${CMAKE_DL_LIBS}>;$<LINK_ONLY:colamd>"
+      IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+      IMPORTED_LOCATION "${LPSOLVE_LIBRARY_PATH}"
+    )
+  ENDIF()
 ENDIF()
