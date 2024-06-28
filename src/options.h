@@ -168,7 +168,7 @@ struct HlsOptions final : public AppOptions {
     schedGroup->add_flag(LP_SCHEDULER_FLAG,   lpScheduler,   "Use Linear Programming scheduler");
     schedGroup->require_option(1); 
 
-    options->add_option(OUT_ARG,    outFile,       "Output file path (default: standard output stream)")
+    options->add_option(OUT_ARG, outFile, "Output file path (default: standard output stream)")
            ->expected(0, 1);
   }
 

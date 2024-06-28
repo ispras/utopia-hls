@@ -14,6 +14,7 @@
 namespace dfcxx {
 
 enum Ops {
+  // Arithmetic operations.
   ADD_INT = 1,
   ADD_FLOAT,
   SUB_INT,
@@ -22,6 +23,9 @@ enum Ops {
   MUL_FLOAT,
   DIV_INT,
   DIV_FLOAT,
+  NEG_INT,
+  NEG_FLOAT,
+  // Bitwise operations.
   AND_INT,
   AND_FLOAT,
   OR_INT,
@@ -30,8 +34,7 @@ enum Ops {
   XOR_FLOAT,
   NOT_INT,
   NOT_FLOAT,
-  NEG_INT,
-  NEG_FLOAT,
+  // Comparison operations.
   LESS_INT,
   LESS_FLOAT,
   LESSEQ_INT,
@@ -44,6 +47,7 @@ enum Ops {
   EQ_FLOAT,
   NEQ_INT,
   NEQ_FLOAT,
+  // Utility values. Contain normal and incremented number of elements in the enum.
   INC_COUNT,
   COUNT = INC_COUNT - 1
 };

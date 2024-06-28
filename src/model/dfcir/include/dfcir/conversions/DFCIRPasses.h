@@ -17,7 +17,9 @@
 namespace mlir::dfcir {
 
 enum Ops {
+  // Empty op. Its latency is always 0.
   UNDEFINED,
+  // Arithmetic operations.
   ADD_INT,
   ADD_FLOAT,
   SUB_INT,
@@ -26,6 +28,9 @@ enum Ops {
   MUL_FLOAT,
   DIV_INT,
   DIV_FLOAT,
+  NEG_INT,
+  NEG_FLOAT,
+  // Bitwise operations.
   AND_INT,
   AND_FLOAT,
   OR_INT,
@@ -34,8 +39,7 @@ enum Ops {
   XOR_FLOAT,
   NOT_INT,
   NOT_FLOAT,
-  NEG_INT,
-  NEG_FLOAT,
+  // Comparison operations.
   LESS_INT,
   LESS_FLOAT,
   LESSEQ_INT,
@@ -48,6 +52,7 @@ enum Ops {
   EQ_FLOAT,
   NEQ_INT,
   NEQ_FLOAT,
+  // Utility value. Contains the number of elements in the enum.
   COUNT
 };
 
