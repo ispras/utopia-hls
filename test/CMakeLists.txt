@@ -6,13 +6,14 @@ project(UtopiaTest VERSION 0.0)
 
 add_compile_options(-g3 -Wall -Wignored-qualifiers)
 
-# Check if the 'gtest' target has been already imported (e.g., by LLVM).
-if(NOT TARGET gtest)
+# If GTest isn't installed, download sources from Github.
+if(NOT TARGET GTest::gtest)
+  message(STATUS "Downloading GTest-sources from Github")
   include(FetchContent)
   FetchContent_Declare(
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG        609281088cfefc76f9d0ce82e1ff6c30cc3591e5)
+    GIT_TAG        release-1.11.0)
 
   # For Windows: Prevent overriding the parent project's compiler/linker settings.
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
@@ -48,7 +49,7 @@ target_include_directories(utest
 
 target_link_libraries(utest
   PRIVATE
-    gtest_main
+    GTest::gtest
     Utopia::MLIRDFCIR
     Utopia::DFCXX
     easyloggingpp
