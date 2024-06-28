@@ -60,7 +60,7 @@ It is recommended to use Utopia HLS on Debian-based operating systems (e.g. Ubun
 
 * `build-essential`
 * `clang` + `lld` or `g++` + `gcc` as a C/C++ compiler
-* `cmake` ver. 3.13 or higher
+* `cmake` ver. 3.20.0 or higher (*)
 * `liblpsolve55-dev`
 * `ninja-build` (preferred) or `make`
 
@@ -69,6 +69,8 @@ The following command can be used to install all of these dependencies regardles
 ```bash
 sudo apt install build-essential clang cmake g++ gcc liblpsolve55-dev lld make ninja-build
 ```
+
+(*)**Note**: in case `cmake` which was installed from `apt install` has a version lower than 3.20.0, follow this [guide](https://apt.kitware.com/) and use `sudo apt install cmake` again.
 
 ### Precompiled CIRCT & MLIR Installation
 
