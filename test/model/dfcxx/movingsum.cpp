@@ -15,7 +15,7 @@ TEST(DFCxx, MovingSumAddInt2Asap) {
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 2}
   };
-  EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::ASAP), true);
+  EXPECT_EQ(kernel.compile(config, {NULLDEVICE}, dfcxx::ASAP), true);
 }
 
 TEST(DFCxx, MovingSumAddInt2Linear) {
@@ -23,7 +23,7 @@ TEST(DFCxx, MovingSumAddInt2Linear) {
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 2}
   };
-  EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::Linear), true);
+  EXPECT_EQ(kernel.compile(config, {NULLDEVICE}, dfcxx::Linear), true);
 }
 
 TEST(DFCxx, MovingSumAddInt8Asap) {
@@ -31,7 +31,7 @@ TEST(DFCxx, MovingSumAddInt8Asap) {
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 8}
   };
-  EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::ASAP), true);
+  EXPECT_EQ(kernel.compile(config, {NULLDEVICE}, dfcxx::ASAP), true);
 }
 
 TEST(DFCxx, MovingSumAddInt8Linear) {
@@ -39,5 +39,5 @@ TEST(DFCxx, MovingSumAddInt8Linear) {
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 8}
   };
-  EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::Linear), true);
+  EXPECT_EQ(kernel.compile(config, {NULLDEVICE}, dfcxx::Linear), true);
 }

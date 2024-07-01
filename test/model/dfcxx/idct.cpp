@@ -17,7 +17,7 @@ TEST(DFCxx, IdctAsap) {
           {dfcxx::MUL_INT, 3},
           {dfcxx::SUB_INT, 1}
   };
-  EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::ASAP), true);
+  EXPECT_EQ(kernel.compile(config, {NULLDEVICE}, dfcxx::ASAP), true);
 }
 
 // Issue #7 (https://github.com/ispras/utopia-hls/issues/7).
@@ -29,5 +29,5 @@ TEST(DFCxx, IdctAsap) {
 //           {dfcxx::MUL_INT, 3},
 //           {dfcxx::SUB_INT, 1}
 //   };
-//   EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::Linear), true);
+//   EXPECT_EQ(kernel.compile(config, {NULLDEVICE}, dfcxx::Linear), true);
 // }

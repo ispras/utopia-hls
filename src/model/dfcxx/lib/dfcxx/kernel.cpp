@@ -40,23 +40,31 @@ DFType Kernel::dfBool() {
   return DFType(storage.addType(type));
 }
 
-bool Kernel::compile(const DFLatencyConfig &config, const Scheduler &sched) {
-  DFCIRBuilder builder(config);
-  auto compiled = builder.buildModule(this);
-  llvm::raw_fd_ostream &out = llvm::outs();
-  return DFCIRConverter(config).convertAndPrint(compiled, out, sched);
-}
 
 bool Kernel::compile(const DFLatencyConfig &config,
-                     const std::string &filePath,
+                     const std::vector<std::string> &outputPaths,
                      const Scheduler &sched) {
-  if (filePath.empty()) { return compile(config, sched); }
   DFCIRBuilder builder(config);
   auto compiled = builder.buildModule(this);
-  std::error_code ec;
-  llvm::raw_fd_ostream out(filePath, ec);
-  bool result = DFCIRConverter(config).convertAndPrint(compiled, out, sched);
-  out.close();
+  size_t count = outputPaths.size();
+  std::vector<llvm::raw_fd_ostream *> outputStreams(count);
+  // Output paths strings are converted into output streams.
+  for (unsigned i = 0; i < count; ++i) {
+    std::error_code ec;
+    outputStreams[i] = (!outputPaths[i].empty())
+        ? new llvm::raw_fd_ostream(outputPaths[i], ec)
+        : nullptr;
+  }
+  bool result = DFCIRConverter(config).convertAndPrint(compiled,
+                                                       outputStreams,
+                                                       sched);
+  // Every created output stream has to be closed explicitly.
+  for (llvm::raw_fd_ostream *stream : outputStreams) {
+    if (stream) {
+      stream->close();
+      delete stream;
+    }
+  }
   return result;
 }
 

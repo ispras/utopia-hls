@@ -22,6 +22,7 @@
 #include "dfcxx/vars/var.h"
 
 #include <string_view>
+#include <vector>
 
 namespace dfcxx {
 
@@ -57,9 +58,8 @@ public:
 
   virtual std::string_view getName() = 0;
 
-  bool compile(const DFLatencyConfig &config, const Scheduler &sched);
-
-  bool compile(const DFLatencyConfig &config, const std::string &filePath,
+  bool compile(const DFLatencyConfig &config,
+               const std::vector<std::string> &outputPaths,
                const Scheduler &sched);
 };
 

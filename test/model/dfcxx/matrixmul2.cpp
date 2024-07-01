@@ -16,7 +16,7 @@ TEST(DFCxx, MatrixMul2AddInt2MulInt3Asap) {
           {dfcxx::ADD_INT, 2},
           {dfcxx::MUL_INT, 3},
   };
-  EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::ASAP), true);
+  EXPECT_EQ(kernel.compile(config, {NULLDEVICE}, dfcxx::ASAP), true);
 }
 
 TEST(DFCxx, MatrixMul2AddInt2MulInt3Linear) {
@@ -25,5 +25,5 @@ TEST(DFCxx, MatrixMul2AddInt2MulInt3Linear) {
           {dfcxx::ADD_INT, 2},
           {dfcxx::MUL_INT, 2},
   };
-  EXPECT_EQ(kernel.compile(config, NULLDEVICE, dfcxx::Linear), true);
+  EXPECT_EQ(kernel.compile(config, {NULLDEVICE}, dfcxx::Linear), true);
 }

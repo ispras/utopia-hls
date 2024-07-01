@@ -16,6 +16,8 @@
 
 #include <string>
 
+typedef std::vector<llvm::raw_fd_ostream *> OutputStreams;
+
 namespace dfcxx {
 
 class DFCIRConverter {
@@ -23,7 +25,8 @@ private:
   LatencyConfig config;
 public:
   explicit DFCIRConverter(const DFLatencyConfig &config);
-  bool convertAndPrint(mlir::ModuleOp module, llvm::raw_fd_ostream &out,
+  bool convertAndPrint(mlir::ModuleOp module,
+                       OutputStreams &outputStreams,
                        const Scheduler &sched);
 };
 

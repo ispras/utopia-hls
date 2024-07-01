@@ -61,4 +61,7 @@ enum Scheduler {
 
 typedef std::unordered_map<dfcxx::Ops, unsigned> DFLatencyConfig;
 
+// Macro substitutions for indexes in a std::vector for paths.
+#define SV_OUT_ID 0
+
 #endif // DFCXX_TYPEDEFS_H
