@@ -160,18 +160,26 @@ struct HlsOptions final : public AppOptions {
   HlsOptions(AppOptions &parent):
       AppOptions(parent, HLS_CMD, "High-level synthesis"),
       // Initialize the output paths vector for every possible format.
-      outNames(OUTPUT_FORMATS_COUNT) {
-      
+      outNames(OUT_FORMAT_ID_INT(COUNT)) {
+
     // Named options.
-    options->add_option(CONFIG_ARG, latConfigFile, "JSON latency configuration path")
+    options->add_option(CONFIG_ARG,
+                        latConfigFile,
+                        "JSON latency configuration path")
         ->expected(1);
     
     auto schedGroup = options->add_option_group(SCHEDULER_GROUP);
-    schedGroup->add_flag(ASAP_SCHEDULER_FLAG, asapScheduler, "Use greedy as-soon-as-possible scheduler");
-    schedGroup->add_flag(LP_SCHEDULER_FLAG,   lpScheduler,   "Use Linear Programming scheduler");
+    schedGroup->add_flag(ASAP_SCHEDULER_FLAG,
+                         asapScheduler,
+                        "Use greedy as-soon-as-possible scheduler");
+    schedGroup->add_flag(LP_SCHEDULER_FLAG,
+                         lpScheduler,
+                         "Use Linear Programming scheduler");
     schedGroup->require_option(1); 
     auto outputGroup = options->add_option_group(OUTPUT_GROUP);
-    outputGroup->add_option(SV_OUT_ARG, outNames[SV_OUT_ID], "File path for SystemVerilog output");
+    outputGroup->add_option(SV_OUT_ARG,
+                            outNames[OUT_FORMAT_ID_INT(SystemVerilog)],
+                            "Path to output SystemVerilog module to");
     outputGroup->require_option();
   }
 
@@ -179,7 +187,7 @@ struct HlsOptions final : public AppOptions {
     get(json, CONFIG_JSON,         latConfigFile);
     get(json, ASAP_SCHEDULER_JSON, asapScheduler);
     get(json, LP_SCHEDULER_JSON,   lpScheduler);
-    get(json, SV_OUT_JSON,         outNames[SV_OUT_ID]);
+    get(json, SV_OUT_JSON,         outNames[OUT_FORMAT_ID_INT(SystemVerilog)]);
   }
 
   std::string latConfigFile;
