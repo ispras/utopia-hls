@@ -10,6 +10,7 @@
 #define DFCXX_TYPEDEFS_H
 
 #include <unordered_map>
+#include <cstdint>
 
 namespace dfcxx {
 
