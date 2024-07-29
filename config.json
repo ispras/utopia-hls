@@ -3,6 +3,6 @@
     "config"         : "",
     "asap_scheduler" : false,
     "lp_scheduler"   : false,
-    "out"            : ""
+    "sv_out"         : ""
   }
 }

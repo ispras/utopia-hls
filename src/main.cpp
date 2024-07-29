@@ -38,7 +38,7 @@ int hlsMain(HlsContext &context) {
   auto kernel = start();
   bool useASAP = context.options.asapScheduler;
   kernel->compile(context.options.latConfig,
-                  {context.options.outFile},
+                  context.options.outNames,
                   (useASAP) ? dfcxx::Scheduler::ASAP 
                             : dfcxx::Scheduler::Linear);
   return 0;

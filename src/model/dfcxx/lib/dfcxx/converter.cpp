@@ -37,7 +37,8 @@ bool DFCIRConverter::convertAndPrint(mlir::ModuleOp module,
   }
   pm.addPass(circt::createLowerFIRRTLToHWPass());
   pm.addPass(circt::createLowerSeqToSVPass());
-  pm.addPass(circt::createExportVerilogPass(*(outputStreams[SV_OUT_ID])));
+  pm.addPass(circt::createExportVerilogPass(*(
+      outputStreams[OUT_FORMAT_ID_INT(SystemVerilog)])));
   auto result = pm.run(module);
   return result.succeeded();
 }

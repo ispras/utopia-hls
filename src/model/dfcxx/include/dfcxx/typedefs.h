@@ -10,6 +10,7 @@
 #define DFCXX_TYPEDEFS_H
 
 #include <unordered_map>
+#include <cstdint>
 
 namespace dfcxx {
 
@@ -57,11 +58,17 @@ enum Scheduler {
   ASAP
 };
 
+// Used for accessing specified output format paths.
+enum class OutputFormatID : uint8_t {
+  SystemVerilog = 0,
+  // Utility value. Constains the number of elements in the enum.
+  COUNT
+};
+
+#define OUT_FORMAT_ID_INT(id) static_cast<uint8_t>(dfcxx::OutputFormatID::id)
+
 } // namespace dfcxx
 
 typedef std::unordered_map<dfcxx::Ops, unsigned> DFLatencyConfig;
-
-// Macro substitutions for indexes in a std::vector for paths.
-#define SV_OUT_ID 0
 
 #endif // DFCXX_TYPEDEFS_H

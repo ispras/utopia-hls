@@ -8,6 +8,7 @@
 
 #pragma once
 
+// Is needed for DFCxx output formats definitions and avaiable op. types.
 #include "dfcxx/typedefs.h"
 
 #include "CLI/CLI.hpp"
@@ -32,10 +33,9 @@
 
 #define HLS_ID_JSON "hls"
 #define CONFIG_JSON "config"
-#define SCHEDULER_JSON "scheduler"
 #define ASAP_SCHEDULER_JSON "asap_scheduler"
 #define LP_SCHEDULER_JSON "lp_scheduler"
-#define OUT_JSON "out"
+#define SV_OUT_JSON "sv_out"
 
 //===----------------------------------------------------------------------===//
 // CLI args/flags definitions
@@ -45,7 +45,8 @@
 #define SCHEDULER_GROUP "scheduler"
 #define ASAP_SCHEDULER_FLAG CLI_FLAG("a")
 #define LP_SCHEDULER_FLAG CLI_FLAG("l")
-#define OUT_ARG CLI_ARG("out")
+#define OUTPUT_GROUP "output"
+#define SV_OUT_ARG CLI_ARG("sv_out")
 
 //===----------------------------------------------------------------------===//
 
@@ -157,31 +158,41 @@ protected:
 struct HlsOptions final : public AppOptions {
 
   HlsOptions(AppOptions &parent):
-      AppOptions(parent, HLS_CMD, "High-level synthesis") {
+      AppOptions(parent, HLS_CMD, "High-level synthesis"),
+      // Initialize the output paths vector for every possible format.
+      outNames(OUT_FORMAT_ID_INT(COUNT)) {
 
     // Named options.
-    options->add_option(CONFIG_ARG, latConfigFile, "JSON latency configuration path")
-           ->expected(1);
+    options->add_option(CONFIG_ARG,
+                        latConfigFile,
+                        "JSON latency configuration path")
+        ->expected(1);
     
     auto schedGroup = options->add_option_group(SCHEDULER_GROUP);
-    schedGroup->add_flag(ASAP_SCHEDULER_FLAG, asapScheduler, "Use greedy as-soon-as-possible scheduler");
-    schedGroup->add_flag(LP_SCHEDULER_FLAG,   lpScheduler,   "Use Linear Programming scheduler");
+    schedGroup->add_flag(ASAP_SCHEDULER_FLAG,
+                         asapScheduler,
+                        "Use greedy as-soon-as-possible scheduler");
+    schedGroup->add_flag(LP_SCHEDULER_FLAG,
+                         lpScheduler,
+                         "Use Linear Programming scheduler");
     schedGroup->require_option(1); 
-
-    options->add_option(OUT_ARG, outFile, "Output file path (default: standard output stream)")
-           ->expected(0, 1);
+    auto outputGroup = options->add_option_group(OUTPUT_GROUP);
+    outputGroup->add_option(SV_OUT_ARG,
+                            outNames[OUT_FORMAT_ID_INT(SystemVerilog)],
+                            "Path to output SystemVerilog module to");
+    outputGroup->require_option();
   }
 
   void fromJson(Json json) override {
     get(json, CONFIG_JSON,         latConfigFile);
     get(json, ASAP_SCHEDULER_JSON, asapScheduler);
     get(json, LP_SCHEDULER_JSON,   lpScheduler);
-    get(json, OUT_JSON,            outFile);
+    get(json, SV_OUT_JSON,         outNames[OUT_FORMAT_ID_INT(SystemVerilog)]);
   }
 
   std::string latConfigFile;
   DFLatencyConfig latConfig;
-  std::string outFile;
+  std::vector<std::string> outNames;
   bool asapScheduler;
   bool lpScheduler;
 };
