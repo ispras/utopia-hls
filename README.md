@@ -216,16 +216,16 @@ The list of arguments for `hls`-mode is presented below:
 
 * `-h,--help`: *optional* flag; used to print the help-message about other arguments.
 * `--config <PATH>`: *required* filesystem-path option; used to specify the file for a JSON latency configuration file. Its format is presented in *JSON Configuration* section.
-* `--sv_out <PATH>`: *optional* filesystem-path option; used to specify the destination file for the output SystemVerilog to be generated in.
-* `--dfcir_out <PATH>`: *optional* filesystem-path option; used to specify the destination file for the output DFCIR to be generated in.
+* `--out-sv <PATH>`: *optional* filesystem-path option; used to specify the output SystemVerilog file.
+* `--out-dfcir <PATH>`: *optional* filesystem-path option; used to specify the output DFCIR file.
 * `-a` or `-l`: *required* flag; used to specify the chosen scheduling strategy - either as-soon-as-possible or linear programming. **Exactly one of these flags has to be specified**.
 
-**At least one of the `*_out` options has to be specified.**
+**At least one of the `out-*` options has to be specified.**
 
 Here is an example of an Utopia HLS CLI call:
 
 ```bash
-umain hls --config ~/utopia-user/config.json --sv_out ~/outFile.sv --dfcir_out ~/outFile2.mlir -a
+umain hls --config ~/utopia-user/config.json --out-sv ~/outFile.sv --out-dfcir ~/outFile2.mlir -a
 ```
 
 ### JSON Configuration
@@ -273,7 +273,7 @@ For example, given subdirectory `polynomial2`, the compilation and execution com
 ```bash
 cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH=~/firtool-1.72.0 -DSRC_FILES="~/utopia-hls/examples/polynomial2/polynomial2.cpp"
 cmake --build build
-build/src/umain hls --config examples/polynomial2/polynomial2.json -a
+build/src/umain hls --config examples/polynomial2/polynomial2.json -a --out-sv output
 ```
 
 ## DFCxx Documentation
