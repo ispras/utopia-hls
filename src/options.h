@@ -36,6 +36,7 @@
 #define ASAP_SCHEDULER_JSON "asap_scheduler"
 #define LP_SCHEDULER_JSON "lp_scheduler"
 #define SV_OUT_JSON "sv_out"
+#define DFCIR_OUT_JSON "dfcir_out"
 
 //===----------------------------------------------------------------------===//
 // CLI args/flags definitions
@@ -47,6 +48,7 @@
 #define LP_SCHEDULER_FLAG CLI_FLAG("l")
 #define OUTPUT_GROUP "output"
 #define SV_OUT_ARG CLI_ARG("sv_out")
+#define DFCIR_OUT_ARG CLI_ARG("dfcir_out")
 
 //===----------------------------------------------------------------------===//
 
@@ -180,6 +182,9 @@ struct HlsOptions final : public AppOptions {
     outputGroup->add_option(SV_OUT_ARG,
                             outNames[OUT_FORMAT_ID_INT(SystemVerilog)],
                             "Path to output SystemVerilog module to");
+    outputGroup->add_option(DFCIR_OUT_ARG,
+                            outNames[OUT_FORMAT_ID_INT(DFCIR)],
+                            "Path to output unscheduled DFCIR to");
     outputGroup->require_option();
   }
 
@@ -188,6 +193,7 @@ struct HlsOptions final : public AppOptions {
     get(json, ASAP_SCHEDULER_JSON, asapScheduler);
     get(json, LP_SCHEDULER_JSON,   lpScheduler);
     get(json, SV_OUT_JSON,         outNames[OUT_FORMAT_ID_INT(SystemVerilog)]);
+    get(json, DFCIR_OUT_JSON,      outNames[OUT_FORMAT_ID_INT(DFCIR)]);
   }
 
   std::string latConfigFile;

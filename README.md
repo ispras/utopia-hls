@@ -216,13 +216,16 @@ The list of arguments for `hls`-mode is presented below:
 
 * `-h,--help`: *optional* flag; used to print the help-message about other arguments.
 * `--config <PATH>`: *required* filesystem-path option; used to specify the file for a JSON latency configuration file. Its format is presented in *JSON Configuration* section.
-* `--out <NAME>`: *optional* filesystem-path option; used to specify the destination file for the output SystemVerilog to be generated in. If the name isn't provided or the provided name is an empty string, standard output stream is used.
+* `--sv_out <PATH>`: *optional* filesystem-path option; used to specify the destination file for the output SystemVerilog to be generated in.
+* `--dfcir_out <PATH>`: *optional* filesystem-path option; used to specify the destination file for the output DFCIR to be generated in.
 * `-a` or `-l`: *required* flag; used to specify the chosen scheduling strategy - either as-soon-as-possible or linear programming. **Exactly one of these flags has to be specified**.
+
+**At least one of the `*_out` options has to be specified.**
 
 Here is an example of an Utopia HLS CLI call:
 
 ```bash
-umain hls --config ~/utopia-user/config.json --out ~/outFile -a
+umain hls --config ~/utopia-user/config.json --sv_out ~/outFile.sv --dfcir_out ~/outFile2.mlir -a
 ```
 
 ### JSON Configuration
