@@ -35,7 +35,8 @@
 #define CONFIG_JSON "config"
 #define ASAP_SCHEDULER_JSON "asap_scheduler"
 #define LP_SCHEDULER_JSON "lp_scheduler"
-#define SV_OUT_JSON "sv_out"
+#define OUT_SV_JSON "out_sv"
+#define OUT_DFCIR_JSON "out_dfcir"
 
 //===----------------------------------------------------------------------===//
 // CLI args/flags definitions
@@ -46,7 +47,8 @@
 #define ASAP_SCHEDULER_FLAG CLI_FLAG("a")
 #define LP_SCHEDULER_FLAG CLI_FLAG("l")
 #define OUTPUT_GROUP "output"
-#define SV_OUT_ARG CLI_ARG("sv_out")
+#define OUT_SV_ARG CLI_ARG("out-sv")
+#define OUT_DFCIR_ARG CLI_ARG("out-dfcir")
 
 //===----------------------------------------------------------------------===//
 
@@ -177,9 +179,12 @@ struct HlsOptions final : public AppOptions {
                          "Use Linear Programming scheduler");
     schedGroup->require_option(1); 
     auto outputGroup = options->add_option_group(OUTPUT_GROUP);
-    outputGroup->add_option(SV_OUT_ARG,
+    outputGroup->add_option(OUT_SV_ARG,
                             outNames[OUT_FORMAT_ID_INT(SystemVerilog)],
-                            "Path to output SystemVerilog module to");
+                            "Path to output the SystemVerilog module");
+    outputGroup->add_option(OUT_DFCIR_ARG,
+                            outNames[OUT_FORMAT_ID_INT(DFCIR)],
+                            "Path to output unscheduled DFCIR");
     outputGroup->require_option();
   }
 
@@ -187,7 +192,8 @@ struct HlsOptions final : public AppOptions {
     get(json, CONFIG_JSON,         latConfigFile);
     get(json, ASAP_SCHEDULER_JSON, asapScheduler);
     get(json, LP_SCHEDULER_JSON,   lpScheduler);
-    get(json, SV_OUT_JSON,         outNames[OUT_FORMAT_ID_INT(SystemVerilog)]);
+    get(json, OUT_SV_JSON,         outNames[OUT_FORMAT_ID_INT(SystemVerilog)]);
+    get(json, OUT_DFCIR_JSON,      outNames[OUT_FORMAT_ID_INT(DFCIR)]);
   }
 
   std::string latConfigFile;

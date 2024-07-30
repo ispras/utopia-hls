@@ -26,6 +26,12 @@ bool DFCIRConverter::convertAndPrint(mlir::ModuleOp module,
                                      const Scheduler &sched) {
   mlir::MLIRContext *context = module.getContext();
   mlir::PassManager pm(context);
+
+  // Dump DFCIR if the corresponding option is specified.
+  if (auto *stream = outputStreams[OUT_FORMAT_ID_INT(DFCIR)]) {
+    module.print(*stream);
+  }
+
   pm.addPass(mlir::dfcir::createDFCIRToFIRRTLPass(&config));
   switch (sched) {
     case Linear:
@@ -35,10 +41,14 @@ bool DFCIRConverter::convertAndPrint(mlir::ModuleOp module,
       pm.addPass(mlir::dfcir::createDFCIRASAPSchedulerPass());
       break;
   }
-  pm.addPass(circt::createLowerFIRRTLToHWPass());
-  pm.addPass(circt::createLowerSeqToSVPass());
-  pm.addPass(circt::createExportVerilogPass(*(
-      outputStreams[OUT_FORMAT_ID_INT(SystemVerilog)])));
+
+  // Add FIRRTL->SystemVerilog passes if SystemVerilog output option is specified.
+  if (auto *stream = outputStreams[OUT_FORMAT_ID_INT(SystemVerilog)]) {
+    pm.addPass(circt::createLowerFIRRTLToHWPass());
+    pm.addPass(circt::createLowerSeqToSVPass());
+    pm.addPass(circt::createExportVerilogPass(*stream));
+  }
+
   auto result = pm.run(module);
   return result.succeeded();
 }
