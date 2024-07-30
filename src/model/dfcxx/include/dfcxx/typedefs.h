@@ -9,8 +9,9 @@
 #ifndef DFCXX_TYPEDEFS_H
 #define DFCXX_TYPEDEFS_H
 
-#include <unordered_map>
 #include <cstdint>
+#include <string>
+#include <unordered_map>
 
 namespace dfcxx {
 
@@ -71,5 +72,6 @@ enum class OutputFormatID : uint8_t {
 } // namespace dfcxx
 
 typedef std::unordered_map<dfcxx::Ops, unsigned> DFLatencyConfig;
+typedef std::unordered_map<dfcxx::OutputFormatID, std::string> DFOutputPaths;
 
 #endif // DFCXX_TYPEDEFS_H
