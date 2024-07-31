@@ -10,13 +10,16 @@
 
 #include "gtest/gtest.h"
 
+static const DFOutputPaths nullDevicePath =
+    {{dfcxx::OutputFormatID::SystemVerilog, NULLDEVICE}};
+
 TEST(DFCxx, Polynomial2AddInt2MulInt3Asap) {
   Polynomial2 kernel;
   DFLatencyConfig config = {
           {dfcxx::ADD_INT, 2},
           {dfcxx::MUL_INT, 3}
   };
-  EXPECT_EQ(kernel.compile(config, {NULLDEVICE}, dfcxx::ASAP), true);
+  EXPECT_EQ(kernel.compile(config, nullDevicePath, dfcxx::ASAP), true);
 }
 
 TEST(DFCxx, Polynomial2AddInt2MulInt3Linear) {
@@ -25,7 +28,7 @@ TEST(DFCxx, Polynomial2AddInt2MulInt3Linear) {
           {dfcxx::ADD_INT, 2},
           {dfcxx::MUL_INT, 3}
   };
-  EXPECT_EQ(kernel.compile(config, {NULLDEVICE}, dfcxx::Linear), true);
+  EXPECT_EQ(kernel.compile(config, nullDevicePath, dfcxx::Linear), true);
 }
 
 TEST(DFCxx, Polynomial2AddInt8MulInt15Asap) {
@@ -34,7 +37,7 @@ TEST(DFCxx, Polynomial2AddInt8MulInt15Asap) {
           {dfcxx::ADD_INT, 8},
           {dfcxx::MUL_INT, 15}
   };
-  EXPECT_EQ(kernel.compile(config, {NULLDEVICE}, dfcxx::ASAP), true);
+  EXPECT_EQ(kernel.compile(config, nullDevicePath, dfcxx::ASAP), true);
 }
 
 TEST(DFCxx, Polynomial2AddInt8MulInt15Linear) {
@@ -43,5 +46,5 @@ TEST(DFCxx, Polynomial2AddInt8MulInt15Linear) {
           {dfcxx::ADD_INT, 8},
           {dfcxx::MUL_INT, 15}
   };
-  EXPECT_EQ(kernel.compile(config, {NULLDEVICE}, dfcxx::Linear), true);
+  EXPECT_EQ(kernel.compile(config, nullDevicePath, dfcxx::Linear), true);
 }

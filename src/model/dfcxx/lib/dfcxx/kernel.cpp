@@ -68,5 +68,14 @@ bool Kernel::compile(const DFLatencyConfig &config,
   return result;
 }
 
-} // namespace dfcxx
+bool Kernel::compile(const DFLatencyConfig &config,
+                     const DFOutputPaths &outputPaths,
+                     const Scheduler &sched) {
+  std::vector<std::string> outPathsStrings(OUT_FORMAT_ID_INT(COUNT), "");
+  for (const auto &[id, path] : outputPaths) {
+    outPathsStrings[static_cast<uint8_t>(id)] = path;
+  }
+  return compile(config, outPathsStrings, sched);
+}
 
+} // namespace dfcxx

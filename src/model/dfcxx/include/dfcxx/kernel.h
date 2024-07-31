@@ -61,6 +61,11 @@ public:
   bool compile(const DFLatencyConfig &config,
                const std::vector<std::string> &outputPaths,
                const Scheduler &sched);
+  
+  bool compile(const DFLatencyConfig &config,
+               const DFOutputPaths &outputPaths,
+               const Scheduler &sched);
+
 };
 
 } // namespace dfcxx
