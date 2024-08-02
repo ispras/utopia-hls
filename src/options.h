@@ -37,6 +37,7 @@
 #define LP_SCHEDULER_JSON "lp_scheduler"
 #define OUT_SV_JSON "out_sv"
 #define OUT_DFCIR_JSON "out_dfcir"
+#define OUT_FIRRTL_JSON "out_firrtl"
 
 //===----------------------------------------------------------------------===//
 // CLI args/flags definitions
@@ -49,6 +50,7 @@
 #define OUTPUT_GROUP "output"
 #define OUT_SV_ARG CLI_ARG("out-sv")
 #define OUT_DFCIR_ARG CLI_ARG("out-dfcir")
+#define OUT_FIRRTL_ARG CLI_ARG("out-firrtl")
 
 //===----------------------------------------------------------------------===//
 
@@ -185,6 +187,9 @@ struct HlsOptions final : public AppOptions {
     outputGroup->add_option(OUT_DFCIR_ARG,
                             outNames[OUT_FORMAT_ID_INT(DFCIR)],
                             "Path to output unscheduled DFCIR");
+    outputGroup->add_option(OUT_FIRRTL_ARG,
+                            outNames[OUT_FORMAT_ID_INT(FIRRTL)],
+                            "Path to output scheduled FIRRTL");
     outputGroup->require_option();
   }
 
@@ -194,6 +199,7 @@ struct HlsOptions final : public AppOptions {
     get(json, LP_SCHEDULER_JSON,   lpScheduler);
     get(json, OUT_SV_JSON,         outNames[OUT_FORMAT_ID_INT(SystemVerilog)]);
     get(json, OUT_DFCIR_JSON,      outNames[OUT_FORMAT_ID_INT(DFCIR)]);
+    get(json, OUT_FIRRTL_JSON,     outNames[OUT_FORMAT_ID_INT(FIRRTL)]);
   }
 
   std::string latConfigFile;

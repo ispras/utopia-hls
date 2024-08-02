@@ -63,6 +63,7 @@ enum Scheduler {
 enum class OutputFormatID : uint8_t {
   SystemVerilog = 0,
   DFCIR,
+  FIRRTL,
   // Utility value. Constains the number of elements in the enum.
   COUNT
 };

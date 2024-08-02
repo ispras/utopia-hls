@@ -4,6 +4,17 @@ add_subdirectory(typebuilders)
 add_subdirectory(vars)
 add_subdirectory(varbuilders)
 
+## By default LLVM, MLIR and DFCIR are compiled without RTTI, but not DFCxx.
+## So using core Pass functionality from MLIR in converter.cpp causes
+## linker-level errors ("undefined reference to `typeinfo for mlir::Pass'").
+## The following lines explicitly disable RTTI for DFCxx.
+if (${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
+  set(DISABLE_RTTI_FLAG "/GR-")
+else()
+  set(DISABLE_RTTI_FLAG "-fno-rtti")
+endif()
+add_definitions(${DISABLE_RTTI_FLAG})
+
 set(SOURCES
   kernel.cpp
   ${IR_BUILDERS_SOURCES}
@@ -36,6 +47,7 @@ target_include_directories(DFCXX
 
 ## MLIRDFCIR is ensured to be compiled beforehand.
 target_link_libraries(DFCXX
+  PRIVATE $<LINK_ONLY:MLIRPass>
   PRIVATE $<LINK_ONLY:Utopia::MLIRDFCIR>
   PRIVATE $<LINK_ONLY:CIRCTHW>
   PRIVATE $<LINK_ONLY:CIRCTSV>
