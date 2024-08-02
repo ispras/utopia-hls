@@ -3,11 +3,8 @@ name: main
 on:
   workflow_dispatch:
   push:
-    #branches:
-    #  - master
-  pull_request:
-    #branches:
-     # - master
+    branches:
+      - master
 
 env:
   CIRCT_VERSION: 1.72.0
