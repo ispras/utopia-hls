@@ -7,5 +7,6 @@ build/*
 ## Allow
 !.git
 !.gitconfig
+!.github
 !.gitignore
 !.gitmodules
