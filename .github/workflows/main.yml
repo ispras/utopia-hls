@@ -12,8 +12,8 @@ on:
 env:
   CIRCT_VERSION: 1.72.0
   CIRCT_LIB_TYPE: shared
-  CIRCT_ARCHIVE: circt-full-$CIRCT_LIB_TYPE-linux-x64.tar.gz
-  CIRCT_SOURCE: https://github.com/llvm/circt/releases/download/firtool-$CIRCT_VERSION/$CIRCT_ARCHIVE
+  CIRCT_ARCHIVE: "circt-full-$CIRCT_LIB_TYPE-linux-x64.tar.gz"
+  CIRCT_SOURCE: "https://github.com/llvm/circt/releases/download/firtool-$CIRCT_VERSION/$CIRCT_ARCHIVE"
   CIRCT_DIR: circt
   CIRCT_DIR_NAME: "firtool-$CIRCT_VERSION"
   CIRCT_PATH: "$CIRCT_DIR/$CIRCT_DIR_NAME"
