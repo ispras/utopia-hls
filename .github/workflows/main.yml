@@ -1,0 +1,48 @@
+name: main
+
+on:
+  push:
+    branches: [ $default-branch ]
+  pull_request:
+    branches: [ $default-branch ]
+
+env:
+  CIRCT_VERSION: 1.72.0
+  CIRCT_LIB_TYPE: shared
+  CIRCT_ARCHIVE: circt-full-$CIRCT_LIB_TYPE-linux-x64.tar.gz
+  CIRCT_SOURCE: https://github.com/llvm/circt/releases/download/firtool-$CIRCT_VERSION/$CIRCT_ARCHIVE
+  CIRCT_DIR: circt
+  CIRCT_DIR_NAME: firtool-$CIRCT_VERSION
+  CIRCT_PATH: $CIRCT_DIR/$CIRCT_DIR_NAME
+  MLIR_TARGETS_PATH: $CIRCT_DIR_NAME/lib/cmake/mlir/MLIRTargets.cmake
+  BUILD_DIR: build
+  DEFAULT_KERNEL: $GITHUB_WORKSPACE/examples/polynomial2/polynomial2.cpp
+  TESTS_EXECUTABLE: test/utest
+  
+jobs:
+  gcc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Download APT dependencies
+        run: |
+          sudo apt update
+          sudo apt install build-essential clang cmake g++ gcc liblpsolve55-dev lld make ninja-build
+      - name: Download and configure CIRCT & LLVM
+        run: |
+          mkdir $CIRCT_DIR
+          cd $CIRCT_DIR
+          wget $CIRCT_SOURCE
+          tar -xvf $CIRCT_ARCHIVE
+          sed -i 's/foreach(_target "LLVMSupport" "LLVMCore" "LLVMMC" "LLVMTarget" "LLVMAsmParser" "LLVMBinaryFormat" "LLVMBitReader" "LLVMBitWriter" "LLVMFrontendOpenMP" "LLVMTransformUtils" "LLVMTargetParser" "LLVMIRReader" "LLVMipo" "LLVMLinker" "LLVMPasses" "LLVMMCParser" "LLVMLineEditor" "LLVMTableGen" "LLVMCoroutines" "LLVMExecutionEngine" "LLVMObject" "LLVMOrcJIT" "LLVMJITLink" "LLVMAnalysis" "LLVMAggressiveInstCombine" "LLVMInstCombine" "LLVMScalarOpts" "LLVMVectorize" "LLVMX86CodeGen" "LLVMX86Desc" "LLVMX86Info" "LLVMX86AsmParser" "LLVMX86Disassembler" "CIRCTAffineToLoopSchedule" "CIRCTArcToLLVM" "CIRCTCalyxToFSM" "CIRCTCalyxToHW" "CIRCTCalyxNative" "CIRCTCombToArith" "CIRCTCombToLLVM" "CIRCTCombToSMT" "CIRCTConvertToArcs" "CIRCTDCToHW" "CIRCTExportChiselInterface" "CIRCTExportVerilog" "CIRCTFIRRTLToHW" "CIRCTFSMToSV" "CIRCTHandshakeToDC" "CIRCTHandshakeToHW" "CIRCTHWArithToHW" "CIRCTHWToLLHD" "CIRCTHWToLLVM" "CIRCTHWToBTOR2" "CIRCTHWToSMT" "CIRCTHWToSV" "CIRCTHWToSystemC" "CIRCTLLHDToLLVM" "CIRCTLoopScheduleToCalyx" "CIRCTMooreToCore" "CIRCTPipelineToHW" "CIRCTSCFToCalyx" "CIRCTSeqToSV" "CIRCTSimToSV" "CIRCTCFToHandshake" "CIRCTVerifToSMT" "CIRCTVerifToSV" "CIRCTExportFIRRTL" "CIRCTComb" "CIRCTCombTransforms" "CIRCTDebug" "CIRCTESI" "CIRCTFIRRTL" "CIRCTImportFIRFile" "CIRCTMSFT" "CIRCTMSFTTransforms" "CIRCTHW" "CIRCTLLHD" "CIRCTMoore" "CIRCTOM" "CIRCTOMEvaluator" "CIRCTSeq" "CIRCTSeqTransforms" "CIRCTSV" "CIRCTSVTransforms" "CIRCTFSM" "CIRCTFSMTransforms" "CIRCTHandshake" "CIRCTHandshakeTransforms" "CIRCTHWArith" "CIRCTVerif" "CIRCTLTL" "CIRCTEmit" "CIRCTFirtool" )/foreach(_target "LLVMSupport" "LLVMCore" "LLVMMC" "LLVMTarget" "LLVMAsmParser" "LLVMBinaryFormat" "LLVMBitReader" "LLVMBitWriter" "LLVMFrontendOpenMP" "LLVMTransformUtils" "LLVMTargetParser" "LLVMIRReader" "LLVMipo" "LLVMLinker" "LLVMPasses" "LLVMMCParser" "LLVMLineEditor" "LLVMTableGen" "LLVMCoroutines" "LLVMExecutionEngine" "LLVMObject" "LLVMOrcJIT" "LLVMJITLink" "LLVMAnalysis" "LLVMAggressiveInstCombine" "LLVMInstCombine" "LLVMScalarOpts" "LLVMVectorize" "LLVMX86CodeGen" "LLVMX86Desc" "LLVMX86Info" "LLVMX86AsmParser" "LLVMX86Disassembler")/' $MLIR_TARGETS_PATH
+          cd $GITHUB_WORKSPACE
+      - name: Configure Utopia HLS build
+        run: |
+          cmake -S . -B $BUILD_DIR -G Ninja -DCMAKE_CXX_COMPILER=g++ -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/$CIRCT_PATH" -DSRC_FILES="$DEFAULT_KERNEL" -DBUILD_TESTS=ON
+      - name: Build Utopia HLS
+        run: |
+          cmake --build $BUILD_DIR
+      - name: Run tests
+        run: |
+          $BUILD_DIR/$TESTS_EXECUTABLE
