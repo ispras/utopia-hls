@@ -18,7 +18,10 @@ env:
   TESTS_EXECUTABLE: test/utest
   
 jobs:
-  gcc:
+  build-and-test:
+    strategy:
+      matrix:
+        compiler: [g++, clang++]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
@@ -64,7 +67,7 @@ jobs:
         env:
           CIRCT_DIR: "firtool-${{env.CIRCT_VERSION}}"
         run: |
-          cmake -S . -B "${{env.BUILD_DIR}}" -G Ninja -DCMAKE_CXX_COMPILER=g++ \
+          cmake -S . -B "${{env.BUILD_DIR}}" -G Ninja -DCMAKE_CXX_COMPILER="${{matrix.compiler}}" \
           -DCMAKE_PREFIX_PATH="${{github.workspace}}/${{env.DEPENDENCIES_DIR}}/${{env.CIRCT_DIR}}" \
           -DSRC_FILES="${{github.workspace}}/examples/polynomial2/polynomial2.cpp" -DBUILD_TESTS=ON
 
