@@ -23,10 +23,12 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
+
       - name: Download APT dependencies
         run: |
           sudo apt update
           sudo apt install build-essential clang cmake g++ gcc liblpsolve55-dev lld make ninja-build
+
       - name: Download and configure CIRCT & LLVM
         env:
           CIRCT_SOURCE: "https://github.com/llvm/circt/releases/download/firtool-${{env.CIRCT_VERSION}}/${{env.CIRCT_ARCHIVE}}"
@@ -38,14 +40,19 @@ jobs:
           tar -xvf "${{env.CIRCT_ARCHIVE}}"
           sed -i 's/foreach(_target "LLVMSupport" "LLVMCore" "LLVMMC" "LLVMTarget" "LLVMAsmParser" "LLVMBinaryFormat" "LLVMBitReader" "LLVMBitWriter" "LLVMFrontendOpenMP" "LLVMTransformUtils" "LLVMTargetParser" "LLVMIRReader" "LLVMipo" "LLVMLinker" "LLVMPasses" "LLVMMCParser" "LLVMLineEditor" "LLVMTableGen" "LLVMCoroutines" "LLVMExecutionEngine" "LLVMObject" "LLVMOrcJIT" "LLVMJITLink" "LLVMAnalysis" "LLVMAggressiveInstCombine" "LLVMInstCombine" "LLVMScalarOpts" "LLVMVectorize" "LLVMX86CodeGen" "LLVMX86Desc" "LLVMX86Info" "LLVMX86AsmParser" "LLVMX86Disassembler" "CIRCTAffineToLoopSchedule" "CIRCTArcToLLVM" "CIRCTCalyxToFSM" "CIRCTCalyxToHW" "CIRCTCalyxNative" "CIRCTCombToArith" "CIRCTCombToLLVM" "CIRCTCombToSMT" "CIRCTConvertToArcs" "CIRCTDCToHW" "CIRCTExportChiselInterface" "CIRCTExportVerilog" "CIRCTFIRRTLToHW" "CIRCTFSMToSV" "CIRCTHandshakeToDC" "CIRCTHandshakeToHW" "CIRCTHWArithToHW" "CIRCTHWToLLHD" "CIRCTHWToLLVM" "CIRCTHWToBTOR2" "CIRCTHWToSMT" "CIRCTHWToSV" "CIRCTHWToSystemC" "CIRCTLLHDToLLVM" "CIRCTLoopScheduleToCalyx" "CIRCTMooreToCore" "CIRCTPipelineToHW" "CIRCTSCFToCalyx" "CIRCTSeqToSV" "CIRCTSimToSV" "CIRCTCFToHandshake" "CIRCTVerifToSMT" "CIRCTVerifToSV" "CIRCTExportFIRRTL" "CIRCTComb" "CIRCTCombTransforms" "CIRCTDebug" "CIRCTESI" "CIRCTFIRRTL" "CIRCTImportFIRFile" "CIRCTMSFT" "CIRCTMSFTTransforms" "CIRCTHW" "CIRCTLLHD" "CIRCTMoore" "CIRCTOM" "CIRCTOMEvaluator" "CIRCTSeq" "CIRCTSeqTransforms" "CIRCTSV" "CIRCTSVTransforms" "CIRCTFSM" "CIRCTFSMTransforms" "CIRCTHandshake" "CIRCTHandshakeTransforms" "CIRCTHWArith" "CIRCTVerif" "CIRCTLTL" "CIRCTEmit" "CIRCTFirtool" )/foreach(_target "LLVMSupport" "LLVMCore" "LLVMMC" "LLVMTarget" "LLVMAsmParser" "LLVMBinaryFormat" "LLVMBitReader" "LLVMBitWriter" "LLVMFrontendOpenMP" "LLVMTransformUtils" "LLVMTargetParser" "LLVMIRReader" "LLVMipo" "LLVMLinker" "LLVMPasses" "LLVMMCParser" "LLVMLineEditor" "LLVMTableGen" "LLVMCoroutines" "LLVMExecutionEngine" "LLVMObject" "LLVMOrcJIT" "LLVMJITLink" "LLVMAnalysis" "LLVMAggressiveInstCombine" "LLVMInstCombine" "LLVMScalarOpts" "LLVMVectorize" "LLVMX86CodeGen" "LLVMX86Desc" "LLVMX86Info" "LLVMX86AsmParser" "LLVMX86Disassembler")/' "${{env.CIRCT_DIR}}/${{env.MLIR_TARGETS_PATH}}"
           cd "${{github.workspace}}"
+
       - name: Configure Utopia HLS build
         env:
           CIRCT_DIR: "firtool-${{env.CIRCT_VERSION}}"
         run: |
-          cmake -S . -B "${{env.BUILD_DIR}}" -G Ninja -DCMAKE_CXX_COMPILER=g++ -DCMAKE_PREFIX_PATH="${{github.workspace}}/${{env.DEPENDENCIES_DIR}}/${{env.CIRCT_DIR}}" -DSRC_FILES="${{github.workspace}}/examples/polynomial2/polynomial2.cpp" -DBUILD_TESTS=ON
+          cmake -S . -B "${{env.BUILD_DIR}}" -G Ninja -DCMAKE_CXX_COMPILER=g++ \
+          -DCMAKE_PREFIX_PATH="${{github.workspace}}/${{env.DEPENDENCIES_DIR}}/${{env.CIRCT_DIR}}" \
+          -DSRC_FILES="${{github.workspace}}/examples/polynomial2/polynomial2.cpp" -DBUILD_TESTS=ON
+
       - name: Build Utopia HLS
         run: |
           cmake --build "${{env.BUILD_DIR}}"
+
       - name: Run tests
         run: |
           "${{env.BUILD_DIR}}/${{env.TESTS_EXECUTABLE}}"
