@@ -12,12 +12,12 @@ on:
 env:
   CIRCT_VERSION: 1.72.0
   CIRCT_LIB_TYPE: shared
-  CIRCT_ARCHIVE: "circt-full-${{env.CIRCT_LIB_TYPE}}-linux-x64.tar.gz"
-  CIRCT_SOURCE: "https://github.com/llvm/circt/releases/download/firtool-${{env.CIRCT_VERSION}}/${{env.CIRCT_ARCHIVE}}"
+  CIRCT_ARCHIVE: "circt-full-${{CIRCT_LIB_TYPE}}-linux-x64.tar.gz"
+  CIRCT_SOURCE: "https://github.com/llvm/circt/releases/download/firtool-${{CIRCT_VERSION}}/${{CIRCT_ARCHIVE}}"
   CIRCT_DIR: circt
-  CIRCT_DIR_NAME: "firtool-${{env.CIRCT_VERSION}}"
-  CIRCT_PATH: "${{env.CIRCT_DIR}}/${{env.CIRCT_DIR_NAME}}"
-  MLIR_TARGETS_PATH: "${{env.CIRCT_DIR_NAME}}/lib/cmake/mlir/MLIRTargets.cmake"
+  CIRCT_DIR_NAME: "firtool-${{CIRCT_VERSION}}"
+  CIRCT_PATH: "${{CIRCT_DIR}}/${{CIRCT_DIR_NAME}}"
+  MLIR_TARGETS_PATH: "${{CIRCT_DIR_NAME}}/lib/cmake/mlir/MLIRTargets.cmake"
   BUILD_DIR: build
   DEFAULT_KERNEL: "${{GITHUB_WORKSPACE}}/examples/polynomial2/polynomial2.cpp"
   TESTS_EXECUTABLE: test/utest
