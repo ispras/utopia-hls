@@ -16,7 +16,7 @@
 
 namespace dfcxx {
 
-class DFCIRDumperPass: public PassWrapper<DFCIRDumperPass, OperationPass<ModuleOp>> {
+class DFCIRDumperPass: public mlir::PassWrapper<DFCIRDumperPass, mlir::OperationPass<mlir::ModuleOp>> {
 private:
   llvm::raw_fd_ostream *stream;
 
