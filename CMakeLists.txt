@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+## SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.20)
 
@@ -15,29 +15,29 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 ##===----------------------------------------------------------------------===//
 ## CMake command line arguments handling
 
-# It is assumed that unless CIRCT & LLVM dependencies are installed into default system paths,
-# "CMAKE_PREFIX_PATH" is explicitly provided to specify these dependencies. 
+## It is assumed that unless CIRCT & LLVM dependencies are installed into default system paths,
+## "CMAKE_PREFIX_PATH" is explicitly provided to specify these dependencies. 
 
 message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 
-# "INCLUDE_DIRS" is optional and may be omitted.
+## "INCLUDE_DIRS" is optional and may be omitted.
 if(DEFINED INCLUDE_DIRS)
   message(STATUS "Kernel include directories: ${INCLUDE_DIRS}")
 endif()
 
-# "SRC_FILES" has to be explicitly provided.
+## "SRC_FILES" has to be explicitly provided.
 if(DEFINED SRC_FILES)
   message(STATUS "Kernel source files: ${SRC_FILES}")
 else()
   message(FATAL_ERROR "SRC_FILES var is not set!")
 endif()
 
-# Unless explicit binary name is provided, "umain" is used.
+## Unless explicit binary name is provided, "umain" is used.
 if(NOT DEFINED OUT)
   set(OUT umain)
 endif()
 
-# Unless "BUILD_TESTS" is explicitly set to "ON", tests will not be built.
+## Unless "BUILD_TESTS" is explicitly set to "ON", tests will not be built.
 option(BUILD_TESTS OFF)
 
 message(STATUS "Output binary name: ${OUT}")
