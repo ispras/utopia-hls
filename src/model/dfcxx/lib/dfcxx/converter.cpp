@@ -9,9 +9,35 @@
 #include "dfcxx/converter.h"
 
 #include "circt/Conversion/Passes.h"
+#include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
 
+#include <memory>
+
 namespace dfcxx {
+
+class DFCIRDumperPass: public mlir::PassWrapper<DFCIRDumperPass, mlir::OperationPass<mlir::ModuleOp>> {
+private:
+  llvm::raw_fd_ostream *stream;
+
+public:
+  MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(DFCIRDumperPass)
+
+  DFCIRDumperPass() = default;
+
+  DFCIRDumperPass(llvm::raw_fd_ostream *stream) : DFCIRDumperPass() {
+    this->stream = stream;
+  }
+
+  void runOnOperation() override {
+    return getOperation()->print(*stream);
+  }
+
+};
+
+std::unique_ptr<mlir::Pass> createDFCIRDumperPass(llvm::raw_fd_ostream *stream) {
+  return std::make_unique<DFCIRDumperPass>(stream);
+}
 
 DFCIRConverter::DFCIRConverter(const DFLatencyConfig &config) {
   this->config = LatencyConfig();
@@ -40,6 +66,11 @@ bool DFCIRConverter::convertAndPrint(mlir::ModuleOp module,
     case ASAP:
       pm.addPass(mlir::dfcir::createDFCIRASAPSchedulerPass());
       break;
+  }
+
+  // Dump FIRRTL if the corresponding option is specified.
+  if (auto *stream = outputStreams[OUT_FORMAT_ID_INT(FIRRTL)]) {
+    pm.addPass(createDFCIRDumperPass(stream));
   }
 
   // Add FIRRTL->SystemVerilog passes if SystemVerilog output option is specified.

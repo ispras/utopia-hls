@@ -3,6 +3,8 @@
     "config"         : "",
     "asap_scheduler" : false,
     "lp_scheduler"   : false,
-    "sv_out"         : ""
+    "out_sv"         : "",
+    "out_dfcir"      : "",
+    "out_firrtl"     : ""
   }
 }

@@ -6,5 +6,6 @@ set(DFCXX_TESTS
   model/dfcxx/addconst.cpp
   model/dfcxx/movingsum.cpp
   model/dfcxx/idct.cpp
+  model/dfcxx/output_formats.cpp
   PARENT_SCOPE
 )

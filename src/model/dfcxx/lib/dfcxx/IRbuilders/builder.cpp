@@ -6,9 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "dfcxx/IRbuilders/builder.h"
+
 #include "circt/Dialect/FIRRTL/FIRRTLDialect.h"
 #include "circt/Dialect/SV/SVDialect.h"
-#include "dfcxx/IRbuilders/builder.h"
 #include "mlir/Parser/Parser.h"
 
 namespace dfcxx {
