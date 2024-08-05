@@ -16,9 +16,9 @@ static const DFOutputPaths nullDevicePath =
 TEST(DFCxx, IdctAsap) {
   IDCT kernel;
   DFLatencyConfig config = {
-          {dfcxx::ADD_INT, 1},
-          {dfcxx::MUL_INT, 3},
-          {dfcxx::SUB_INT, 1}
+    {dfcxx::ADD_INT, 1},
+    {dfcxx::MUL_INT, 3},
+    {dfcxx::SUB_INT, 1}
   };
   EXPECT_EQ(kernel.compile(config, nullDevicePath, dfcxx::ASAP), true);
 }
@@ -28,9 +28,9 @@ TEST(DFCxx, IdctAsap) {
 // TEST(DFCxx, IdctLinear) {
 //   IDCT kernel;
 //   DFLatencyConfig config = {
-//           {dfcxx::ADD_INT, 1},
-//           {dfcxx::MUL_INT, 3},
-//           {dfcxx::SUB_INT, 1}
+//     {dfcxx::ADD_INT, 1},
+//     {dfcxx::MUL_INT, 3},
+//     {dfcxx::SUB_INT, 1}
 //   };
 //   EXPECT_EQ(kernel.compile(config, nullDevicePath, dfcxx::Linear), true);
 // }
