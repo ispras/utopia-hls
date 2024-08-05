@@ -18,7 +18,7 @@ static const DFLatencyConfig config =
 TEST(DFCxxOutputFormats, FIRRTL) {
   Polynomial2 kernel;
   DFOutputPaths paths = {
-    {dfcxx::OutputFormatID::SystemVerilog, NULLDEVICE}
+    {dfcxx::OutputFormatID::FIRRTL, NULLDEVICE}
   };
   EXPECT_EQ(kernel.compile(config, paths, dfcxx::ASAP), true);
 }
