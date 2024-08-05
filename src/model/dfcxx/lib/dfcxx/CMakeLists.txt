@@ -7,13 +7,8 @@ add_subdirectory(varbuilders)
 ## By default LLVM, MLIR and DFCIR are compiled without RTTI, but not DFCxx.
 ## So using core Pass functionality from MLIR in converter.cpp causes
 ## linker-level errors ("undefined reference to `typeinfo for mlir::Pass'").
-## The following lines explicitly disable RTTI for DFCxx.
-if (${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
-  set(DISABLE_RTTI_FLAG "/GR-")
-else()
-  set(DISABLE_RTTI_FLAG "-fno-rtti")
-endif()
-add_definitions(${DISABLE_RTTI_FLAG})
+## The following line explicitly disables RTTI for DFCxx.
+add_definitions("-fno-rtti")
 
 set(SOURCES
   kernel.cpp
