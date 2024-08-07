@@ -1,17 +1,13 @@
 //
 //  Bismillah ar-Rahmaan ar-Raheem
 //
-//  Easylogging++ v9.96.7
+//  Easylogging++ v9.97.1
 //  Single-header only, cross-platform logging library for C++ applications
 //
-//  Copyright (c) 2012-2018 Amrayn Web Services
-//  Copyright (c) 2012-2018 @abumusamq
+//  Copyright (c) 2012-present @abumq (Majid Q.)
 //
 //  This library is released under the MIT Licence.
-//  https://github.com/amrayn/easyloggingpp/blob/master/LICENSE
-//
-//  https://amrayn.com
-//  http://muflihun.com
+//  https://github.com/abumq/easyloggingpp/blob/master/LICENSE
 //
 
 #ifndef EASYLOGGINGPP_H
@@ -351,14 +347,14 @@ ELPP_INTERNAL_DEBUGGING_OUT_INFO << ELPP_INTERNAL_DEBUGGING_MSG(internalInfoStre
 #if defined(ELPP_SYSLOG)
 #   include <syslog.h>
 #endif  // defined(ELPP_SYSLOG)
-#include <cctype>
-#include <cerrno>
-#include <csignal>
-#include <cstdarg>
-#include <cstdlib>
-#include <cstring>
 #include <ctime>
+#include <cstring>
+#include <cstdlib>
+#include <cctype>
 #include <cwchar>
+#include <csignal>
+#include <cerrno>
+#include <cstdarg>
 #if defined(ELPP_UNICODE)
 #   include <locale>
 #  if ELPP_OS_WINDOWS
@@ -386,18 +382,18 @@ ELPP_INTERNAL_DEBUGGING_OUT_INFO << ELPP_INTERNAL_DEBUGGING_MSG(internalInfoStre
 #      endif // defined(ELPP_WINSOCK2)
 #  endif // defined(WIN32_LEAN_AND_MEAN)
 #endif  // ELPP_OS_UNIX
-#include <algorithm>
-#include <fstream>
-#include <functional>
-#include <iostream>
-#include <map>
-#include <memory>
-#include <sstream>
 #include <string>
-#include <type_traits>
+#include <vector>
+#include <map>
 #include <unordered_map>
 #include <utility>
-#include <vector>
+#include <functional>
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <memory>
+#include <type_traits>
 #if ELPP_THREADING_ENABLED
 #  if ELPP_USE_STD_THREADING
 #      include <mutex>
@@ -1402,7 +1398,7 @@ class Registry : public AbstractRegistry<T_Ptr, std::unordered_map<T_Key, T_Ptr*
   }
 
  protected:
-  virtual void unregisterAll(void) ELPP_FINAL {
+  virtual void unregisterAll(void) ELPP_FINAL override {
     if (!this->empty()) {
       for (auto&& curr : this->list()) {
         base::utils::safeDelete(curr.second);
@@ -1435,7 +1431,7 @@ class Registry : public AbstractRegistry<T_Ptr, std::unordered_map<T_Key, T_Ptr*
   }
 
  private:
-  virtual void deepCopy(const AbstractRegistry<T_Ptr, std::unordered_map<T_Key, T_Ptr*>>& sr) ELPP_FINAL {
+  virtual void deepCopy(const AbstractRegistry<T_Ptr, std::unordered_map<T_Key, T_Ptr*>>& sr) ELPP_FINAL override {
     for (const_iterator it = sr.cbegin(); it != sr.cend(); ++it) {
       registerNew(it->first, new T_Ptr(*it->second));
     }
@@ -1486,7 +1482,7 @@ class RegistryWithPred : public AbstractRegistry<T_Ptr, std::vector<T_Ptr*>> {
   }
 
  protected:
-  virtual void unregisterAll(void) ELPP_FINAL {
+  virtual void unregisterAll(void) ELPP_FINAL override {
     if (!this->empty()) {
       for (auto&& curr : this->list()) {
         base::utils::safeDelete(curr);

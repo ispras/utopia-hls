@@ -56,7 +56,7 @@ void LPProblem::addConstraint(size_t count, int *vars,
 }
 
 void LPProblem::finalizeInit() {
-  for (const LPVariable &var: variables) {
+  for (unsigned i = 0; i < variables.size(); ++i) {
     // Issue #8 (https://github.com/ispras/utopia-hls/issues/8).
     ::add_column(lp, NULL);  
   }

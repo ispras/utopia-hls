@@ -9,3 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_library(${ELPP_LIBRARY} easylogging++.cc)
 target_include_directories(${ELPP_LIBRARY} PUBLIC .)
+target_compile_options(${ELPP_LIBRARY}
+  PRIVATE
+    -Wno-range-loop-construct
+)

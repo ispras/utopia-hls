@@ -403,25 +403,7 @@ for (unsigned id = 0; id < op->getNumResults(); ++id) {                      \
 return name;
 
 // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
-#define GET_OP_SV_PARAMS(CTX, ATTR_TYPE, LATENCY, WIDTH) {        \
-//circt::firrtl::ParamDeclAttr::get(                              \
-//        CTX,                                                    \
-//        mlir::StringAttr::get(                                  \
-//        CTX,                                                    \
-//        STAGES_PARAM),                                          \
-//        ATTR_TYPE,                                              \
-//        mlir::IntegerAttr::get(                                 \
-//        ATTR_TYPE, LATENCY)),                                   \
-//circt::firrtl::ParamDeclAttr::get(                              \
-//        CTX,                                                    \
-//        mlir::StringAttr::get(                                  \
-//        CTX,                                                    \
-//        "op_" TYPE_SIZE_PARAM),                                 \
-//        ATTR_TYPE,                                              \
-//        mlir::IntegerAttr::get(                                 \
-//        ATTR_TYPE,                                              \
-//        WIDTH))                                                 \
-}
+#define GET_OP_SV_PARAMS(CTX, ATTR_TYPE, LATENCY, WIDTH) { }
 
 template <typename OperationType, typename AdaptorType>
 class SchedulableOpConversionPattern {
@@ -490,19 +472,12 @@ public:                                                                         
                             Rewriter &rewriter) const override {                                    \
     Type type = op->getResult(0).getType();                                                         \
     Type innerType = llvm::cast<DFType>(type).getDFType();                                          \
-    Type firstType = (*oldTypeMap)[std::make_pair(op, 0)];                                          \
-    Type firstInnerType = llvm::cast<DFType>(firstType).getDFType();                                \
-    Type secondType = (*oldTypeMap)[std::make_pair(op, 1)];                                         \
-    Type secondInnerType = llvm::cast<DFType>(secondType).getDFType();                              \
     Type convertedType = getTypeConverter()->convertType(type);                                     \
     auto ports = getBinaryOpPorts(convertedType, adaptor.getFirst().getType(),                      \
                                   adaptor.getSecond().getType(),                                    \
                                   rewriter.getContext());                                           \
     IntegerType attrType = mlir::IntegerType::get(rewriter.getContext(), 32,                        \
                                                   mlir::IntegerType::Unsigned);                     \
-    auto outTypeWidth = llvm::cast<SVSynthesizable>(innerType).getBitWidth();                       \
-    auto firstTypeWidth = llvm::cast<SVSynthesizable>(firstInnerType).getBitWidth();                \
-    auto secondTypeWidth = llvm::cast<SVSynthesizable>(secondInnerType).getBitWidth();              \
                                                                                                     \
     bool isFloat = innerType.isa<DFCIRFloatType>();                                                 \
     unsigned latency = latencyConfig->find(                                                         \

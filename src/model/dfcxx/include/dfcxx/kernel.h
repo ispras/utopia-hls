@@ -31,6 +31,12 @@ class DFCIRBuilder;
 class Kernel {
   friend DFCIRBuilder;
 
+private:
+  KernStorage storage;
+  TypeBuilder typeBuilder;
+  VarBuilder varBuilder;
+  Graph graph;
+
 protected:
   IO io;
   Offset offset;
@@ -46,12 +52,6 @@ protected:
   DFType dfBool();
 
   Kernel();
-
-private:
-  KernStorage storage;
-  TypeBuilder typeBuilder;
-  VarBuilder varBuilder;
-  Graph graph;
 
 public:
   virtual ~Kernel() = default;

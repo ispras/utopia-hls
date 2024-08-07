@@ -48,7 +48,6 @@ void DFCIRBuilder::translate(dfcxx::Node node, dfcxx::Graph *graph,
   auto loc = builder.getUnknownLoc();
 
   const auto &ins = graph->inputs[node];
-  const auto &outs = graph->outputs[node];
 
   auto nameAttr = mlir::StringAttr::get(&ctx, node.var->getName());
 
@@ -126,9 +125,13 @@ void DFCIRBuilder::translate(dfcxx::Node node, dfcxx::Graph *graph,
     case MUX: {
       Node ctrl = ins[node.data.muxId].source;
       llvm::SmallVector<mlir::Value> mux;
-      for (int i = ins.size() - 1; i >= 0; --i) {
-        if (i != node.data.muxId) {
-          mux.push_back(map[ins[i].source]);
+      uint64_t size = ins.size();
+      for (uint64_t i = 0; i < size; ++i) {
+        // To produce correct FIRRTL/SystemVerilog code
+        // multiplexer inputs have to be reversed.
+        uint64_t ind = size - 1 - i;
+        if (ind != node.data.muxId) {
+          mux.push_back(map[ins[ind].source]);
         }
       }
       muxMap[node] = mux;

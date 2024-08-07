@@ -1,9 +1,9 @@
-# SPDX-License-Identifier: Apache-2.0
+## SPDX-License-Identifier: Apache-2.0
 
-# The configuration file w/ the project version.
+## The configuration file w/ the project version.
 configure_file(config.h.in config.h)
 
-# The compilation options.
+## The compilation options.
 add_compile_options(-g3 -Wall -Wignored-qualifiers)
 
 add_subdirectory(model)

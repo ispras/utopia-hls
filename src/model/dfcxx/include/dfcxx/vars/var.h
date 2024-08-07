@@ -35,8 +35,8 @@ class DFVariableImpl {
   friend DFCIRBuilder;
 
 private:
-  IODirection direction;
   std::string name;
+  IODirection direction;
 
 public:
   virtual ~DFVariableImpl() = default;
