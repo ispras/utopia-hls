@@ -92,4 +92,4 @@ jobs:
       
       - name: Run Verilator
         run: |
-          verilator --lint-only -Wall -Wno-DECLFILENAME "${{env.MODULE_OUTPUT_PATH}}" ${{env.LIBRARY_OUTPUT_PATH}}"
+          verilator --lint-only -Wall -Wno-DECLFILENAME "${{env.MODULE_OUTPUT_PATH}}" "${{env.LIBRARY_OUTPUT_PATH}}"
