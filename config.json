@@ -4,6 +4,7 @@
     "asap_scheduler" : false,
     "lp_scheduler"   : false,
     "out_sv"         : "",
+    "out_stubs"      : "",
     "out_dfcir"      : "",
     "out_firrtl"     : ""
   }

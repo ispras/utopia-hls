@@ -19,6 +19,10 @@ target_include_directories(MLIRDFCIR
                           ## Issue #16 (https://github.com/ispras/utopia-hls/issues/16).
 )
 
+set(TEMPLATES_PATH "${PROJECT_SOURCE_DIR}/templates")
+
+add_compile_definitions(TEMPLATES_PATH="${TEMPLATES_PATH}" STUBS_TEMPLATE_PATH="${TEMPLATES_PATH}/stubs.tpl")
+
 target_link_libraries(MLIRDFCIR
   PUBLIC
     MLIRIR
@@ -29,6 +33,7 @@ target_link_libraries(MLIRDFCIR
         
   PRIVATE
     LpSolve::LpSolve
+    CTemplate::nothreads
 )
 
 add_library(Utopia::MLIRDFCIR ALIAS MLIRDFCIR)

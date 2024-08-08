@@ -32,7 +32,9 @@ inline FExtModuleOp createBufferModule(OpBuilder &builder,
   auto typeWidth =
       circt::firrtl::getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(type));
   assert(typeWidth.has_value());
-  return builder.create<FExtModuleOp>(
+  IntegerType attrType = mlir::IntegerType::get(builder.getContext(), 32,
+                                                mlir::IntegerType::Unsigned);
+  auto module = builder.create<FExtModuleOp>(
       loc,
       mlir::StringAttr::get(builder.getContext(), name),
       circt::firrtl::ConventionAttr::get(builder.getContext(),
@@ -40,6 +42,9 @@ inline FExtModuleOp createBufferModule(OpBuilder &builder,
       ports,
       StringRef(name),
       mlir::ArrayAttr());
+  module->setAttr(INSTANCE_LATENCY_ATTR,
+                  mlir::IntegerAttr::get(attrType, stages));
+  return module;
 }
 
 inline FExtModuleOp createBufferModuleWithTypeName(OpBuilder &builder,

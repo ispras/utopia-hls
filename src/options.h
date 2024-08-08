@@ -36,6 +36,7 @@
 #define ASAP_SCHEDULER_JSON "asap_scheduler"
 #define LP_SCHEDULER_JSON "lp_scheduler"
 #define OUT_SV_JSON "out_sv"
+#define OUT_STUBS_JSON "out_stubs"
 #define OUT_DFCIR_JSON "out_dfcir"
 #define OUT_FIRRTL_JSON "out_firrtl"
 
@@ -49,6 +50,7 @@
 #define LP_SCHEDULER_FLAG CLI_FLAG("l")
 #define OUTPUT_GROUP "output"
 #define OUT_SV_ARG CLI_ARG("out-sv")
+#define OUT_STUBS_ARG CLI_ARG("out-stubs")
 #define OUT_DFCIR_ARG CLI_ARG("out-dfcir")
 #define OUT_FIRRTL_ARG CLI_ARG("out-firrtl")
 
@@ -184,6 +186,9 @@ struct HlsOptions final : public AppOptions {
     outputGroup->add_option(OUT_SV_ARG,
                             outNames[OUT_FORMAT_ID_INT(SystemVerilog)],
                             "Path to output the SystemVerilog module");
+    outputGroup->add_option(OUT_STUBS_ARG,
+                            outNames[OUT_FORMAT_ID_INT(Stubs)],
+                            "Path to output stubs for SystemVerilog modules");
     outputGroup->add_option(OUT_DFCIR_ARG,
                             outNames[OUT_FORMAT_ID_INT(DFCIR)],
                             "Path to output unscheduled DFCIR");
@@ -198,6 +203,7 @@ struct HlsOptions final : public AppOptions {
     get(json, ASAP_SCHEDULER_JSON, asapScheduler);
     get(json, LP_SCHEDULER_JSON,   lpScheduler);
     get(json, OUT_SV_JSON,         outNames[OUT_FORMAT_ID_INT(SystemVerilog)]);
+    get(json, OUT_STUBS_JSON,      outNames[OUT_FORMAT_ID_INT(Stubs)]);
     get(json, OUT_DFCIR_JSON,      outNames[OUT_FORMAT_ID_INT(DFCIR)]);
     get(json, OUT_FIRRTL_JSON,     outNames[OUT_FORMAT_ID_INT(FIRRTL)]);
   }

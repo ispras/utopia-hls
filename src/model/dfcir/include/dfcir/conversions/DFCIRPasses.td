@@ -37,4 +37,18 @@ def DFCIRLinearSchedulerPass: Pass<"dfcir-linear-scheduler-pass", "mlir::ModuleO
   let constructor = "mlir::dfcir::createDFCIRLinearSchedulerPass()";
 }
 
+def FIRRTLStubGeneratorPass: Pass<"firrtl-stub-generator-pass", "mlir::ModuleOp"> {
+  let summary = "Generate stubs for pipelined computational modules, specified in FIRRTL.";
+
+  let options = [
+    Option<"stream",
+           "stream",
+           "llvm::raw_ostream *",
+           "nullptr",
+           "Stream to dump stubs to.">
+  ];
+
+  let constructor = "mlir::dfcir::createFIRRTLStubGeneratorPass()";
+}
+
 #endif // DFCIR_Passes

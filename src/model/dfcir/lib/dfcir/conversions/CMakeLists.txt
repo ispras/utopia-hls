@@ -3,6 +3,7 @@ set(PASSES
   conversions/DFCIRASAPSchedulerPass.cpp
   conversions/DFCIRLinearSchedulerPass.cpp
   conversions/DFCIRLPUtils.cpp
+  conversions/FIRRTLStubsGeneratorPass.cpp
 )
 
 set(CONV_LIBS
