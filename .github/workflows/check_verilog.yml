@@ -39,7 +39,7 @@ jobs:
       - name: Download APT dependencies
         run: |
           sudo apt update
-          sudo apt install build-essential clang cmake g++ gcc liblpsolve55-dev lld make ninja-build libctemplate-dev
+          sudo apt install build-essential clang cmake g++ gcc liblpsolve55-dev lld make ninja-build libctemplate-dev verilator
 
       - name: Download and configure CIRCT & LLVM
         env:
