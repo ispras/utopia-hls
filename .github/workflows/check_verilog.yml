@@ -86,7 +86,7 @@ jobs:
 
       - name: Run SystemVerilog modules generation
         run: |
-          "${{env.BUILD_DIR}}/${{env.TESTS_EXECUTABLE}}" hls --config \
+          "${{env.BUILD_DIR}}/${{env.UTOPIA_EXECUTABLE}}" hls --config \
           "${{github.workspace}}/examples/${{matrix.kernel}}/${{matrix.kernel}}_${{matrix.config}}.json" \
           -l --out-sv "${{env.MODULE_OUTPUT_PATH}}" --out-sv-lib "${{env.LIBRARY_OUTPUT_PATH}}"
       
