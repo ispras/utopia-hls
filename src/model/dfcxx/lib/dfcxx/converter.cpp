@@ -74,7 +74,7 @@ bool DFCIRConverter::convertAndPrint(mlir::ModuleOp module,
   }
 
   // Add stub generation pass if the corresponding option is specified.
-  if (auto *stream = outputStreams[OUT_FORMAT_ID_INT(Stubs)]) {
+  if (auto *stream = outputStreams[OUT_FORMAT_ID_INT(SVStubs)]) {
     pm.addPass(mlir::dfcir::createFIRRTLStubGeneratorPass(stream));
   }
 

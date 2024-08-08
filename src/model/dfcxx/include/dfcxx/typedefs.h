@@ -62,7 +62,7 @@ enum Scheduler {
 // Used for accessing specified output format paths.
 enum class OutputFormatID : uint8_t {
   SystemVerilog = 0,
-  Stubs,
+  SVStubs,
   DFCIR,
   FIRRTL,
   // Utility value. Constains the number of elements in the enum.

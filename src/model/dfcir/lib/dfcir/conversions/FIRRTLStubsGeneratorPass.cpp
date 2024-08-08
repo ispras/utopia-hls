@@ -16,6 +16,7 @@
 #include "mlir/IR/BuiltinOps.h"
 
 #include <algorithm>
+#include <ctime>
 #include <string>
 
 namespace mlir::dfcir {
@@ -117,6 +118,16 @@ private:
       moduleDict->SetFormattedValue("LATENCY", "%u", latency - 1);
       moduleDict->SetValue("MODULE_NAME", moduleName.data());
     }
+    auto time = std::time(nullptr);
+    auto *localTime = std::localtime(&time);
+    dict->SetFormattedValue("GEN_TIME",
+                            "%d-%d-%d %d:%d:%d",
+                            localTime->tm_mday,
+                            localTime->tm_mon + 1,
+                            localTime->tm_year + 1900,
+                            localTime->tm_hour,
+                            localTime->tm_min,
+                            localTime->tm_sec);
   }
 
   std::string generateOutput() {
