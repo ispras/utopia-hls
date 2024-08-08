@@ -63,11 +63,12 @@ It is recommended to use Utopia HLS on Debian-based operating systems (e.g. Ubun
 * `cmake` ver. 3.20.0 or higher (*)
 * `liblpsolve55-dev`
 * `ninja-build` (preferred) or `make`
+* `libctemplate-dev` as a template generator for SystemVerilog stubs
 
 The following command can be used to install all of these dependencies regardless of what exactly will be used to compile Utopia HLS:
 
 ```bash
-sudo apt install build-essential clang cmake g++ gcc liblpsolve55-dev lld make ninja-build
+sudo apt install build-essential clang cmake g++ gcc liblpsolve55-dev lld make ninja-build libctemplate-dev
 ```
 
 (*)**Note**: in case `cmake` which was installed from `apt install` has a version lower than 3.20.0, follow this [guide](https://apt.kitware.com/) and use `sudo apt install cmake` again.
