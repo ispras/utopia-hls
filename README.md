@@ -63,11 +63,12 @@ It is recommended to use Utopia HLS on Debian-based operating systems (e.g. Ubun
 * `cmake` ver. 3.20.0 or higher (*)
 * `liblpsolve55-dev`
 * `ninja-build` (preferred) or `make`
+* `libctemplate-dev` as a template generator for SystemVerilog stubs
 
 The following command can be used to install all of these dependencies regardless of what exactly will be used to compile Utopia HLS:
 
 ```bash
-sudo apt install build-essential clang cmake g++ gcc liblpsolve55-dev lld make ninja-build
+sudo apt install build-essential clang cmake g++ gcc liblpsolve55-dev lld make ninja-build libctemplate-dev
 ```
 
 (*)**Note**: in case `cmake` which was installed from `apt install` has a version lower than 3.20.0, follow this [guide](https://apt.kitware.com/) and use `sudo apt install cmake` again.
@@ -217,6 +218,7 @@ The list of arguments for `hls`-mode is presented below:
 * `-h,--help`: *optional* flag; used to print the help-message about other arguments.
 * `--config <PATH>`: *required* filesystem-path option; used to specify the file for a JSON latency configuration file. Its format is presented in *JSON Configuration* section.
 * `--out-sv <PATH>`: *optional* filesystem-path option; used to specify the output SystemVerilog file.
+* `--out-sv-lib <PATH>`: *optional* filesystem-path option; used to specify the output SystemVerilog file for generated operations library.
 * `--out-dfcir <PATH>`: *optional* filesystem-path option; used to specify the output DFCIR file.
 * `--out-firrtl <PATH>`: *optional* filesystem-path option; used to specify the output FIRRTL file.
 * `-a` or `-l`: *required* flag; used to specify the chosen scheduling strategy - either as-soon-as-possible or linear programming. **Exactly one of these flags has to be specified**.

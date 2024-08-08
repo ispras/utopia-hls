@@ -73,7 +73,14 @@ bool DFCIRConverter::convertAndPrint(mlir::ModuleOp module,
     pm.addPass(createDFCIRDumperPass(stream));
   }
 
-  // Add FIRRTL->SystemVerilog passes if SystemVerilog output option is specified.
+  // Add SystemVerilog library generation pass if the corresponding option
+  // is specified.
+  if (auto *stream = outputStreams[OUT_FORMAT_ID_INT(SVLibrary)]) {
+    pm.addPass(mlir::dfcir::createFIRRTLStubGeneratorPass(stream));
+  }
+
+  // Add FIRRTL->SystemVerilog passes if SystemVerilog output
+  // option is specified.
   if (auto *stream = outputStreams[OUT_FORMAT_ID_INT(SystemVerilog)]) {
     pm.addPass(circt::createLowerFIRRTLToHWPass());
     pm.addPass(circt::createLowerSeqToSVPass());

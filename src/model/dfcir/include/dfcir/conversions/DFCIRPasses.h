@@ -10,7 +10,9 @@
 #define DFCIR_PASSES_H
 
 #include "dfcir/DFCIROperations.h"
+
 #include "mlir/Pass/Pass.h"
+#include "llvm/Support/raw_ostream.h"
 
 #include "memory"
 
@@ -65,15 +67,15 @@ namespace mlir::dfcir {
 using std::unique_ptr;
 using mlir::Pass;
 
-unique_ptr<Pass> createDFCIRToFIRRTLPass(LatencyConfig *config = nullptr);
+unique_ptr<Pass> createDFCIRToFIRRTLPass(LatencyConfig *config);
 
 unique_ptr<Pass> createDFCIRASAPSchedulerPass();
 
 unique_ptr<Pass> createDFCIRLinearSchedulerPass();
 
-} // namespace mlir::dfcir
+unique_ptr<Pass> createFIRRTLStubGeneratorPass(llvm::raw_ostream *stream);
 
-#define GEN_PASS_REGISTRATION
+} // namespace mlir::dfcir
 
 #include "dfcir/conversions/DFCIRPasses.h.inc"
 
