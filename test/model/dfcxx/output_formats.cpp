@@ -23,6 +23,14 @@ TEST(DFCxxOutputFormats, SystemVerilog) {
   EXPECT_EQ(kernel.compile(config, paths, dfcxx::ASAP), true);
 }
 
+TEST(DFCxxOutputFormats, SystemVerilogLibrary) {
+  Polynomial2 kernel;
+  DFOutputPaths paths = {
+    {dfcxx::OutputFormatID::SVLibrary, NULLDEVICE}
+  };
+  EXPECT_EQ(kernel.compile(config, paths, dfcxx::ASAP), true);
+}
+
 TEST(DFCxxOutputFormats, DFCIR) {
   Polynomial2 kernel;
   DFOutputPaths paths = {
@@ -43,6 +51,7 @@ TEST(DFCxxOutputFormats, All) {
   Polynomial2 kernel;
   DFOutputPaths paths = {
     {dfcxx::OutputFormatID::SystemVerilog, NULLDEVICE},
+    {dfcxx::OutputFormatID::SVLibrary, NULLDEVICE},
     {dfcxx::OutputFormatID::DFCIR, NULLDEVICE},
     {dfcxx::OutputFormatID::FIRRTL, NULLDEVICE}
   };
