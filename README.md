@@ -217,6 +217,7 @@ The list of arguments for `hls`-mode is presented below:
 * `-h,--help`: *optional* flag; used to print the help-message about other arguments.
 * `--config <PATH>`: *required* filesystem-path option; used to specify the file for a JSON latency configuration file. Its format is presented in *JSON Configuration* section.
 * `--out-sv <PATH>`: *optional* filesystem-path option; used to specify the output SystemVerilog file.
+* `--out-stubs <PATH>`: *optional* filesystem-path option; used to specify the output file for generated SystemVerilog stubs.
 * `--out-dfcir <PATH>`: *optional* filesystem-path option; used to specify the output DFCIR file.
 * `--out-firrtl <PATH>`: *optional* filesystem-path option; used to specify the output FIRRTL file.
 * `-a` or `-l`: *required* flag; used to specify the chosen scheduling strategy - either as-soon-as-possible or linear programming. **Exactly one of these flags has to be specified**.
