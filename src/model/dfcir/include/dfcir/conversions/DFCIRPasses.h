@@ -10,8 +10,8 @@
 #define DFCIR_PASSES_H
 
 #include "dfcir/DFCIROperations.h"
-#include "mlir/Pass/Pass.h"
 
+#include "mlir/Pass/Pass.h"
 #include "llvm/Support/raw_ostream.h"
 
 #include "memory"

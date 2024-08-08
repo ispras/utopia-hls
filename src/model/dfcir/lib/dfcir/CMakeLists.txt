@@ -21,7 +21,10 @@ target_include_directories(MLIRDFCIR
 
 set(TEMPLATES_PATH "${PROJECT_SOURCE_DIR}/templates")
 
-add_compile_definitions(TEMPLATES_PATH="${TEMPLATES_PATH}" STUBS_TEMPLATE_PATH="${TEMPLATES_PATH}/stubs.tpl")
+add_compile_definitions(
+  TEMPLATES_PATH="${TEMPLATES_PATH}"
+  STUBS_TEMPLATE_PATH="${TEMPLATES_PATH}/stubs.tpl"
+)
 
 target_link_libraries(MLIRDFCIR
   PUBLIC
