@@ -73,8 +73,9 @@ bool DFCIRConverter::convertAndPrint(mlir::ModuleOp module,
     pm.addPass(createDFCIRDumperPass(stream));
   }
 
-  // Add stub generation pass if the corresponding option is specified.
-  if (auto *stream = outputStreams[OUT_FORMAT_ID_INT(SVStubs)]) {
+  // Add SystemVerilog library generation pass if the corresponding option
+  // is specified.
+  if (auto *stream = outputStreams[OUT_FORMAT_ID_INT(SVLibrary)]) {
     pm.addPass(mlir::dfcir::createFIRRTLStubGeneratorPass(stream));
   }
 

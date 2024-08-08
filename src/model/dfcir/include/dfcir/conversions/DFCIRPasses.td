@@ -38,7 +38,7 @@ def DFCIRLinearSchedulerPass: Pass<"dfcir-linear-scheduler-pass", "mlir::ModuleO
 }
 
 def FIRRTLStubGeneratorPass: Pass<"firrtl-stub-generator-pass", "mlir::ModuleOp"> {
-  let summary = "Generate stubs for pipelined computational modules, specified in FIRRTL.";
+  let summary = "Generate stub modules for pipelined computational operations.";
 
   let options = [
     Option<"stream",
