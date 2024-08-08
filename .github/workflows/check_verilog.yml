@@ -1,4 +1,4 @@
-name: main
+name: check-verilog
 
 on:
   workflow_dispatch:
