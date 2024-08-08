@@ -276,7 +276,7 @@ For example, given subdirectory `polynomial2`, the compilation and execution com
 ```bash
 cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH=~/firtool-1.72.0 -DSRC_FILES="~/utopia-hls/examples/polynomial2/polynomial2.cpp"
 cmake --build build
-build/src/umain hls --config examples/polynomial2/polynomial2.json -a --out-sv output
+build/src/umain hls --config examples/polynomial2/polynomial2_1.json -a --out-sv output
 ```
 
 ## DFCxx Documentation
