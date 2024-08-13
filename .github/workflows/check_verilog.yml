@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         kernel: [addconst, matrixmul2, movingsum, muxmul, polynomial2, scalar3]
-        config: []
+        config:
         include:
           - kernel: addconst
             config: [add_int_2]
