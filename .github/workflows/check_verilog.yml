@@ -1,4 +1,4 @@
-name: check-verilog
+name: synth-sv
 
 on:
   workflow_dispatch:
@@ -16,22 +16,31 @@ env:
   MLIR_TARGETS_PATH: "lib/cmake/mlir/MLIRTargets.cmake"
   BUILD_DIR: "build"
   UTOPIA_EXECUTABLE: "src/umain"
-  MODULE_OUTPUT_PATH: "output.sv"
-  LIBRARY_OUTPUT_PATH: "lib.sv"
 
 jobs:
-  build-and-parse-verilog:
+  synthesize-system-verilog:
     strategy:
       matrix:
-        kernel: [polynomial2, scalar3, matrixmul2, muxmul, addconst, movingsum]
-        config: [1]
+        kernel: [addconst, matrixmul2, movingsum, muxmul, polynomial2, scalar3]
+        config: []
         include:
-          - kernel: polynomial2
-            config: 2
+          - kernel: addconst
+            config: [add_int_2]
+          - kernel: matrixmul2
+            config: [add_int_2_mul_int3]
           - kernel: movingsum
-            config: 2
+            config: [add_int_2, add_int_8]
+          - kernel: muxmul
+            config: [add_int_2_mul_int3]
+          - kernel: polynomial2
+            config: [add_int_2_mul_int3, add_int_8_mul_int15]
+          - kernel: scalar3
+            config: [add_int_2_mul_int3]
         
     runs-on: ubuntu-latest
+    env:
+      MODULE_OUTPUT_PATH: "output.sv"
+      LIBRARY_OUTPUT_PATH: "lib.sv"
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -87,7 +96,7 @@ jobs:
       - name: Run SystemVerilog modules generation
         run: |
           "${{env.BUILD_DIR}}/${{env.UTOPIA_EXECUTABLE}}" hls --config \
-          "${{github.workspace}}/examples/${{matrix.kernel}}/${{matrix.kernel}}_${{matrix.config}}.json" \
+          "${{github.workspace}}/examples/${{matrix.kernel}}/${{matrix.config}}.json" \
           -l --out-sv "${{env.MODULE_OUTPUT_PATH}}" --out-sv-lib "${{env.LIBRARY_OUTPUT_PATH}}"
       
       - name: Run Verilator
