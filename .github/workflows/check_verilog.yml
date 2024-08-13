@@ -27,18 +27,28 @@ jobs:
         exclude:
           - config: STUB
         include:
+          ## addconst configs.
           - kernel: addconst
-            config: [add_int_2]
+            config: add_int_2
+          ## matrixmul configs.
           - kernel: matrixmul2
-            config: [add_int_2_mul_int3]
+            config: add_int_2_mul_int3
+          ## movingsum configs.
           - kernel: movingsum
-            config: [add_int_2, add_int_8]
+            config: add_int_2
+          - kernel: movingsum
+            config: add_int_8
+          ## muxmul configs.
           - kernel: muxmul
-            config: [add_int_2_mul_int3]
+            config: add_int_2_mul_int3
+          ## polynomial2 configs.
           - kernel: polynomial2
-            config: [add_int_2_mul_int3, add_int_8_mul_int15]
+            config: add_int_2_mul_int3
+          - kernel: polynomial2
+            config: add_int_8_mul_int15
+          ## scalar3 configs.
           - kernel: scalar3
-            config: [add_int_2_mul_int3]
+            config: add_int_2_mul_int3
         
     runs-on: ubuntu-latest
     env:
