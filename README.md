@@ -276,8 +276,12 @@ For example, given subdirectory `polynomial2`, the compilation and execution com
 ```bash
 cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH=~/firtool-1.72.0 -DSRC_FILES="~/utopia-hls/examples/polynomial2/polynomial2.cpp"
 cmake --build build
-build/src/umain hls --config examples/polynomial2/polynomial2.json -a --out-sv output
+build/src/umain hls --config examples/polynomial2/add_int_2_mul_int3.json -a --out-sv output
 ```
+
+The execution command is going to pass a JSON configuration file (with 2 and 3 pipeline stages for integer addition
+and multiplication respectively) to Utopia HLS, resulting in the creation of the file `output`, containing a SystemVerilog
+module for Polynomial2 kernel with a greedy ASAP-scheduling.
 
 ## DFCxx Documentation
 
