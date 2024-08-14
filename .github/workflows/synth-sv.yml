@@ -23,7 +23,7 @@ jobs:
       matrix:
         kernel: [addconst, matrixmul2, movingsum, muxmul, polynomial2, scalar3]
         config: [STUB]
-        ## A workaround to intiailize an empty config array.
+        ## A workaround to initiailize an empty config array.
         exclude:
           - config: STUB
         include:
