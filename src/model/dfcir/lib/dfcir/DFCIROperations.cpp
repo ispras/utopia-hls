@@ -419,12 +419,7 @@ void mlir::dfcir::OffsetOp::print(OpAsmPrinter &printer) {
   ::llvm::SmallVector<::llvm::StringRef, 2> elidedAttrs;
   elidedAttrs.push_back("offset");
   printer.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
-  printer << " : ";
-  auto type = getRes().getType();
-  if (auto validType = llvm::dyn_cast<DFCIRStreamType>(type)) {
-    printer.printStrippedAttrOrType(validType);
-  } else
-    printer << type;
+  printer << " : " << getRes().getType();
 }
 
 } // namespace mlir::dfcir
