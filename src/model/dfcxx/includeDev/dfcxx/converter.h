@@ -12,6 +12,7 @@
 #include "dfcxx/typedefs.h"
 
 #include "dfcir/conversions/DFCIRPasses.h"
+#include "llvm/Support/raw_ostream.h"
 #include "mlir/IR/BuiltinOps.h"
 
 #include <string>

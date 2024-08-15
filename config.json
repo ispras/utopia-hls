@@ -6,6 +6,7 @@
     "out_sv"         : "",
     "out_sv_lib"     : "",
     "out_dfcir"      : "",
-    "out_firrtl"     : ""
+    "out_firrtl"     : "",
+    "out_dot"        : ""
   }
 }

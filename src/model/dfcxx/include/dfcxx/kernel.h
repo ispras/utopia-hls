@@ -24,6 +24,12 @@
 #include <string_view>
 #include <vector>
 
+// This forward declaration is needed to avoid
+// users having to include LLVM headers.
+namespace llvm {
+  class raw_fd_ostream;
+}
+
 namespace dfcxx {
 
 class DFCIRBuilder;
@@ -36,6 +42,8 @@ private:
   TypeBuilder typeBuilder;
   VarBuilder varBuilder;
   Graph graph;
+  
+  bool compileDot(llvm::raw_fd_ostream *stream);
 
 protected:
   IO io;

@@ -221,6 +221,7 @@ The list of arguments for `hls`-mode is presented below:
 * `--out-sv-lib <PATH>`: *optional* filesystem-path option; used to specify the output SystemVerilog file for generated operations library.
 * `--out-dfcir <PATH>`: *optional* filesystem-path option; used to specify the output DFCIR file.
 * `--out-firrtl <PATH>`: *optional* filesystem-path option; used to specify the output FIRRTL file.
+* `--out-dot <PATH>`: *optional* filesystem-path option; used to specify the output .dot file.
 * `-a` or `-l`: *required* flag; used to specify the chosen scheduling strategy - either as-soon-as-possible or linear programming. **Exactly one of these flags has to be specified**.
 
 **At least one of the `out-*` options has to be specified.**
