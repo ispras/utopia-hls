@@ -26,6 +26,8 @@ set(SOURCES
   graph.cpp
   node.cpp
   channel.cpp
+  utils.cpp
+  simulator.cpp
 )
 
 add_library(DFCXX STATIC

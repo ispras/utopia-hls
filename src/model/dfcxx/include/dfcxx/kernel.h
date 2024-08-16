@@ -29,9 +29,11 @@
 namespace dfcxx {
 
 class DFCIRBuilder;
+class DFCXXSimulator;
 
 class Kernel {
   friend DFCIRBuilder;
+  friend DFCXXSimulator;
 
 private:
   KernStorage storage;
@@ -68,7 +70,7 @@ public:
                const DFOutputPaths &outputPaths,
                const Scheduler &sched);
 
-  bool simulate(const std::vector<std::string> &data,
+  bool simulate(const std::vector<std::string> &dataPaths,
                 std::ostream &stream);
 
 };

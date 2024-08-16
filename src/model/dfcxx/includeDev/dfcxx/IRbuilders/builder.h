@@ -17,14 +17,11 @@
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
 
-#include <stack>
-
 namespace dfcxx {
 
 class DFCIRBuilder {
 private:
   mlir::MLIRContext ctx;
-  const DFLatencyConfig &config;
   mlir::OpBuilder builder;
   std::unordered_map<Node, mlir::Value> map;
   mlir::OwningOpRef<mlir::ModuleOp> module;
@@ -37,12 +34,10 @@ private:
 
   mlir::ModuleOp buildModule(Kernel *kern, mlir::OpBuilder &builder);
 
-  std::stack<Node> topSortNodes(Graph *graph);
-
   void translate(Node node, Graph *graph, mlir::OpBuilder &builder);
 
 public:
-  explicit DFCIRBuilder(const DFLatencyConfig &config);
+  DFCIRBuilder();
 
   mlir::ModuleOp buildModule(Kernel *kern);
 };

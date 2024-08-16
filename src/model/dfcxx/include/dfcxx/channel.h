@@ -17,7 +17,8 @@ struct Channel {
   Node source;
   Node target;
   unsigned opInd;
-
+  
+  Channel() = default;
   Channel(Node source, Node target, unsigned opInd);
 
   bool operator==(const Channel &channel) const;

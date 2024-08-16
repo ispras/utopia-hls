@@ -9,6 +9,7 @@
 #include "dfcxx/converter.h"
 #include "dfcxx/IRbuilders/builder.h"
 #include "dfcxx/kernel.h"
+#include "dfcxx/utils.h"
 
 #include <iostream>
 
@@ -44,7 +45,7 @@ DFType Kernel::dfBool() {
 bool Kernel::compile(const DFLatencyConfig &config,
                      const std::vector<std::string> &outputPaths,
                      const Scheduler &sched) {
-  DFCIRBuilder builder(config);
+  DFCIRBuilder builder;
   auto compiled = builder.buildModule(this);
   size_t count = outputPaths.size();
   std::vector<llvm::raw_fd_ostream *> outputStreams(count);
@@ -78,9 +79,15 @@ bool Kernel::compile(const DFLatencyConfig &config,
   return compile(config, outPathsStrings, sched);
 }
 
-bool Kernel::simulate(const std::vector<std::string> &data,
+
+bool Kernel::simulate(const std::vector<std::string> &dataPaths,
                       std::ostream &stream) {
-  return true;
+  bool result = true;
+  std::vector<Node> sorted = topSort(graph.startNodes,
+                                     graph.outputs,
+                                     graph.nodes.size());
+  
+  return result;
 }
 
 } // namespace dfcxx
