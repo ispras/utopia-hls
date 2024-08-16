@@ -78,4 +78,9 @@ bool Kernel::compile(const DFLatencyConfig &config,
   return compile(config, outPathsStrings, sched);
 }
 
+bool Kernel::simulate(const std::vector<std::string> &data,
+                      std::ostream &stream) {
+  return true;
+}
+
 } // namespace dfcxx

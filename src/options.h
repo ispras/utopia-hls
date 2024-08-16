@@ -16,6 +16,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -40,10 +41,13 @@
 #define OUT_DFCIR_JSON "out_dfcir"
 #define OUT_FIRRTL_JSON "out_firrtl"
 
+#define SIM_ID_JSON "sim"
+
 //===----------------------------------------------------------------------===//
 // CLI args/flags definitions
 
 #define HLS_CMD "hls"
+#define SIM_CMD "sim"
 #define CONFIG_ARG CLI_ARG("config")
 #define SCHEDULER_GROUP "scheduler"
 #define ASAP_SCHEDULER_FLAG CLI_FLAG("a")
@@ -53,6 +57,8 @@
 #define OUT_SV_LIB_ARG CLI_ARG("out-sv-lib")
 #define OUT_DFCIR_ARG CLI_ARG("out-dfcir")
 #define OUT_FIRRTL_ARG CLI_ARG("out-firrtl")
+
+#define SIM_USAGE_FILES_ARG "files"
 
 //===----------------------------------------------------------------------===//
 
@@ -81,6 +87,10 @@ public:
 
   virtual void fromJson(Json json) {
     // TODO: Default implementation.
+  }
+  
+  operator bool() const {
+    return options->parsed();
   }
 
   virtual Json toJson() const {
@@ -207,23 +217,6 @@ struct HlsOptions final : public AppOptions {
     get(json, OUT_DFCIR_JSON,      outNames[OUT_FORMAT_ID_INT(DFCIR)]);
     get(json, OUT_FIRRTL_JSON,     outNames[OUT_FORMAT_ID_INT(FIRRTL)]);
   }
-
-  std::string latConfigFile;
-  DFLatencyConfig latConfig;
-  std::vector<std::string> outNames;
-  bool asapScheduler;
-  bool lpScheduler;
-};
-
-struct Options final : public AppOptions {
-  Options(const std::string &title,
-          const std::string &version):
-      AppOptions(title, version), hls(*this) {
-
-    // Top-level options.
-    options->set_help_all_flag("-H,--help-all", "Print the extended help message and exit");
-    options->set_version_flag("-v,--version", version, "Print the tool version");
-  }
   
   dfcxx::Ops convertFieldToEnum(const std::string field) {
     if (field == "ADD_INT")         { return dfcxx::ADD_INT; }          else
@@ -259,13 +252,96 @@ struct Options final : public AppOptions {
     return dfcxx::ADD_INT;
   }
 
-  void parseLatencyConfig(const std::string config) {
-    std::ifstream in(config);
+  void parseLatencyConfig() {
+    std::ifstream in(latConfigFile);
     if (!in.good()) { return; }
     auto json = Json::parse(in);
     for (auto &[key, val] : json.items()) {
-      hls.latConfig[convertFieldToEnum(key)] = val;
+      latConfig[convertFieldToEnum(key)] = val;
     }
+  }
+
+  std::string latConfigFile;
+  DFLatencyConfig latConfig;
+  std::vector<std::string> outNames;
+  bool asapScheduler;
+  bool lpScheduler;
+};
+
+struct SimOptions final : public AppOptions {
+
+  // Custom usage description formatter (based on the default one).
+  // struct UsageFormatter: public CLI::Formatter {
+  //   inline std::string make_usage(const CLI::App *app,
+  //                                 std::string name) const override {
+  //     std::stringstream out;
+
+  //     out << get_label("Usage") << ":" << (name.empty() ? "" : " ") << name;
+
+  //     std::vector<std::string> groups = app->get_groups();
+
+  //     // Print an Options badge if any options exist
+  //     std::vector<const CLI::Option *> non_pos_options =
+  //         app->get_options([](const CLI::Option *opt) {
+  //           return opt->nonpositional();
+  //         });
+
+  //     if(!non_pos_options.empty()) {
+  //       out << " [" << get_label("OPTIONS") << "]";
+  //     }
+  //     out << " " SIM_USAGE_FILES_ARG "...";
+
+  //     // Positionals need to be listed here
+  //     std::vector<const CLI::Option *> positionals =
+  //         app->get_options([](const CLI::Option *opt) {
+  //           return opt->get_positional();
+  //         });
+
+  //     // Print out positionals if any are left
+  //     if(!positionals.empty()) {
+  //       // Convert to help names
+  //       std::vector<std::string> positional_names(positionals.size());
+  //       std::transform(positionals.begin(),
+  //                      positionals.end(),
+  //                      positional_names.begin(),
+  //                      [this](const CLI::Option *opt) {
+  //                        return make_option_usage(opt);
+  //                      });
+
+  //       out << " " << CLI::detail::join(positional_names, " ");
+  //     }
+
+  //     out << std::endl;
+  //     return out.str();
+  //   }
+  // };
+
+  SimOptions(AppOptions &parent):
+      AppOptions(parent, SIM_CMD, "DFCxx simulation") {
+    //options->formatter(std::make_shared<UsageFormatter>());
+    // For processing data files' paths.
+    options->allow_extras();
+    auto *var = options; // Used for lambda variable passing.
+    options->callback([&var]() {
+      if (var->remaining_size() < 1) {
+        throw CLI::ArgumentMismatch("input data files", -1, 0);
+      }
+    });
+  }
+
+  std::vector<std::string> dataFiles() const {
+    return options->remaining();
+  }
+};
+
+struct Options final : public AppOptions {
+  Options(const std::string &title,
+          const std::string &version):
+      AppOptions(title, version), hls(*this), sim(*this) {
+
+    // Top-level options.
+    options->set_help_all_flag("-H,--help-all", "Print the extended help message and exit");
+    options->set_version_flag("-v,--version", version, "Print the tool version");
   }
 
   void initialize(const std::string &config, int argc, char **argv) {
@@ -273,8 +349,12 @@ struct Options final : public AppOptions {
     read(config);
     // Command line is of higher priority.
     parse(argc, argv);
-    // Parse latency configuration.
-    parseLatencyConfig(hls.latConfigFile);
+
+    // Subcommand-specific initialization actions.
+    if (hls) {
+      // Parse latency configuration.
+      hls.parseLatencyConfig();
+    }
   }
 
   int exit(const CLI::Error &e) const {
@@ -283,7 +363,9 @@ struct Options final : public AppOptions {
 
   void fromJson(Json json) override {
     hls.fromJson(json[HLS_ID_JSON]);
+    hls.fromJson(json[SIM_ID_JSON]);
   }
 
   HlsOptions hls;
+  SimOptions sim;
 };

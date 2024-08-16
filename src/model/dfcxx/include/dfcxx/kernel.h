@@ -21,6 +21,8 @@
 #include "dfcxx/varbuilders/builder.h"
 #include "dfcxx/vars/var.h"
 
+#include <ostream>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -65,6 +67,9 @@ public:
   bool compile(const DFLatencyConfig &config,
                const DFOutputPaths &outputPaths,
                const Scheduler &sched);
+
+  bool simulate(const std::vector<std::string> &data,
+                std::ostream &stream);
 
 };
 
