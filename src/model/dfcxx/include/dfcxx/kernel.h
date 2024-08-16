@@ -71,7 +71,7 @@ public:
                const Scheduler &sched);
 
   bool simulate(const std::vector<std::string> &dataPaths,
-                std::ostream &stream);
+                const std::string &outFilePath);
 
 };
 

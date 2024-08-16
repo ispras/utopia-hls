@@ -53,7 +53,8 @@ int hlsMain(const HlsContext &context) {
 
 int simMain(const SimContext &context) {
   auto kernel = start();
-  return !kernel->simulate(context.options.dataFiles(), std::cout);
+  return !kernel->simulate(context.options.dataFiles(),
+                           context.options.outFilePath);
 }
 
 int main(int argc, char **argv) {

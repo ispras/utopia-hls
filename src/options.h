@@ -42,6 +42,7 @@
 #define OUT_FIRRTL_JSON "out_firrtl"
 
 #define SIM_ID_JSON "sim"
+#define SIM_OUT_JSON "out"
 
 //===----------------------------------------------------------------------===//
 // CLI args/flags definitions
@@ -59,6 +60,7 @@
 #define OUT_FIRRTL_ARG CLI_ARG("out-firrtl")
 
 #define SIM_USAGE_FILES_ARG "files"
+#define SIM_OUT_ARG CLI_ARG("out")
 
 //===----------------------------------------------------------------------===//
 
@@ -319,6 +321,11 @@ struct SimOptions final : public AppOptions {
   SimOptions(AppOptions &parent):
       AppOptions(parent, SIM_CMD, "DFCxx simulation") {
     //options->formatter(std::make_shared<UsageFormatter>());
+    
+    // Named options.
+    options->add_option(SIM_OUT_ARG,
+                        outFilePath,
+                        "Simulation output path")->expected(1);
     // For processing data files' paths.
     options->allow_extras();
     auto *var = options; // Used for lambda variable passing.
@@ -332,6 +339,12 @@ struct SimOptions final : public AppOptions {
   std::vector<std::string> dataFiles() const {
     return options->remaining();
   }
+
+  void fromJson(Json json) override {
+    get(json, SIM_OUT_JSON, outFilePath);
+  }
+
+  std::string outFilePath;
 };
 
 struct Options final : public AppOptions {

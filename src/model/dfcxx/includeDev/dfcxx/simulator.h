@@ -53,7 +53,7 @@ namespace dfcxx {
 
 class DFCXXSimulator {
 public:
-  bool simulate(std::ifstream &in, std::ostream &out, std::vector<Node> nodes);
+  bool simulate(std::ifstream &in, std::ofstream &out, std::vector<Node> nodes);
 };
 
 } // namespace dfcxx
