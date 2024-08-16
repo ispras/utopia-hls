@@ -9,8 +9,10 @@
 #include "dfcxx/converter.h"
 #include "dfcxx/IRbuilders/builder.h"
 #include "dfcxx/kernel.h"
+#include "dfcxx/simulator.h"
 #include "dfcxx/utils.h"
 
+#include <fstream>
 #include <iostream>
 
 namespace dfcxx {
@@ -86,7 +88,12 @@ bool Kernel::simulate(const std::vector<std::string> &dataPaths,
   std::vector<Node> sorted = topSort(graph.startNodes,
                                      graph.outputs,
                                      graph.nodes.size());
-  
+  DFCXXSimulator sim;
+  for (const std::string &path : dataPaths) {
+    std::ifstream input(path, std::ios::in);
+    sim.simulate(input, stream, sorted);
+  }
+
   return result;
 }
 
