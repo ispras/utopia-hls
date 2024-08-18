@@ -87,7 +87,7 @@ jobs:
         run: |
           lcov --capture --directory "${{github.workspace}}" -o ${{env.COV_INFO_FILE}}
           lcov --remove ${{env.COV_INFO_FILE}} "${{github.workspace}}/${{env.BUILD_DIR}}/*" "${{github.workspace}}/lib/*" \
-          "${{github.workspace}}/${{env.DEPENDENCIES_DIR}}"-o ${{env.COV_INFO_FILE}}
+          "${{github.workspace}}/${{env.DEPENDENCIES_DIR}}" -o ${{env.COV_INFO_FILE}}
           genhtml "${{env.COV_INFO_FILE}}" -o "${{env.COV_INFO_DIR}}"
 
       - name: Archive code coverage results
