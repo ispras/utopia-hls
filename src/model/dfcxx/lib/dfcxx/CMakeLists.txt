@@ -40,6 +40,13 @@ target_include_directories(DFCXX
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/includeDev>
 )
 
+set(TEMPLATES_PATH "${PROJECT_SOURCE_DIR}/templates")
+
+add_compile_definitions(
+  TEMPLATES_PATH="${TEMPLATES_PATH}"
+  DOT_TEMPLATE_PATH="${TEMPLATES_PATH}/dot.tpl"
+)
+
 ## MLIRDFCIR is ensured to be compiled beforehand.
 target_link_libraries(DFCXX
   PRIVATE $<LINK_ONLY:MLIRPass>
@@ -49,6 +56,8 @@ target_link_libraries(DFCXX
   PRIVATE $<LINK_ONLY:CIRCTFIRRTLToHW>
   PRIVATE $<LINK_ONLY:CIRCTSeqToSV>
   PRIVATE $<LINK_ONLY:CIRCTExportVerilog>
+  PRIVATE $<LINK_ONLY:CTemplate::nothreads>
+  PRIVATE $<LINK_ONLY:LLVMSupport>
 )
 
 add_library(Utopia::DFCXX ALIAS DFCXX)
