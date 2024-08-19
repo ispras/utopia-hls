@@ -151,8 +151,8 @@ bool Kernel::compile(const DFLatencyConfig &config,
         : nullptr;
   }
   bool result = true;
-  // Compile the kernel to .dot if such stream is specified.
-  if (auto *stream = outputStreams[OUT_FORMAT_ID_INT(Dot)]) {
+  // Compile the kernel to DOT if such stream is specified.
+  if (auto *stream = outputStreams[OUT_FORMAT_ID_INT(DOT)]) {
     result &= compileDot(stream);
   }
   if (result) {

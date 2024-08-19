@@ -198,8 +198,8 @@ struct HlsOptions final : public AppOptions {
                             outNames[OUT_FORMAT_ID_INT(FIRRTL)],
                             "Path to output scheduled FIRRTL");
     outputGroup->add_option(OUT_DOT_ARG,
-                            outNames[OUT_FORMAT_ID_INT(Dot)],
-                            "Path to output a DFCxx kernel in .dot format.");
+                            outNames[OUT_FORMAT_ID_INT(DOT)],
+                            "Path to output a DFCxx kernel in DOT format.");
     outputGroup->require_option();
   }
 
@@ -211,7 +211,7 @@ struct HlsOptions final : public AppOptions {
     get(json, OUT_SV_LIB_JSON,     outNames[OUT_FORMAT_ID_INT(SVLibrary)]);
     get(json, OUT_DFCIR_JSON,      outNames[OUT_FORMAT_ID_INT(DFCIR)]);
     get(json, OUT_FIRRTL_JSON,     outNames[OUT_FORMAT_ID_INT(FIRRTL)]);
-    get(json, OUT_DOT_JSON,     outNames[OUT_FORMAT_ID_INT(Dot)]);
+    get(json, OUT_DOT_JSON,     outNames[OUT_FORMAT_ID_INT(DOT)]);
   }
 
   std::string latConfigFile;

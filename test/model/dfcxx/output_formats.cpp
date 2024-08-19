@@ -47,10 +47,10 @@ TEST(DFCxxOutputFormats, FIRRTL) {
   EXPECT_EQ(kernel.compile(config, paths, dfcxx::ASAP), true);
 }
 
-TEST(DFCxxOutputFormats, Dot) {
+TEST(DFCxxOutputFormats, DOT) {
   Polynomial2 kernel;
   DFOutputPaths paths = {
-    {dfcxx::OutputFormatID::Dot, NULLDEVICE}
+    {dfcxx::OutputFormatID::DOT, NULLDEVICE}
   };
   EXPECT_EQ(kernel.compile(config, paths, dfcxx::ASAP), true);
 }
@@ -62,7 +62,7 @@ TEST(DFCxxOutputFormats, All) {
     {dfcxx::OutputFormatID::SVLibrary, NULLDEVICE},
     {dfcxx::OutputFormatID::DFCIR, NULLDEVICE},
     {dfcxx::OutputFormatID::FIRRTL, NULLDEVICE},
-    {dfcxx::OutputFormatID::Dot, NULLDEVICE}
+    {dfcxx::OutputFormatID::DOT, NULLDEVICE}
   };
   EXPECT_EQ(kernel.compile(config, paths, dfcxx::ASAP), true);
 }
