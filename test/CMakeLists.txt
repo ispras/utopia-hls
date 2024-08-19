@@ -39,6 +39,7 @@ endif()
 target_compile_definitions(utest
   PUBLIC
     NULLDEVICE="${NULLDEVICE}"
+    DATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/data"
 )
 
 target_include_directories(utest
