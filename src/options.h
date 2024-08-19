@@ -61,6 +61,7 @@
 
 #define SIM_USAGE_FILES_ARG "files"
 #define SIM_OUT_ARG CLI_ARG("out")
+#define SIM_FILES_ARG CLI_ARG("files")
 
 //===----------------------------------------------------------------------===//
 
@@ -326,18 +327,21 @@ struct SimOptions final : public AppOptions {
     options->add_option(SIM_OUT_ARG,
                         outFilePath,
                         "Simulation output path")->expected(1);
+    options->add_option(SIM_FILES_ARG,
+                        files,
+                        "Simulation output path");
     // For processing data files' paths.
-    options->allow_extras();
-    auto *var = options; // Used for lambda variable passing.
-    options->callback([&var]() {
-      if (var->remaining_size() < 1) {
-        throw CLI::ArgumentMismatch("input data files", -1, 0);
-      }
-    });
+    // options->allow_extras();
+    // auto *var = options; // Used for lambda variable passing.
+    // options->callback([&var]() {
+    //   if (var->remaining_size() < 1) {
+    //     throw CLI::ArgumentMismatch("input data files", -1, 0);
+    //   }
+    // });
   }
 
   std::vector<std::string> dataFiles() const {
-    return options->remaining();
+    return files;
   }
 
   void fromJson(Json json) override {
@@ -345,6 +349,7 @@ struct SimOptions final : public AppOptions {
   }
 
   std::string outFilePath;
+  std::vector<std::string> files;
 };
 
 struct Options final : public AppOptions {

@@ -16,6 +16,7 @@ uint64_t DFCXXSimulator::readInputData(std::ifstream &in,
                                        SimVars &inputMapping) {
   uint64_t ind = 0;
   std::string line;
+  bool atLeastOne = false;
   while (std::getline(in, line) && ind < BUF_SIZE) {
     // An empty line is treated as a data block delimiter.
     if (line.empty()) {
@@ -28,11 +29,12 @@ uint64_t DFCXXSimulator::readInputData(std::ifstream &in,
         spaceInd == line.size() - 1) {
       return 0;
     }
+    atLeastOne = true;
     inputMapping[line.substr(0, spaceInd)][ind] =
         std::stoul(line.substr(spaceInd + 1), 0, 16);
   }
   // It is assumed that at least one data block exists.
-  return ind + 1;
+  return atLeastOne ? (ind + 1) : 0;
 }
 
 void DFCXXSimulator::processInput(RecordedValues &vals, Node &node,
@@ -55,7 +57,7 @@ void DFCXXSimulator::processConst(RecordedValues &vals, Node &node) {
 
 void DFCXXSimulator::processMux(RecordedValues &vals, Node &node) {
   auto muxedValue = vals[inputs[node][node.data.muxId].source];
-  vals[node] = vals[inputs[node][muxedValue].source];
+  vals[node] = vals[inputs[node][muxedValue + 1].source];
 }
 
 template <>
@@ -383,7 +385,7 @@ bool DFCXXSimulator::writeOutput(std::ofstream &out,
                                  uint64_t count) {
   auto outFunc = [&out, &output] (uint64_t iter) {
     for (auto &kv : output) {
-      out << kv.first << " " << std::to_string(kv.second[iter]) << "\n";
+      out << kv.first << " 0x" << std::hex << kv.second[iter] << "\n";
     }
   };
 
