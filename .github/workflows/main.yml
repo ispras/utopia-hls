@@ -16,6 +16,7 @@ env:
   MLIR_TARGETS_PATH: "lib/cmake/mlir/MLIRTargets.cmake"
   BUILD_DIR: "build"
   TESTS_EXECUTABLE: test/utest
+  COV_INFO_DIR: "lcoverage.dir"
   
 jobs:
   build-and-test:
@@ -30,7 +31,7 @@ jobs:
       - name: Download APT dependencies
         run: |
           sudo apt update
-          sudo apt install build-essential clang cmake g++ gcc liblpsolve55-dev lld make ninja-build libctemplate-dev
+          sudo apt install build-essential clang cmake g++ gcc liblpsolve55-dev lld make ninja-build libctemplate-dev lcov
 
       - name: Download and configure CIRCT & LLVM
         env:
@@ -63,13 +64,13 @@ jobs:
           '"LLVMX86AsmParser" "LLVMX86Disassembler")/' "${{env.CIRCT_DIR}}/${{env.MLIR_TARGETS_PATH}}"
           cd "${{github.workspace}}"
 
-      - name: Configure Utopia HLS build
+      - name: Configure Utopia HLS build (with coverage info)
         env:
           CIRCT_DIR: "firtool-${{env.CIRCT_VERSION}}"
         run: |
           cmake -S . -B "${{env.BUILD_DIR}}" -G Ninja -DCMAKE_CXX_COMPILER="${{matrix.compiler}}" \
           -DCMAKE_PREFIX_PATH="${{github.workspace}}/${{env.DEPENDENCIES_DIR}}/${{env.CIRCT_DIR}}" \
-          -DSRC_FILES="${{github.workspace}}/examples/polynomial2/polynomial2.cpp" -DBUILD_TESTS=ON
+          -DSRC_FILES="${{github.workspace}}/examples/polynomial2/polynomial2.cpp" -DBUILD_TESTS=ON -DCMAKE_CXX_FLAGS="--coverage"
 
       - name: Build Utopia HLS
         run: |
@@ -78,3 +79,20 @@ jobs:
       - name: Run tests
         run: |
           "${{env.BUILD_DIR}}/${{env.TESTS_EXECUTABLE}}"
+
+      - name: Gather coverage info
+        if: ${{ matrix.compiler == 'g++' }}
+        env:
+          COV_INFO_FILE: "lcoverage.info"
+        run: |
+          lcov --capture --directory "${{github.workspace}}" -o ${{env.COV_INFO_FILE}}
+          lcov --remove ${{env.COV_INFO_FILE}} "${{github.workspace}}/${{env.BUILD_DIR}}/*" "${{github.workspace}}/lib/*" \
+          "${{github.workspace}}/${{env.DEPENDENCIES_DIR}}" -o ${{env.COV_INFO_FILE}}
+          genhtml "${{env.COV_INFO_FILE}}" -o "${{env.COV_INFO_DIR}}"
+
+      - name: Archive code coverage results
+        if: ${{ matrix.compiler == 'g++' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: "${{env.COV_INFO_DIR}}"
