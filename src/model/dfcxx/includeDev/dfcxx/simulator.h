@@ -11,6 +11,7 @@
 
 #include "dfcxx/graph.h"
 
+#include <array>
 #include <fstream>
 #include <iostream>
 #include <unordered_map>
@@ -18,42 +19,43 @@
 
 namespace dfcxx {
 
-union SimValue {
-  int64_t int_;
-  uint64_t uint_;
-  double double_;
-};
+typedef uint64_t SimValue;
 
-enum class SimType : uint8_t {
-  INT = 0,
-  UINT,
-  FLOAT
-};
+// Buffer size for reading from and writing to simulation data files. 
+#define BUF_SIZE 200
 
-struct SimVariable {
-  std::string name;
-  SimType type;
+typedef std::unordered_map<std::string,
+                           std::array<SimValue, BUF_SIZE>> SimVars;
 
-  SimVariable(std::string name, SimType type) : name(name), type(type) {}
-};
+typedef std::unordered_map<Node, std::vector<Channel>> Inputs;
 
-} // namespace dfcxx
-
-template <>
-struct std::hash<dfcxx::SimVariable> {
-  size_t operator()(const dfcxx::SimVariable &var) const noexcept {
-    return std::hash<std::string>()(var.name);
-  }
-};
-
-typedef std::unordered_map<dfcxx::SimVariable,
-                           std::vector<dfcxx::SimValue>> SimVars;
-
-namespace dfcxx {
+typedef std::unordered_map<Node, SimValue> RecordedValues;
 
 class DFCXXSimulator {
 public:
-  bool simulate(std::ifstream &in, std::ofstream &out, std::vector<Node> nodes);
+  DFCXXSimulator(std::vector<Node> &nodes,
+                 Inputs &inputs);
+  bool simulate(std::ifstream &in, std::ofstream &out);
+
+private:
+  uint64_t readInputData(std::ifstream &in, SimVars &inputMapping);
+  bool runSim(SimVars &input, SimVars &output, uint64_t count);
+  bool writeOutput(std::ofstream &out, SimVars &output, uint64_t count);
+
+  void processInput(RecordedValues &vals, Node &node,
+               SimVars &input, uint64_t ind);
+  void processOutput(RecordedValues &vals, Node &node,
+               SimVars &output, uint64_t ind);
+  void processConst(RecordedValues &vals, Node &node);
+  void processMux(RecordedValues &vals, Node &node);
+  template <dfcxx::OpType T>
+  void processBinaryOp(RecordedValues &vals, Node &node);
+  template <dfcxx::OpType T>
+  void processUnaryOp(RecordedValues &vals, Node &node);
+  void processShiftLeft(RecordedValues &vals, Node &node);
+  void processShiftRight(RecordedValues &vals, Node &node);
+  std::vector<Node> &nodes;
+  Inputs &inputs;
 };
 
 } // namespace dfcxx

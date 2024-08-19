@@ -42,6 +42,12 @@ private:
 
 public:
   ~DFConstant() override = default;
+  
+  int64_t getInt() const;
+
+  uint64_t getUInt() const;
+
+  double getDouble() const;
 
 protected:
   DFTypeImpl &getType() override;
@@ -81,12 +87,6 @@ protected:
   DFVariableImpl &operator>>(uint8_t bits) override;
 
   ConstantTypeKind getKind() const;
-
-  int64_t getInt() const;
-
-  uint64_t getUInt() const;
-
-  double getDouble() const;
 
   bool isConstant() const override;
 };

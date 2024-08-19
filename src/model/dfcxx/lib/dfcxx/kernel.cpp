@@ -88,11 +88,11 @@ bool Kernel::simulate(const std::vector<std::string> &dataPaths,
   std::vector<Node> sorted = topSort(graph.startNodes,
                                      graph.outputs,
                                      graph.nodes.size());
-  DFCXXSimulator sim;
+  DFCXXSimulator sim(sorted, graph.inputs);
   std::ofstream out(outFilePath, std::ios::out);
   for (const std::string &path : dataPaths) {
     std::ifstream input(path, std::ios::in);
-    sim.simulate(input, out, sorted);
+    sim.simulate(input, out);
   }
 
   return result;

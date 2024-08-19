@@ -29,11 +29,9 @@
 namespace dfcxx {
 
 class DFCIRBuilder;
-class DFCXXSimulator;
 
 class Kernel {
   friend DFCIRBuilder;
-  friend DFCXXSimulator;
 
 private:
   KernStorage storage;
