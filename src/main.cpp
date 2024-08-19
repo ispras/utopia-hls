@@ -82,7 +82,4 @@ int main(int argc, char **argv) {
   } else {
     return simMain(SimContext(options.sim));
   }
-
-  HlsContext context(options.hls);
-  return hlsMain(context);
 }
