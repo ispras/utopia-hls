@@ -14,6 +14,7 @@
 #include <array>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <unordered_map>
 #include <vector>
 
@@ -24,8 +25,7 @@ typedef uint64_t SimValue;
 // Buffer size for reading from and writing to simulation data files. 
 #define BUF_SIZE 200
 
-typedef std::unordered_map<std::string,
-                           std::array<SimValue, BUF_SIZE>> SimVars;
+typedef std::map<std::string, std::array<SimValue, BUF_SIZE>> IOVars;
 
 typedef std::unordered_map<Node, std::vector<Channel>> Inputs;
 
@@ -38,14 +38,14 @@ public:
   bool simulate(std::ifstream &in, std::ofstream &out);
 
 private:
-  uint64_t readInputData(std::ifstream &in, SimVars &inputMapping);
-  bool runSim(SimVars &input, SimVars &output, uint64_t count);
-  bool writeOutput(std::ofstream &out, SimVars &output, uint64_t count);
+  uint64_t readInputData(std::ifstream &in, IOVars &inputMapping);
+  bool runSim(IOVars &input, IOVars &output, uint64_t count);
+  bool writeOutput(std::ofstream &out, IOVars &output, uint64_t count);
 
   void processInput(RecordedValues &vals, Node &node,
-               SimVars &input, uint64_t ind);
+               IOVars &input, uint64_t ind);
   void processOutput(RecordedValues &vals, Node &node,
-               SimVars &output, uint64_t ind);
+               IOVars &output, uint64_t ind);
   void processConst(RecordedValues &vals, Node &node);
   void processMux(RecordedValues &vals, Node &node);
   template <dfcxx::OpType T>

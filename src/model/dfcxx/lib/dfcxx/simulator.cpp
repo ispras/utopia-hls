@@ -13,7 +13,7 @@ DFCXXSimulator::DFCXXSimulator(std::vector<Node> &nodes,
 
 
 uint64_t DFCXXSimulator::readInputData(std::ifstream &in,
-                                       SimVars &inputMapping) {
+                                       IOVars &inputMapping) {
   uint64_t ind = 0;
   std::string line;
   bool atLeastOne = false;
@@ -38,13 +38,13 @@ uint64_t DFCXXSimulator::readInputData(std::ifstream &in,
 }
 
 void DFCXXSimulator::processInput(RecordedValues &vals, Node &node,
-                         SimVars &input, uint64_t ind) {
+                                  IOVars &input, uint64_t ind) {
   auto name = std::string(DFVariable(node.var).getName());
   vals[node] = input[name][ind];
 }
 
 void DFCXXSimulator::processOutput(RecordedValues &vals, Node &node,
-                         SimVars &output, uint64_t ind) {
+                                   IOVars &output, uint64_t ind) {
   auto name = std::string(DFVariable(node.var).getName());
   // Take output's only connection and assign the existing source value.
   vals[node] = vals[inputs[node][0].source];
@@ -340,8 +340,8 @@ void DFCXXSimulator::processShiftRight(RecordedValues &vals, Node &node) {
   // No right bit shift for floats.
 }
 
-bool DFCXXSimulator::runSim(SimVars &input,
-                            SimVars &output,
+bool DFCXXSimulator::runSim(IOVars &input,
+                            IOVars &output,
                             uint64_t count) {
   // Node->value mapping is initialized. This allows us
   // to rememeber the relevant value for the operand node.
@@ -381,7 +381,7 @@ bool DFCXXSimulator::runSim(SimVars &input,
 }
 
 bool DFCXXSimulator::writeOutput(std::ofstream &out,
-                                 SimVars &output,
+                                 IOVars &output,
                                  uint64_t count) {
   auto outFunc = [&out, &output] (uint64_t iter) {
     for (auto &kv : output) {
@@ -399,8 +399,8 @@ bool DFCXXSimulator::writeOutput(std::ofstream &out,
 
 bool DFCXXSimulator::simulate(std::ifstream &in,
                               std::ofstream &out) {
-  SimVars input;
-  SimVars output;
+  IOVars input;
+  IOVars output;
   while (uint64_t count = readInputData(in, input)) {
     // If either the simulation itself or writing to output file
     // fails - return false.
