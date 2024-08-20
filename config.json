@@ -9,6 +9,7 @@
     "out_firrtl"     : ""
   },
   "sim": {
-    
+    "in"  : "sim.txt",
+    "out" : "sim_out.txt"
   }
 }

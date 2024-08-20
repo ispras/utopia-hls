@@ -42,6 +42,7 @@
 #define OUT_FIRRTL_JSON "out_firrtl"
 
 #define SIM_ID_JSON "sim"
+#define SIM_IN_JSON "in"
 #define SIM_OUT_JSON "out"
 
 //===----------------------------------------------------------------------===//
@@ -59,9 +60,8 @@
 #define OUT_DFCIR_ARG CLI_ARG("out-dfcir")
 #define OUT_FIRRTL_ARG CLI_ARG("out-firrtl")
 
-#define SIM_USAGE_FILES_ARG "files"
+#define SIM_IN_ARG CLI_ARG("in")
 #define SIM_OUT_ARG CLI_ARG("out")
-#define SIM_FILES_ARG CLI_ARG("files")
 
 //===----------------------------------------------------------------------===//
 
@@ -273,81 +273,25 @@ struct HlsOptions final : public AppOptions {
 
 struct SimOptions final : public AppOptions {
 
-  // Custom usage description formatter (based on the default one).
-  // struct UsageFormatter: public CLI::Formatter {
-  //   inline std::string make_usage(const CLI::App *app,
-  //                                 std::string name) const override {
-  //     std::stringstream out;
-
-  //     out << get_label("Usage") << ":" << (name.empty() ? "" : " ") << name;
-
-  //     std::vector<std::string> groups = app->get_groups();
-
-  //     // Print an Options badge if any options exist
-  //     std::vector<const CLI::Option *> non_pos_options =
-  //         app->get_options([](const CLI::Option *opt) {
-  //           return opt->nonpositional();
-  //         });
-
-  //     if(!non_pos_options.empty()) {
-  //       out << " [" << get_label("OPTIONS") << "]";
-  //     }
-  //     out << " " SIM_USAGE_FILES_ARG "...";
-
-  //     // Positionals need to be listed here
-  //     std::vector<const CLI::Option *> positionals =
-  //         app->get_options([](const CLI::Option *opt) {
-  //           return opt->get_positional();
-  //         });
-
-  //     // Print out positionals if any are left
-  //     if(!positionals.empty()) {
-  //       // Convert to help names
-  //       std::vector<std::string> positional_names(positionals.size());
-  //       std::transform(positionals.begin(),
-  //                      positionals.end(),
-  //                      positional_names.begin(),
-  //                      [this](const CLI::Option *opt) {
-  //                        return make_option_usage(opt);
-  //                      });
-
-  //       out << " " << CLI::detail::join(positional_names, " ");
-  //     }
-
-  //     out << std::endl;
-  //     return out.str();
-  //   }
-  // };
-
   SimOptions(AppOptions &parent):
       AppOptions(parent, SIM_CMD, "DFCxx simulation") {
     //options->formatter(std::make_shared<UsageFormatter>());
     
     // Named options.
+    options->add_option(SIM_IN_ARG,
+                        inFilePath,
+                        "Simulation input data path")->capture_default_str();
     options->add_option(SIM_OUT_ARG,
                         outFilePath,
-                        "Simulation output path")->expected(1);
-    options->add_option(SIM_FILES_ARG,
-                        files,
-                        "Simulation output path");
-    // For processing data files' paths.
-    // options->allow_extras();
-    // auto *var = options; // Used for lambda variable passing.
-    // options->callback([&var]() {
-    //   if (var->remaining_size() < 1) {
-    //     throw CLI::ArgumentMismatch("input data files", -1, 0);
-    //   }
-    // });
-  }
-
-  std::vector<std::string> dataFiles() const {
-    return files;
+                        "Simulation results output path")->capture_default_str();
   }
 
   void fromJson(Json json) override {
+    get(json, SIM_IN_JSON, inFilePath);
     get(json, SIM_OUT_JSON, outFilePath);
   }
 
+  std::string inFilePath;
   std::string outFilePath;
   std::vector<std::string> files;
 };
@@ -381,7 +325,7 @@ struct Options final : public AppOptions {
 
   void fromJson(Json json) override {
     hls.fromJson(json[HLS_ID_JSON]);
-    hls.fromJson(json[SIM_ID_JSON]);
+    sim.fromJson(json[SIM_ID_JSON]);
   }
 
   HlsOptions hls;

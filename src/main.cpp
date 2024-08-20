@@ -53,7 +53,7 @@ int hlsMain(const HlsContext &context) {
 
 int simMain(const SimContext &context) {
   auto kernel = start();
-  return !kernel->simulate(context.options.dataFiles(),
+  return !kernel->simulate(context.options.inFilePath,
                            context.options.outFilePath);
 }
 

@@ -82,20 +82,18 @@ bool Kernel::compile(const DFLatencyConfig &config,
 }
 
 
-bool Kernel::simulate(const std::vector<std::string> &dataPaths,
+bool Kernel::simulate(const std::string &inDataPath,
                       const std::string &outFilePath) {
-  bool result = true;
   std::vector<Node> sorted = topSort(graph.startNodes,
                                      graph.outputs,
                                      graph.nodes.size());
   DFCXXSimulator sim(sorted, graph.inputs);
-  std::ofstream out(outFilePath, std::ios::out);
-  for (const std::string &path : dataPaths) {
-    std::ifstream input(path, std::ios::in);
-    sim.simulate(input, out);
+  std::ifstream input(inDataPath, std::ios::in);
+  if (!input || input.bad() || input.eof() || input.fail() || !input.is_open()) {
+    return false;
   }
-
-  return result;
+  std::ofstream output(outFilePath, std::ios::out);
+  return sim.simulate(input, output);
 }
 
 } // namespace dfcxx

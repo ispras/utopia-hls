@@ -68,7 +68,7 @@ public:
                const DFOutputPaths &outputPaths,
                const Scheduler &sched);
 
-  bool simulate(const std::vector<std::string> &dataPaths,
+  bool simulate(const std::string &inDataPath,
                 const std::string &outFilePath);
 
 };

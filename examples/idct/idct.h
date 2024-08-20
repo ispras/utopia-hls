@@ -29,9 +29,6 @@ public:
     DFVariable const8192 = constant.var(type, int64_t(8192));
     DFVariable const4 = constant.var(type, int64_t(4));
     
-    DFVariable constM256 = constant.var(type, int64_t(-256));
-    DFVariable const255 = constant.var(type, int64_t(255));
-
     DFVariable W1 = constant.var(type, int64_t(2841));
     DFVariable W2 = constant.var(type, int64_t(2676));
     DFVariable W3 = constant.var(type, int64_t(2408));
