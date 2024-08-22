@@ -21,12 +21,16 @@ Kernel::Kernel() : meta(), io(meta), offset(meta),
                    constant(meta), control(meta) {}
 
 DFType Kernel::dfUInt(uint8_t bits) {
-  auto *type = meta.typeBuilder.buildFixed(SignMode::UNSIGNED, bits, 0);
+  auto *type = meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED,
+                                           bits,
+                                           0);
   return meta.storage.addType(type);
 }
 
 DFType Kernel::dfInt(uint8_t bits) {
-  auto *type = meta.typeBuilder.buildFixed(SignMode::SIGNED, bits, 0);
+  auto *type = meta.typeBuilder.buildFixed(FixedType::SignMode::SIGNED,
+                                           bits,
+                                           0);
   return meta.storage.addType(type);
 }
 
@@ -40,6 +44,9 @@ DFType Kernel::dfBool() {
   return meta.storage.addType(type);
 }
 
+const Graph& Kernel::getGraph() const {
+  return meta.graph;
+}
 
 bool Kernel::compile(const DFLatencyConfig &config,
                      const std::vector<std::string> &outputPaths,
@@ -80,12 +87,9 @@ bool Kernel::compile(const DFLatencyConfig &config,
 
 
 bool Kernel::simulate(const std::string &inDataPath,
-                      const std::string &outFilePath,
-                      bool intermediateResults) {
-  std::vector<Node> sorted = topSort(graph.startNodes,
-                                     graph.outputs,
-                                     graph.nodes.size());
-  DFCXXSimulator sim(sorted, graph.inputs, intermediateResults);
+                      const std::string &outFilePath) {
+  std::vector<Node> sorted = topSort(meta.graph);
+  DFCXXSimulator sim(sorted, meta.graph.getInputs());
   std::ifstream input(inDataPath, std::ios::in);
   if (!input || input.bad() || input.eof() || input.fail() || !input.is_open()) {
     return false;

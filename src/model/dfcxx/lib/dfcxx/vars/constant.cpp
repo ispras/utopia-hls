@@ -6,18 +6,28 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcxx/graph.h"
-#include "dfcxx/kernstorage.h"
-#include "dfcxx/types/types.h"
-#include "dfcxx/varbuilders/builder.h"
+#include "dfcxx/kernmeta.h"
 #include "dfcxx/vars/constant.h"
 
 namespace dfcxx {
 
-DFConstant::DFConstant(KernMeta &meta, DFTypeImpl *type,
-                       ConstantTypeKind kind, ConstantValue value) :
+DFConstant::DFConstant(KernMeta &meta, DFTypeImpl *type, Value value) :
                        DFVariableImpl("", IODirection::NONE, meta),
-                       type(*type), kind(kind), value(value) {}
+                       type(*type), value(value) {
+  if (this->type.isFixed()) {
+    if (((FixedType &) this->type).isSigned()) {
+      kind = TypeKind::INT;
+    } else {
+      kind = TypeKind::UINT;
+    }
+  } else {
+    kind = TypeKind::FLOAT;
+  }
+}
+
+DFVariableImpl *DFConstant::clone() const {
+  return new DFConstant(meta, &type, value);
+}
 
 DFTypeImpl *DFConstant::getType() {
   return &type;
@@ -26,7 +36,7 @@ DFTypeImpl *DFConstant::getType() {
 DFVariableImpl *DFConstant::operator+(DFVariableImpl &rhs) {
   DFVariableImpl *newVar;
   if (rhs.isConstant()) {
-    ConstantValue val{};
+    Value val{};
     DFConstant &casted = (DFConstant &) (rhs);
     switch (kind) {
       case INT:
@@ -39,7 +49,7 @@ DFVariableImpl *DFConstant::operator+(DFVariableImpl &rhs) {
         val.double_ = value.double_ + casted.value.double_;
         break;
     }
-    newVar = meta.varBuilder.buildConstant(meta, &type, kind, val);
+    newVar = meta.varBuilder.buildConstant(meta, &type, val);
   } else {
     newVar = meta.varBuilder.buildStream("", IODirection::NONE, meta, &type);
   }
@@ -53,7 +63,7 @@ DFVariableImpl *DFConstant::operator+(DFVariableImpl &rhs) {
 DFVariableImpl *DFConstant::operator-(DFVariableImpl &rhs) {
   DFVariableImpl *newVar;
   if (rhs.isConstant()) {
-    ConstantValue val{};
+    Value val{};
     DFConstant &casted = (DFConstant &) (rhs);
     switch (kind) {
       case INT:
@@ -66,7 +76,7 @@ DFVariableImpl *DFConstant::operator-(DFVariableImpl &rhs) {
         val.double_ = value.double_ - casted.value.double_;
         break;
     }
-    newVar = meta.varBuilder.buildConstant(meta, &type, kind, val);
+    newVar = meta.varBuilder.buildConstant(meta, &type, val);
   } else {
     newVar = meta.varBuilder.buildStream("", IODirection::NONE, meta, &type);
   }
@@ -80,7 +90,7 @@ DFVariableImpl *DFConstant::operator-(DFVariableImpl &rhs) {
 DFVariableImpl *DFConstant::operator*(DFVariableImpl &rhs) {
   DFVariableImpl *newVar;
   if (rhs.isConstant()) {
-    ConstantValue val{};
+    Value val{};
     DFConstant &casted = (DFConstant &) (rhs);
     switch (kind) {
       case INT:
@@ -93,7 +103,7 @@ DFVariableImpl *DFConstant::operator*(DFVariableImpl &rhs) {
         val.double_ = value.double_ * casted.value.double_;
         break;
     }
-    newVar = meta.varBuilder.buildConstant(meta, &type, kind, val);
+    newVar = meta.varBuilder.buildConstant(meta, &type, val);
   } else {
     newVar = meta.varBuilder.buildStream("", IODirection::NONE, meta, &type);
   }
@@ -107,7 +117,7 @@ DFVariableImpl *DFConstant::operator*(DFVariableImpl &rhs) {
 DFVariableImpl *DFConstant::operator/(DFVariableImpl &rhs) {
   DFVariableImpl *newVar;
   if (rhs.isConstant()) {
-    ConstantValue val{};
+    Value val{};
     DFConstant &casted = (DFConstant &) (rhs);
     switch (kind) {
       case INT:
@@ -120,7 +130,7 @@ DFVariableImpl *DFConstant::operator/(DFVariableImpl &rhs) {
         val.double_ = value.double_ / casted.value.double_;
         break;
     }
-    newVar = meta.varBuilder.buildConstant(meta, &type, kind, val);
+    newVar = meta.varBuilder.buildConstant(meta, &type, val);
   } else {
     newVar = meta.varBuilder.buildStream("", IODirection::NONE, meta, &type);
   }
@@ -134,7 +144,7 @@ DFVariableImpl *DFConstant::operator/(DFVariableImpl &rhs) {
 DFVariableImpl *DFConstant::operator&(DFVariableImpl &rhs) {
   DFVariableImpl *newVar;
   if (rhs.isConstant()) {
-    ConstantValue val{};
+    Value val{};
     DFConstant &casted = (DFConstant &) (rhs);
     switch (kind) {
       case INT:
@@ -148,7 +158,7 @@ DFVariableImpl *DFConstant::operator&(DFVariableImpl &rhs) {
         // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
         break;
     }
-    newVar = meta.varBuilder.buildConstant(meta, &type, kind, val);
+    newVar = meta.varBuilder.buildConstant(meta, &type, val);
   } else {
     newVar = meta.varBuilder.buildStream("", IODirection::NONE, meta, &type);
   }
@@ -162,7 +172,7 @@ DFVariableImpl *DFConstant::operator&(DFVariableImpl &rhs) {
 DFVariableImpl *DFConstant::operator|(DFVariableImpl &rhs) {
   DFVariableImpl *newVar;
   if (rhs.isConstant()) {
-    ConstantValue val{};
+    Value val{};
     DFConstant &casted = (DFConstant &) (rhs);
     switch (kind) {
       case INT:
@@ -176,7 +186,7 @@ DFVariableImpl *DFConstant::operator|(DFVariableImpl &rhs) {
         // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
         break;
     }
-    newVar = meta.varBuilder.buildConstant(meta, &type, kind, val);
+    newVar = meta.varBuilder.buildConstant(meta, &type, val);
   } else {
     newVar = meta.varBuilder.buildStream("", IODirection::NONE, meta, &type);
   }
@@ -190,7 +200,7 @@ DFVariableImpl *DFConstant::operator|(DFVariableImpl &rhs) {
 DFVariableImpl *DFConstant::operator^(DFVariableImpl &rhs) {
   DFVariableImpl *newVar;
   if (rhs.isConstant()) {
-    ConstantValue val{};
+    Value val{};
     DFConstant &casted = (DFConstant &) (rhs);
     switch (kind) {
       case INT:
@@ -204,7 +214,7 @@ DFVariableImpl *DFConstant::operator^(DFVariableImpl &rhs) {
         // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
         break;
     }
-    newVar = meta.varBuilder.buildConstant(meta, &type, kind, val);
+    newVar = meta.varBuilder.buildConstant(meta, &type, val);
   } else {
     newVar = meta.varBuilder.buildStream("", IODirection::NONE, meta, &type);
   }
@@ -217,7 +227,7 @@ DFVariableImpl *DFConstant::operator^(DFVariableImpl &rhs) {
 
 DFVariableImpl *DFConstant::operator!() {
   DFVariableImpl *newVar;
-  ConstantValue val{};
+  Value val{};
   switch (kind) {
     case INT:
       val.int_ = ~value.int_;
@@ -230,7 +240,7 @@ DFVariableImpl *DFConstant::operator!() {
       // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
       break;
   }
-  newVar = meta.varBuilder.buildConstant(meta, &type, kind, val);
+  newVar = meta.varBuilder.buildConstant(meta, &type, val);
   meta.storage.addVariable(newVar);
   meta.graph.addNode(newVar, OpType::NOT, NodeData{});
   meta.graph.addChannel(this, newVar, 0, false);
@@ -239,7 +249,7 @@ DFVariableImpl *DFConstant::operator!() {
 
 DFVariableImpl *DFConstant::operator-() {
   DFVariableImpl *newVar;
-  ConstantValue val{};
+  Value val{};
   switch (kind) {
     case INT:
       val.int_ = -value.int_;
@@ -251,7 +261,7 @@ DFVariableImpl *DFConstant::operator-() {
       val.double_ = -value.double_;
       break;
   }
-  newVar = meta.varBuilder.buildConstant(meta, &type, kind, val);
+  newVar = meta.varBuilder.buildConstant(meta, &type, val);
   meta.storage.addVariable(newVar);
   meta.graph.addNode(newVar, OpType::NEG, NodeData{});
   meta.graph.addChannel(this, newVar, 0, false);
@@ -262,7 +272,7 @@ DFVariableImpl *DFConstant::operator<(DFVariableImpl &rhs) {
   DFVariableImpl *newVar;
   DFTypeImpl *newType = meta.storage.addType(meta.typeBuilder.buildBool());
   if (rhs.isConstant()) {
-    ConstantValue val{};
+    Value val{};
     DFConstant &casted = (DFConstant &) (rhs);
     switch (kind) {
       case INT:
@@ -276,11 +286,11 @@ DFVariableImpl *DFConstant::operator<(DFVariableImpl &rhs) {
         break;
     }
     newVar = meta.varBuilder.buildConstant(meta,
-                                             *newType,
-                                             kind, val);
+                                             newType,
+                                             val);
   } else {
     newVar = meta.varBuilder.buildStream("", IODirection::NONE, meta,
-                                           *newType);
+                                           newType);
   }
   meta.storage.addVariable(newVar);
   meta.graph.addNode(newVar, OpType::LESS, NodeData{});
@@ -293,7 +303,7 @@ DFVariableImpl *DFConstant::operator<=(DFVariableImpl &rhs) {
   DFVariableImpl *newVar;
   DFTypeImpl *newType = meta.storage.addType(meta.typeBuilder.buildBool());
   if (rhs.isConstant()) {
-    ConstantValue val{};
+    Value val{};
     DFConstant &casted = (DFConstant &) (rhs);
     switch (kind) {
       case INT:
@@ -307,11 +317,11 @@ DFVariableImpl *DFConstant::operator<=(DFVariableImpl &rhs) {
         break;
     }
     newVar = meta.varBuilder.buildConstant(meta,
-                                             *newType,
-                                             kind, val);
+                                             newType,
+                                             val);
   } else {
     newVar = meta.varBuilder.buildStream("", IODirection::NONE, meta,
-                                           *newType);
+                                           newType);
   }
   meta.storage.addVariable(newVar);
   meta.graph.addNode(newVar, OpType::LESSEQ, NodeData{});
@@ -324,7 +334,7 @@ DFVariableImpl *DFConstant::operator>(DFVariableImpl &rhs) {
   DFVariableImpl *newVar;
   DFTypeImpl *newType = meta.storage.addType(meta.typeBuilder.buildBool());
   if (rhs.isConstant()) {
-    ConstantValue val{};
+    Value val{};
     DFConstant &casted = (DFConstant &) (rhs);
     switch (kind) {
       case INT:
@@ -338,11 +348,11 @@ DFVariableImpl *DFConstant::operator>(DFVariableImpl &rhs) {
         break;
     }
     newVar = meta.varBuilder.buildConstant(meta,
-                                             *newType,
-                                             kind, val);
+                                             newType,
+                                             val);
   } else {
     newVar = meta.varBuilder.buildStream("", IODirection::NONE, meta,
-                                           *newType);
+                                           newType);
   }
   meta.storage.addVariable(newVar);
   meta.graph.addNode(newVar, OpType::GREATER, NodeData{});
@@ -355,7 +365,7 @@ DFVariableImpl *DFConstant::operator>=(DFVariableImpl &rhs) {
   DFVariableImpl *newVar;
   DFTypeImpl *newType = meta.storage.addType(meta.typeBuilder.buildBool());
   if (rhs.isConstant()) {
-    ConstantValue val{};
+    Value val{};
     DFConstant &casted = (DFConstant &) (rhs);
     switch (kind) {
       case INT:
@@ -369,11 +379,11 @@ DFVariableImpl *DFConstant::operator>=(DFVariableImpl &rhs) {
         break;
     }
     newVar = meta.varBuilder.buildConstant(meta,
-                                             *newType,
-                                             kind, val);
+                                             newType,
+                                             val);
   } else {
     newVar = meta.varBuilder.buildStream("", IODirection::NONE, meta,
-                                           *newType);
+                                           newType);
   }
   meta.storage.addVariable(newVar);
   meta.graph.addNode(newVar, OpType::GREATEREQ, NodeData{});
@@ -386,7 +396,7 @@ DFVariableImpl *DFConstant::operator==(DFVariableImpl &rhs) {
   DFVariableImpl *newVar;
   DFTypeImpl *newType = meta.storage.addType(meta.typeBuilder.buildBool());
   if (rhs.isConstant()) {
-    ConstantValue val{};
+    Value val{};
     DFConstant &casted = (DFConstant &) (rhs);
     switch (kind) {
       case INT:
@@ -400,11 +410,11 @@ DFVariableImpl *DFConstant::operator==(DFVariableImpl &rhs) {
         break;
     }
     newVar = meta.varBuilder.buildConstant(meta,
-                                             *newType,
-                                             kind, val);
+                                             newType,
+                                             val);
   } else {
     newVar = meta.varBuilder.buildStream("", IODirection::NONE, meta,
-                                           *newType);
+                                           newType);
   }
   meta.storage.addVariable(newVar);
   meta.graph.addNode(newVar, OpType::EQ, NodeData{});
@@ -417,7 +427,7 @@ DFVariableImpl *DFConstant::operator!=(DFVariableImpl &rhs) {
   DFVariableImpl *newVar;
   DFTypeImpl *newType = meta.storage.addType(meta.typeBuilder.buildBool());
   if (rhs.isConstant()) {
-    ConstantValue val{};
+    Value val{};
     DFConstant &casted = (DFConstant &) (rhs);
     switch (kind) {
       case INT:
@@ -431,11 +441,11 @@ DFVariableImpl *DFConstant::operator!=(DFVariableImpl &rhs) {
         break;
     }
     newVar = meta.varBuilder.buildConstant(meta,
-                                             *newType,
-                                             kind, val);
+                                             newType,
+                                             val);
   } else {
     newVar = meta.varBuilder.buildStream("", IODirection::NONE, meta,
-                                           *newType);
+                                           newType);
   }
   meta.storage.addVariable(newVar);
   meta.graph.addNode(newVar, OpType::NEQ, NodeData{});
@@ -446,7 +456,7 @@ DFVariableImpl *DFConstant::operator!=(DFVariableImpl &rhs) {
 
 DFVariableImpl *DFConstant::operator<<(uint8_t bits) {
   DFVariableImpl *newVar;
-  ConstantValue val{};
+  Value val{};
   switch (kind) {
     case INT:
       val.int_ = value.int_ << bits;
@@ -460,8 +470,8 @@ DFVariableImpl *DFConstant::operator<<(uint8_t bits) {
       break;
   }
   DFTypeImpl *newType = meta.storage.addType(
-      meta.typeBuilder.buildShiftedType(type, bits));
-  newVar = meta.varBuilder.buildConstant(meta, newType, kind, val);
+      meta.typeBuilder.buildShiftedType(&type, bits));
+  newVar = meta.varBuilder.buildConstant(meta, newType, val);
   meta.storage.addVariable(newVar);
   meta.graph.addNode(newVar, OpType::SHL, NodeData{.bitShift=bits});
   meta.graph.addChannel(this, newVar, 0, false);
@@ -470,7 +480,7 @@ DFVariableImpl *DFConstant::operator<<(uint8_t bits) {
 
 DFVariableImpl *DFConstant::operator>>(uint8_t bits) {
   DFVariableImpl *newVar;
-  ConstantValue val{};
+  Value val{};
   switch (kind) {
     case INT:
       val.int_ = value.int_ >> bits;
@@ -484,15 +494,15 @@ DFVariableImpl *DFConstant::operator>>(uint8_t bits) {
       break;
   }
   DFTypeImpl *newType = meta.storage.addType(
-      meta.typeBuilder.buildShiftedType(type, int8_t(bits) * -1));
-  newVar = meta.varBuilder.buildConstant(meta, newType, kind, val);
+      meta.typeBuilder.buildShiftedType(&type, int8_t(bits) * -1));
+  newVar = meta.varBuilder.buildConstant(meta, newType, val);
   meta.storage.addVariable(newVar);
   meta.graph.addNode(newVar, OpType::SHR, NodeData{.bitShift=bits});
   meta.graph.addChannel(this, newVar, 0, false);
   return newVar;
 }
 
-ConstantTypeKind DFConstant::getKind() const {
+DFConstant::TypeKind DFConstant::getKind() const {
   return kind;
 }
 

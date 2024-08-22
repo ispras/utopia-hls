@@ -15,7 +15,8 @@ Offset::Offset(KernMeta &meta) : meta(meta) {}
 
 DFVariable Offset::operator()(DFVariable &stream, int64_t offset) {
   if (!stream.isStream()) { throw std::exception(); }
-  auto *var = meta.varBuilder.buildStream("", IODirection::NONE,
+  auto *var = meta.varBuilder.buildStream("",
+                                          DFVariableImpl::IODirection::NONE,
                                           meta, stream.getType());
   meta.storage.addVariable(var);
   meta.graph.addNode(var, OpType::OFFSET, NodeData{.offset = offset});

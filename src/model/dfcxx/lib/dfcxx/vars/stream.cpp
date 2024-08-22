@@ -6,9 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcxx/graph.h"
-#include "dfcxx/kernstorage.h"
-#include "dfcxx/varbuilders/builder.h"
+#include "dfcxx/kernmeta.h"
 #include "dfcxx/vars/stream.h"
 
 namespace dfcxx {
@@ -16,6 +14,10 @@ namespace dfcxx {
 DFStream::DFStream(const std::string &name, IODirection direction,
                    KernMeta &meta, DFTypeImpl *type) :
                    DFVariableImpl(name, direction, meta), type(*type) {}
+
+DFVariableImpl *DFStream::clone() const {
+  return new DFStream(name, direction, meta, &type);
+}
 
 DFTypeImpl *DFStream::getType() {
   return &type;
@@ -177,7 +179,7 @@ DFVariableImpl *DFStream::operator!=(DFVariableImpl &rhs) {
 
 DFVariableImpl *DFStream::operator<<(uint8_t bits) {
   DFTypeImpl *newType = meta.storage.addType(
-      meta.typeBuilder.buildShiftedType(type, bits));
+      meta.typeBuilder.buildShiftedType(&type, bits));
   DFVariableImpl *newVar =
       meta.varBuilder.buildStream("", IODirection::NONE, meta, newType);
   meta.storage.addVariable(newVar);
@@ -188,7 +190,7 @@ DFVariableImpl *DFStream::operator<<(uint8_t bits) {
 
 DFVariableImpl *DFStream::operator>>(uint8_t bits) {
   DFTypeImpl *newType = meta.storage.addType(
-      meta.typeBuilder.buildShiftedType(type, int8_t(bits) * -1));
+      meta.typeBuilder.buildShiftedType(&type, int8_t(bits) * -1));
   DFVariableImpl *newVar =
       meta.varBuilder.buildStream("", IODirection::NONE, meta, newType);
   meta.storage.addVariable(newVar);

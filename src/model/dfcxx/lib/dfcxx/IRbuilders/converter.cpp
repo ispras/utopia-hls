@@ -13,18 +13,18 @@ namespace dfcxx {
 DFCIRTypeConverter::DFCIRTypeConverter(mlir::MLIRContext *ctx) : ctx(ctx) {}
 
 mlir::Type DFCIRTypeConverter::operator[](dfcxx::DFVariableImpl *var) {
-  const DFTypeImpl &type = var->getType();
+  auto *type = var->getType();
   mlir::Type newInnerType;
 
-  if (type.isFixed()) {
-    const FixedType &casted = (const FixedType &) (type);
-    newInnerType = mlir::dfcir::DFCIRFixedType::get(ctx, casted.isSigned(),
-                                                    casted.getIntBits(),
-                                                    casted.getFracBits());
-  } else if (type.isFloat()) {
-    const FloatType &casted = (const FloatType &) (type);
-    newInnerType = mlir::dfcir::DFCIRFloatType::get(ctx, casted.getExpBits(),
-                                                    casted.getFracBits());
+  if (type->isFixed()) {
+    auto *casted = (FixedType *) (type);
+    newInnerType = mlir::dfcir::DFCIRFixedType::get(ctx, casted->isSigned(),
+                                                    casted->getIntBits(),
+                                                    casted->getFracBits());
+  } else if (type->isFloat()) {
+    auto *casted = (FloatType *) (type);
+    newInnerType = mlir::dfcir::DFCIRFloatType::get(ctx, casted->getExpBits(),
+                                                    casted->getFracBits());
   } else {
     return nullptr;
   }

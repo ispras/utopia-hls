@@ -24,7 +24,7 @@ bool DFTypeImpl::isFloat() const {
 
 DFType::DFType(DFTypeImpl *impl) : impl(impl) {}
 
-DFType::operator DFTypeImpl*() {
+DFType::operator DFTypeImpl*() const {
   return impl;
 }
 

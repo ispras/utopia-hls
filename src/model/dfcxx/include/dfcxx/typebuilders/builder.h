@@ -15,7 +15,8 @@ namespace dfcxx {
 
 class TypeBuilder {
 public:
-  DFTypeImpl *buildFixed(SignMode mode, uint8_t intBits, uint8_t fracBits);
+  DFTypeImpl *buildFixed(FixedType::SignMode mode, uint8_t intBits,
+                         uint8_t fracBits);
 
   DFTypeImpl *buildBool();
 

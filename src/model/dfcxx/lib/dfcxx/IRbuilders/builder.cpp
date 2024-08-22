@@ -13,55 +13,46 @@
 
 namespace dfcxx {
 
-DFCIRBuilder::DFCIRBuilder() : ctx(), builder(&ctx), conv(&ctx) {
-  // We are allowed to initialize 'builder'-field before loading
-  // dialects as OpBuilder only stores the pointer to MLIRContext
-  // and doesn't check any of its state.
+DFCIRBuilder::DFCIRBuilder() : ctx(), conv(&ctx) {
   ctx.getOrLoadDialect<mlir::dfcir::DFCIRDialect>();
 }
 
-void DFCIRBuilder::buildKernelBody(Graph *graph, mlir::OpBuilder &builder) {
-  std::vector<Node> sorted = topSort(graph->startNodes,
-                                     graph->outputs,
-                                     graph->nodes.size());
+void DFCIRBuilder::buildKernelBody(const Graph &graph, mlir::OpBuilder &builder) {
+  std::vector<Node> sorted = topSort(graph);
 
+  std::unordered_map<Node, mlir::Value> map;
   for (Node node : sorted) {
-    translate(node, graph, builder);
+    translate(node, graph, builder, map);
   }
 }
 
-mlir::dfcir::KernelOp
-DFCIRBuilder::buildKernel(dfcxx::Kernel *kern, mlir::OpBuilder &builder) {
+mlir::dfcir::KernelOp DFCIRBuilder::buildKernel(Kernel *kern,
+                                                mlir::OpBuilder &builder) {
   auto kernel = builder.create<mlir::dfcir::KernelOp>(builder.getUnknownLoc(),
                                                       kern->getName());
   builder.setInsertionPointToStart(&kernel.getBody().emplaceBlock());
-  buildKernelBody(&kern->graph, builder);
+  buildKernelBody(kern->getGraph(), builder);
   return kernel;
 }
 
-mlir::ModuleOp
-DFCIRBuilder::buildModule(dfcxx::Kernel *kern, mlir::OpBuilder &builder) {
-  auto module = builder.create<mlir::ModuleOp>(builder.getUnknownLoc());
-  builder.setInsertionPointToStart(module.getBody());
-  buildKernel(kern, builder);
-  return module;
-}
-
-mlir::ModuleOp DFCIRBuilder::buildModule(dfcxx::Kernel *kern) {
+mlir::ModuleOp DFCIRBuilder::buildModule(Kernel *kern) {
 
   assert(ctx.getLoadedDialect<mlir::dfcir::DFCIRDialect>() != nullptr);
 
   mlir::OpBuilder builder(&ctx);
-  module = buildModule(kern, builder);
+  module = builder.create<mlir::ModuleOp>(builder.getUnknownLoc());
+  builder.setInsertionPointToStart(module->getBody());
+  buildKernel(kern, builder);
 
   return module.get();
 }
 
-void DFCIRBuilder::translate(dfcxx::Node node, dfcxx::Graph *graph,
-                             mlir::OpBuilder &builder) {
+void DFCIRBuilder::translate(Node node, const Graph &graph,
+                             mlir::OpBuilder &builder,
+                             std::unordered_map<Node, mlir::Value> &map) {
   auto loc = builder.getUnknownLoc();
-
-  const auto &ins = graph->inputs[node];
+  
+  const auto &ins = graph.getInputs().at(node);
 
   auto nameAttr = mlir::StringAttr::get(&ctx, node.var->getName());
 
@@ -108,21 +99,21 @@ void DFCIRBuilder::translate(dfcxx::Node node, dfcxx::Graph *graph,
       auto constant = (DFConstant *) (node.var);
       int64_t val;
       mlir::IntegerType attrType;
-      unsigned width = constant->getType().getTotalBits();
+      unsigned width = constant->getType()->getTotalBits();
       switch (constant->getKind()) {
-        case INT:
+        case DFConstant::TypeKind::INT:
           val = constant->getInt();
           attrType = mlir::IntegerType::get(builder.getContext(), width,
                                             mlir::IntegerType::Signed);
           break;
-        case UINT: {
+        case DFConstant::TypeKind::UINT: {
           auto tmpU = constant->getUInt();
           memcpy(&val, &tmpU, sizeof(val));
           attrType = mlir::IntegerType::get(builder.getContext(), width,
                                             mlir::IntegerType::Unsigned);
           break;
         }
-        case FLOAT: {
+        case DFConstant::TypeKind::FLOAT: {
           auto tmpD = constant->getDouble();
           memcpy(&val, &tmpD, sizeof(val));
           attrType = mlir::IntegerType::get(builder.getContext(), width,
@@ -148,9 +139,9 @@ void DFCIRBuilder::translate(dfcxx::Node node, dfcxx::Graph *graph,
           mux.push_back(map[ins[ind].source]);
         }
       }
-      muxMap[node] = mux;
+
       auto newOp = builder.create<mlir::dfcir::MuxOp>(loc, conv[node.var],
-                                                      map[ctrl], muxMap[node]);
+                                                      map[ctrl], mux);
       map[node] = newOp.getRes();
       break;
     }
@@ -300,8 +291,9 @@ void DFCIRBuilder::translate(dfcxx::Node node, dfcxx::Graph *graph,
       break;
     }
   }
-  if (graph->connections.find(node) != graph->connections.end()) {
-    auto conSrc = graph->connections.at(node).source;
+  auto &connections = graph.getConnections();
+  if (connections.find(node) != connections.end()) {
+    auto conSrc = connections.at(node).source;
     builder.create<mlir::dfcir::ConnectOp>(loc, map[node], map[conSrc]);
   }
 }

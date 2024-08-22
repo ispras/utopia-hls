@@ -14,7 +14,7 @@ FixedType::FixedType(SignMode mode, uint8_t intBits,
                      uint8_t fracBits) : mode(mode), intBits(intBits),
                                          fracBits(fracBits) {}
 
-SignMode FixedType::getSign() const {
+FixedType::SignMode FixedType::getSign() const {
   return mode;
 }
 

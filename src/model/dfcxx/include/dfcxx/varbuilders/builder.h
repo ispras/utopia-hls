@@ -9,23 +9,27 @@
 #ifndef DFCXX_VAR_BUILDER_H
 #define DFCXX_VAR_BUILDER_H
 
-#include "dfcxx/kernmeta.h"
 #include "dfcxx/vars/vars.h"
 
 namespace dfcxx {
 
+struct KernMeta; // Forward declaration to omit circicular dependency.
+
 class VarBuilder {
 public:
-  DFVariableImpl *buildStream(const std::string &name, IODirection direction,
-                              KernMeta &meta, DFTypeImpl &type);
+  DFVariableImpl *buildStream(const std::string &name,
+                              DFVariableImpl::IODirection direction,
+                              KernMeta &meta, DFTypeImpl *type);
 
-  DFVariableImpl *buildScalar(const std::string &name, IODirection direction,
-                              KernMeta &meta, DFTypeImpl &type);
+  DFVariableImpl *buildScalar(const std::string &name,
+                              DFVariableImpl::IODirection direction,
+                              KernMeta &meta, DFTypeImpl *type);
 
-  DFVariableImpl *buildConstant(KernMeta &meta, DFTypeImpl &type,
-                                ConstantTypeKind kind, ConstantValue value);
+  DFVariableImpl *buildConstant(KernMeta &meta,
+                                DFTypeImpl *type,
+                                DFConstant::Value value);
 
-  DFVariableImpl *buildMuxCopy(DFVariableImpl *var, KernMeta &meta);
+  DFVariableImpl *buildClone(DFVariableImpl *var);
 };
 
 } // namespace dfcxx

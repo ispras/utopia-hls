@@ -22,7 +22,9 @@ private:
   DFTypeImpl &type;
 
   DFScalar(const std::string &name, IODirection direction,
-           GraphHelper &helper, DFTypeImpl &type);
+           KernMeta &meta, DFTypeImpl *type);
+
+  DFVariableImpl *clone() const override;
 
 public:
   ~DFScalar() override = default;

@@ -43,7 +43,6 @@
 
 #define SIM_ID_JSON "sim"
 #define SIM_IN_JSON "in"
-#define SIM_INTERMEDIATE_RESULTS_JSON "intermediate"
 #define SIM_OUT_JSON "out"
 
 //===----------------------------------------------------------------------===//
@@ -62,7 +61,6 @@
 #define OUT_FIRRTL_ARG CLI_ARG("out-firrtl")
 
 #define SIM_IN_ARG CLI_ARG("in")
-#define SIM_INTERMEDIATE_RESULTS_FLAG CLI_FLAG("i")
 #define SIM_OUT_ARG CLI_ARG("out")
 
 //===----------------------------------------------------------------------===//
@@ -277,15 +275,11 @@ struct SimOptions final : public AppOptions {
 
   SimOptions(AppOptions &parent):
       AppOptions(parent, SIM_CMD, "DFCxx simulation") {
-    //options->formatter(std::make_shared<UsageFormatter>());
     
     // Named options.
     options->add_option(SIM_IN_ARG,
                         inFilePath,
                         "Simulation input data path")->capture_default_str();
-    schedGroup->add_flag(SIM_INTERMEDIATE_RESULTS_FLAG,
-                         intermediateResults,
-                         "Dump intermediate computations as well")->capture_default_str();
     options->add_option(SIM_OUT_ARG,
                         outFilePath,
                         "Simulation results output path")->capture_default_str();
@@ -293,12 +287,10 @@ struct SimOptions final : public AppOptions {
 
   void fromJson(Json json) override {
     get(json, SIM_IN_JSON,                   inFilePath);
-    get(json, SIM_INTERMEDIATE_RESULTS_JSON, intermediateResults);
     get(json, SIM_OUT_JSON,                  outFilePath);
   }
 
   std::string inFilePath;
-  bool intermediateResults;
   std::string outFilePath;
   std::vector<std::string> files;
 };

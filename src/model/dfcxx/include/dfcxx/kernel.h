@@ -15,7 +15,7 @@
 #include "dfcxx/kernmeta.h"
 #include "dfcxx/offset.h"
 #include "dfcxx/typedefs.h"
-#include "dfcxx/types/types.h"
+#include "dfcxx/types/type.h"
 #include "dfcxx/vars/var.h"
 
 #include <ostream>
@@ -49,6 +49,8 @@ public:
   virtual ~Kernel() = default;
 
   virtual std::string_view getName() = 0;
+  
+  const Graph& getGraph() const;
 
   bool compile(const DFLatencyConfig &config,
                const std::vector<std::string> &outputPaths,
@@ -59,8 +61,7 @@ public:
                const Scheduler &sched);
 
   bool simulate(const std::string &inDataPath,
-                const std::string &outFilePath,
-                bool intermediateResults = false);
+                const std::string &outFilePath);
 
 };
 

@@ -9,9 +9,7 @@
 #ifndef DFCXX_CONTROL_H
 #define DFCXX_CONTROL_H
 
-#include "dfcxx/graph.h"
-#include "dfcxx/kernstorage.h"
-#include "dfcxx/varbuilders/builder.h"
+#include "dfcxx/kernmeta.h"
 
 #include <initializer_list>
 
@@ -23,13 +21,9 @@ class Control {
   friend Kernel;
 
 private:
-  Graph &graph;
-  GraphHelper helper;
-  VarBuilder &varBuilder;
-  KernStorage &storage;
+  KernMeta &meta;
 
-  Control(Graph &graph, TypeBuilder &typeBuilder,
-          VarBuilder &varBuilder, KernStorage &storage);
+  Control(KernMeta &meta);
 
 public:
   DFVariable mux(DFVariable ctrl, std::initializer_list<DFVariable> args);

@@ -18,10 +18,7 @@
 
 namespace dfcxx {
 
-std::vector<Node> topSort(std::unordered_set<Node> startNodes,
-                          std::unordered_map<Node,
-                                             std::vector<Channel>> outs,
-                          size_t nodesCount);
+std::vector<Node> topSort(const Graph &graph);
 
 } // namespace dfcxx
 

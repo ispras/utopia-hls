@@ -9,16 +9,20 @@
 #ifndef DFCXX_VAR_H
 #define DFCXX_VAR_H
 
-#include "dfcxx/kernmeta.h"
-#include "dfcxx/types/type.h"
+#include "dfcxx/types/types.h"
 
 #include <string_view>
 #include <string>
 
 namespace dfcxx {
 
-class DFVariableImpl {
+class VarBuilder;
+struct KernMeta; // Forward declaration to omit circicular dependency.
 
+class DFVariableImpl {
+  friend VarBuilder;
+
+public:
   enum IODirection{
     NONE = 0,
     INPUT,
@@ -29,6 +33,8 @@ protected:
   std::string name;
   IODirection direction;
   KernMeta &meta;
+
+  virtual DFVariableImpl *clone() const = 0;
 
 public:
   DFVariableImpl(const std::string &name, IODirection direction,
@@ -94,7 +100,7 @@ private:
 public:
   DFVariable(DFVariableImpl *impl);
 
-  operator DFVariableImpl*();
+  operator DFVariableImpl*() const;
 
   DFVariable(const DFVariable &) = default;
 
@@ -102,7 +108,7 @@ public:
 
   std::string_view getName() const;
 
-  IODirection getDirection() const;
+  DFVariableImpl::IODirection getDirection() const;
 
   const KernMeta &getMeta() const;
 

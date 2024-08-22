@@ -10,13 +10,14 @@
 
 namespace dfcxx {
 
-DFTypeImpl *TypeBuilder::buildFixed(dfcxx::SignMode mode, uint8_t intBits,
+DFTypeImpl *TypeBuilder::buildFixed(FixedType::SignMode mode,
+                                    uint8_t intBits,
                                     uint8_t fracBits) {
   return new FixedType(mode, intBits, fracBits);
 }
 
 DFTypeImpl *TypeBuilder::buildBool() {
-  return buildFixed(dfcxx::SignMode::UNSIGNED, 1, 0);
+  return buildFixed(FixedType::SignMode::UNSIGNED, 1, 0);
 }
 
 DFTypeImpl *TypeBuilder::buildFloat(uint8_t expBits, uint8_t fracBits) {

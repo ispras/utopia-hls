@@ -6,14 +6,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcxx/graph.h"
-#include "dfcxx/kernstorage.h"
-#include "dfcxx/varbuilders/builder.h"
+#include "dfcxx/kernmeta.h"
 #include "dfcxx/vars/var.h"
 
 namespace dfcxx {
 
-DFVariableImpl::DFVariableImpl(const std::string &name, IODirection direction,
+DFVariableImpl::DFVariableImpl(const std::string &name,
+                               IODirection direction,
                                KernMeta &meta) : name(name),
                                                  direction(direction),
                                                  meta(meta) {}
@@ -22,8 +21,12 @@ std::string_view DFVariableImpl::getName() const {
   return name;
 }
 
-IODirection DFVariableImpl::getDirection() const {
+DFVariableImpl::IODirection DFVariableImpl::getDirection() const {
   return direction;
+}
+
+const KernMeta &DFVariableImpl::getMeta() const {
+  return meta;
 }
 
 bool DFVariableImpl::isStream() const {
@@ -39,12 +42,12 @@ bool DFVariableImpl::isConstant() const {
 }
 
 void DFVariableImpl::connect(DFVariableImpl *connectee) {
-  meta.addChannel(connectee, this, 0, true);
+  meta.graph.addChannel(connectee, this, 0, true);
 }
 
 DFVariable::DFVariable(DFVariableImpl *impl) : impl(impl) {}
 
-DFVariable::operator DFVariableImpl*() {
+DFVariable::operator DFVariableImpl*() const {
   return impl;
 }
 
@@ -56,12 +59,8 @@ std::string_view DFVariable::getName() const {
   return impl->getName();
 }
 
-IODirection DFVariable::getDirection() const {
+DFVariableImpl::IODirection DFVariable::getDirection() const {
   return impl->getDirection();
-}
-
-const KernMeta &DFVariable::getMeta() const {
-  return impl->getMeta();
 }
 
 DFType DFVariable::getType() const {

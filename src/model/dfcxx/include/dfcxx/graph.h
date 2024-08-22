@@ -27,18 +27,22 @@ private:
   std::unordered_map<Node, std::vector<Channel>> outputs;
   std::unordered_map<Node, Channel> connections;
 
-  Graph() = default;
+public:
+  const std::unordered_set<Node>& getNodes() const;
+
+  const std::unordered_set<Node>& getStartNodes() const;
+
+  const std::unordered_map<Node, std::vector<Channel>> &getInputs() const;
+
+  const std::unordered_map<Node, std::vector<Channel>> &getOutputs() const;
+
+  const std::unordered_map<Node, Channel> &getConnections() const;
 
   Node findNode(DFVariableImpl *var);
 
   void addNode(DFVariableImpl *var, OpType type, NodeData data);
 
-  void addNode(const DFVariable &var, OpType type, NodeData data);
-
   void addChannel(DFVariableImpl *source, DFVariableImpl *target,
-                  unsigned opInd, bool connect);
-
-  void addChannel(const DFVariable &source, const DFVariable &target,
                   unsigned opInd, bool connect);
 };
 

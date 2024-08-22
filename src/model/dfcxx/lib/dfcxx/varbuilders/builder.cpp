@@ -11,38 +11,27 @@
 namespace dfcxx {
 
 DFVariableImpl *VarBuilder::buildStream(const std::string &name,
-                                        IODirection direction,
+                                        DFVariableImpl::IODirection direction,
                                         KernMeta &meta,
                                         DFTypeImpl *type) {
   return new DFStream(name, direction, meta, type);
 }
 
 DFVariableImpl *VarBuilder::buildScalar(const std::string &name,
-                                        IODirection direction,
+                                        DFVariableImpl::IODirection direction,
                                         KernMeta &meta,
                                         DFTypeImpl *type) {
-  return new DFScalar(name, direction, helper, type);
+  return new DFScalar(name, direction, meta, type);
 }
 
 DFVariableImpl *VarBuilder::buildConstant(KernMeta &meta,
                                           DFTypeImpl *type,
-                                          ConstantTypeKind kind,
-                                          ConstantValue value) {
-  return new DFConstant(helper, type, kind, value);
+                                          DFConstant::Value value) {
+  return new DFConstant(meta, type, value);
 }
 
-DFVariableImpl *VarBuilder::buildMuxCopy(DFVariableImpl *var, KernMeta &meta) {
-  if (var->isConstant()) {
-    return buildConstant(meta, var->getType(),
-                         ((DFConstant *) var)->getKind(),
-                         ConstantValue{});
-  } else if (var->isScalar()) {
-    return buildScalar("", IODirection::NONE, meta,
-                       var->getType());
-  } else /* if (var.isStream()) */ {
-    return buildStream("", IODirection::NONE, meta,
-                       var->getType());
-  }
+DFVariableImpl *VarBuilder::buildClone(DFVariableImpl *var) {
+  return var->clone();
 }
 
 } // namespace dfcxx

@@ -24,6 +24,8 @@ private:
   DFStream(const std::string &name, IODirection direction,
            KernMeta &meta, DFTypeImpl *type);
 
+  DFVariableImpl *clone() const override;
+
 public:
   ~DFStream() override = default;
 

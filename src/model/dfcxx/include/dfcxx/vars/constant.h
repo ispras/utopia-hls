@@ -18,25 +18,27 @@ class VarBuilder;
 class DFConstant : DFVariableImpl {
   friend VarBuilder;
 
-  enum ConstantTypeKind : uint8_t {
+public:
+  enum TypeKind : uint8_t {
     INT = 0,
     UINT,
     FLOAT
   };
 
-  union ConstantValue {
+  union Value {
     int64_t int_;
     uint64_t uint_;
     double double_;
   };
 
 private:
-  DFTypeImpl *type;
-  ConstantTypeKind kind;
-  ConstantValue value;
+  DFTypeImpl &type;
+  TypeKind kind;
+  Value value;
 
-  DFConstant(KernMeta &meta, DFTypeImpl *type,
-             ConstantTypeKind kind, ConstantValue value);
+  DFConstant(KernMeta &meta, DFTypeImpl *type, Value value);
+
+  DFVariableImpl *clone() const override;
 
 public:
   ~DFConstant() override = default;
@@ -83,7 +85,7 @@ public:
 
   DFVariableImpl *operator>>(uint8_t bits) override;
 
-  ConstantTypeKind getKind() const;
+  TypeKind getKind() const;
 
   bool isConstant() const override;
 };

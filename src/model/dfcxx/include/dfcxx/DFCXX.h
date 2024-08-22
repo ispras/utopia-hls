@@ -9,7 +9,9 @@
 #ifndef DFCXX_H
 #define DFCXX_H
 
-#include "kernel.h"
-#include "typedefs.h"
+#include "dfcxx/kernel.h"
+#include "dfcxx/typedefs.h"
+#include "dfcxx/types/types.h"
+#include "dfcxx/vars/vars.h"
 
 #endif // DFCXX_H

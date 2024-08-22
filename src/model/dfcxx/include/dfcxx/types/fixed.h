@@ -18,6 +18,7 @@ class TypeBuilder;
 class FixedType : DFTypeImpl {
   friend TypeBuilder;
 
+public:
   enum SignMode {
     UNSIGNED = 0,
     SIGNED

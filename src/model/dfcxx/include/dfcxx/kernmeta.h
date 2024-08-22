@@ -16,15 +16,15 @@
 
 namespace dfcxx {
 
-struct KernelMeta {
+struct KernMeta {
   Graph graph;
   KernStorage storage;
   TypeBuilder typeBuilder;
   VarBuilder varBuilder;
 
-  KernelMeta() = default;
-  KernelMeta(const KernelMeta &) = delete;
-  ~KernelMeta() = default;
+  KernMeta() = default;
+  KernMeta(const KernMeta &) = delete;
+  ~KernMeta() = default;
 };
 
 } // namespace dfcxx

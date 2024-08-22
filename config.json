@@ -10,7 +10,6 @@
   },
   "sim": {
     "in"           : "sim.txt",
-    "intermediate" : false,
     "out"          : "sim_out.txt"
   }
 }

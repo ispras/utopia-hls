@@ -54,8 +54,7 @@ int hlsMain(const HlsContext &context) {
 int simMain(const SimContext &context) {
   auto kernel = start();
   return !kernel->simulate(context.options.inFilePath,
-                           context.options.outFilePath,
-                           context.options.intermediateResults);
+                           context.options.outFilePath);
 }
 
 int main(int argc, char **argv) {
