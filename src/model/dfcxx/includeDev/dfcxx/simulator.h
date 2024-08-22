@@ -34,13 +34,17 @@ typedef std::unordered_map<Node, SimValue> RecordedValues;
 class DFCXXSimulator {
 public:
   DFCXXSimulator(std::vector<Node> &nodes,
-                 Inputs &inputs);
+                 Inputs &inputs,
+                 bool intermediateResults);
   bool simulate(std::ifstream &in, std::ofstream &out);
 
 private:
   uint64_t readInputData(std::ifstream &in, IOVars &inputMapping);
   bool runSim(IOVars &input, IOVars &output, uint64_t count);
   bool writeOutput(std::ofstream &out, IOVars &output, uint64_t count);
+  
+  bool processOp(RecordedValues &vals, Node &node,
+                 IOVars &input, uint64_t ind);
 
   void processInput(RecordedValues &vals, Node &node,
                IOVars &input, uint64_t ind);
@@ -54,8 +58,10 @@ private:
   void processUnaryOp(RecordedValues &vals, Node &node);
   void processShiftLeft(RecordedValues &vals, Node &node);
   void processShiftRight(RecordedValues &vals, Node &node);
+
   std::vector<Node> &nodes;
   Inputs &inputs;
+  bool intermediateResults;
 };
 
 } // namespace dfcxx

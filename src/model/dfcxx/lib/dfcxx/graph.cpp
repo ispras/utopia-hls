@@ -46,31 +46,4 @@ void Graph::addChannel(const DFVariable &source, const DFVariable &target,
   addChannel(source.getImpl(), target.getImpl(), opInd, connect);
 }
 
-GraphHelper::GraphHelper(Graph &graph, TypeBuilder &typeBuilder,
-                         VarBuilder &varBuilder,
-                         KernStorage &storage) : graph(graph),
-                                                 typeBuilder(typeBuilder),
-                                                 varBuilder(varBuilder),
-                                                 storage(storage) {}
-
-void GraphHelper::addNode(DFVariableImpl *var, OpType type, NodeData data) {
-  graph.addNode(var, type, data);
-}
-
-void GraphHelper::addNode(const DFVariable &var, OpType type, NodeData data) {
-  addNode(var.getImpl(), type, data);
-}
-
-void GraphHelper::addChannel(DFVariableImpl *source, DFVariableImpl *target,
-                             unsigned opInd, bool connect) {
-  graph.addChannel(source, target, opInd, connect);
-}
-
-void GraphHelper::addChannel(const DFVariable &source,
-                             const DFVariable &target,
-                             unsigned opInd,
-                             bool connect) {
-  graph.addChannel(source.getImpl(), target.getImpl(), opInd, connect);
-}
-
 } // namespace dfcxx

@@ -6,9 +6,10 @@
 
 namespace dfcxx {
 
-DFCXXSimulator::DFCXXSimulator(std::vector<Node> &nodes,
-                               Inputs &inputs) : nodes(nodes),
-                                                 inputs(inputs) {}
+DFCXXSimulator::DFCXXSimulator(std::vector<Node> &nodes, Inputs &inputs,
+                               bool intermediateResults) :
+                                   nodes(nodes), inputs(inputs),
+                                   intermediateResults(intermediateResults) {}
 
 
 
@@ -340,6 +341,11 @@ void DFCXXSimulator::processShiftRight(RecordedValues &vals, Node &node) {
   // No right bit shift for floats.
 }
 
+bool DFCXXSimulator::processOp(RecordedValues &vals, Node &node,
+                               IOVars &input, uint64_t ind) {
+  if (intermediateResults) {}
+}
+
 bool DFCXXSimulator::runSim(IOVars &input,
                             IOVars &output,
                             uint64_t count) {
@@ -350,6 +356,9 @@ bool DFCXXSimulator::runSim(IOVars &input,
   RecordedValues vals;
   for (uint64_t i = 0; i < count; ++i) {
     for (Node &node : nodes) {
+      if (!processOp(vals, node, i, input, output)) {
+        return false;
+      }
       switch (node.type) {
         case OFFSET:
           return false;  // TODO: Add offset support in the future.

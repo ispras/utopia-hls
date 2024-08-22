@@ -10,36 +10,32 @@
 
 namespace dfcxx {
 
-Constant::Constant(Graph &graph, TypeBuilder &typeBuilder,
-                   VarBuilder &varBuilder, KernStorage &storage) : 
-                   graph(graph),
-                   helper(graph, typeBuilder, varBuilder, storage),
-                   varBuilder(varBuilder), storage(storage) {}
+Constant::Constant(KernMeta &meta) : meta(meta) {} 
 
 DFVariable Constant::var(const DFType &type, int64_t value) {
-  DFVariable var = varBuilder.buildConstant(helper, type,
+  auto *var = meta.varBuilder.buildConstant(meta, type,
                                             ConstantTypeKind::INT,
                                             ConstantValue{.int_ = value});
-  storage.addVariable(var);
-  graph.addNode(var, OpType::CONST, NodeData{});
+  meta.storage.addVariable(var);
+  meta.graph.addNode(var, OpType::CONST, NodeData{});
   return var;
 }
 
 DFVariable Constant::var(const DFType &type, uint64_t value) {
-  DFVariable var = varBuilder.buildConstant(helper, *(type.getImpl()),
+  auto *var = meta.varBuilder.buildConstant(helper, type,
                                             ConstantTypeKind::UINT,
                                             ConstantValue{.uint_ = value});
-  storage.addVariable(var);
-  graph.addNode(var, OpType::CONST, NodeData{});
+  meta.storage.addVariable(var);
+  meta.graph.addNode(var, OpType::CONST, NodeData{});
   return var;
 }
 
 DFVariable Constant::var(const DFType &type, double value) {
-  DFVariable var = varBuilder.buildConstant(helper, *(type.getImpl()),
+  auto *var = meta.varBuilder.buildConstant(helper, type,
                                             ConstantTypeKind::FLOAT,
                                             ConstantValue{.double_ = value});
-  storage.addVariable(var);
-  graph.addNode(var, OpType::CONST, NodeData{});
+  meta.storage.addVariable(var);
+  meta.graph.addNode(var, OpType::CONST, NodeData{});
   return var;
 }
 

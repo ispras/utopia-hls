@@ -17,30 +17,27 @@
 
 namespace dfcxx {
 
-Kernel::Kernel() : storage(), typeBuilder(), varBuilder(),
-                   graph(), io(graph, typeBuilder, varBuilder, storage),
-                   offset(graph, typeBuilder, varBuilder, storage),
-                   constant(graph, typeBuilder, varBuilder, storage),
-                   control(graph, typeBuilder, varBuilder, storage) {}
+Kernel::Kernel() : meta(), io(meta), offset(meta),
+                   constant(meta), control(meta) {}
 
 DFType Kernel::dfUInt(uint8_t bits) {
-  DFTypeImpl *type = typeBuilder.buildFixed(SignMode::UNSIGNED, bits, 0);
-  return DFType(storage.addType(type));
+  auto *type = meta.typeBuilder.buildFixed(SignMode::UNSIGNED, bits, 0);
+  return meta.storage.addType(type);
 }
 
 DFType Kernel::dfInt(uint8_t bits) {
-  DFTypeImpl *type = typeBuilder.buildFixed(SignMode::SIGNED, bits, 0);
-  return DFType(storage.addType(type));
+  auto *type = meta.typeBuilder.buildFixed(SignMode::SIGNED, bits, 0);
+  return meta.storage.addType(type);
 }
 
 DFType Kernel::dfFloat(uint8_t expBits, uint8_t fracBits) {
-  DFTypeImpl *type = typeBuilder.buildFloat(expBits, fracBits);
-  return DFType(storage.addType(type));
+  auto *type = meta.typeBuilder.buildFloat(expBits, fracBits);
+  return meta.storage.addType(type);
 }
 
 DFType Kernel::dfBool() {
-  DFTypeImpl *type = typeBuilder.buildBool();
-  return DFType(storage.addType(type));
+  auto *type = meta.typeBuilder.buildBool();
+  return meta.storage.addType(type);
 }
 
 
@@ -83,11 +80,12 @@ bool Kernel::compile(const DFLatencyConfig &config,
 
 
 bool Kernel::simulate(const std::string &inDataPath,
-                      const std::string &outFilePath) {
+                      const std::string &outFilePath,
+                      bool intermediateResults) {
   std::vector<Node> sorted = topSort(graph.startNodes,
                                      graph.outputs,
                                      graph.nodes.size());
-  DFCXXSimulator sim(sorted, graph.inputs);
+  DFCXXSimulator sim(sorted, graph.inputs, intermediateResults);
   std::ifstream input(inDataPath, std::ios::in);
   if (!input || input.bad() || input.eof() || input.fail() || !input.is_open()) {
     return false;

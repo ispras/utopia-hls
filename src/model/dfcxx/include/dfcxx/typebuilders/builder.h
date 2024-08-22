@@ -21,9 +21,7 @@ public:
 
   DFTypeImpl *buildFloat(uint8_t expBits, uint8_t fracBits);
 
-  DFTypeImpl *buildShiftedType(DFTypeImpl &type, int8_t shift);
-
-  DFType buildShiftedType(const DFType &type, int8_t shift);
+  DFTypeImpl *buildShiftedType(DFTypeImpl *type, int8_t shift);
 };
 
 } // namespace dfcxx

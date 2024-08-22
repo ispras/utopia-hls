@@ -14,9 +14,9 @@
 namespace dfcxx {
 
 DFVariableImpl::DFVariableImpl(const std::string &name, IODirection direction,
-                               GraphHelper &helper) : name(name),
-                                                      direction(direction),
-                                                      helper(helper) {}
+                               KernMeta &meta) : name(name),
+                                                 direction(direction),
+                                                 meta(meta) {}
 
 std::string_view DFVariableImpl::getName() const {
   return name;
@@ -38,11 +38,15 @@ bool DFVariableImpl::isConstant() const {
   return false;
 }
 
-void DFVariableImpl::connect(dfcxx::DFVariableImpl &connectee) {
-  helper.addChannel(&connectee, this, 0, true);
+void DFVariableImpl::connect(DFVariableImpl *connectee) {
+  meta.addChannel(connectee, this, 0, true);
 }
 
 DFVariable::DFVariable(DFVariableImpl *impl) : impl(impl) {}
+
+DFVariable::operator DFVariableImpl*() {
+  return impl;
+}
 
 DFVariableImpl *DFVariable::getImpl() const {
   return impl;
@@ -56,76 +60,80 @@ IODirection DFVariable::getDirection() const {
   return impl->getDirection();
 }
 
+const KernMeta &DFVariable::getMeta() const {
+  return impl->getMeta();
+}
+
 DFType DFVariable::getType() const {
-  return DFType(&(impl->getType()));
+  return DFType(impl->getType());
 }
 
 DFVariable DFVariable::operator+(const DFVariable &rhs) {
-  return DFVariable(&(impl->operator+(*(rhs.impl))));
+  return DFVariable(impl->operator+(*(rhs.impl)));
 }
 
 DFVariable DFVariable::operator-(const DFVariable &rhs) {
-  return DFVariable(&(impl->operator-(*(rhs.impl))));
+  return DFVariable(impl->operator-(*(rhs.impl)));
 }
 
 DFVariable DFVariable::operator*(const DFVariable &rhs) {
-  return DFVariable(&(impl->operator*(*(rhs.impl))));
+  return DFVariable(impl->operator*(*(rhs.impl)));
 }
 
 DFVariable DFVariable::operator/(const DFVariable &rhs) {
-  return DFVariable(&(impl->operator/(*(rhs.impl))));
+  return DFVariable(impl->operator/(*(rhs.impl)));
 }
 
 DFVariable DFVariable::operator&(const DFVariable &rhs) {
-  return DFVariable(&(impl->operator&(*(rhs.impl))));
+  return DFVariable(impl->operator&(*(rhs.impl)));
 }
 
 DFVariable DFVariable::operator|(const DFVariable &rhs) {
-  return DFVariable(&(impl->operator|(*(rhs.impl))));
+  return DFVariable(impl->operator|(*(rhs.impl)));
 }
 
 DFVariable DFVariable::operator^(const DFVariable &rhs) {
-  return DFVariable(&(impl->operator^(*(rhs.impl))));
+  return DFVariable(impl->operator^(*(rhs.impl)));
 }
 
 DFVariable DFVariable::operator!() {
-  return DFVariable(&(impl->operator!()));
+  return DFVariable(impl->operator!());
 }
 
 DFVariable DFVariable::operator-() {
-  return DFVariable(&(impl->operator-()));
+  return DFVariable(impl->operator-());
 }
 
 DFVariable DFVariable::operator<(const DFVariable &rhs) {
-  return DFVariable(&(impl->operator<(*(rhs.impl))));
+  return DFVariable(impl->operator<(*(rhs.impl)));
 }
 
 DFVariable DFVariable::operator<=(const DFVariable &rhs) {
-  return DFVariable(&(impl->operator<=(*(rhs.impl))));
+  return DFVariable(impl->operator<=(*(rhs.impl)));
 }
 
 DFVariable DFVariable::operator>(const DFVariable &rhs) {
-  return DFVariable(&(impl->operator>(*(rhs.impl))));
+  return DFVariable(impl->operator>(*(rhs.impl)));
 }
 
 DFVariable DFVariable::operator>=(const DFVariable &rhs) {
-  return DFVariable(&(impl->operator>=(*(rhs.impl))));
+  return DFVariable(impl->operator>=(*(rhs.impl)));
 }
 
 DFVariable DFVariable::operator==(const DFVariable &rhs) {
-  return DFVariable(&(impl->operator==(*(rhs.impl))));
+  return DFVariable(impl->operator==(*(rhs.impl)));
 }
 
 DFVariable DFVariable::operator!=(const DFVariable &rhs) {
-  return DFVariable(&(impl->operator!=(*(rhs.impl))));
+  return DFVariable(impl->operator!=(*(rhs.impl)));
 }
 
 DFVariable DFVariable::operator<<(uint8_t bits) {
-  return DFVariable(&(impl->operator<<(bits)));
+  return DFVariable(impl->operator<<(bits));
 }
 
 DFVariable DFVariable::operator>>(uint8_t bits) {
-  return DFVariable(&(impl->operator>>(bits)));
+  return DFVariable(impl->operator>>(bits));
 }
 
 bool DFVariable::isStream() const {
@@ -141,7 +149,7 @@ bool DFVariable::isConstant() const {
 }
 
 void DFVariable::connect(const DFVariable &connectee) {
-  impl->connect(*(connectee.impl));
+  impl->connect(connectee.impl);
 }
 
 DFVariable &DFVariable::operator=(const DFVariable &var) {

@@ -13,17 +13,7 @@
 
 namespace dfcxx {
 
-class DFType;
-class TypeBuilder;
-class DFCIRTypeConverter;
-class DFCIRBuilder;
-
 class DFTypeImpl {
-  friend DFType;
-  friend TypeBuilder;
-  friend DFCIRTypeConverter;
-  friend DFCIRBuilder;
-
 public:
   virtual ~DFTypeImpl() = default;
 
@@ -44,10 +34,12 @@ private:
 
 public:
   DFType(DFTypeImpl *impl);
+  
+  operator DFTypeImpl*();
 
   DFType(const DFType &) = default;
 
-  DFTypeImpl *getImpl() const;
+  DFTypeImpl *getImpl();
 
   uint16_t getTotalBits() const;
 

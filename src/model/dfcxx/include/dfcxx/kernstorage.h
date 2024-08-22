@@ -24,11 +24,7 @@ private:
 public:
   DFTypeImpl *addType(DFTypeImpl *type);
 
-  DFType addType(const DFType &type);
-
   DFVariableImpl *addVariable(DFVariableImpl *var);
-
-  DFVariable addVariable(const DFVariable &var);
 
   ~KernStorage();
 };

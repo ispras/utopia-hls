@@ -11,14 +11,11 @@
 
 #include "dfcxx/constant.h"
 #include "dfcxx/control.h"
-#include "dfcxx/graph.h"
 #include "dfcxx/io.h"
-#include "dfcxx/kernstorage.h"
+#include "dfcxx/kernmeta.h"
 #include "dfcxx/offset.h"
-#include "dfcxx/typebuilders/builder.h"
 #include "dfcxx/typedefs.h"
 #include "dfcxx/types/types.h"
-#include "dfcxx/varbuilders/builder.h"
 #include "dfcxx/vars/var.h"
 
 #include <ostream>
@@ -28,16 +25,9 @@
 
 namespace dfcxx {
 
-class DFCIRBuilder;
-
 class Kernel {
-  friend DFCIRBuilder;
-
 private:
-  KernStorage storage;
-  TypeBuilder typeBuilder;
-  VarBuilder varBuilder;
-  Graph graph;
+  KernMeta meta;
 
 protected:
   IO io;
@@ -69,7 +59,8 @@ public:
                const Scheduler &sched);
 
   bool simulate(const std::string &inDataPath,
-                const std::string &outFilePath);
+                const std::string &outFilePath,
+                bool intermediateResults = false);
 
 };
 

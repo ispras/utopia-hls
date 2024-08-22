@@ -14,11 +14,9 @@
 namespace dfcxx {
 
 class VarBuilder;
-class DFCIRBuilder;
 
 class DFScalar : DFVariableImpl {
   friend VarBuilder;
-  friend DFCIRBuilder;
 
 private:
   DFTypeImpl &type;
@@ -29,42 +27,41 @@ private:
 public:
   ~DFScalar() override = default;
 
-protected:
-  DFTypeImpl &getType() override;
+  DFTypeImpl *getType() override;
 
-  DFVariableImpl &operator+(DFVariableImpl &rhs) override;
+  DFVariableImpl *operator+(DFVariableImpl &rhs) override;
 
-  DFVariableImpl &operator-(DFVariableImpl &rhs) override;
+  DFVariableImpl *operator-(DFVariableImpl &rhs) override;
 
-  DFVariableImpl &operator*(DFVariableImpl &rhs) override;
+  DFVariableImpl *operator*(DFVariableImpl &rhs) override;
 
-  DFVariableImpl &operator/(DFVariableImpl &rhs) override;
+  DFVariableImpl *operator/(DFVariableImpl &rhs) override;
 
-  DFVariableImpl &operator&(DFVariableImpl &rhs) override;
+  DFVariableImpl *operator&(DFVariableImpl &rhs) override;
 
-  DFVariableImpl &operator|(DFVariableImpl &rhs) override;
+  DFVariableImpl *operator|(DFVariableImpl &rhs) override;
 
-  DFVariableImpl &operator^(DFVariableImpl &rhs) override;
+  DFVariableImpl *operator^(DFVariableImpl &rhs) override;
 
-  DFVariableImpl &operator!() override;
+  DFVariableImpl *operator!() override;
 
-  DFVariableImpl &operator-() override;
+  DFVariableImpl *operator-() override;
 
-  DFVariableImpl &operator<(DFVariableImpl &rhs) override;
+  DFVariableImpl *operator<(DFVariableImpl &rhs) override;
 
-  DFVariableImpl &operator<=(DFVariableImpl &rhs) override;
+  DFVariableImpl *operator<=(DFVariableImpl &rhs) override;
 
-  DFVariableImpl &operator>(DFVariableImpl &rhs) override;
+  DFVariableImpl *operator>(DFVariableImpl &rhs) override;
 
-  DFVariableImpl &operator>=(DFVariableImpl &rhs) override;
+  DFVariableImpl *operator>=(DFVariableImpl &rhs) override;
 
-  DFVariableImpl &operator==(DFVariableImpl &rhs) override;
+  DFVariableImpl *operator==(DFVariableImpl &rhs) override;
 
-  DFVariableImpl &operator!=(DFVariableImpl &rhs) override;
+  DFVariableImpl *operator!=(DFVariableImpl &rhs) override;
 
-  DFVariableImpl &operator<<(uint8_t bits) override;
+  DFVariableImpl *operator<<(uint8_t bits) override;
 
-  DFVariableImpl &operator>>(uint8_t bits) override;
+  DFVariableImpl *operator>>(uint8_t bits) override;
 
   bool isScalar() const override;
 };

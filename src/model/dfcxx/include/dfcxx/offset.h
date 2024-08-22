@@ -9,9 +9,7 @@
 #ifndef DFCXX_OFFSET_H
 #define DFCXX_OFFSET_H
 
-#include "dfcxx/graph.h"
-#include "dfcxx/kernstorage.h"
-#include "dfcxx/varbuilders/builder.h"
+#include "dfcxx/kernmeta.h"
 
 namespace dfcxx {
 
@@ -21,12 +19,9 @@ class Offset {
   friend Kernel;
 
 private:
-  Graph &graph;
-  GraphHelper helper;
-  VarBuilder &varBuilder;
-  KernStorage &storage;
+  KernMeta &meta;
 
-  Offset(Graph &graph, TypeBuilder &typeBuilder, VarBuilder &builder, KernStorage &storage);
+  Offset(KernMeta &meta);
 
 public:
   DFVariable operator()(DFVariable &stream, int64_t offset);
