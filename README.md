@@ -211,9 +211,9 @@ The compiled Utopia HLS executable has a CLI to accept a number of parameters af
 
 For the executable there are three general arguments: `-h,--help`, `-H,--help-all` and `-v,--version` for printing simple and extended help-messages, and printing current executable's version respectively.
 
-Unless neither of the three arguments is used, first argument is the mode which the executable has to function in. Currently there is only one available mode `hls`.
+Unless neither of the three arguments is used, first argument is the mode which the executable has to function in. Currently there are only two available modes: `hls` and `sim`.
 
-The list of arguments for `hls`-mode is presented below:
+`hls` mode is used to translate the provided DFCxx kernel to different output formats. The list of arguments for `hls`-mode is presented below:
 
 * `-h,--help`: *optional* flag; used to print the help-message about other arguments.
 * `--config <PATH>`: *required* filesystem-path option; used to specify the file for a JSON latency configuration file. Its format is presented in *JSON Configuration* section.
@@ -231,6 +231,12 @@ Here is an example of an Utopia HLS CLI call:
 ```bash
 umain hls --config ~/utopia-user/config.json --out-sv ~/outFile.sv --out-dfcir ~/outFile2.mlir -a
 ```
+
+`sim` mode is used to simulate the provided DFCxx kernel. The list of arguments for `sim`-mode is presented below:
+
+* `-h,--help`: *optional* flag; used to print the help-message about other arguments.
+* `--in <PATH>`: *optional* filesystem-path option; used to specify the input file for simulation data (default: `sim.txt`). Its format is presented in *DFCxx Simulation Input Format* section.
+* `--out <PATH>`: *optional* filesystem-path option; used to specify the output VCD file (default: `sim_out.txt`).
 
 ### JSON Configuration
 
@@ -268,6 +274,33 @@ Here is an example of a JSON configuration file, containing latencies for multip
 }
 ```
 
+### DFCxx Simulation Input Format
+
+DFCxx kernels can be simulated to check that they describe computations as expected. The simulation doesn't include scheduling-related characteristics, thus DFCxx concepts like *offsets* are not supported, every computational node has to use **and** accept some value. 
+The format to provide simulation input data is the following:
+
+* input data is divided into blocks separated with a newline character (`\n`) - one block for each clock period
+* every block has a number of lines, each of which has the name of some **input** stream/scalar value and its hex-value (these values do not have a type - it is assumed from the corresponding computational nodes)
+* stream/scalar value name and the value are separated with a single space character (` `)
+* the provided value must be a valid hex-value: with or without `0x`, with either lower- or uppercase letters
+* if some stream/scalar value is present twice or more in the same block - its latest described value is used
+* after the last block **no newline character can be present**
+
+Here is an example of an input simulation file for `MuxMul` kernel, which has two input streams `x` and `ctrl`.
+
+```txt
+x 0x32
+ctrl 0x1
+
+x 0x45
+ctrl 0x0
+
+x 0x56
+ctrl 0x1
+```
+
+In this example, `x` accepts values `50` (`0x32`), `69` (`0x45`) and `86` (`0x56`), while `ctrl` accepts `1`, `0` and `1`. This means that 3 clock periods will be simulated for the provided kernel.
+
 ## Examples
 
 Root subdirectory `examples` contains different examples of DFCxx kernels, `start`-function definitions and JSON configuration files.
@@ -282,7 +315,15 @@ build/src/umain hls --config examples/polynomial2/add_int_2_mul_int3.json -a --o
 
 The execution command is going to pass a JSON configuration file (with 2 and 3 pipeline stages for integer addition
 and multiplication respectively) to Utopia HLS, resulting in the creation of the file `output`, containing a SystemVerilog
-module for Polynomial2 kernel with a greedy ASAP-scheduling.
+module for `Polynomial2` kernel with a greedy ASAP-scheduling.
+
+The same kernel can be simulated with:
+
+```bash
+build/src/umain sim --in examples/polynomial2/sim.txt --out output.vcd
+```
+
+This command uses the simulation data from `sim.txt` file to output a VCD-file `output.vcd`.
 
 ## DFCxx Documentation
 
