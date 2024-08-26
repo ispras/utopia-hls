@@ -14,14 +14,8 @@
 
 namespace dfcxx {
 
-DFCXXSimulator::DFCXXSimulator(std::vector<Node> &nodes,
-                               const Inputs &inputs) : nodes(nodes),
-                                                       inputs(inputs) {}
-
-
-
-uint64_t DFCXXSimulator::readInputData(std::ifstream &in,
-                                       IOVars &inputMapping) {
+uint64_t DFCXXSimulator::readInput(std::ifstream &in,
+                                   IOVars &inData) {
   uint64_t ind = 0;
   std::string line;
   bool atLeastOne = false;
@@ -38,318 +32,204 @@ uint64_t DFCXXSimulator::readInputData(std::ifstream &in,
       return 0;
     }
     atLeastOne = true;
-    inputMapping[line.substr(0, spaceInd)][ind] =
+    inData[line.substr(0, spaceInd)][ind] =
         std::stoul(line.substr(spaceInd + 1), 0, 16);
   }
   // It is assumed that at least one data block exists.
   return atLeastOne ? (ind + 1) : 0;
 }
 
-void DFCXXSimulator::processInput(RecordedValues &vals, Node &node,
-                                  IOVars &input, uint64_t ind) {
+static bool processInput(RecordedValues &vals, const Node &node,
+                         const Inputs &inputs, const IOVars &inData,
+                         IOVars &outData, uint64_t ind) {
   auto name = std::string(DFVariable(node.var).getName());
-  vals[node] = input[name][ind];
+  vals[node] = inData.at(name)[ind];
+  return true;
 }
 
-void DFCXXSimulator::processOutput(RecordedValues &vals, Node &node,
-                                   IOVars &output, uint64_t ind) {
+static bool processOutput(RecordedValues &vals, const Node &node,
+                          const Inputs &inputs, const IOVars &inData,
+                          IOVars &outData, uint64_t ind) {
   auto name = std::string(DFVariable(node.var).getName());
   // Take output's only connection and assign the existing source value.
   vals[node] = vals[inputs.at(node)[0].source];
-  output[name][ind] = vals[node];
+  outData[name][ind] = vals[node];
+  return true;
 }
 
-void DFCXXSimulator::processConst(RecordedValues &vals, Node &node) {
+static bool processConst(RecordedValues &vals, const Node &node,
+                         const Inputs &inputs, const IOVars &inData,
+                         IOVars &outData, uint64_t ind) {
   vals[node] = ((DFConstant *) node.var)->getUInt();
+  return true;
 }
 
-void DFCXXSimulator::processMux(RecordedValues &vals, Node &node) {
+static bool processMux(RecordedValues &vals, const Node &node,
+                       const Inputs &inputs, const IOVars &inData,
+                       IOVars &outData, uint64_t ind) {
   auto muxedValue = vals[inputs.at(node)[node.data.muxId].source];
   vals[node] = vals[inputs.at(node)[muxedValue + 1].source];
+  return true;
 }
 
-template <>
-void DFCXXSimulator::processBinaryOp<OpType::ADD>(RecordedValues &vals,
-                                                  Node &node) {
-  DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();
-  if (type->isFixed()) {
-    if (((FixedType*) type)->isSigned()) {
-      int64_t left = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[0].source]));
-      int64_t right = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[1].source]));
-      int64_t result = left + right;
-      vals[node] = *(reinterpret_cast<SimValue*>(&result));
-    } else {
-      vals[node] = vals[inputs.at(node)[0].source] + vals[inputs.at(node)[1].source];
-    }
-  } else {
-    double left = *(reinterpret_cast<double*>(&vals[inputs.at(node)[0].source]));
-    double right = *(reinterpret_cast<double*>(&vals[inputs.at(node)[1].source]));
-    double result = left + right;
-    vals[node] = *(reinterpret_cast<SimValue*>(&result));
-  }
+#define GENERIC_FUNC_NAME(OP_NAME) process##OP_NAME##Name
+#define PROCESS_GENERIC_BINARY_OP_FUNC(OP_NAME, OP)                           \
+static bool GENERIC_FUNC_NAME(OP_NAME)(RecordedValues &vals,                  \
+                                       const Node &node,                      \
+                                       const Inputs &inputs,                  \
+                                       const IOVars &inData,                  \
+                                       IOVars &outData,                       \
+                                       uint64_t ind) {                        \
+  DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();              \
+  if (type->isFixed()) {                                                      \
+    if (((FixedType*) type)->isSigned()) {                                    \
+      int64_t left =                                                          \
+          *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[0].source]));    \
+      int64_t right =                                                         \
+          *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[1].source]));    \
+      int64_t result = left OP right;                                         \
+      vals[node] =                                                            \
+          *(reinterpret_cast<SimValue*>(&result));                            \
+    } else {                                                                  \
+      vals[node] =                                                            \
+          vals[inputs.at(node)[0].source] OP vals[inputs.at(node)[1].source]; \
+    }                                                                         \
+  } else if (type->isFloat()) {                                               \
+    double left =                                                             \
+        *(reinterpret_cast<double*>(&vals[inputs.at(node)[0].source]));       \
+    double right =                                                            \
+        *(reinterpret_cast<double*>(&vals[inputs.at(node)[1].source]));       \
+    double result = left OP right;                                            \
+    vals[node] =                                                              \
+        *(reinterpret_cast<SimValue*>(&result));                              \
+  } else {                                                                    \
+    return false;                                                             \
+  }                                                                           \
+  return true;                                                                \
 }
 
-template <>
-void DFCXXSimulator::processBinaryOp<OpType::SUB>(RecordedValues &vals,
-                                                  Node &node) {
-  DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();
-  if (type->isFixed()) {
-    if (((FixedType*) type)->isSigned()) {
-      int64_t left = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[0].source]));
-      int64_t right = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[1].source]));
-      int64_t result = left - right;
-      vals[node] = *(reinterpret_cast<SimValue*>(&result));
-    } else {
-      vals[node] = vals[inputs.at(node)[0].source] - vals[inputs.at(node)[1].source];
-    }
-  } else {
-    double left = *(reinterpret_cast<double*>(&vals[inputs.at(node)[0].source]));
-    double right = *(reinterpret_cast<double*>(&vals[inputs.at(node)[1].source]));
-    double result = left - right;
-    vals[node] = *(reinterpret_cast<SimValue*>(&result));
-  }
-}
+PROCESS_GENERIC_BINARY_OP_FUNC(Add, +)
 
-template <>
-void DFCXXSimulator::processBinaryOp<OpType::MUL>(RecordedValues &vals,
-                                                  Node &node) {
-  DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();
-  if (type->isFixed()) {
-    if (((FixedType*) type)->isSigned()) {
-      int64_t left = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[0].source]));
-      int64_t right = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[1].source]));
-      int64_t result = left * right;
-      vals[node] = *(reinterpret_cast<SimValue*>(&result));
-    } else {
-      vals[node] = vals[inputs.at(node)[0].source] * vals[inputs.at(node)[1].source];
-    }
-  } else {
-    double left = *(reinterpret_cast<double*>(&vals[inputs.at(node)[0].source]));
-    double right = *(reinterpret_cast<double*>(&vals[inputs.at(node)[1].source]));
-    double result = left * right;
-    vals[node] = *(reinterpret_cast<SimValue*>(&result));
-  }
-}
+PROCESS_GENERIC_BINARY_OP_FUNC(Sub, -)
 
-template <>
-void DFCXXSimulator::processBinaryOp<OpType::DIV>(RecordedValues &vals,
-                                                  Node &node) {
-  DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();
-  if (type->isFixed()) {
-    if (((FixedType*) type)->isSigned()) {
-      int64_t left = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[0].source]));
-      int64_t right = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[1].source]));
-      int64_t result = left / right;
-      vals[node] = *(reinterpret_cast<SimValue*>(&result));
-    } else {
-      vals[node] = vals[inputs.at(node)[0].source] / vals[inputs.at(node)[1].source];
-    }
-  } else {
-    double left = *(reinterpret_cast<double*>(&vals[inputs.at(node)[0].source]));
-    double right = *(reinterpret_cast<double*>(&vals[inputs.at(node)[1].source]));
-    double result = left / right;
-    vals[node] = *(reinterpret_cast<SimValue*>(&result));
-  }
-}
+PROCESS_GENERIC_BINARY_OP_FUNC(Mul, *)
 
-template <>
-void DFCXXSimulator::processBinaryOp<OpType::AND>(RecordedValues &vals,
-                                                  Node &node) {
-  DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();
-  if (type->isFixed()) {
-    if (((FixedType*) type)->isSigned()) {
-      int64_t left = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[0].source]));
-      int64_t right = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[1].source]));
-      int64_t result = left & right;
-      vals[node] = *(reinterpret_cast<SimValue*>(&result));
-    } else {
-      vals[node] = vals[inputs.at(node)[0].source] & vals[inputs.at(node)[1].source];
-    }
-  }
-  // No AND for floats.
-}
+PROCESS_GENERIC_BINARY_OP_FUNC(Div, /)
 
-template <>
-void DFCXXSimulator::processBinaryOp<OpType::OR>(RecordedValues &vals,
-                                                  Node &node) {
-  DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();
-  if (type->isFixed()) {
-    if (((FixedType*) type)->isSigned()) {
-      int64_t left = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[0].source]));
-      int64_t right = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[1].source]));
-      int64_t result = left | right;
-      vals[node] = *(reinterpret_cast<SimValue*>(&result));
-    } else {
-      vals[node] = vals[inputs.at(node)[0].source] | vals[inputs.at(node)[1].source];
-    }
-  }
-  // No OR for floats.
-}
+PROCESS_GENERIC_BINARY_OP_FUNC(Less, <)
 
-template <>
-void DFCXXSimulator::processBinaryOp<OpType::XOR>(RecordedValues &vals,
-                                                  Node &node) {
-  DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();
-  if (type->isFixed()) {
-    if (((FixedType*) type)->isSigned()) {
-      int64_t left = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[0].source]));
-      int64_t right = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[1].source]));
-      int64_t result = left ^ right;
-      vals[node] = *(reinterpret_cast<SimValue*>(&result));
-    } else {
-      vals[node] = vals[inputs.at(node)[0].source] ^ vals[inputs.at(node)[1].source];
-    }
-  }
-  // No XOR for floats.
-}
+PROCESS_GENERIC_BINARY_OP_FUNC(LessEq, <=)
 
-template <>
-void DFCXXSimulator::processUnaryOp<OpType::NOT>(RecordedValues &vals,
-                                                 Node &node) {
+PROCESS_GENERIC_BINARY_OP_FUNC(Greater, >)
+
+PROCESS_GENERIC_BINARY_OP_FUNC(GreaterEq, >=)
+
+PROCESS_GENERIC_BINARY_OP_FUNC(Eq, ==)
+
+PROCESS_GENERIC_BINARY_OP_FUNC(Neq, !=)
+
+#define PROCESS_GENERIC_BITWISE_BINARY_OP_FUNC(OP_NAME, OP)               \
+static bool GENERIC_FUNC_NAME(OP_NAME)(RecordedValues &vals,              \
+                                       const Node &node,                  \
+                                       const Inputs &inputs,              \
+                                       const IOVars &inData,              \
+                                       IOVars &outData, uint64_t ind) {   \
+  vals[node] =                                                            \
+      vals[inputs.at(node)[0].source] OP vals[inputs.at(node)[1].source]; \
+  return true;                                                            \
+}          
+
+PROCESS_GENERIC_BITWISE_BINARY_OP_FUNC(And, &)
+
+PROCESS_GENERIC_BITWISE_BINARY_OP_FUNC(Or, |)
+
+PROCESS_GENERIC_BITWISE_BINARY_OP_FUNC(Xor, ^)
+
+static bool processNotOp(RecordedValues &vals, const Node &node,
+                         const Inputs &inputs, const IOVars &inData,
+                         IOVars &outData, uint64_t ind) {
   vals[node] = ~(vals[inputs.at(node)[0].source]);
+  return true;
 }
 
-template <>
-void DFCXXSimulator::processUnaryOp<OpType::NEG>(RecordedValues &vals,
-                                                 Node &node) {
+static bool processNegOp(RecordedValues &vals, const Node &node,
+                         const Inputs &inputs, const IOVars &inData,
+                         IOVars &outData, uint64_t ind) {
   DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();
   if (type->isFixed()) {
-    int64_t left = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[0].source]));
+    int64_t left =
+        *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[0].source]));
     int64_t result = -left;
-    vals[node] = *(reinterpret_cast<SimValue*>(&result));
-  } else {
-    double left = *(reinterpret_cast<double*>(&vals[inputs.at(node)[0].source]));
+    vals[node] =
+        *(reinterpret_cast<SimValue*>(&result));
+  } else if (type->isFloat()) {
+    double left =
+        *(reinterpret_cast<double*>(&vals[inputs.at(node)[0].source]));
     double result = -left;
-    vals[node] = *(reinterpret_cast<SimValue*>(&result));
-  }
-}
-
-template <>
-void DFCXXSimulator::processBinaryOp<OpType::LESS>(RecordedValues &vals,
-                                                  Node &node) {
-  DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();
-  if (type->isFixed()) {
-    if (((FixedType*) type)->isSigned()) {
-      int64_t left = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[0].source]));
-      int64_t right = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[1].source]));
-      int64_t result = left < right;
-      vals[node] = *(reinterpret_cast<SimValue*>(&result));
-    } else {
-      vals[node] = vals[inputs.at(node)[0].source] < vals[inputs.at(node)[1].source];
-    }
+    vals[node] =
+        *(reinterpret_cast<SimValue*>(&result));
   } else {
-    double left = *(reinterpret_cast<double*>(&vals[inputs.at(node)[0].source]));
-    double right = *(reinterpret_cast<double*>(&vals[inputs.at(node)[1].source]));
-    double result = left < right;
-    vals[node] = *(reinterpret_cast<SimValue*>(&result));
+    return false;
   }
+  return true;
 }
 
-template <>
-void DFCXXSimulator::processBinaryOp<OpType::LESSEQ>(RecordedValues &vals,
-                                                  Node &node) {
-  DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();
-  if (type->isFixed()) {
-    if (((FixedType*) type)->isSigned()) {
-      int64_t left = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[0].source]));
-      int64_t right = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[1].source]));
-      int64_t result = left <= right;
-      vals[node] = *(reinterpret_cast<SimValue*>(&result));
-    } else {
-      vals[node] = vals[inputs.at(node)[0].source] <= vals[inputs.at(node)[1].source];
-    }
-  } else {
-    double left = *(reinterpret_cast<double*>(&vals[inputs.at(node)[0].source]));
-    double right = *(reinterpret_cast<double*>(&vals[inputs.at(node)[1].source]));
-    double result = left <= right;
-    vals[node] = *(reinterpret_cast<SimValue*>(&result));
+static bool processShiftLeftOp(RecordedValues &vals, const Node &node,
+                               const Inputs &inputs, const IOVars &inData,
+                               IOVars &outData, uint64_t ind) {
+  vals[node] = vals[inputs.at(node)[0].source] << node.data.bitShift;
+  return true;
+}
+
+static bool processShiftRightOp(RecordedValues &vals, const Node &node,
+                                const Inputs &inputs, const IOVars &inData,
+                                IOVars &outData, uint64_t ind) {
+  vals[node] = vals[inputs.at(node)[0].source] >> node.data.bitShift;
+  return true;
+}
+
+bool DFCXXSimulator::processOp(RecordedValues &vals, const Node &node,
+                               const IOVars &inData, IOVars &outData,
+                               uint64_t ind) {
+  if (funcs.find(node.type) == funcs.end()) {
+    return false;
   }
+  return funcs.at(node.type)(vals, node, inputs, inData, outData, ind);
 }
 
-template <>
-void DFCXXSimulator::processBinaryOp<OpType::GREATER>(RecordedValues &vals,
-                                                  Node &node) {
-  DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();
-  if (type->isFixed()) {
-    if (((FixedType*) type)->isSigned()) {
-      int64_t left = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[0].source]));
-      int64_t right = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[1].source]));
-      int64_t result = left > right;
-      vals[node] = *(reinterpret_cast<SimValue*>(&result));
-    } else {
-      vals[node] = vals[inputs.at(node)[0].source] > vals[inputs.at(node)[1].source];
-    }
-  } else {
-    double left = *(reinterpret_cast<double*>(&vals[inputs.at(node)[0].source]));
-    double right = *(reinterpret_cast<double*>(&vals[inputs.at(node)[1].source]));
-    double result = left > right;
-    vals[node] = *(reinterpret_cast<SimValue*>(&result));
-  }
+DFCXXSimulator::DFCXXSimulator(std::vector<Node> &nodes,
+                               const Inputs &inputs) :
+                               nodes(nodes),
+                               inputs(inputs),
+                               funcs({
+                                 {OpType::IN, processInput},
+                                 {OpType::OUT, processOutput},
+                                 {OpType::CONST, processConst},
+                                 {OpType::MUX, processMux},
+                                 {OpType::ADD, GENERIC_FUNC_NAME(Add)},
+                                 {OpType::SUB, GENERIC_FUNC_NAME(Sub)},
+                                 {OpType::MUL, GENERIC_FUNC_NAME(Mul)},
+                                 {OpType::DIV, GENERIC_FUNC_NAME(Div)},
+                                 {OpType::AND, GENERIC_FUNC_NAME(And)},
+                                 {OpType::OR, GENERIC_FUNC_NAME(Or)},
+                                 {OpType::XOR, GENERIC_FUNC_NAME(Xor)},
+                                 {OpType::NOT, processNotOp},
+                                 {OpType::NEG, processNegOp},
+                                 {OpType::LESS, GENERIC_FUNC_NAME(Less)},
+                                 {OpType::LESSEQ, GENERIC_FUNC_NAME(LessEq)},
+                                 {OpType::GREATER, GENERIC_FUNC_NAME(Greater)},
+                                 {
+                                  OpType::GREATEREQ,
+                                  GENERIC_FUNC_NAME(GreaterEq)},
+                                 {OpType::EQ, GENERIC_FUNC_NAME(Eq)},
+                                 {OpType::NEQ, GENERIC_FUNC_NAME(Neq)},
+                                 {OpType::SHL, processShiftLeftOp},
+                                 {OpType::SHR, processShiftRightOp}}) {
+  // TODO: Add offset support in the future.
 }
 
-template <>
-void DFCXXSimulator::processBinaryOp<OpType::GREATEREQ>(RecordedValues &vals,
-                                                  Node &node) {
-  DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();
-  if (type->isFixed()) {
-    if (((FixedType*) type)->isSigned()) {
-      int64_t left = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[0].source]));
-      int64_t right = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[1].source]));
-      int64_t result = left >= right;
-      vals[node] = *(reinterpret_cast<SimValue*>(&result));
-    } else {
-      vals[node] = vals[inputs.at(node)[0].source] >= vals[inputs.at(node)[1].source];
-    }
-  } else {
-    double left = *(reinterpret_cast<double*>(&vals[inputs.at(node)[0].source]));
-    double right = *(reinterpret_cast<double*>(&vals[inputs.at(node)[1].source]));
-    double result = left >= right;
-    vals[node] = *(reinterpret_cast<SimValue*>(&result));
-  }
-}
-
-template <>
-void DFCXXSimulator::processBinaryOp<OpType::EQ>(RecordedValues &vals,
-                                                  Node &node) {
-  vals[node] = vals[inputs.at(node)[0].source] == vals[inputs.at(node)[1].source];
-}
-
-template <>
-void DFCXXSimulator::processBinaryOp<OpType::NEQ>(RecordedValues &vals,
-                                                  Node &node) {
-  vals[node] = vals[inputs.at(node)[0].source] != vals[inputs.at(node)[1].source];
-}
-
-void DFCXXSimulator::processShiftLeft(RecordedValues &vals, Node &node) {
-  DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();
-  if (type->isFixed()) {
-    if (((FixedType*) type)->isSigned()) {
-      int64_t left = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[0].source]));
-      int64_t result = left << node.data.bitShift;
-      vals[node] = *(reinterpret_cast<SimValue*>(&result));
-    } else {
-      vals[node] = vals[inputs.at(node)[0].source] << node.data.bitShift;
-    }
-  }
-  // No left bit shift for floats.
-}
-
-void DFCXXSimulator::processShiftRight(RecordedValues &vals, Node &node) {
-  DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();
-  if (type->isFixed()) {
-    if (((FixedType*) type)->isSigned()) {
-      int64_t left = *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[0].source]));
-      int64_t result = left >> node.data.bitShift;
-      vals[node] = *(reinterpret_cast<SimValue*>(&result));
-    } else {
-      vals[node] = vals[inputs.at(node)[0].source] >> node.data.bitShift;
-    }
-  }
-  // No right bit shift for floats.
-}
-
-bool DFCXXSimulator::runSim(IOVars &input,
-                            IOVars &output,
+bool DFCXXSimulator::runSim(IOVars &inData,
+                            IOVars &outData,
                             uint64_t count) {
   // Node->value mapping is initialized. This allows us
   // to rememeber the relevant value for the operand node.
@@ -358,30 +238,8 @@ bool DFCXXSimulator::runSim(IOVars &input,
   RecordedValues vals;
   for (uint64_t i = 0; i < count; ++i) {
     for (Node &node : nodes) {
-      switch (node.type) {
-        case OFFSET:
-          return false;  // TODO: Add offset support in the future.
-        case IN: processInput(vals, node, input, i); break;
-        case OUT: processOutput(vals, node, output, i); break;
-        case CONST: processConst(vals, node); break;
-        case MUX: processMux(vals, node); break;
-        case ADD: processBinaryOp<OpType::ADD>(vals, node); break;
-        case SUB: processBinaryOp<OpType::SUB>(vals, node); break;
-        case MUL: processBinaryOp<OpType::MUL>(vals, node); break;
-        case DIV: processBinaryOp<OpType::DIV>(vals, node); break;
-        case AND: processBinaryOp<OpType::AND>(vals, node); break;
-        case OR: processBinaryOp<OpType::OR>(vals, node); break;
-        case XOR: processBinaryOp<OpType::XOR>(vals, node); break;
-        case NOT: processUnaryOp<OpType::NOT>(vals, node); break;
-        case NEG: processUnaryOp<OpType::NEG>(vals, node); break;
-        case LESS: processBinaryOp<OpType::LESS>(vals, node); break;
-        case LESSEQ: processBinaryOp<OpType::LESSEQ>(vals, node); break;
-        case GREATER: processBinaryOp<OpType::GREATER>(vals, node); break;
-        case GREATEREQ: processBinaryOp<OpType::GREATEREQ>(vals, node); break;
-        case EQ: processBinaryOp<OpType::EQ>(vals, node); break;
-        case NEQ: processBinaryOp<OpType::NEQ>(vals, node); break;
-        case SHL: processShiftLeft(vals, node); break;
-        case SHR: processShiftRight(vals, node); break;
+      if (!processOp(vals, node, inData, outData, i)) {
+        return false;
       }
     }
   }
@@ -389,10 +247,10 @@ bool DFCXXSimulator::runSim(IOVars &input,
 }
 
 bool DFCXXSimulator::writeOutput(std::ofstream &out,
-                                 IOVars &output,
+                                 const IOVars &outData,
                                  uint64_t count) {
-  auto outFunc = [&out, &output] (uint64_t iter) {
-    for (auto &kv : output) {
+  auto outFunc = [&out, &outData] (uint64_t iter) {
+    for (const auto &kv : outData) {
       out << kv.first << " 0x" << std::hex << kv.second[iter] << "\n";
     }
   };
@@ -407,13 +265,13 @@ bool DFCXXSimulator::writeOutput(std::ofstream &out,
 
 bool DFCXXSimulator::simulate(std::ifstream &in,
                               std::ofstream &out) {
-  IOVars input;
-  IOVars output;
-  while (uint64_t count = readInputData(in, input)) {
+  IOVars inData;
+  IOVars outData;
+  while (uint64_t count = readInput(in, inData)) {
     // If either the simulation itself or writing to output file
     // fails - return false.
-    if (!runSim(input, output, count) ||
-        !writeOutput(out, output, count)) {
+    if (!runSim(inData, outData, count) ||
+        !writeOutput(out, outData, count)) {
       return false;
     }
   }

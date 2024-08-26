@@ -10,6 +10,7 @@
 #define DFCXX_SIMULATOR_H
 
 #include "dfcxx/graph.h"
+#include "dfcxx/node.h"
 
 #include <array>
 #include <fstream>
@@ -31,6 +32,12 @@ typedef std::unordered_map<Node, std::vector<Channel>> Inputs;
 
 typedef std::unordered_map<Node, SimValue> RecordedValues;
 
+typedef bool (*OpSimulationFunc)(RecordedValues &vals, const Node &node,
+                                 const Inputs &inputs, const IOVars &inData,
+                                 IOVars &outData, uint64_t ind);
+
+typedef std::unordered_map<OpType, OpSimulationFunc> OpSimulationFuncs;
+
 class DFCXXSimulator {
 public:
   DFCXXSimulator(std::vector<Node> &nodes,
@@ -38,26 +45,17 @@ public:
   bool simulate(std::ifstream &in, std::ofstream &out);
 
 private:
-  uint64_t readInputData(std::ifstream &in, IOVars &inputMapping);
-  bool runSim(IOVars &input, IOVars &output, uint64_t count);
-  bool writeOutput(std::ofstream &out, IOVars &output, uint64_t count);
-
-  void processInput(RecordedValues &vals, Node &node,
-               IOVars &input, uint64_t ind);
-  void processOutput(RecordedValues &vals, Node &node,
-               IOVars &output, uint64_t ind);
-  void processConst(RecordedValues &vals, Node &node);
-  void processMux(RecordedValues &vals, Node &node);
-  template <dfcxx::OpType T>
-  void processBinaryOp(RecordedValues &vals, Node &node);
-  template <dfcxx::OpType T>
-  void processUnaryOp(RecordedValues &vals, Node &node);
-  void processShiftLeft(RecordedValues &vals, Node &node);
-  void processShiftRight(RecordedValues &vals, Node &node);
+  uint64_t readInput(std::ifstream &in, IOVars &inData);
+  bool runSim(IOVars &inData, IOVars &outData, uint64_t count);
+  
+  bool processOp(RecordedValues &vals, const Node &node,
+                 const IOVars &inData, IOVars &outData, uint64_t ind);
+  
+  bool writeOutput(std::ofstream &out, const IOVars &outData, uint64_t count);
 
   std::vector<Node> &nodes;
   const Inputs &inputs;
-  bool intermediateResults;
+  const OpSimulationFuncs funcs;
 };
 
 } // namespace dfcxx
