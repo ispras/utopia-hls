@@ -6,9 +6,9 @@ project(UtopiaTest VERSION 0.0)
 
 add_compile_options(-g3 -Wall -Wignored-qualifiers)
 
-## If GTest isn't installed, download sources from Github.
+## If GTest isn't installed, download sources from repo.
 if(NOT TARGET GTest::gtest)
-  message(STATUS "Downloading GTest-sources from Github")
+  message(STATUS "Downloading GTest-sources from GitHub")
   include(FetchContent)
   FetchContent_Declare(
     googletest
@@ -39,6 +39,7 @@ endif()
 target_compile_definitions(utest
   PUBLIC
     NULLDEVICE="${NULLDEVICE}"
+    DATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/data"
 )
 
 target_include_directories(utest
