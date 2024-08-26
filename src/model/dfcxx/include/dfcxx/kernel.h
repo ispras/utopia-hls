@@ -23,11 +23,19 @@
 #include <string_view>
 #include <vector>
 
+// This forward declaration is needed to avoid
+// users having to include LLVM headers.
+namespace llvm {
+  class raw_fd_ostream;
+}
+
 namespace dfcxx {
 
 class Kernel {
 private:
   KernMeta meta;
+  
+  bool compileDot(llvm::raw_fd_ostream *stream);
 
 protected:
   IO io;

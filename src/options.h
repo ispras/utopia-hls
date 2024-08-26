@@ -40,6 +40,7 @@
 #define OUT_SV_LIB_JSON "out_sv_lib"
 #define OUT_DFCIR_JSON "out_dfcir"
 #define OUT_FIRRTL_JSON "out_firrtl"
+#define OUT_DOT_JSON "out_dot"
 
 #define SIM_ID_JSON "sim"
 #define SIM_IN_JSON "in"
@@ -59,6 +60,7 @@
 #define OUT_SV_LIB_ARG CLI_ARG("out-sv-lib")
 #define OUT_DFCIR_ARG CLI_ARG("out-dfcir")
 #define OUT_FIRRTL_ARG CLI_ARG("out-firrtl")
+#define OUT_DOT_ARG CLI_ARG("out-dot")
 
 #define SIM_IN_ARG CLI_ARG("in")
 #define SIM_OUT_ARG CLI_ARG("out")
@@ -208,6 +210,9 @@ struct HlsOptions final : public AppOptions {
     outputGroup->add_option(OUT_FIRRTL_ARG,
                             outNames[OUT_FORMAT_ID_INT(FIRRTL)],
                             "Path to output scheduled FIRRTL");
+    outputGroup->add_option(OUT_DOT_ARG,
+                            outNames[OUT_FORMAT_ID_INT(DOT)],
+                            "Path to output a DFCxx kernel in DOT format.");
     outputGroup->require_option();
   }
 
@@ -219,6 +224,7 @@ struct HlsOptions final : public AppOptions {
     get(json, OUT_SV_LIB_JSON,     outNames[OUT_FORMAT_ID_INT(SVLibrary)]);
     get(json, OUT_DFCIR_JSON,      outNames[OUT_FORMAT_ID_INT(DFCIR)]);
     get(json, OUT_FIRRTL_JSON,     outNames[OUT_FORMAT_ID_INT(FIRRTL)]);
+    get(json, OUT_DOT_JSON,     outNames[OUT_FORMAT_ID_INT(DOT)]);
   }
   
   dfcxx::Ops convertFieldToEnum(const std::string field) {
