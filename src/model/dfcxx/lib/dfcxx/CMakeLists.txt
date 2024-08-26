@@ -47,6 +47,7 @@ set(TEMPLATES_PATH "${PROJECT_SOURCE_DIR}/templates")
 add_compile_definitions(
   TEMPLATES_PATH="${TEMPLATES_PATH}"
   DOT_TEMPLATE_PATH="${TEMPLATES_PATH}/dot.tpl"
+  VCD_TEMPLATE_PATH="${TEMPLATES_PATH}/vcd.tpl"
 )
 
 ## MLIRDFCIR is ensured to be compiled beforehand.

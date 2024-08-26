@@ -19,6 +19,12 @@
 #include <unordered_map>
 #include <vector>
 
+// This forward declaration is needed to avoid
+// users having to include CTemplate headers.
+namespace ctemplate {
+  class TemplateDictionary;
+}
+
 namespace dfcxx {
 
 typedef uint64_t SimValue;
@@ -34,7 +40,7 @@ typedef std::unordered_map<Node, SimValue> RecordedValues;
 
 typedef bool (*OpSimulationFunc)(RecordedValues &vals, const Node &node,
                                  const Inputs &inputs, const IOVars &inData,
-                                 IOVars &outData, uint64_t ind);
+                                 uint64_t ind);
 
 typedef std::unordered_map<OpType, OpSimulationFunc> OpSimulationFuncs;
 
@@ -46,12 +52,21 @@ public:
 
 private:
   uint64_t readInput(std::ifstream &in, IOVars &inData);
-  bool runSim(IOVars &inData, IOVars &outData, uint64_t count);
+  bool runSim(RecordedValues &vals, IOVars &inData, uint64_t iter);
   
   bool processOp(RecordedValues &vals, const Node &node,
-                 const IOVars &inData, IOVars &outData, uint64_t ind);
+                 const IOVars &inData, uint64_t ind);
   
-  bool writeOutput(std::ofstream &out, const IOVars &outData, uint64_t count);
+  void genHeader(ctemplate::TemplateDictionary *dict,
+                 const RecordedValues &vals,
+                 std::unordered_map<Node, std::string> &idMap,
+                 uint64_t &counter);
+
+  void writeOutput(ctemplate::TemplateDictionary *dict,
+                   const RecordedValues &vals,
+                   uint64_t startInd,
+                   uint64_t iter,
+                   const std::unordered_map<Node, std::string> &idMap);
 
   std::vector<Node> &nodes;
   const Inputs &inputs;

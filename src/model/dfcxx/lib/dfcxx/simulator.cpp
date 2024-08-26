@@ -10,6 +10,10 @@
 #include "dfcxx/types/types.h"
 #include "dfcxx/vars/vars.h"
 
+#include "ctemplate/template.h"
+
+#include <ctime>
+#include <sstream>
 #include <string>
 
 namespace dfcxx {
@@ -41,7 +45,7 @@ uint64_t DFCXXSimulator::readInput(std::ifstream &in,
 
 static bool processInput(RecordedValues &vals, const Node &node,
                          const Inputs &inputs, const IOVars &inData,
-                         IOVars &outData, uint64_t ind) {
+                         uint64_t ind) {
   auto name = std::string(DFVariable(node.var).getName());
   vals[node] = inData.at(name)[ind];
   return true;
@@ -49,24 +53,23 @@ static bool processInput(RecordedValues &vals, const Node &node,
 
 static bool processOutput(RecordedValues &vals, const Node &node,
                           const Inputs &inputs, const IOVars &inData,
-                          IOVars &outData, uint64_t ind) {
+                          uint64_t ind) {
   auto name = std::string(DFVariable(node.var).getName());
   // Take output's only connection and assign the existing source value.
   vals[node] = vals[inputs.at(node)[0].source];
-  outData[name][ind] = vals[node];
   return true;
 }
 
 static bool processConst(RecordedValues &vals, const Node &node,
                          const Inputs &inputs, const IOVars &inData,
-                         IOVars &outData, uint64_t ind) {
+                         uint64_t ind) {
   vals[node] = ((DFConstant *) node.var)->getUInt();
   return true;
 }
 
 static bool processMux(RecordedValues &vals, const Node &node,
                        const Inputs &inputs, const IOVars &inData,
-                       IOVars &outData, uint64_t ind) {
+                       uint64_t ind) {
   auto muxedValue = vals[inputs.at(node)[node.data.muxId].source];
   vals[node] = vals[inputs.at(node)[muxedValue + 1].source];
   return true;
@@ -78,7 +81,6 @@ static bool GENERIC_FUNC_NAME(OP_NAME)(RecordedValues &vals,                  \
                                        const Node &node,                      \
                                        const Inputs &inputs,                  \
                                        const IOVars &inData,                  \
-                                       IOVars &outData,                       \
                                        uint64_t ind) {                        \
   DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();              \
   if (type->isFixed()) {                                                      \
@@ -133,7 +135,7 @@ static bool GENERIC_FUNC_NAME(OP_NAME)(RecordedValues &vals,              \
                                        const Node &node,                  \
                                        const Inputs &inputs,              \
                                        const IOVars &inData,              \
-                                       IOVars &outData, uint64_t ind) {   \
+                                       uint64_t ind) {                    \
   vals[node] =                                                            \
       vals[inputs.at(node)[0].source] OP vals[inputs.at(node)[1].source]; \
   return true;                                                            \
@@ -147,14 +149,14 @@ PROCESS_GENERIC_BITWISE_BINARY_OP_FUNC(Xor, ^)
 
 static bool processNotOp(RecordedValues &vals, const Node &node,
                          const Inputs &inputs, const IOVars &inData,
-                         IOVars &outData, uint64_t ind) {
+                         uint64_t ind) {
   vals[node] = ~(vals[inputs.at(node)[0].source]);
   return true;
 }
 
 static bool processNegOp(RecordedValues &vals, const Node &node,
                          const Inputs &inputs, const IOVars &inData,
-                         IOVars &outData, uint64_t ind) {
+                         uint64_t ind) {
   DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();
   if (type->isFixed()) {
     int64_t left =
@@ -176,25 +178,24 @@ static bool processNegOp(RecordedValues &vals, const Node &node,
 
 static bool processShiftLeftOp(RecordedValues &vals, const Node &node,
                                const Inputs &inputs, const IOVars &inData,
-                               IOVars &outData, uint64_t ind) {
+                               uint64_t ind) {
   vals[node] = vals[inputs.at(node)[0].source] << node.data.bitShift;
   return true;
 }
 
 static bool processShiftRightOp(RecordedValues &vals, const Node &node,
                                 const Inputs &inputs, const IOVars &inData,
-                                IOVars &outData, uint64_t ind) {
+                                uint64_t ind) {
   vals[node] = vals[inputs.at(node)[0].source] >> node.data.bitShift;
   return true;
 }
 
 bool DFCXXSimulator::processOp(RecordedValues &vals, const Node &node,
-                               const IOVars &inData, IOVars &outData,
-                               uint64_t ind) {
+                               const IOVars &inData, uint64_t ind) {
   if (funcs.find(node.type) == funcs.end()) {
     return false;
   }
-  return funcs.at(node.type)(vals, node, inputs, inData, outData, ind);
+  return funcs.at(node.type)(vals, node, inputs, inData, ind);
 }
 
 DFCXXSimulator::DFCXXSimulator(std::vector<Node> &nodes,
@@ -228,53 +229,134 @@ DFCXXSimulator::DFCXXSimulator(std::vector<Node> &nodes,
   // TODO: Add offset support in the future.
 }
 
-bool DFCXXSimulator::runSim(IOVars &inData,
-                            IOVars &outData,
-                            uint64_t count) {
-  // Node->value mapping is initialized. This allows us
+bool DFCXXSimulator::runSim(RecordedValues &vals,
+                            IOVars &inData,
+                            uint64_t iter) {
+  // Node->value mapping is updated. This allows us
   // to rememeber the relevant value for the operand node.
-  // With every single "clock" (loop iteration) input
-  // nodes' mapping is updated with the value from the buffer.
-  RecordedValues vals;
-  for (uint64_t i = 0; i < count; ++i) {
-    for (Node &node : nodes) {
-      if (!processOp(vals, node, inData, outData, i)) {
-        return false;
-      }
+  // With every single "clock" input nodes' mapping is updated
+  // with the value from the buffer.
+  for (Node &node : nodes) {
+    if (!processOp(vals, node, inData, iter)) {
+      return false;
     }
   }
   return true;
 }
 
-bool DFCXXSimulator::writeOutput(std::ofstream &out,
-                                 const IOVars &outData,
-                                 uint64_t count) {
-  auto outFunc = [&out, &outData] (uint64_t iter) {
-    for (const auto &kv : outData) {
-      out << kv.first << " 0x" << std::hex << kv.second[iter] << "\n";
-    }
-  };
-
-  outFunc(0);
-  for (uint64_t i = 1; i < count; ++i) {
-    out << "\n";
-    outFunc(i);
+static inline std::string valueToBinary(SimValue value, uint64_t width) {
+  std::stringstream stream;
+  uint64_t lastBitId = width - 1;
+  // Every iteration we take leftmost bit and convert it to a char.
+  for (uint64_t bitId = 0; bitId < width; ++bitId) {
+    stream << char(((value >> (lastBitId - bitId)) & 1) + 48);
   }
-  return true;
+  return stream.str();
+} 
+
+void DFCXXSimulator::writeOutput(ctemplate::TemplateDictionary *dict,
+                                 const RecordedValues &vals,
+                                 uint64_t startInd,
+                                 uint64_t iter,
+                                 const std::unordered_map<Node,
+                                                          std::string> &idMap) {
+  ctemplate::TemplateDictionary *tick =
+      dict->AddSectionDictionary("TICKS");
+  tick->SetValue("TICK", std::to_string(startInd + iter));
+  for (const auto &kv : vals) {
+    ctemplate::TemplateDictionary *value =
+        tick->AddSectionDictionary("VALUES");
+    value->SetValue("VALUE",
+                    valueToBinary(kv.second, 
+                                  kv.first.var->getType()->getTotalBits()));
+    value->SetValue("NAME", idMap.at(kv.first));
+  }
+}
+
+void DFCXXSimulator::genHeader(ctemplate::TemplateDictionary *dict,
+                               const RecordedValues &vals,
+                               std::unordered_map<Node, std::string> &idMap,
+                               uint64_t &counter) {
+  auto time = std::time(nullptr);
+  auto *localTime = std::localtime(&time);
+  dict->SetFormattedValue("GEN_TIME",
+                          "%d-%d-%d %d:%d:%d",
+                          localTime->tm_mday,
+                          localTime->tm_mon + 1,
+                          localTime->tm_year + 1900,
+                          localTime->tm_hour,
+                          localTime->tm_min,
+                          localTime->tm_sec);
+  
+  auto getName = [&idMap, &counter] (const Node &node) -> std::string {
+    // If the node is named - just save and return the name.
+    auto name = DFVariable(node.var).getName();
+    if (!name.empty()) {
+      return (idMap[node] = name.data());
+    }
+    // If the mapping contains the node name - return it.
+    auto it = idMap.find(node);
+    if (it != idMap.end()) {
+      return it->second;
+    }
+    // Otherwise create and return the new node name mapping. 
+    return (idMap[node] = "node" + std::to_string(counter++));
+  };
+  
+  for (const auto &kv : vals) {
+    std::string name = getName(kv.first);
+    auto width = kv.first.var->getType()->getTotalBits();
+   
+    ctemplate::TemplateDictionary *var =
+        dict->AddSectionDictionary("VARS");
+    var->SetValue("WIDTH",
+                  std::to_string(width));
+    var->SetValue("NAME", name);
+  
+    ctemplate::TemplateDictionary *initVar =
+        dict->AddSectionDictionary("INIT_VARS");
+    initVar->SetValue("INIT_VALUE", std::string(width, 'x'));
+    initVar->SetValue("NAME", name);
+  }
 }
 
 bool DFCXXSimulator::simulate(std::ifstream &in,
                               std::ofstream &out) {
   IOVars inData;
-  IOVars outData;
+  RecordedValues vals;
+  bool headerGenerated = false;
+  uint64_t startInd = 1;
+  uint64_t counter = 0;
+  std::unordered_map<Node, std::string> idMapping;
+  ctemplate::TemplateDictionary *dict =
+      new ctemplate::TemplateDictionary("vcd");
+
   while (uint64_t count = readInput(in, inData)) {
-    // If either the simulation itself or writing to output file
-    // fails - return false.
-    if (!runSim(inData, outData, count) ||
-        !writeOutput(out, outData, count)) {
-      return false;
+    for (uint64_t iter = 0; iter < count; ++iter) {
+      // If the simulation fails - return false.
+      if (!runSim(vals, inData, iter)) {
+        delete dict;
+        return false;
+      }
+      // If it's the first iteration - generate .vcd headers.
+      if (!headerGenerated) {
+        genHeader(dict, vals, idMapping, counter);
+        headerGenerated = true;
+      }
+      writeOutput(dict, vals, startInd, iter, idMapping);
     }
+    startInd += count;
   }
+  dict->SetValue("FINAL_TICK", std::to_string(startInd));
+  std::string result;
+  ctemplate::ExpandTemplate(VCD_TEMPLATE_PATH,
+                            ctemplate::DO_NOT_STRIP,
+                            dict,
+                            &result);
+
+  out << result;
+
+  delete dict;
   return true;
 }
 
