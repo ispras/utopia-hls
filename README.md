@@ -236,7 +236,7 @@ umain hls --config ~/utopia-user/config.json --out-sv ~/outFile.sv --out-dfcir ~
 
 * `-h,--help`: *optional* flag; used to print the help-message about other arguments.
 * `--in <PATH>`: *optional* filesystem-path option; used to specify the input file for simulation data (default: `sim.txt`). Its format is presented in *DFCxx Simulation Input Format* section.
-* `--out <PATH>`: *optional* filesystem-path option; used to specify the output VCD file (default: `sim_out.txt`).
+* `--out <PATH>`: *optional* filesystem-path option; used to specify the output VCD file (default: `sim_out.vcd`).
 
 ### JSON Configuration
 

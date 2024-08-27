@@ -12,11 +12,11 @@
 
 namespace dfcxx {
 
-const std::unordered_set<Node>& Graph::getNodes() const {
+const std::unordered_set<Node> &Graph::getNodes() const {
   return nodes;
 }
 
-const std::unordered_set<Node>& Graph::getStartNodes() const {
+const std::unordered_set<Node> &Graph::getStartNodes() const {
   return startNodes;
 }
 

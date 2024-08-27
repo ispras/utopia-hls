@@ -18,12 +18,14 @@
 
 namespace dfcxx {
 
+#define HEX_BASE 16
+
 uint64_t DFCXXSimulator::readInput(std::ifstream &in,
                                    IOVars &inData) {
   uint64_t ind = 0;
   std::string line;
   bool atLeastOne = false;
-  while (std::getline(in, line) && ind < BUF_SIZE) {
+  while (std::getline(in, line) && ind < SIM_DATA_BUF_SIZE) {
     // An empty line is treated as a data block delimiter.
     if (line.empty()) {
       ++ind;
@@ -37,7 +39,7 @@ uint64_t DFCXXSimulator::readInput(std::ifstream &in,
     }
     atLeastOne = true;
     inData[line.substr(0, spaceInd)][ind] =
-        std::stoul(line.substr(spaceInd + 1), 0, 16);
+        std::stoul(line.substr(spaceInd + 1), 0, HEX_BASE);
   }
   // It is assumed that at least one data block exists.
   return atLeastOne ? (ind + 1) : 0;
@@ -75,7 +77,27 @@ static bool processMux(RecordedValues &vals, const Node &node,
   return true;
 }
 
+// Generic name for a simulation function.
 #define GENERIC_FUNC_NAME(OP_NAME) process##OP_NAME##Name
+
+// Casts the provided value to a concrete type in a system-dependent way. 
+#define CAST_SIM_VALUE_TO(TYPE, VALUE) *(reinterpret_cast<TYPE *>(&VALUE))
+
+// Generic procedure to perform the simulation
+// for the concrete binary op and type of its operands.
+#define GENERIC_BINARY_OP_SIM_WITH_TYPE(TYPE, VALS, INPUTS, NODE, OP)  \
+TYPE left = CAST_SIM_VALUE_TO(TYPE, VALS[INPUTS.at(NODE)[0].source]);  \
+TYPE right = CAST_SIM_VALUE_TO(TYPE, VALS[INPUTS.at(NODE)[1].source]); \
+TYPE result = left OP right;                                           \
+VALS[NODE] = CAST_SIM_VALUE_TO(SimValue, result);
+
+// Generic procedure to perform the simulation
+// for the concrete unary op and type of its operand.
+#define GENERIC_UNARY_OP_SIM_WITH_TYPE(TYPE, VALS, INPUTS, NODE, OP)  \
+TYPE left = CAST_SIM_VALUE_TO(TYPE, VALS[INPUTS.at(NODE)[0].source]); \
+TYPE result = OP left;                                                \
+VALS[NODE] = CAST_SIM_VALUE_TO(SimValue, result);
+
 #define PROCESS_GENERIC_BINARY_OP_FUNC(OP_NAME, OP)                           \
 static bool GENERIC_FUNC_NAME(OP_NAME)(RecordedValues &vals,                  \
                                        const Node &node,                      \
@@ -85,25 +107,12 @@ static bool GENERIC_FUNC_NAME(OP_NAME)(RecordedValues &vals,                  \
   DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();              \
   if (type->isFixed()) {                                                      \
     if (((FixedType*) type)->isSigned()) {                                    \
-      int64_t left =                                                          \
-          *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[0].source]));    \
-      int64_t right =                                                         \
-          *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[1].source]));    \
-      int64_t result = left OP right;                                         \
-      vals[node] =                                                            \
-          *(reinterpret_cast<SimValue*>(&result));                            \
+      GENERIC_BINARY_OP_SIM_WITH_TYPE(int64_t, vals, inputs, node, OP)        \
     } else {                                                                  \
-      vals[node] =                                                            \
-          vals[inputs.at(node)[0].source] OP vals[inputs.at(node)[1].source]; \
+      GENERIC_BINARY_OP_SIM_WITH_TYPE(uint64_t, vals, inputs, node, OP)       \
     }                                                                         \
   } else if (type->isFloat()) {                                               \
-    double left =                                                             \
-        *(reinterpret_cast<double*>(&vals[inputs.at(node)[0].source]));       \
-    double right =                                                            \
-        *(reinterpret_cast<double*>(&vals[inputs.at(node)[1].source]));       \
-    double result = left OP right;                                            \
-    vals[node] =                                                              \
-        *(reinterpret_cast<SimValue*>(&result));                              \
+      GENERIC_BINARY_OP_SIM_WITH_TYPE(double, vals, inputs, node, OP)         \
   } else {                                                                    \
     return false;                                                             \
   }                                                                           \
@@ -159,17 +168,13 @@ static bool processNegOp(RecordedValues &vals, const Node &node,
                          uint64_t ind) {
   DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();
   if (type->isFixed()) {
-    int64_t left =
-        *(reinterpret_cast<int64_t*>(&vals[inputs.at(node)[0].source]));
-    int64_t result = -left;
-    vals[node] =
-        *(reinterpret_cast<SimValue*>(&result));
+    if (((FixedType*) type)->isSigned()) {
+      GENERIC_UNARY_OP_SIM_WITH_TYPE(int64_t, vals, inputs, node, -)
+    } else {
+      GENERIC_UNARY_OP_SIM_WITH_TYPE(uint64_t, vals, inputs, node, -)
+    }
   } else if (type->isFloat()) {
-    double left =
-        *(reinterpret_cast<double*>(&vals[inputs.at(node)[0].source]));
-    double result = -left;
-    vals[node] =
-        *(reinterpret_cast<SimValue*>(&result));
+      GENERIC_UNARY_OP_SIM_WITH_TYPE(double, vals, inputs, node, -)
   } else {
     return false;
   }
@@ -233,7 +238,7 @@ bool DFCXXSimulator::runSim(RecordedValues &vals,
                             IOVars &inData,
                             uint64_t iter) {
   // Node->value mapping is updated. This allows us
-  // to rememeber the relevant value for the operand node.
+  // to remember the relevant value for the operand node.
   // With every single "clock" input nodes' mapping is updated
   // with the value from the buffer.
   for (Node &node : nodes) {
@@ -244,12 +249,14 @@ bool DFCXXSimulator::runSim(RecordedValues &vals,
   return true;
 }
 
+#define ASCII_ZERO_CHAR_NUM 48
+
 static inline std::string valueToBinary(SimValue value, uint64_t width) {
   std::stringstream stream;
   uint64_t lastBitId = width - 1;
   // Every iteration we take leftmost bit and convert it to a char.
   for (uint64_t bitId = 0; bitId < width; ++bitId) {
-    stream << char(((value >> (lastBitId - bitId)) & 1) + 48);
+    stream << char(((value >> (lastBitId - bitId)) & 1) + ASCII_ZERO_CHAR_NUM);
   }
   return stream.str();
 } 

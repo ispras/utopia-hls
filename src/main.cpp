@@ -45,7 +45,7 @@ struct SimContext {
 int hlsMain(const HlsContext &context) {
   auto kernel = start();
   bool useASAP = context.options.asapScheduler;
-  return !kernel->compile(context.options.latConfig,
+  return !kernel->compile(context.options.latencyCfg,
                           context.options.outNames,
                           (useASAP) ? dfcxx::Scheduler::ASAP 
                                     : dfcxx::Scheduler::Linear);

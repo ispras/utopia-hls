@@ -51,7 +51,7 @@ DFType Kernel::dfBool() {
   return meta.storage.addType(type);
 }
 
-const Graph& Kernel::getGraph() const {
+const Graph &Kernel::getGraph() const {
   return meta.graph;
 }
 

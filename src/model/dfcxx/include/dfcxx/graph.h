@@ -28,9 +28,9 @@ private:
   std::unordered_map<Node, Channel> connections;
 
 public:
-  const std::unordered_set<Node>& getNodes() const;
+  const std::unordered_set<Node> &getNodes() const;
 
-  const std::unordered_set<Node>& getStartNodes() const;
+  const std::unordered_set<Node> &getStartNodes() const;
 
   const std::unordered_map<Node, std::vector<Channel>> &getInputs() const;
 

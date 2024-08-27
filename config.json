@@ -11,6 +11,6 @@
   },
   "sim": {
     "in"           : "sim.txt",
-    "out"          : "sim_out.txt"
+    "out"          : "sim_out.vcd"
   }
 }

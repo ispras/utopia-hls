@@ -30,9 +30,9 @@ namespace dfcxx {
 typedef uint64_t SimValue;
 
 // Buffer size for reading from and writing to simulation data files. 
-#define BUF_SIZE 200
+#define SIM_DATA_BUF_SIZE 200
 
-typedef std::map<std::string, std::array<SimValue, BUF_SIZE>> IOVars;
+typedef std::map<std::string, std::array<SimValue, SIM_DATA_BUF_SIZE>> IOVars;
 
 typedef std::unordered_map<Node, std::vector<Channel>> Inputs;
 

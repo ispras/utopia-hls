@@ -16,7 +16,6 @@
 
 #include <fstream>
 #include <iostream>
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -185,7 +184,7 @@ struct HlsOptions final : public AppOptions {
 
     // Named options.
     options->add_option(CONFIG_ARG,
-                        latConfigFile,
+                        latencyCfgFile,
                         "JSON latency configuration path")
         ->expected(1);
     
@@ -217,7 +216,7 @@ struct HlsOptions final : public AppOptions {
   }
 
   void fromJson(Json json) override {
-    get(json, CONFIG_JSON,         latConfigFile);
+    get(json, CONFIG_JSON,         latencyCfgFile);
     get(json, ASAP_SCHEDULER_JSON, asapScheduler);
     get(json, LP_SCHEDULER_JSON,   lpScheduler);
     get(json, OUT_SV_JSON,         outNames[OUT_FORMAT_ID_INT(SystemVerilog)]);
@@ -262,16 +261,16 @@ struct HlsOptions final : public AppOptions {
   }
 
   void parseLatencyConfig() {
-    std::ifstream in(latConfigFile);
+    std::ifstream in(latencyCfgFile);
     if (!in.good()) { return; }
     auto json = Json::parse(in);
     for (auto &[key, val] : json.items()) {
-      latConfig[convertFieldToEnum(key)] = val;
+      latencyCfg[convertFieldToEnum(key)] = val;
     }
   }
 
-  std::string latConfigFile;
-  DFLatencyConfig latConfig;
+  std::string latencyCfgFile;
+  DFLatencyConfig latencyCfg;
   std::vector<std::string> outNames;
   bool asapScheduler;
   bool lpScheduler;
@@ -292,8 +291,8 @@ struct SimOptions final : public AppOptions {
   }
 
   void fromJson(Json json) override {
-    get(json, SIM_IN_JSON,                   inFilePath);
-    get(json, SIM_OUT_JSON,                  outFilePath);
+    get(json, SIM_IN_JSON,  inFilePath);
+    get(json, SIM_OUT_JSON, outFilePath);
   }
 
   std::string inFilePath;

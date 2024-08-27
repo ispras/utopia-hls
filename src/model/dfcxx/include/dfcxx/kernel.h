@@ -58,7 +58,7 @@ public:
 
   virtual std::string_view getName() = 0;
   
-  const Graph& getGraph() const;
+  const Graph &getGraph() const;
 
   bool compile(const DFLatencyConfig &config,
                const std::vector<std::string> &outputPaths,

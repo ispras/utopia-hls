@@ -17,7 +17,7 @@
 namespace dfcxx {
 
 class VarBuilder;
-struct KernMeta; // Forward declaration to omit circicular dependency.
+struct KernMeta; // Forward declaration to omit cyclic dependency.
 
 class DFVariableImpl {
   friend VarBuilder;

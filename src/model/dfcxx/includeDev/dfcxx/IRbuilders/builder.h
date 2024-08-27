@@ -24,7 +24,6 @@ private:
   mlir::MLIRContext ctx;
   mlir::OwningOpRef<mlir::ModuleOp> module;
   DFCIRTypeConverter conv;
-  //std::unordered_map<Node, llvm::SmallVector<mlir::Value>> muxMap;
 
   void translate(Node node, const Graph &graph, mlir::OpBuilder &builder,
                  std::unordered_map<Node, mlir::Value> &map);

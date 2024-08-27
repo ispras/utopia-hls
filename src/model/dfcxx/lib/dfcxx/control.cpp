@@ -19,7 +19,7 @@ DFVariable Control::mux(DFVariable ctrl,
   unsigned argsCount = args.size();
   auto *var = meta.varBuilder.buildClone(argsData[0]);
   meta.storage.addVariable(var);
-  meta.graph.addNode(var, OpType::MUX, NodeData{.muxId = 0});
+  meta.graph.addNode(var, OpType::MUX, NodeData {.muxId = 0});
   meta.graph.addChannel(ctrl, var, 0, false);
   for (unsigned i = 0; i < argsCount; ++i) {
     meta.graph.addChannel(argsData[i], var, i + 1, false);

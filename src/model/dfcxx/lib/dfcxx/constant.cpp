@@ -14,31 +14,31 @@ Constant::Constant(KernMeta &meta) : meta(meta) {}
 
 DFVariable Constant::var(const DFType &type, int64_t value) {
   auto *var = meta.varBuilder.buildConstant(meta, type,
-                                            DFConstant::Value{
+                                            DFConstant::Value {
                                               .int_ = value
                                             });
   meta.storage.addVariable(var);
-  meta.graph.addNode(var, OpType::CONST, NodeData{});
+  meta.graph.addNode(var, OpType::CONST, NodeData {});
   return var;
 }
 
 DFVariable Constant::var(const DFType &type, uint64_t value) {
   auto *var = meta.varBuilder.buildConstant(meta, type,
-                                            DFConstant::Value{
+                                            DFConstant::Value {
                                               .uint_ = value
                                             });
   meta.storage.addVariable(var);
-  meta.graph.addNode(var, OpType::CONST, NodeData{});
+  meta.graph.addNode(var, OpType::CONST, NodeData {});
   return var;
 }
 
 DFVariable Constant::var(const DFType &type, double value) {
   auto *var = meta.varBuilder.buildConstant(meta, type,
-                                            DFConstant::Value{
+                                            DFConstant::Value {
                                               .double_ = value
                                             });
   meta.storage.addVariable(var);
-  meta.graph.addNode(var, OpType::CONST, NodeData{});
+  meta.graph.addNode(var, OpType::CONST, NodeData {});
   return var;
 }
 
