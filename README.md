@@ -216,7 +216,7 @@ Unless neither of the three arguments is used, first argument is the mode which 
 `hls` mode is used to translate the provided DFCxx kernel to different output formats. The list of arguments for `hls`-mode is presented below:
 
 * `-h,--help`: *optional* flag; used to print the help-message about other arguments.
-* `--config <PATH>`: *required* filesystem-path option; used to specify the file for a JSON latency configuration file. Its format is presented in *JSON Configuration* section.
+* `--config <PATH>`: *required* filesystem-path option; used to specify the file for a JSON latency configuration file. Its format is presented in `docs/latency_config.md`.
 * `--out-sv <PATH>`: *optional* filesystem-path option; used to specify the output SystemVerilog file.
 * `--out-sv-lib <PATH>`: *optional* filesystem-path option; used to specify the output SystemVerilog file for generated operations library.
 * `--out-dfcir <PATH>`: *optional* filesystem-path option; used to specify the output DFCIR file.
@@ -235,73 +235,10 @@ umain hls --config ~/utopia-user/config.json --out-sv ~/outFile.sv --out-dfcir ~
 `sim` mode is used to simulate the provided DFCxx kernel. The list of arguments for `sim`-mode is presented below:
 
 * `-h,--help`: *optional* flag; used to print the help-message about other arguments.
-* `--in <PATH>`: *optional* filesystem-path option; used to specify the input file for simulation data (default: `sim.txt`). Its format is presented in *DFCxx Simulation Input Format* section.
+* `--in <PATH>`: *optional* filesystem-path option; used to specify the input file for simulation data (default: `sim.txt`). Its format is presented in `docs/simulation.md`.
 * `--out <PATH>`: *optional* filesystem-path option; used to specify the output VCD file (default: `sim_out.vcd`).
 
-### JSON Configuration
-
-Latency configuration for each computational operation (number of pipeline stages) used in a DFCxx kernel is provided via a JSON file.
-
-Currently each operation has two specifications: for integer values (`INT`) and floating point (`FLOAT`) values. 
-
-The list of all computational operations is provided below:
-
-* `ADD` - Addition
-* `SUB` - Subtraction
-* `MUL` - Multiplication
-* `DIV` - Division
-* `AND` - Logical conjunction
-* `OR` - Logical disjunction
-* `XOR` - Exclusive logical disjunction
-* `NOT` - Logical inversion
-* `NEG` - Negation
-* `LESS` - "less" comparison
-* `LESSEQ` - "less or equal" comparison
-* `GREATER` - "greater" comparison 
-* `GREATEREQ` - "greater or equal" comparison
-* `EQ` - "equal" comparison
-* `NEQ` - "not equal" comparison
-
-JSON configuration structure states that for every operation with a specific configuration (each pair is represented as a separate JSON-field with `_` between pair's elements) present in the kernel, operation's latency will be provided. 
-
-Here is an example of a JSON configuration file, containing latencies for multiplication, addition and subtraction of integer numbers:
-
-```json
-{
-  "MUL_INT": 3,
-  "ADD_INT": 1,
-  "SUB_INT": 1
-}
-```
-
-### DFCxx Simulation Input Format
-
-DFCxx kernels can be simulated to check that they describe computations as expected. The simulation doesn't include scheduling-related characteristics, thus DFCxx concepts like *offsets* are not supported, every computational node has to use **and** accept some value. 
-The format to provide simulation input data is the following:
-
-* input data is divided into blocks separated with a newline character (`\n`) - one block for each clock period
-* every block has a number of lines, each of which has the name of some **input** stream/scalar value and its hex-value (these values do not have a type - it is assumed from the corresponding computational nodes)
-* stream/scalar value name and the value are separated with a single space character (` `)
-* the provided value must be a valid hex-value: with or without `0x`, with either lower- or uppercase letters
-* if some stream/scalar value is present twice or more in the same block - its latest described value is used
-* after the last block **no newline character can be present**
-
-Here is an example of an input simulation file for `MuxMul` kernel, which has two input streams `x` and `ctrl`.
-
-```txt
-x 0x32
-ctrl 0x1
-
-x 0x45
-ctrl 0x0
-
-x 0x56
-ctrl 0x1
-```
-
-In this example, `x` accepts values `50` (`0x32`), `69` (`0x45`) and `86` (`0x56`), while `ctrl` accepts `1`, `0` and `1`. This means that 3 clock periods will be simulated for the provided kernel.
-
-## Examples
+### Examples
 
 Root subdirectory `examples` contains different examples of DFCxx kernels, `start`-function definitions and JSON configuration files.
 
@@ -323,7 +260,7 @@ The same kernel can be simulated with:
 build/src/umain sim --in examples/polynomial2/sim.txt --out output.vcd
 ```
 
-This command uses the simulation data from `sim.txt` file to output a VCD-file `output.vcd`.
+This command uses the simulation data from `sim.txt` file and stores the simulation trace in the output file `output.vcd`.
 
 ## DFCxx Documentation
 
