@@ -7,12 +7,12 @@ DFCxx kernels can be simulated to check that they describe computations as expec
 The format to provide simulation input data is the following:
 
 * input data is divided into blocks separated with a newline character (`\n`) - one block for each simulation step
-* every block has a number of lines, each of which has the name of some **input** stream/scalar value and its hex-value (these values do not have an explicit type - they will be casted to the types of related computational nodes)
+* every block has a number of lines, each of which has the case-sensitive name of some **input** stream/scalar variable and its hex-value (these values do not have an explicit type - they will be casted to the types of related computational nodes)
 * stream/scalar value name and the hex-value are separated with a single space character (` `)
 * the provided value must be a valid hex-value: with or without `0x`, with either lower- or uppercase letters
 * if some stream/scalar hex-value is present twice or more in the same block - its latest described value is used
 
-Here is an example of an input simulation file for `MuxMul` kernel, which has two input streams `x` (unsigned 32-bit integer values) and `ctrl` (unsigned 1-bit integer values -> boolean values).
+Here is an example of an input simulation file for `MuxMul` kernel, which has two input streams: `x` (unsigned 32-bit integer values) and `ctrl` (unsigned 1-bit integer values).
 
 ```txt
 x 0x32

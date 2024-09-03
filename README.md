@@ -213,7 +213,7 @@ For the executable there are three general arguments: `-h,--help`, `-H,--help-al
 
 Unless neither of the three arguments is used, first argument is the mode which the executable has to function in. Currently there are only two available modes: `hls` and `sim`.
 
-`hls` mode is used to translate the provided DFCxx kernel to different output formats. The list of arguments for `hls`-mode is presented below:
+`hls` mode is used to perform the high-level synthesis of digital hardware description from the input DFCxx kernel. The list of arguments for `hls`-mode is presented below:
 
 * `-h,--help`: *optional* flag; used to print the help-message about other arguments.
 * `--config <PATH>`: *required* filesystem-path option; used to specify the file for a JSON latency configuration file. Its format is presented in `docs/latency_config.md`.
@@ -232,7 +232,7 @@ Here is an example of an Utopia HLS CLI call:
 umain hls --config ~/utopia-user/config.json --out-sv ~/outFile.sv --out-dfcir ~/outFile2.mlir -a
 ```
 
-`sim` mode is used to simulate the provided DFCxx kernel. The list of arguments for `sim`-mode is presented below:
+`sim` mode is used to simulate the input DFCxx kernel. The list of arguments for `sim`-mode is presented below:
 
 * `-h,--help`: *optional* flag; used to print the help-message about other arguments.
 * `--in <PATH>`: *optional* filesystem-path option; used to specify the input file for simulation data (default: `sim.txt`). Its format is presented in `docs/simulation.md`.

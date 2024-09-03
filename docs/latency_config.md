@@ -1,10 +1,10 @@
 ## JSON Configuration
 
-Latency configuration for each computational operation (number of pipeline stages) used in a DFCxx kernel is provided via a JSON file.
+Latency configuration (in terms of pipeline stages) for each computational operation used in a DFCxx kernel is provided via a JSON file.
 
-Currently each operation has two specifications: for integer values (`INT`) and floating point (`FLOAT`) values. 
+Currently each operation has two specifications based on the types of its arguments: for integer values (`INT`) and floating point (`FLOAT`) values respectively. 
 
-The list of all computational operations is provided below:
+All the supported computational operations are listed below:
 
 * `ADD` - Addition
 * `SUB` - Subtraction
@@ -22,7 +22,7 @@ The list of all computational operations is provided below:
 * `EQ` - "equal" comparison
 * `NEQ` - "not equal" comparison
 
-JSON configuration structure states that for every operation with a specific configuration (each pair is represented as a separate JSON-field with `_` between pair's elements) present in the kernel, operation's latency will be provided. 
+JSON configuration structure states that for every operation with a specific configuration (each pair is represented as a separate JSON-field with `_` between pair's elements) present in the kernel, operation's latency has to be provided. 
 
 Here is an example of a JSON configuration file, containing latencies for multiplication, addition and subtraction of integer numbers:
 

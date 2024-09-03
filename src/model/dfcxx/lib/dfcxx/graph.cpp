@@ -20,13 +20,11 @@ const std::unordered_set<Node> &Graph::getStartNodes() const {
   return startNodes;
 }
 
-const std::unordered_map<Node,
-                         std::vector<Channel>> &Graph::getInputs() const {
+const std::unordered_map<Node, std::vector<Channel>> &Graph::getInputs() const {
   return inputs;
 }
 
-const std::unordered_map<Node,
-                         std::vector<Channel>> &Graph::getOutputs() const {
+const std::unordered_map<Node, std::vector<Channel>> &Graph::getOutputs() const {
   return outputs;
 }
 

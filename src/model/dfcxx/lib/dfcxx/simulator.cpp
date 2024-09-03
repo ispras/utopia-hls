@@ -261,12 +261,12 @@ static inline std::string valueToBinary(SimValue value, uint64_t width) {
   return stream.str();
 } 
 
-void DFCXXSimulator::writeOutput(ctemplate::TemplateDictionary *dict,
-                                 const RecordedValues &vals,
-                                 uint64_t startInd,
-                                 uint64_t iter,
-                                 const std::unordered_map<Node,
-                                                          std::string> &idMap) {
+void
+DFCXXSimulator::writeOutput(ctemplate::TemplateDictionary *dict,
+                            const RecordedValues &vals,
+                            uint64_t startInd,
+                            uint64_t iter,
+                            const std::unordered_map<Node, std::string> &idMap) {
   ctemplate::TemplateDictionary *tick =
       dict->AddSectionDictionary("TICKS");
   tick->SetValue("TICK", std::to_string(startInd + iter));

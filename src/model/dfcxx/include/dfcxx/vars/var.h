@@ -23,7 +23,7 @@ class DFVariableImpl {
   friend VarBuilder;
 
 public:
-  enum IODirection{
+  enum IODirection {
     NONE = 0,
     INPUT,
     OUTPUT
