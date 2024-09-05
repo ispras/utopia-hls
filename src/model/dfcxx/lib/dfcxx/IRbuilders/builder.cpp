@@ -11,6 +11,8 @@
 
 #include "mlir/Parser/Parser.h"
 
+#include <iostream>
+
 namespace dfcxx {
 
 DFCIRBuilder::DFCIRBuilder() : ctx(), conv(&ctx) {
@@ -271,7 +273,11 @@ void DFCIRBuilder::translate(Node node, const Graph &graph,
                                                         map[first], attr);
       break;
     }
-    default: assert(false && "Unknown node type");
+    default: {
+      // TODO: Add proper logging: https://github.com/ispras/utopia-hls/issues/13
+      std::cout << "[ERROR] Unknown node type id: " << node.type << std::endl;
+      assert(false);
+    };
   }
 
   map[node] = newOp->getResult(0);
