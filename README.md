@@ -250,7 +250,7 @@ cmake --build build
 build/src/umain hls --config examples/polynomial2/add_int_2_mul_int3.json -a --out-sv output
 ```
 
-The execution command is going to pass a JSON configuration file (with 2 and 3 pipeline stages for integer addition
+The execution command is going to pass a JSON configuration file (with latencies 2 and 3 for integer addition
 and multiplication respectively) to Utopia HLS, resulting in the creation of the file `output`, containing a SystemVerilog
 module for `Polynomial2` kernel with a greedy ASAP-scheduling.
 

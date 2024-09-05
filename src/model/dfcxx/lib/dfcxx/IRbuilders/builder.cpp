@@ -271,7 +271,7 @@ void DFCIRBuilder::translate(Node node, const Graph &graph,
                                                         map[first], attr);
       break;
     }
-    default: assert(false);
+    default: assert(false && "Unknown node type");
   }
 
   map[node] = newOp->getResult(0);

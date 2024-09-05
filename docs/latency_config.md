@@ -1,6 +1,6 @@
-## JSON Configuration
+## Latency Configuration
 
-Latency configuration (in terms of pipeline stages) for each computational operation used in a DFCxx kernel is provided via a JSON file.
+Latency configuration is a JSON-based file describing characteristics of computational operations for the specific DFCxx kernel.
 
 Currently each operation has two specifications based on the types of its arguments: for integer values (`INT`) and floating point (`FLOAT`) values respectively. 
 
