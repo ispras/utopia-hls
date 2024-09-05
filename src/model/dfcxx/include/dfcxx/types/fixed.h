@@ -13,15 +13,16 @@
 
 namespace dfcxx {
 
-enum SignMode {
-  UNSIGNED = 0,
-  SIGNED
-};
-
 class TypeBuilder;
 
 class FixedType : DFTypeImpl {
   friend TypeBuilder;
+
+public:
+  enum SignMode {
+    UNSIGNED = 0,
+    SIGNED
+  };
 
 private:
   SignMode mode;

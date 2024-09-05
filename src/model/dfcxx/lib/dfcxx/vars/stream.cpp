@@ -6,195 +6,130 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcxx/graph.h"
-#include "dfcxx/kernstorage.h"
-#include "dfcxx/varbuilders/builder.h"
+#include "dfcxx/kernmeta.h"
 #include "dfcxx/vars/stream.h"
 
 namespace dfcxx {
 
 DFStream::DFStream(const std::string &name, IODirection direction,
-                   GraphHelper &helper, dfcxx::DFTypeImpl &type) :
-                   DFVariableImpl(name, direction, helper), type(type) {}
+                   KernMeta &meta, DFTypeImpl *type) :
+                   DFVariableImpl(name, direction, meta), type(*type) {}
 
-DFTypeImpl &DFStream::getType() {
-  return type;
+DFVariableImpl *DFStream::clone() const {
+  return new DFStream(name, direction, meta, &type);
 }
 
-DFVariableImpl &DFStream::operator+(dfcxx::DFVariableImpl &rhs) {
-  DFVariableImpl *newVar =
-      helper.varBuilder.buildStream("", IODirection::NONE, helper, type);
-  helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::ADD, NodeData{});
-  helper.addChannel(this, newVar, 0, false);
-  helper.addChannel(&rhs, newVar, 1, false);
-  return *newVar;
+DFTypeImpl *DFStream::getType() {
+  return &type;
 }
 
-DFVariableImpl &DFStream::operator-(dfcxx::DFVariableImpl &rhs) {
-  DFVariableImpl *newVar =
-      helper.varBuilder.buildStream("", IODirection::NONE, helper, type);
-  helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::SUB, NodeData{});
-  helper.addChannel(this, newVar, 0, false);
-  helper.addChannel(&rhs, newVar, 1, false);
-  return *newVar;
+#define GENERIC_STREAM_BINARY_OP(OP_TYPE, VAR, RHS)                  \
+DFVariableImpl *VAR =                                                \
+    meta.varBuilder.buildStream("", IODirection::NONE, meta, &type); \
+meta.storage.addVariable(VAR);                                       \
+meta.graph.addNode(VAR, OP_TYPE, NodeData {});                       \
+meta.graph.addChannel(this, VAR, 0, false);                          \
+meta.graph.addChannel(&RHS, VAR, 1, false);                          \
+return VAR;
+
+DFVariableImpl *DFStream::operator+(DFVariableImpl &rhs) {
+  GENERIC_STREAM_BINARY_OP(OpType::ADD, newVar, rhs)
 }
 
-DFVariableImpl &DFStream::operator*(dfcxx::DFVariableImpl &rhs) {
-  DFVariableImpl *newVar =
-      helper.varBuilder.buildStream("", IODirection::NONE, helper, type);
-  helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::MUL, NodeData{});
-  helper.addChannel(this, newVar, 0, false);
-  helper.addChannel(&rhs, newVar, 1, false);
-  return *newVar;
+DFVariableImpl *DFStream::operator-(DFVariableImpl &rhs) {
+  GENERIC_STREAM_BINARY_OP(OpType::SUB, newVar, rhs)
 }
 
-DFVariableImpl &DFStream::operator/(dfcxx::DFVariableImpl &rhs) {
-  DFVariableImpl *newVar =
-      helper.varBuilder.buildStream("", IODirection::NONE, helper, type);
-  helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::DIV, NodeData{});
-  helper.addChannel(this, newVar, 0, false);
-  helper.addChannel(&rhs, newVar, 1, false);
-  return *newVar;
+DFVariableImpl *DFStream::operator*(DFVariableImpl &rhs) {
+  GENERIC_STREAM_BINARY_OP(OpType::MUL, newVar, rhs)
 }
 
-DFVariableImpl &DFStream::operator&(dfcxx::DFVariableImpl &rhs) {
-  DFVariableImpl *newVar =
-      helper.varBuilder.buildStream("", IODirection::NONE, helper, type);
-  helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::AND, NodeData{});
-  helper.addChannel(this, newVar, 0, false);
-  helper.addChannel(&rhs, newVar, 1, false);
-  return *newVar;
+DFVariableImpl *DFStream::operator/(DFVariableImpl &rhs) {
+  GENERIC_STREAM_BINARY_OP(OpType::DIV, newVar, rhs)
 }
 
-DFVariableImpl &DFStream::operator|(dfcxx::DFVariableImpl &rhs) {
-  DFVariableImpl *newVar =
-      helper.varBuilder.buildStream("", IODirection::NONE, helper, type);
-  helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::OR, NodeData{});
-  helper.addChannel(this, newVar, 0, false);
-  helper.addChannel(&rhs, newVar, 1, false);
-  return *newVar;
+DFVariableImpl *DFStream::operator&(DFVariableImpl &rhs) {
+  GENERIC_STREAM_BINARY_OP(OpType::AND, newVar, rhs)
 }
 
-DFVariableImpl &DFStream::operator^(dfcxx::DFVariableImpl &rhs) {
-  DFVariableImpl *newVar =
-      helper.varBuilder.buildStream("", IODirection::NONE, helper, type);
-  helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::XOR, NodeData{});
-  helper.addChannel(this, newVar, 0, false);
-  helper.addChannel(&rhs, newVar, 1, false);
-  return *newVar;
+DFVariableImpl *DFStream::operator|(DFVariableImpl &rhs) {
+  GENERIC_STREAM_BINARY_OP(OpType::OR, newVar, rhs)
 }
 
-DFVariableImpl &DFStream::operator!() {
-  DFVariableImpl *newVar =
-      helper.varBuilder.buildStream("", IODirection::NONE, helper, type);
-  helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::NOT, NodeData{});
-  helper.addChannel(this, newVar, 0, false);
-  return *newVar;
+DFVariableImpl *DFStream::operator^(DFVariableImpl &rhs) {
+  GENERIC_STREAM_BINARY_OP(OpType::XOR, newVar, rhs)
 }
 
-DFVariableImpl &DFStream::operator-() {
-  DFVariableImpl *newVar =
-      helper.varBuilder.buildStream("", IODirection::NONE, helper, type);
-  helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::NEG, NodeData{});
-  helper.addChannel(this, newVar, 0, false);
-  return *newVar;
+#define GENERIC_STREAM_UNARY_OP(OP_TYPE, VAR)                        \
+DFVariableImpl *VAR =                                                \
+    meta.varBuilder.buildStream("", IODirection::NONE, meta, &type); \
+meta.storage.addVariable(VAR);                                       \
+meta.graph.addNode(VAR, OP_TYPE, NodeData {});                       \
+meta.graph.addChannel(this, VAR, 0, false);                          \
+return VAR;
+
+DFVariableImpl *DFStream::operator!() {
+  GENERIC_STREAM_UNARY_OP(OpType::NOT, newVar)
 }
 
-DFVariableImpl &DFStream::operator<(dfcxx::DFVariableImpl &rhs) {
-  DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildBool());
-  DFVariableImpl *newVar =
-      helper.varBuilder.buildStream("", IODirection::NONE, helper, *newType);
-  helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::LESS, NodeData{});
-  helper.addChannel(this, newVar, 0, false);
-  helper.addChannel(&rhs, newVar, 1, false);
-  return *newVar;
+DFVariableImpl *DFStream::operator-() {
+  GENERIC_STREAM_UNARY_OP(OpType::NEG, newVar)
 }
 
-DFVariableImpl &DFStream::operator<=(dfcxx::DFVariableImpl &rhs) {
-  DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildBool());
-  DFVariableImpl *newVar =
-      helper.varBuilder.buildStream("", IODirection::NONE, helper, *newType);
-  helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::LESSEQ, NodeData{});
-  helper.addChannel(this, newVar, 0, false);
-  helper.addChannel(&rhs, newVar, 1, false);
-  return *newVar;
+#define GENERIC_STREAM_COMP_OP(OP_TYPE, VAR, TYPE_VAR, RHS)                \
+DFTypeImpl *TYPE_VAR = meta.storage.addType(meta.typeBuilder.buildBool()); \
+  DFVariableImpl *VAR =                                                    \
+      meta.varBuilder.buildStream("", IODirection::NONE, meta, TYPE_VAR);  \
+  meta.storage.addVariable(VAR);                                           \
+  meta.graph.addNode(VAR, OP_TYPE, NodeData {});                           \
+  meta.graph.addChannel(this, VAR, 0, false);                              \
+  meta.graph.addChannel(&RHS, VAR, 1, false);                              \
+  return VAR;
+
+DFVariableImpl *DFStream::operator<(DFVariableImpl &rhs) {
+  GENERIC_STREAM_COMP_OP(OpType::LESS, newVar, newType, rhs)
 }
 
-DFVariableImpl &DFStream::operator>(dfcxx::DFVariableImpl &rhs) {
-  DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildBool());
-  DFVariableImpl *newVar =
-      helper.varBuilder.buildStream("", IODirection::NONE, helper, *newType);
-  helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::GREATER, NodeData{});
-  helper.addChannel(this, newVar, 0, false);
-  helper.addChannel(&rhs, newVar, 1, false);
-  return *newVar;
+DFVariableImpl *DFStream::operator<=(DFVariableImpl &rhs) {
+  GENERIC_STREAM_COMP_OP(OpType::LESSEQ, newVar, newType, rhs)
 }
 
-DFVariableImpl &DFStream::operator>=(dfcxx::DFVariableImpl &rhs) {
-  DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildBool());
-  DFVariableImpl *newVar =
-      helper.varBuilder.buildStream("", IODirection::NONE, helper, *newType);
-  helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::GREATEREQ, NodeData{});
-  helper.addChannel(this, newVar, 0, false);
-  helper.addChannel(&rhs, newVar, 1, false);
-  return *newVar;
+DFVariableImpl *DFStream::operator>(DFVariableImpl &rhs) {
+  GENERIC_STREAM_COMP_OP(OpType::GREATER, newVar, newType, rhs)
 }
 
-DFVariableImpl &DFStream::operator==(dfcxx::DFVariableImpl &rhs) {
-  DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildBool());
-  DFVariableImpl *newVar =
-      helper.varBuilder.buildStream("", IODirection::NONE, helper, *newType);
-  helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::EQ, NodeData{});
-  helper.addChannel(this, newVar, 0, false);
-  helper.addChannel(&rhs, newVar, 1, false);
-  return *newVar;
+DFVariableImpl *DFStream::operator>=(DFVariableImpl &rhs) {
+  GENERIC_STREAM_COMP_OP(OpType::GREATEREQ, newVar, newType, rhs)
 }
 
-DFVariableImpl &DFStream::operator!=(dfcxx::DFVariableImpl &rhs) {
-  DFTypeImpl *newType = helper.storage.addType(helper.typeBuilder.buildBool());
-  DFVariableImpl *newVar =
-      helper.varBuilder.buildStream("", IODirection::NONE, helper, *newType);
-  helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::NEQ, NodeData{});
-  helper.addChannel(this, newVar, 0, false);
-  helper.addChannel(&rhs, newVar, 1, false);
-  return *newVar;
+DFVariableImpl *DFStream::operator==(DFVariableImpl &rhs) {
+  GENERIC_STREAM_COMP_OP(OpType::EQ, newVar, newType, rhs)
 }
 
-DFVariableImpl &DFStream::operator<<(uint8_t bits) {
-  DFTypeImpl *newType = helper.storage.addType(
-      helper.typeBuilder.buildShiftedType(type, bits));
-  DFVariableImpl *newVar =
-      helper.varBuilder.buildStream("", IODirection::NONE, helper, *newType);
-  helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::SHL, NodeData{.bitShift=bits});
-  helper.addChannel(this, newVar, 0, false);
-  return *newVar;
+DFVariableImpl *DFStream::operator!=(DFVariableImpl &rhs) {
+  GENERIC_STREAM_COMP_OP(OpType::NEQ, newVar, newType, rhs)
 }
 
-DFVariableImpl &DFStream::operator>>(uint8_t bits) {
-  DFTypeImpl *newType = helper.storage.addType(
-      helper.typeBuilder.buildShiftedType(type, int8_t(bits) * -1));
+DFVariableImpl *DFStream::operator<<(uint8_t bits) {
+  DFTypeImpl *newType = meta.storage.addType(
+      meta.typeBuilder.buildShiftedType(&type, bits));
   DFVariableImpl *newVar =
-      helper.varBuilder.buildStream("", IODirection::NONE, helper, *newType);
-  helper.storage.addVariable(newVar);
-  helper.addNode(newVar, OpType::SHR, NodeData{.bitShift=bits});
-  helper.addChannel(this, newVar, 0, false);
-  return *newVar;
+      meta.varBuilder.buildStream("", IODirection::NONE, meta, newType);
+  meta.storage.addVariable(newVar);
+  meta.graph.addNode(newVar, OpType::SHL, NodeData {.bitShift=bits});
+  meta.graph.addChannel(this, newVar, 0, false);
+  return newVar;
+}
+
+DFVariableImpl *DFStream::operator>>(uint8_t bits) {
+  DFTypeImpl *newType = meta.storage.addType(
+      meta.typeBuilder.buildShiftedType(&type, int8_t(bits) * -1));
+  DFVariableImpl *newVar =
+      meta.varBuilder.buildStream("", IODirection::NONE, meta, newType);
+  meta.storage.addVariable(newVar);
+  meta.graph.addNode(newVar, OpType::SHR, NodeData {.bitShift=bits});
+  meta.graph.addChannel(this, newVar, 0, false);
+  return newVar;
 }
 
 bool DFStream::isStream() const {

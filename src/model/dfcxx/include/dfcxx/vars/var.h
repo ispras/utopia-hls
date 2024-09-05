@@ -9,36 +9,37 @@
 #ifndef DFCXX_VAR_H
 #define DFCXX_VAR_H
 
-#include "dfcxx/types/type.h"
+#include "dfcxx/types/types.h"
 
 #include <string_view>
 #include <string>
 
 namespace dfcxx {
 
-enum IODirection{
-  NONE = 0,
-  INPUT,
-  OUTPUT
-};
-
-class GraphHelper;
-class DFVariable;
 class VarBuilder;
-class DFCIRTypeConverter;
-class DFCIRBuilder;
+struct KernMeta; // Forward declaration to omit cyclic dependency.
 
 class DFVariableImpl {
-  friend DFVariable;
   friend VarBuilder;
-  friend DFCIRTypeConverter;
-  friend DFCIRBuilder;
-
-private:
-  std::string name;
-  IODirection direction;
 
 public:
+  enum IODirection {
+    NONE = 0,
+    INPUT,
+    OUTPUT
+  };
+
+protected:
+  std::string name;
+  IODirection direction;
+  KernMeta &meta;
+
+  virtual DFVariableImpl *clone() const = 0;
+
+public:
+  DFVariableImpl(const std::string &name, IODirection direction,
+                 KernMeta &meta);
+
   virtual ~DFVariableImpl() = default;
 
   virtual bool isStream() const;
@@ -47,53 +48,49 @@ public:
 
   virtual bool isConstant() const;
 
-protected:
-  GraphHelper &helper;
-
-  DFVariableImpl(const std::string &name, IODirection direction,
-                 GraphHelper &helper);
-
   std::string_view getName() const;
 
   IODirection getDirection() const;
 
-  virtual DFTypeImpl &getType() = 0;
+  const KernMeta &getMeta() const;
 
-  virtual DFVariableImpl &operator+(DFVariableImpl &rhs) = 0;
+  virtual DFTypeImpl *getType() = 0;
 
-  virtual DFVariableImpl &operator-(DFVariableImpl &rhs) = 0;
+  virtual DFVariableImpl *operator+(DFVariableImpl &rhs) = 0;
 
-  virtual DFVariableImpl &operator*(DFVariableImpl &rhs) = 0;
+  virtual DFVariableImpl *operator-(DFVariableImpl &rhs) = 0;
 
-  virtual DFVariableImpl &operator/(DFVariableImpl &rhs) = 0;
+  virtual DFVariableImpl *operator*(DFVariableImpl &rhs) = 0;
 
-  virtual DFVariableImpl &operator&(DFVariableImpl &rhs) = 0;
+  virtual DFVariableImpl *operator/(DFVariableImpl &rhs) = 0;
 
-  virtual DFVariableImpl &operator|(DFVariableImpl &rhs) = 0;
+  virtual DFVariableImpl *operator&(DFVariableImpl &rhs) = 0;
 
-  virtual DFVariableImpl &operator^(DFVariableImpl &rhs) = 0;
+  virtual DFVariableImpl *operator|(DFVariableImpl &rhs) = 0;
 
-  virtual DFVariableImpl &operator!() = 0;
+  virtual DFVariableImpl *operator^(DFVariableImpl &rhs) = 0;
 
-  virtual DFVariableImpl &operator-() = 0;
+  virtual DFVariableImpl *operator!() = 0;
 
-  virtual DFVariableImpl &operator<(DFVariableImpl &rhs) = 0;
+  virtual DFVariableImpl *operator-() = 0;
 
-  virtual DFVariableImpl &operator<=(DFVariableImpl &rhs) = 0;
+  virtual DFVariableImpl *operator<(DFVariableImpl &rhs) = 0;
 
-  virtual DFVariableImpl &operator>(DFVariableImpl &rhs) = 0;
+  virtual DFVariableImpl *operator<=(DFVariableImpl &rhs) = 0;
 
-  virtual DFVariableImpl &operator>=(DFVariableImpl &rhs) = 0;
+  virtual DFVariableImpl *operator>(DFVariableImpl &rhs) = 0;
 
-  virtual DFVariableImpl &operator==(DFVariableImpl &rhs) = 0;
+  virtual DFVariableImpl *operator>=(DFVariableImpl &rhs) = 0;
 
-  virtual DFVariableImpl &operator!=(DFVariableImpl &rhs) = 0;
+  virtual DFVariableImpl *operator==(DFVariableImpl &rhs) = 0;
 
-  virtual DFVariableImpl &operator<<(uint8_t bits) = 0;
+  virtual DFVariableImpl *operator!=(DFVariableImpl &rhs) = 0;
 
-  virtual DFVariableImpl &operator>>(uint8_t bits) = 0;
+  virtual DFVariableImpl *operator<<(uint8_t bits) = 0;
 
-  void connect(DFVariableImpl &connectee);
+  virtual DFVariableImpl *operator>>(uint8_t bits) = 0;
+
+  void connect(DFVariableImpl *connectee);
 };
 
 class DFVariable {
@@ -103,13 +100,17 @@ private:
 public:
   DFVariable(DFVariableImpl *impl);
 
+  operator DFVariableImpl*() const;
+
   DFVariable(const DFVariable &) = default;
 
   DFVariableImpl *getImpl() const;
 
   std::string_view getName() const;
 
-  IODirection getDirection() const;
+  DFVariableImpl::IODirection getDirection() const;
+
+  const KernMeta &getMeta() const;
 
   DFType getType() const;
 

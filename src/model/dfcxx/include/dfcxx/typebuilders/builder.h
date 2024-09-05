@@ -15,15 +15,14 @@ namespace dfcxx {
 
 class TypeBuilder {
 public:
-  DFTypeImpl *buildFixed(SignMode mode, uint8_t intBits, uint8_t fracBits);
+  DFTypeImpl *buildFixed(FixedType::SignMode mode, uint8_t intBits,
+                         uint8_t fracBits);
 
   DFTypeImpl *buildBool();
 
   DFTypeImpl *buildFloat(uint8_t expBits, uint8_t fracBits);
 
-  DFTypeImpl *buildShiftedType(DFTypeImpl &type, int8_t shift);
-
-  DFType buildShiftedType(const DFType &type, int8_t shift);
+  DFTypeImpl *buildShiftedType(DFTypeImpl *type, int8_t shift);
 };
 
 } // namespace dfcxx

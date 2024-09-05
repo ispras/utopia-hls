@@ -11,16 +11,15 @@
 
 #include "dfcxx/constant.h"
 #include "dfcxx/control.h"
-#include "dfcxx/graph.h"
 #include "dfcxx/io.h"
-#include "dfcxx/kernstorage.h"
+#include "dfcxx/kernmeta.h"
 #include "dfcxx/offset.h"
-#include "dfcxx/typebuilders/builder.h"
 #include "dfcxx/typedefs.h"
-#include "dfcxx/types/types.h"
-#include "dfcxx/varbuilders/builder.h"
+#include "dfcxx/types/type.h"
 #include "dfcxx/vars/var.h"
 
+#include <ostream>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -32,16 +31,9 @@ namespace llvm {
 
 namespace dfcxx {
 
-class DFCIRBuilder;
-
 class Kernel {
-  friend DFCIRBuilder;
-
 private:
-  KernStorage storage;
-  TypeBuilder typeBuilder;
-  VarBuilder varBuilder;
-  Graph graph;
+  KernMeta meta;
   
   bool compileDot(llvm::raw_fd_ostream *stream);
 
@@ -65,6 +57,8 @@ public:
   virtual ~Kernel() = default;
 
   virtual std::string_view getName() = 0;
+  
+  const Graph &getGraph() const;
 
   bool compile(const DFLatencyConfig &config,
                const std::vector<std::string> &outputPaths,
@@ -73,6 +67,9 @@ public:
   bool compile(const DFLatencyConfig &config,
                const DFOutputPaths &outputPaths,
                const Scheduler &sched);
+
+  bool simulate(const std::string &inDataPath,
+                const std::string &outFilePath);
 
 };
 

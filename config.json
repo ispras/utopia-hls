@@ -8,5 +8,9 @@
     "out_dfcir"      : "",
     "out_firrtl"     : "",
     "out_dot"        : ""
+  },
+  "sim": {
+    "in"           : "sim.txt",
+    "out"          : "sim_out.vcd"
   }
 }

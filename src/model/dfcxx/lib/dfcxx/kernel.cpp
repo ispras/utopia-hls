@@ -9,42 +9,50 @@
 #include "dfcxx/converter.h"
 #include "dfcxx/IRbuilders/builder.h"
 #include "dfcxx/kernel.h"
+#include "dfcxx/simulator.h"
+#include "dfcxx/utils.h"
 #include "dfcxx/vars/constant.h"
 
 #include "ctemplate/template.h"
 #include "llvm/Support/raw_ostream.h"
 
 #include <ctime>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <unordered_map>
 
 namespace dfcxx {
 
-Kernel::Kernel() : storage(), typeBuilder(), varBuilder(),
-                   graph(), io(graph, typeBuilder, varBuilder, storage),
-                   offset(graph, typeBuilder, varBuilder, storage),
-                   constant(graph, typeBuilder, varBuilder, storage),
-                   control(graph, typeBuilder, varBuilder, storage) {}
+Kernel::Kernel() : meta(), io(meta), offset(meta),
+                   constant(meta), control(meta) {}
 
 DFType Kernel::dfUInt(uint8_t bits) {
-  DFTypeImpl *type = typeBuilder.buildFixed(SignMode::UNSIGNED, bits, 0);
-  return DFType(storage.addType(type));
+  auto *type = meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED,
+                                           bits,
+                                           0);
+  return meta.storage.addType(type);
 }
 
 DFType Kernel::dfInt(uint8_t bits) {
-  DFTypeImpl *type = typeBuilder.buildFixed(SignMode::SIGNED, bits, 0);
-  return DFType(storage.addType(type));
+  auto *type = meta.typeBuilder.buildFixed(FixedType::SignMode::SIGNED,
+                                           bits,
+                                           0);
+  return meta.storage.addType(type);
 }
 
 DFType Kernel::dfFloat(uint8_t expBits, uint8_t fracBits) {
-  DFTypeImpl *type = typeBuilder.buildFloat(expBits, fracBits);
-  return DFType(storage.addType(type));
+  auto *type = meta.typeBuilder.buildFloat(expBits, fracBits);
+  return meta.storage.addType(type);
 }
 
 DFType Kernel::dfBool() {
-  DFTypeImpl *type = typeBuilder.buildBool();
-  return DFType(storage.addType(type));
+  auto *type = meta.typeBuilder.buildBool();
+  return meta.storage.addType(type);
+}
+
+const Graph &Kernel::getGraph() const {
+  return meta.graph;
 }
 
 bool Kernel::compileDot(llvm::raw_fd_ostream *stream) {
@@ -80,8 +88,11 @@ bool Kernel::compileDot(llvm::raw_fd_ostream *stream) {
                           localTime->tm_hour,
                           localTime->tm_min,
                           localTime->tm_sec);
+  
+  const auto &nodes = meta.graph.getNodes();
+  const auto &inputs = meta.graph.getInputs();
 
-  for (Node node : graph.nodes) {
+  for (const Node &node : nodes) {
     TemplateDictionary *elem = dict->AddSectionDictionary("ELEMENTS");
     auto name = getName(node);
     elem->SetValue("NAME", name);
@@ -120,7 +131,7 @@ bool Kernel::compileDot(llvm::raw_fd_ostream *stream) {
     elem->SetValue("LABEL", label);
 
     unsigned i = 0;
-    for (Channel chan : graph.inputs[node]) {
+    for (Channel chan : inputs.at(node)) {
       TemplateDictionary *conn = elem->AddSectionDictionary("CONNECTIONS");
       conn->SetValue("SRC_NAME", getName(chan.source));
       conn->SetValue("TRG_NAME", name);
@@ -139,7 +150,7 @@ bool Kernel::compileDot(llvm::raw_fd_ostream *stream) {
 bool Kernel::compile(const DFLatencyConfig &config,
                      const std::vector<std::string> &outputPaths,
                      const Scheduler &sched) {
-  DFCIRBuilder builder(config);
+  DFCIRBuilder builder;
   auto compiled = builder.buildModule(this);
   size_t count = outputPaths.size();
   std::vector<llvm::raw_fd_ostream *> outputStreams(count);
@@ -178,6 +189,19 @@ bool Kernel::compile(const DFLatencyConfig &config,
     outPathsStrings[static_cast<uint8_t>(id)] = path;
   }
   return compile(config, outPathsStrings, sched);
+}
+
+
+bool Kernel::simulate(const std::string &inDataPath,
+                      const std::string &outFilePath) {
+  std::vector<Node> sorted = topSort(meta.graph);
+  DFCXXSimulator sim(sorted, meta.graph.getInputs());
+  std::ifstream input(inDataPath, std::ios::in);
+  if (!input || input.bad() || input.eof() || input.fail() || !input.is_open()) {
+    return false;
+  }
+  std::ofstream output(outFilePath, std::ios::out);
+  return sim.simulate(input, output);
 }
 
 } // namespace dfcxx

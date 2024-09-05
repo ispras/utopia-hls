@@ -19,29 +19,42 @@
 
 INITIALIZE_EASYLOGGINGPP
 
+// User-defined function to specify functional behaviour of top-level kernel.
+std::unique_ptr<dfcxx::Kernel> start();
+
 //===-----------------------------------------------------------------------===/
 // High-Level Synthesis
 //===-----------------------------------------------------------------------===/
 
 struct HlsContext {
-  HlsContext(const HlsOptions &options):
-    options(options)
-    {}
+  HlsContext(const HlsOptions &options) : options(options) {}
 
   const HlsOptions &options;
 };
 
-// User-defined function to specify functional behaviour of top-level kernel.
-std::unique_ptr<dfcxx::Kernel> start();
+//===-----------------------------------------------------------------------===/
+// DFCxx Simulation.
+//===-----------------------------------------------------------------------===/
 
-int hlsMain(HlsContext &context) {
+struct SimContext {
+  SimContext(const SimOptions &options): options(options) {}
+
+  const SimOptions &options;
+};
+
+int hlsMain(const HlsContext &context) {
   auto kernel = start();
   bool useASAP = context.options.asapScheduler;
-  kernel->compile(context.options.latConfig,
-                  context.options.outNames,
-                  (useASAP) ? dfcxx::Scheduler::ASAP 
-                            : dfcxx::Scheduler::Linear);
-  return 0;
+  return !kernel->compile(context.options.latencyCfg,
+                          context.options.outNames,
+                          (useASAP) ? dfcxx::Scheduler::ASAP 
+                                    : dfcxx::Scheduler::Linear);
+}
+
+int simMain(const SimContext &context) {
+  auto kernel = start();
+  return !kernel->simulate(context.options.inFilePath,
+                           context.options.outFilePath);
 }
 
 int main(int argc, char **argv) {
@@ -63,7 +76,10 @@ int main(int argc, char **argv) {
   catch(const CLI::ParseError &e) {
     return options.exit(e);
   }
-
-  HlsContext context(options.hls);
-  return hlsMain(context);
+  
+  if (options.hls) {
+    return hlsMain(HlsContext(options.hls));
+  } else {
+    return simMain(SimContext(options.sim));
+  }
 }

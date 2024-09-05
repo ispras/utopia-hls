@@ -9,6 +9,8 @@
 #include "dfcxx/converter.h"
 
 #include "circt/Conversion/Passes.h"
+#include "circt/Dialect/FIRRTL/FIRRTLDialect.h"
+#include "circt/Dialect/SV/SVDialect.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
 
@@ -51,6 +53,8 @@ bool DFCIRConverter::convertAndPrint(mlir::ModuleOp module,
                                      OutputStreams &outputStreams,
                                      const Scheduler &sched) {
   mlir::MLIRContext *context = module.getContext();
+  context->getOrLoadDialect<circt::firrtl::FIRRTLDialect>();
+  context->getOrLoadDialect<circt::sv::SVDialect>();
   mlir::PassManager pm(context);
 
   // Dump DFCIR if the corresponding option is specified.

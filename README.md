@@ -211,12 +211,12 @@ The compiled Utopia HLS executable has a CLI to accept a number of parameters af
 
 For the executable there are three general arguments: `-h,--help`, `-H,--help-all` and `-v,--version` for printing simple and extended help-messages, and printing current executable's version respectively.
 
-Unless neither of the three arguments is used, first argument is the mode which the executable has to function in. Currently there is only one available mode `hls`.
+Unless neither of the three arguments is used, first argument is the mode which the executable has to function in. Currently there are only two available modes: `hls` and `sim`.
 
-The list of arguments for `hls`-mode is presented below:
+`hls` mode is used to perform the high-level synthesis of digital hardware description from the input DFCxx kernel. The list of arguments for `hls`-mode is presented below:
 
 * `-h,--help`: *optional* flag; used to print the help-message about other arguments.
-* `--config <PATH>`: *required* filesystem-path option; used to specify the file for a JSON latency configuration file. Its format is presented in *JSON Configuration* section.
+* `--config <PATH>`: *required* filesystem-path option; used to specify the file for a JSON latency configuration file. Its format is presented in `docs/latency_config.md`.
 * `--out-sv <PATH>`: *optional* filesystem-path option; used to specify the output SystemVerilog file.
 * `--out-sv-lib <PATH>`: *optional* filesystem-path option; used to specify the output SystemVerilog file for generated operations library.
 * `--out-dfcir <PATH>`: *optional* filesystem-path option; used to specify the output DFCIR file.
@@ -232,43 +232,13 @@ Here is an example of an Utopia HLS CLI call:
 umain hls --config ~/utopia-user/config.json --out-sv ~/outFile.sv --out-dfcir ~/outFile2.mlir -a
 ```
 
-### JSON Configuration
+`sim` mode is used to simulate the input DFCxx kernel. The list of arguments for `sim`-mode is presented below:
 
-Latency configuration for each computational operation (number of pipeline stages) used in a DFCxx kernel is provided via a JSON file.
+* `-h,--help`: *optional* flag; used to print the help-message about other arguments.
+* `--in <PATH>`: *optional* filesystem-path option; used to specify the input file for simulation data (default: `sim.txt`). Its format is presented in `docs/simulation.md`.
+* `--out <PATH>`: *optional* filesystem-path option; used to specify the output VCD file (default: `sim_out.vcd`).
 
-Currently each operation has two specifications: for integer values (`INT`) and floating point (`FLOAT`) values. 
-
-The list of all computational operations is provided below:
-
-* `ADD` - Addition
-* `SUB` - Subtraction
-* `MUL` - Multiplication
-* `DIV` - Division
-* `AND` - Logical conjunction
-* `OR` - Logical disjunction
-* `XOR` - Exclusive logical disjunction
-* `NOT` - Logical inversion
-* `NEG` - Negation
-* `LESS` - "less" comparison
-* `LESSEQ` - "less or equal" comparison
-* `GREATER` - "greater" comparison 
-* `GREATEREQ` - "greater or equal" comparison
-* `EQ` - "equal" comparison
-* `NEQ` - "not equal" comparison
-
-JSON configuration structure states that for every operation with a specific configuration (each pair is represented as a separate JSON-field with `_` between pair's elements) present in the kernel, operation's latency will be provided. 
-
-Here is an example of a JSON configuration file, containing latencies for multiplication, addition and subtraction of integer numbers:
-
-```json
-{
-  "MUL_INT": 3,
-  "ADD_INT": 1,
-  "SUB_INT": 1
-}
-```
-
-## Examples
+### Examples
 
 Root subdirectory `examples` contains different examples of DFCxx kernels, `start`-function definitions and JSON configuration files.
 
@@ -280,9 +250,17 @@ cmake --build build
 build/src/umain hls --config examples/polynomial2/add_int_2_mul_int3.json -a --out-sv output
 ```
 
-The execution command is going to pass a JSON configuration file (with 2 and 3 pipeline stages for integer addition
+The execution command is going to pass a JSON configuration file (with latencies 2 and 3 for integer addition
 and multiplication respectively) to Utopia HLS, resulting in the creation of the file `output`, containing a SystemVerilog
-module for Polynomial2 kernel with a greedy ASAP-scheduling.
+module for `Polynomial2` kernel with a greedy ASAP-scheduling.
+
+The same kernel can be simulated with:
+
+```bash
+build/src/umain sim --in examples/polynomial2/sim.txt --out output.vcd
+```
+
+This command uses the simulation data from `sim.txt` file and stores the simulation trace in the output file `output.vcd`.
 
 ## DFCxx Documentation
 

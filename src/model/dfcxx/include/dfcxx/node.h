@@ -48,7 +48,8 @@ struct Node {
   DFVariableImpl *var;
   OpType type;
   NodeData data;
-
+  
+  Node() = default;
   Node(DFVariableImpl *var, OpType type, NodeData data);
 
   bool operator==(const Node &node) const;

@@ -12,20 +12,41 @@
 
 namespace dfcxx {
 
+const std::unordered_set<Node> &Graph::getNodes() const {
+  return nodes;
+}
+
+const std::unordered_set<Node> &Graph::getStartNodes() const {
+  return startNodes;
+}
+
+const std::unordered_map<Node, std::vector<Channel>> &Graph::getInputs() const {
+  return inputs;
+}
+
+const std::unordered_map<Node, std::vector<Channel>> &Graph::getOutputs() const {
+  return outputs;
+}
+
+const std::unordered_map<Node, Channel> &Graph::getConnections() const {
+  return connections;
+}
+
 Node Graph::findNode(DFVariableImpl *var) {
   return *std::find_if(nodes.begin(), nodes.end(),
                        [&](const Node &node) { return node.var == var; });
 }
 
 void Graph::addNode(DFVariableImpl *var, OpType type, NodeData data) {
-  nodes.emplace(var, type, data);
+  auto node = nodes.emplace(var, type, data);
   if (type == IN || type == CONST) {
     startNodes.emplace(var, type, data);
   }
-}
-
-void Graph::addNode(const DFVariable &var, OpType type, NodeData data) {
-  addNode(var.getImpl(), type, data);
+  // The following lines create empty channel vectors
+  // for new nodes. This allows to use .at() on unconnected
+  // nodes without getting an exception.
+  (void)inputs[*(node.first)];
+  (void)outputs[*(node.first)];
 }
 
 void Graph::addChannel(DFVariableImpl *source, DFVariableImpl *target,
@@ -39,38 +60,6 @@ void Graph::addChannel(DFVariableImpl *source, DFVariableImpl *target,
     connections.insert(std::make_pair(foundTarget, newChannel));
     connections.at(foundTarget) = newChannel;
   }
-}
-
-void Graph::addChannel(const DFVariable &source, const DFVariable &target,
-                       unsigned opInd, bool connect) {
-  addChannel(source.getImpl(), target.getImpl(), opInd, connect);
-}
-
-GraphHelper::GraphHelper(Graph &graph, TypeBuilder &typeBuilder,
-                         VarBuilder &varBuilder,
-                         KernStorage &storage) : graph(graph),
-                                                 typeBuilder(typeBuilder),
-                                                 varBuilder(varBuilder),
-                                                 storage(storage) {}
-
-void GraphHelper::addNode(DFVariableImpl *var, OpType type, NodeData data) {
-  graph.addNode(var, type, data);
-}
-
-void GraphHelper::addNode(const DFVariable &var, OpType type, NodeData data) {
-  addNode(var.getImpl(), type, data);
-}
-
-void GraphHelper::addChannel(DFVariableImpl *source, DFVariableImpl *target,
-                             unsigned opInd, bool connect) {
-  graph.addChannel(source, target, opInd, connect);
-}
-
-void GraphHelper::addChannel(const DFVariable &source,
-                             const DFVariable &target,
-                             unsigned opInd,
-                             bool connect) {
-  graph.addChannel(source.getImpl(), target.getImpl(), opInd, connect);
 }
 
 } // namespace dfcxx

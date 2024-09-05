@@ -10,36 +10,35 @@
 
 namespace dfcxx {
 
-Constant::Constant(Graph &graph, TypeBuilder &typeBuilder,
-                   VarBuilder &varBuilder, KernStorage &storage) : 
-                   graph(graph),
-                   helper(graph, typeBuilder, varBuilder, storage),
-                   varBuilder(varBuilder), storage(storage) {}
+Constant::Constant(KernMeta &meta) : meta(meta) {} 
 
 DFVariable Constant::var(const DFType &type, int64_t value) {
-  DFVariable var = varBuilder.buildConstant(helper, type,
-                                            ConstantTypeKind::INT,
-                                            ConstantValue{.int_ = value});
-  storage.addVariable(var);
-  graph.addNode(var, OpType::CONST, NodeData{});
+  auto *var = meta.varBuilder.buildConstant(meta, type,
+                                            DFConstant::Value {
+                                              .int_ = value
+                                            });
+  meta.storage.addVariable(var);
+  meta.graph.addNode(var, OpType::CONST, NodeData {});
   return var;
 }
 
 DFVariable Constant::var(const DFType &type, uint64_t value) {
-  DFVariable var = varBuilder.buildConstant(helper, *(type.getImpl()),
-                                            ConstantTypeKind::UINT,
-                                            ConstantValue{.uint_ = value});
-  storage.addVariable(var);
-  graph.addNode(var, OpType::CONST, NodeData{});
+  auto *var = meta.varBuilder.buildConstant(meta, type,
+                                            DFConstant::Value {
+                                              .uint_ = value
+                                            });
+  meta.storage.addVariable(var);
+  meta.graph.addNode(var, OpType::CONST, NodeData {});
   return var;
 }
 
 DFVariable Constant::var(const DFType &type, double value) {
-  DFVariable var = varBuilder.buildConstant(helper, *(type.getImpl()),
-                                            ConstantTypeKind::FLOAT,
-                                            ConstantValue{.double_ = value});
-  storage.addVariable(var);
-  graph.addNode(var, OpType::CONST, NodeData{});
+  auto *var = meta.varBuilder.buildConstant(meta, type,
+                                            DFConstant::Value {
+                                              .double_ = value
+                                            });
+  meta.storage.addVariable(var);
+  meta.graph.addNode(var, OpType::CONST, NodeData {});
   return var;
 }
 

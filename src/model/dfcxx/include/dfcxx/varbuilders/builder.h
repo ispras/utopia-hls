@@ -13,27 +13,23 @@
 
 namespace dfcxx {
 
+struct KernMeta; // Forward declaration to omit cyclic dependency.
+
 class VarBuilder {
 public:
-  DFVariableImpl * buildStream(const std::string &name, IODirection direction,
-                               GraphHelper &helper, DFTypeImpl &type);
+  DFVariableImpl *buildStream(const std::string &name,
+                              DFVariableImpl::IODirection direction,
+                              KernMeta &meta, DFTypeImpl *type);
 
-  DFVariableImpl * buildScalar(const std::string &name, IODirection direction,
-                               GraphHelper &helper, DFTypeImpl &type);
+  DFVariableImpl *buildScalar(const std::string &name,
+                              DFVariableImpl::IODirection direction,
+                              KernMeta &meta, DFTypeImpl *type);
 
-  DFVariableImpl * buildConstant(GraphHelper &helper, DFTypeImpl &type,
-                                 ConstantTypeKind kind, ConstantValue value);
+  DFVariableImpl *buildConstant(KernMeta &meta,
+                                DFTypeImpl *type,
+                                DFConstant::Value value);
 
-  DFVariable buildStream(const std::string &name, IODirection direction,
-                         GraphHelper &helper, const DFType &type);
-
-  DFVariable buildScalar(const std::string &name, IODirection direction,
-                         GraphHelper &helper, const DFType &type);
-
-  DFVariable buildConstant(GraphHelper &helper, const DFType &type,
-                           ConstantTypeKind kind, ConstantValue value);
-
-  DFVariable buildMuxCopy(const DFVariable &var, GraphHelper &helper);
+  DFVariableImpl *buildClone(DFVariableImpl *var);
 };
 
 } // namespace dfcxx

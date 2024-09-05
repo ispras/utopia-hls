@@ -13,80 +13,79 @@
 
 namespace dfcxx {
 
-enum ConstantTypeKind : uint8_t {
-  INT = 0,
-  UINT,
-  FLOAT
-};
-
-union ConstantValue {
-  int64_t int_;
-  uint64_t uint_;
-  double double_;
-};
-
 class VarBuilder;
-class DFCIRBuilder;
 
 class DFConstant : DFVariableImpl {
   friend VarBuilder;
-  friend DFCIRBuilder;
+
+public:
+  enum TypeKind : uint8_t {
+    INT = 0,
+    UINT,
+    FLOAT
+  };
+
+  union Value {
+    int64_t int_;
+    uint64_t uint_;
+    double double_;
+  };
 
 private:
   DFTypeImpl &type;
-  ConstantTypeKind kind;
-  ConstantValue value;
+  TypeKind kind;
+  Value value;
 
-  DFConstant(GraphHelper &helper, DFTypeImpl &type,
-             ConstantTypeKind kind, ConstantValue value);
+  DFConstant(KernMeta &meta, DFTypeImpl *type, Value value);
+
+  DFVariableImpl *clone() const override;
 
 public:
   ~DFConstant() override = default;
-
-protected:
-  DFTypeImpl &getType() override;
-
-  DFVariableImpl &operator+(DFVariableImpl &rhs) override;
-
-  DFVariableImpl &operator-(DFVariableImpl &rhs) override;
-
-  DFVariableImpl &operator*(DFVariableImpl &rhs) override;
-
-  DFVariableImpl &operator/(DFVariableImpl &rhs) override;
-
-  DFVariableImpl &operator&(DFVariableImpl &rhs) override;
-
-  DFVariableImpl &operator|(DFVariableImpl &rhs) override;
-
-  DFVariableImpl &operator^(DFVariableImpl &rhs) override;
-
-  DFVariableImpl &operator!() override;
-
-  DFVariableImpl &operator-() override;
-
-  DFVariableImpl &operator<(DFVariableImpl &rhs) override;
-
-  DFVariableImpl &operator<=(DFVariableImpl &rhs) override;
-
-  DFVariableImpl &operator>(DFVariableImpl &rhs) override;
-
-  DFVariableImpl &operator>=(DFVariableImpl &rhs) override;
-
-  DFVariableImpl &operator==(DFVariableImpl &rhs) override;
-
-  DFVariableImpl &operator!=(DFVariableImpl &rhs) override;
-
-  DFVariableImpl &operator<<(uint8_t bits) override;
-
-  DFVariableImpl &operator>>(uint8_t bits) override;
-
-  ConstantTypeKind getKind() const;
-
+  
   int64_t getInt() const;
 
   uint64_t getUInt() const;
 
   double getDouble() const;
+
+  DFTypeImpl *getType() override;
+
+  DFVariableImpl *operator+(DFVariableImpl &rhs) override;
+
+  DFVariableImpl *operator-(DFVariableImpl &rhs) override;
+
+  DFVariableImpl *operator*(DFVariableImpl &rhs) override;
+
+  DFVariableImpl *operator/(DFVariableImpl &rhs) override;
+
+  DFVariableImpl *operator&(DFVariableImpl &rhs) override;
+
+  DFVariableImpl *operator|(DFVariableImpl &rhs) override;
+
+  DFVariableImpl *operator^(DFVariableImpl &rhs) override;
+
+  DFVariableImpl *operator!() override;
+
+  DFVariableImpl *operator-() override;
+
+  DFVariableImpl *operator<(DFVariableImpl &rhs) override;
+
+  DFVariableImpl *operator<=(DFVariableImpl &rhs) override;
+
+  DFVariableImpl *operator>(DFVariableImpl &rhs) override;
+
+  DFVariableImpl *operator>=(DFVariableImpl &rhs) override;
+
+  DFVariableImpl *operator==(DFVariableImpl &rhs) override;
+
+  DFVariableImpl *operator!=(DFVariableImpl &rhs) override;
+
+  DFVariableImpl *operator<<(uint8_t bits) override;
+
+  DFVariableImpl *operator>>(uint8_t bits) override;
+
+  TypeKind getKind() const;
 
   bool isConstant() const override;
 };

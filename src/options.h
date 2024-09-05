@@ -41,10 +41,15 @@
 #define OUT_FIRRTL_JSON "out_firrtl"
 #define OUT_DOT_JSON "out_dot"
 
+#define SIM_ID_JSON "sim"
+#define SIM_IN_JSON "in"
+#define SIM_OUT_JSON "out"
+
 //===----------------------------------------------------------------------===//
 // CLI args/flags definitions
 
 #define HLS_CMD "hls"
+#define SIM_CMD "sim"
 #define CONFIG_ARG CLI_ARG("config")
 #define SCHEDULER_GROUP "scheduler"
 #define ASAP_SCHEDULER_FLAG CLI_FLAG("a")
@@ -55,6 +60,9 @@
 #define OUT_DFCIR_ARG CLI_ARG("out-dfcir")
 #define OUT_FIRRTL_ARG CLI_ARG("out-firrtl")
 #define OUT_DOT_ARG CLI_ARG("out-dot")
+
+#define SIM_IN_ARG CLI_ARG("in")
+#define SIM_OUT_ARG CLI_ARG("out")
 
 //===----------------------------------------------------------------------===//
 
@@ -83,6 +91,10 @@ public:
 
   virtual void fromJson(Json json) {
     // TODO: Default implementation.
+  }
+  
+  operator bool() const {
+    return options->parsed();
   }
 
   virtual Json toJson() const {
@@ -172,7 +184,7 @@ struct HlsOptions final : public AppOptions {
 
     // Named options.
     options->add_option(CONFIG_ARG,
-                        latConfigFile,
+                        latencyCfgFile,
                         "JSON latency configuration path")
         ->expected(1);
     
@@ -204,7 +216,7 @@ struct HlsOptions final : public AppOptions {
   }
 
   void fromJson(Json json) override {
-    get(json, CONFIG_JSON,         latConfigFile);
+    get(json, CONFIG_JSON,         latencyCfgFile);
     get(json, ASAP_SCHEDULER_JSON, asapScheduler);
     get(json, LP_SCHEDULER_JSON,   lpScheduler);
     get(json, OUT_SV_JSON,         outNames[OUT_FORMAT_ID_INT(SystemVerilog)]);
@@ -212,23 +224,6 @@ struct HlsOptions final : public AppOptions {
     get(json, OUT_DFCIR_JSON,      outNames[OUT_FORMAT_ID_INT(DFCIR)]);
     get(json, OUT_FIRRTL_JSON,     outNames[OUT_FORMAT_ID_INT(FIRRTL)]);
     get(json, OUT_DOT_JSON,     outNames[OUT_FORMAT_ID_INT(DOT)]);
-  }
-
-  std::string latConfigFile;
-  DFLatencyConfig latConfig;
-  std::vector<std::string> outNames;
-  bool asapScheduler;
-  bool lpScheduler;
-};
-
-struct Options final : public AppOptions {
-  Options(const std::string &title,
-          const std::string &version):
-      AppOptions(title, version), hls(*this) {
-
-    // Top-level options.
-    options->set_help_all_flag("-H,--help-all", "Print the extended help message and exit");
-    options->set_version_flag("-v,--version", version, "Print the tool version");
   }
   
   dfcxx::Ops convertFieldToEnum(const std::string field) {
@@ -265,13 +260,54 @@ struct Options final : public AppOptions {
     return dfcxx::ADD_INT;
   }
 
-  void parseLatencyConfig(const std::string config) {
-    std::ifstream in(config);
+  void parseLatencyConfig() {
+    std::ifstream in(latencyCfgFile);
     if (!in.good()) { return; }
     auto json = Json::parse(in);
     for (auto &[key, val] : json.items()) {
-      hls.latConfig[convertFieldToEnum(key)] = val;
+      latencyCfg[convertFieldToEnum(key)] = val;
     }
+  }
+
+  std::string latencyCfgFile;
+  DFLatencyConfig latencyCfg;
+  std::vector<std::string> outNames;
+  bool asapScheduler;
+  bool lpScheduler;
+};
+
+struct SimOptions final : public AppOptions {
+
+  SimOptions(AppOptions &parent):
+      AppOptions(parent, SIM_CMD, "DFCxx simulation") {
+    
+    // Named options.
+    options->add_option(SIM_IN_ARG,
+                        inFilePath,
+                        "Simulation input data path")->capture_default_str();
+    options->add_option(SIM_OUT_ARG,
+                        outFilePath,
+                        "Simulation results output path")->capture_default_str();
+  }
+
+  void fromJson(Json json) override {
+    get(json, SIM_IN_JSON,  inFilePath);
+    get(json, SIM_OUT_JSON, outFilePath);
+  }
+
+  std::string inFilePath;
+  std::string outFilePath;
+  std::vector<std::string> files;
+};
+
+struct Options final : public AppOptions {
+  Options(const std::string &title,
+          const std::string &version):
+      AppOptions(title, version), hls(*this), sim(*this) {
+
+    // Top-level options.
+    options->set_help_all_flag("-H,--help-all", "Print the extended help message and exit");
+    options->set_version_flag("-v,--version", version, "Print the tool version");
   }
 
   void initialize(const std::string &config, int argc, char **argv) {
@@ -279,8 +315,12 @@ struct Options final : public AppOptions {
     read(config);
     // Command line is of higher priority.
     parse(argc, argv);
-    // Parse latency configuration.
-    parseLatencyConfig(hls.latConfigFile);
+
+    // Subcommand-specific initialization actions.
+    if (hls) {
+      // Parse latency configuration.
+      hls.parseLatencyConfig();
+    }
   }
 
   int exit(const CLI::Error &e) const {
@@ -289,7 +329,9 @@ struct Options final : public AppOptions {
 
   void fromJson(Json json) override {
     hls.fromJson(json[HLS_ID_JSON]);
+    sim.fromJson(json[SIM_ID_JSON]);
   }
 
   HlsOptions hls;
+  SimOptions sim;
 };

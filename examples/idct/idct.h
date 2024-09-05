@@ -53,17 +53,17 @@ public:
       DFVariable x7 = (values[kDIM * i + 3]);
       
       DFVariable x8 = (x4 + x5) * W7;
-      x4 = x8 + (W1 - W7) * x4;
-      x5 = x8 - (W1 - W7) * x5;
-      x8 = W3 * (x6 + x7);
-      x6 = x8 - (W3 - W5) * x6;
-      x7 = x8 - (W3 + W5) * x7;
+      x4 = x8 + x4 * (W1 - W7);
+      x5 = x8 - x5 * (W1 + W7);
+      x8 = (x6 + x7) * W3;
+      x6 = x8 - x6 * (W3 - W5);
+      x7 = x8 - x7 * (W3 + W5);
       
       x8 = x0 + x1;
       x0 = x0 - x1;
       x1 = (x3 + x2) * W6;
-      x2 = x1 - (W2 + W6) * x2;
-      x3 = x1 + (W2 - W6) * x3;
+      x2 = x1 - x2 * (W2 + W6);
+      x3 = x1 + x3 * (W2 - W6);
       x1 = x4 + x6;
       x4 = x4 - x6;
       x6 = x5 + x7;
@@ -97,17 +97,17 @@ public:
       DFVariable x7 = values[kDIM * 3 + i];
       
       DFVariable x8 = ((x4 + x5) * W7) + const4;
-      x4 = (x8 + (W1 - W7) * x4) >> 3;
-      x5 = (x8 - (W1 - W7) * x5) >> 3;
-      x8 = (W3 * (x6 + x7)) + const4;
-      x6 = (x8 - (W3 - W5) * x6) >> 3;
-      x7 = (x8 - (W3 + W5) * x7) >> 3;
+      x4 = (x8 + x4 * (W1 - W7)) >> 3;
+      x5 = (x8 - x5 * (W1 + W7)) >> 3;
+      x8 = ((x6 + x7) * W3) + const4;
+      x6 = (x8 - x6 * (W3 - W5)) >> 3;
+      x7 = (x8 - x7 * (W3 + W5)) >> 3;
       
       x8 = x0 + x1;
       x0 = x0 - x1;
       x1 = ((x3 + x2) * W6) + const4;
-      x2 = (x1 - (W2 + W6) * x2) >> 3;
-      x3 = (x1 + (W2 - W6) * x3) >> 3;
+      x2 = (x1 - x2 * (W2 + W6)) >> 3;
+      x3 = (x1 + x3 * (W2 - W6)) >> 3;
       x1 = x4 + x6;
       x4 = x4 - x6;
       x6 = x5 + x7;
@@ -119,7 +119,7 @@ public:
       x0 = x0 - x2;
       x2 = (((x4 + x5) * const181) + const128) >> 8;
       x4 = (((x4 - x5) * const181) + const128) >> 8;
-      
+
       values[kDIM * 0 + i] = (x7 + x1) >> 14;
       values[kDIM * 1 + i] = (x3 + x2) >> 14;
       values[kDIM * 2 + i] = (x0 + x4) >> 14;
