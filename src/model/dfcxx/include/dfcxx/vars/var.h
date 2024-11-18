@@ -50,6 +50,8 @@ public:
 
   std::string_view getName() const;
 
+  void resetName();
+
   IODirection getDirection() const;
 
   const KernMeta &getMeta() const;

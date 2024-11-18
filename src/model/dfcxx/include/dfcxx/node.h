@@ -14,7 +14,8 @@
 namespace dfcxx {
 
 enum OpType : uint8_t {
-  OFFSET = 0,
+  NONE = 0, // Is not allowed in a fully constructed kernel.
+  OFFSET,
   IN,
   OUT,
   CONST,
@@ -53,6 +54,7 @@ struct Node {
   Node(DFVariableImpl *var, OpType type, NodeData data);
 
   bool operator==(const Node &node) const;
+  bool operator!=(const Node &node) const { return !(*this == node); }
 };
 
 } // namespace dfcxx

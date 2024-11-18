@@ -25,6 +25,8 @@ struct KernMeta {
   KernMeta() = default;
   KernMeta(const KernMeta &) = delete;
   ~KernMeta() = default;
+
+  void transferFrom(KernMeta &&meta);
 };
 
 } // namespace dfcxx

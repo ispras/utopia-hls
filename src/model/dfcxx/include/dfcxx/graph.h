@@ -13,6 +13,7 @@
 #include "dfcxx/node.h"
 #include "dfcxx/vars/var.h"
 
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -21,6 +22,7 @@ namespace dfcxx {
 
 class Graph {
 private:
+  std::unordered_map<std::string_view, Node> nameMap;
   std::unordered_set<Node> nodes;
   std::unordered_set<Node> startNodes;
   std::unordered_map<Node, std::vector<Channel>> inputs;
@@ -44,6 +46,18 @@ public:
 
   void addChannel(DFVariableImpl *source, DFVariableImpl *target,
                   unsigned opInd, bool connect);
+
+  void transferFrom(Graph &&graph);
+
+  Node getNodeByName(const std::string &name);
+
+  void resetNodeName(const std::string &name);
+
+  void deleteNode(Node node);
+
+  void rebindInput(Node source, Node input, Graph &graph);
+
+  Node rebindOutput(Node output, Node target, Graph &graph);
 };
 
 } // namespace dfcxx

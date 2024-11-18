@@ -29,6 +29,9 @@ DFVariableImpl *KernStorage::addVariable(DFVariableImpl *var) {
   return *(variables.insert(var).first);
 }
 
+void KernStorage::deleteVariable(DFVariableImpl *var) {
+  variables.erase(var);
+}
 
 KernStorage::~KernStorage() {
   for (DFTypeImpl *type: types) {
@@ -37,6 +40,11 @@ KernStorage::~KernStorage() {
   for (DFVariableImpl *var: variables) {
     delete var;
   }
+}
+
+void KernStorage::transferFrom(KernStorage &&storage) {
+  types.merge(std::move(storage.types));
+  variables.merge(std::move(storage.variables));
 }
 
 } // namespace dfcxx

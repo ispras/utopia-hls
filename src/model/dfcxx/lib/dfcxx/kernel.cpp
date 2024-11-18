@@ -147,6 +147,34 @@ bool Kernel::compileDot(llvm::raw_fd_ostream *stream) {
   return true;
 }
 
+void Kernel::rebindInput(DFVariable source, Node input, Kernel &kern) {
+  auto sourceNode = meta.graph.findNode(source);
+  meta.graph.rebindInput(sourceNode,
+                         input,
+                         kern.meta.graph);
+
+  kern.deleteNode(input);
+}
+
+DFVariable Kernel::rebindOutput(Node output, DFVariable target, Kernel &kern) {
+  auto targetNode = meta.graph.findNode(target);
+  auto node = meta.graph.rebindOutput(output,
+                                      targetNode,
+                                      kern.meta.graph);
+
+  if (targetNode != node) {
+    meta.storage.deleteVariable(target.getImpl());
+  }
+
+  kern.deleteNode(output);
+  return node.var;
+}
+
+void Kernel::deleteNode(Node node) {
+  meta.graph.deleteNode(node);
+  meta.storage.deleteVariable(node.var);
+}
+
 bool Kernel::compile(const DFLatencyConfig &config,
                      const std::vector<std::string> &outputPaths,
                      const Scheduler &sched) {
