@@ -10,7 +10,7 @@
 
 class Polynomial2 : public dfcxx::Kernel {
 public:
-  std::string_view getName() override {
+  std::string_view getName() const override {
     return "Polynomial2";
   }
 

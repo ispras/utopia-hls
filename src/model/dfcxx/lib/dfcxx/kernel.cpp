@@ -232,4 +232,34 @@ bool Kernel::simulate(const std::string &inDataPath,
   return sim.simulate(input, output);
 }
 
+bool Kernel::check() const {
+  std::cout << "[UTOPIA] Checking whether constructed nodes are valid..." << std::endl;
+  if (!checkValidNodes()) {
+    std::cout << "[UTOPIA] Error: found invalid nodes. Abort." << std::endl;
+    return false;
+  }
+  return true;
+}
+
+bool Kernel::checkValidNodes() const {
+  const auto &nodes = meta.graph.getNodes();
+  const auto &startNodes = meta.graph.getStartNodes();
+  const auto &inputs = meta.graph.getInputs();
+  const auto &outputs = meta.graph.getOutputs();
+  std::cout << "[UTOPIA] Kernel: " << getName() << std::endl;
+  std::cout << "[UTOPIA] Nodes: " << nodes.size() << std::endl;
+  std::cout << "[UTOPIA] Start nodes: " << startNodes.size() << std::endl;
+  for (const Node &node: nodes) {
+    std::cout << "[UTOPIA] -----" << std::endl;
+    std::cout << "[UTOPIA] Node type: " << uint32_t(node.type) << std::endl;
+    std::cout << "[UTOPIA] Inputs count: " << inputs.at(node).size() << std::endl;
+    std::cout << "[UTOPIA] Outputs count: " << outputs.at(node).size() << std::endl;
+    if (node.type == OpType::NONE) {
+      std::cout << "[UTOPIA] Error: NONE-type node found." << std::endl;
+      return false;
+    }
+  }
+  return true;
+}
+
 } // namespace dfcxx

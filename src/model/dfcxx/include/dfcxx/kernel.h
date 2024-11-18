@@ -83,7 +83,7 @@ protected:
 public:
   virtual ~Kernel() = default;
 
-  virtual std::string_view getName() = 0;
+  virtual std::string_view getName() const = 0;
   
   const Graph &getGraph() const;
 
@@ -98,6 +98,11 @@ public:
   bool simulate(const std::string &inDataPath,
                 const std::string &outFilePath);
 
+  bool check() const;
+
+// Checker methods.
+private:
+  bool checkValidNodes() const;
 };
 
 } // namespace dfcxx
