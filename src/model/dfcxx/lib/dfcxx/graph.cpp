@@ -10,7 +10,7 @@
 
 #include <algorithm>
 #include <stdexcept>
-
+#include <iostream>
 namespace dfcxx {
 
 const std::unordered_set<Node> &Graph::getNodes() const {
@@ -103,31 +103,42 @@ void Graph::deleteNode(Node node) {
 }
 
 void Graph::rebindInput(Node source, Node input, Graph &graph) {
+  auto &conns = graph.connections;
   for (auto &out: graph.outputs[input]) {
     for (auto &in: graph.inputs[out.target]) {
-      if (in.source == input) {
+      if (in.source == input && out == in) {
         in.source = source;
         outputs[source].push_back(in);
         break;
       }
     }
-  }
-  
-  for (auto &conn: graph.connections) {
-    if (conn.second.source == input) {
-      conn.second.source = source;
+    auto it = conns.find(out.target);
+    if (it != conns.end() && it->second.source == input) {
+      it->second.source = source;
     }
   }
 }
 
 Node Graph::rebindOutput(Node output, Node target, Graph &graph) {
-  auto &in = graph.inputs[output].front().source;
-  auto &outs = graph.outputs[in];
+  auto &inSrc = graph.inputs[output].front().source;
+  auto &outs = graph.outputs[inSrc];
   for (auto it = outs.begin(); it != outs.end(); ++it) {
     if (it->target == output) {
       if (target.type == OpType::NONE) {
-        target = it->source;
         outs.erase(it);
+        for (auto &out: outputs[target]) {
+          for (auto &in: inputs[out.target]) {
+            if (in.source == target && out == in) {
+              in.source = it->source;
+              outs.push_back(in);
+            }
+          }
+          auto conIt = connections.find(out.target);
+          if (conIt != connections.end() && conIt->second.source == target) {
+            conIt->second.source = it->source;
+          }
+        }
+        target = it->source;
       } else {
         it->target = target;
         inputs[target].clear();

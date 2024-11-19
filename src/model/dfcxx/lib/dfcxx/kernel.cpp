@@ -163,7 +163,7 @@ DFVariable Kernel::rebindOutput(Node output, DFVariable target, Kernel &kern) {
                                       kern.meta.graph);
 
   if (targetNode != node) {
-    meta.storage.deleteVariable(target.getImpl());
+    deleteNode(targetNode);
   }
 
   kern.deleteNode(output);
@@ -246,14 +246,27 @@ bool Kernel::checkValidNodes() const {
   const auto &startNodes = meta.graph.getStartNodes();
   const auto &inputs = meta.graph.getInputs();
   const auto &outputs = meta.graph.getOutputs();
+  const auto &connections = meta.graph.getConnections();
   std::cout << "[UTOPIA] Kernel: " << getName() << std::endl;
   std::cout << "[UTOPIA] Nodes: " << nodes.size() << std::endl;
   std::cout << "[UTOPIA] Start nodes: " << startNodes.size() << std::endl;
   for (const Node &node: nodes) {
     std::cout << "[UTOPIA] -----" << std::endl;
     std::cout << "[UTOPIA] Node type: " << uint32_t(node.type) << std::endl;
+    std::cout << "[UTOPIA] Node var: " << node.var << std::endl;
+    auto &ins = inputs.at(node);
     std::cout << "[UTOPIA] Inputs count: " << inputs.at(node).size() << std::endl;
+    for (int i = 0; i < ins.size(); ++i) {
+      std::cout << "[UTOPIA] Input #" << (i + 1) << ": " << ins[i].source.var << std::endl;
+    }
+    auto &outs = outputs.at(node);
     std::cout << "[UTOPIA] Outputs count: " << outputs.at(node).size() << std::endl;
+    for (int i = 0; i < outs.size(); ++i) {
+      std::cout << "[UTOPIA] Output #" << (i + 1) << ": " << outs[i].target.var << std::endl;
+    }
+    if (connections.find(node) != connections.end()) {
+      std::cout << "[UTOPIA] Connect: " << connections.at(node).source.var << std::endl;
+    }
     if (node.type == OpType::NONE) {
       std::cout << "[UTOPIA] Error: NONE-type node found." << std::endl;
       return false;
