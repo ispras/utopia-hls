@@ -123,30 +123,29 @@ Node Graph::rebindOutput(Node output, Node target, Graph &graph) {
   auto &inSrc = graph.inputs[output].front().source;
   auto &outs = graph.outputs[inSrc];
   for (auto it = outs.begin(); it != outs.end(); ++it) {
-    if (it->target == output) {
-      if (target.type == OpType::NONE) {
-        outs.erase(it);
-        for (auto &out: outputs[target]) {
-          for (auto &in: inputs[out.target]) {
-            if (in.source == target && out == in) {
-              in.source = it->source;
-              outs.push_back(in);
-            }
-          }
-          auto conIt = connections.find(out.target);
-          if (conIt != connections.end() && conIt->second.source == target) {
-            conIt->second.source = it->source;
+    if (it->target != output) { continue; }
+    if (target.type == OpType::NONE) {
+      outs.erase(it);
+      for (auto &out: outputs[target]) {
+        for (auto &in: inputs[out.target]) {
+          if (in.source == target && out == in) {
+            in.source = it->source;
+            outs.push_back(in);
           }
         }
-        target = it->source;
-      } else {
-        it->target = target;
-        inputs[target].clear();
-        inputs[target].push_back(*it);
-        connections[target] = *it;
+        auto conIt = connections.find(out.target);
+        if (conIt != connections.end() && conIt->second.source == target) {
+          conIt->second.source = it->source;
+        }
       }
-      break;
+      target = it->source;
+    } else {
+      it->target = target;
+      inputs[target].clear();
+      inputs[target].push_back(*it);
+      connections[target] = *it;
     }
+    break;
   }
   return target;
 }
