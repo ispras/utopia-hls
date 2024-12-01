@@ -66,7 +66,7 @@ protected:
     Kern kern(std::forward<Args>(args)...);
 
     for (auto &binding: bindings) {
-      Node node = kern.meta.graph.getNodeByName(binding.second);
+      Node node = kern.meta.graph.findNode(binding.second);
       kern.meta.graph.resetNodeName(binding.second);
       if (node.type == OpType::IN) {
         rebindInput(binding.first, node, kern);

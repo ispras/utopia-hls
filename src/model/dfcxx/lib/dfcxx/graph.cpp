@@ -10,7 +10,7 @@
 
 #include <algorithm>
 #include <stdexcept>
-#include <iostream>
+
 namespace dfcxx {
 
 const std::unordered_set<Node> &Graph::getNodes() const {
@@ -31,6 +31,14 @@ const std::unordered_map<Node, std::vector<Channel>> &Graph::getOutputs() const 
 
 const std::unordered_map<Node, Channel> &Graph::getConnections() const {
   return connections;
+}
+
+Node Graph::findNode(const std::string &name) {
+  auto it = nameMap.find(name);
+  if (it == nameMap.end()) {
+    throw new std::invalid_argument("Non-existent node with name: " + name);
+  }
+  return it->second;
 }
 
 Node Graph::findNode(DFVariableImpl *var) {
@@ -74,14 +82,6 @@ void Graph::transferFrom(Graph &&graph) {
   inputs.merge(std::move(graph.inputs));
   outputs.merge(std::move(graph.outputs));
   connections.merge(std::move(graph.connections));
-}
-
-Node Graph::getNodeByName(const std::string &name) {
-  auto it = nameMap.find(name);
-  if (it == nameMap.end()) {
-    throw new std::invalid_argument("Non-existent node with name: " + name);
-  }
-  return it->second;
 }
 
 void Graph::resetNodeName(const std::string &name) {

@@ -13,6 +13,7 @@
 #include "dfcxx/node.h"
 #include "dfcxx/vars/var.h"
 
+#include <functional>
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
@@ -40,16 +41,12 @@ public:
 
   const std::unordered_map<Node, Channel> &getConnections() const;
 
-  Node findNode(DFVariableImpl *var);
-
   void addNode(DFVariableImpl *var, OpType type, NodeData data);
 
   void addChannel(DFVariableImpl *source, DFVariableImpl *target,
                   unsigned opInd, bool connect);
 
   void transferFrom(Graph &&graph);
-
-  Node getNodeByName(const std::string &name);
 
   void resetNodeName(const std::string &name);
 
@@ -58,6 +55,10 @@ public:
   void rebindInput(Node source, Node input, Graph &graph);
 
   Node rebindOutput(Node output, Node target, Graph &graph);
+
+  Node findNode(const std::string &name);
+
+  Node findNode(DFVariableImpl *var);
 };
 
 } // namespace dfcxx
