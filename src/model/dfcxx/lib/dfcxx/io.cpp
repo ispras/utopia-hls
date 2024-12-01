@@ -34,7 +34,7 @@ DFVariable IO::inputScalar(const std::string &name, const DFType &type) {
   return var;
 }
 
-DFVariable IO::hollow(const DFType &type) {
+DFVariable IO::newStream(const DFType &type) {
   auto *var = meta.varBuilder.buildStream("",
                                           IODirection::NONE,
                                           meta,
@@ -44,7 +44,7 @@ DFVariable IO::hollow(const DFType &type) {
   return var;
 }
 
-DFVariable IO::hollowScalar(const DFType &type) {
+DFVariable IO::newScalar(const DFType &type) {
   auto *var = meta.varBuilder.buildScalar("",
                                           IODirection::NONE,
                                           meta,

@@ -44,7 +44,7 @@ public:
 
     const DFType &type = dfUInt(32);
     DFVariable x = io.input("x", type);
-    DFVariable intermediate = io.hollow(type);
+    DFVariable intermediate = io.newStream(type);
     instance<Polynomial2>({
       {x, "x"},
       {intermediate, "out"}

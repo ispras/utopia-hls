@@ -28,9 +28,9 @@ public:
 
   DFVariable inputScalar(const std::string &name, const DFType &type);
 
-  DFVariable hollow(const DFType &type);
+  DFVariable newStream(const DFType &type);
 
-  DFVariable hollowScalar(const DFType &type);
+  DFVariable newScalar(const DFType &type);
 
   DFVariable output(const std::string &name, const DFType &type);
 
