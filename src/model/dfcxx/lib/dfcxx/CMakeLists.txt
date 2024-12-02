@@ -18,6 +18,7 @@ set(SOURCES
   ${VAR_BUILDERS_SOURCES}
   ${TYPE_BUILDERS_SOURCES}
   converter.cpp
+  kernmeta.cpp
   kernstorage.cpp
   io.cpp
   offset.cpp

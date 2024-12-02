@@ -34,6 +34,26 @@ DFVariable IO::inputScalar(const std::string &name, const DFType &type) {
   return var;
 }
 
+DFVariable IO::newStream(const DFType &type) {
+  auto *var = meta.varBuilder.buildStream("",
+                                          IODirection::NONE,
+                                          meta,
+                                          type);
+  meta.storage.addVariable(var);
+  meta.graph.addNode(var, OpType::NONE, NodeData {});
+  return var;
+}
+
+DFVariable IO::newScalar(const DFType &type) {
+  auto *var = meta.varBuilder.buildScalar("",
+                                          IODirection::NONE,
+                                          meta,
+                                          type);
+  meta.storage.addVariable(var);
+  meta.graph.addNode(var, OpType::NONE, NodeData {});
+  return var;
+}
+
 DFVariable IO::output(const std::string &name, const DFType &type) {
   auto *var = meta.varBuilder.buildStream(name,
                                           IODirection::OUTPUT,

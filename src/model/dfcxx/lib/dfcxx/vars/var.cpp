@@ -21,6 +21,10 @@ std::string_view DFVariableImpl::getName() const {
   return name;
 }
 
+void DFVariableImpl::resetName() {
+  name.clear();
+}
+
 DFVariableImpl::IODirection DFVariableImpl::getDirection() const {
   return direction;
 }

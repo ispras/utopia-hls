@@ -275,7 +275,7 @@ void DFCIRBuilder::translate(Node node, const Graph &graph,
     }
     default: {
       // TODO: Add proper logging: https://github.com/ispras/utopia-hls/issues/13
-      std::cout << "[ERROR] Unknown node type id: " << node.type << std::endl;
+      std::cout << "[ERROR] Unknown/unsupported node type id: " << node.type << std::endl;
       assert(false);
     };
   }
@@ -283,8 +283,9 @@ void DFCIRBuilder::translate(Node node, const Graph &graph,
   map[node] = newOp->getResult(0);
 
   auto &connections = graph.getConnections();
-  if (connections.find(node) != connections.end()) {
-    auto conSrc = connections.at(node).source;
+  auto it = connections.find(node);
+  if (it != connections.end()) {
+    auto conSrc = it->second.source;
     builder.create<mlir::dfcir::ConnectOp>(loc, map[node], map[conSrc]);
   }
 }

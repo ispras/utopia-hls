@@ -18,9 +18,11 @@
 #include "dfcxx/types/type.h"
 #include "dfcxx/vars/var.h"
 
+#include <initializer_list>
 #include <ostream>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 // This forward declaration is needed to avoid
@@ -37,6 +39,12 @@ private:
   
   bool compileDot(llvm::raw_fd_ostream *stream);
 
+  void rebindInput(DFVariable source, Node input, Kernel &kern);
+
+  DFVariable rebindOutput(Node output, DFVariable target, Kernel &kern);
+
+  void deleteNode(Node node);
+
 protected:
   IO io;
   Offset offset;
@@ -51,12 +59,31 @@ protected:
 
   DFType dfBool();
 
+  using IOBinding = std::pair<DFVariable&, std::string>;
+
+  template <typename Kern, typename... Args>
+  void instance(std::initializer_list<IOBinding> bindings, Args && ...args) {
+    Kern kern(std::forward<Args>(args)...);
+
+    for (auto &binding: bindings) {
+      Node node = kern.meta.graph.findNode(binding.second);
+      kern.meta.graph.resetNodeName(binding.second);
+      if (node.type == OpType::IN) {
+        rebindInput(binding.first, node, kern);
+      } else {
+        binding.first = rebindOutput(node, binding.first, kern);
+      } 
+    }
+
+    meta.transferFrom(std::move(kern.meta));
+  }
+
   Kernel();
 
 public:
   virtual ~Kernel() = default;
 
-  virtual std::string_view getName() = 0;
+  virtual std::string_view getName() const = 0;
   
   const Graph &getGraph() const;
 
@@ -71,6 +98,11 @@ public:
   bool simulate(const std::string &inDataPath,
                 const std::string &outFilePath);
 
+  bool check() const;
+
+// Checker methods.
+private:
+  bool checkValidNodes() const;
 };
 
 } // namespace dfcxx

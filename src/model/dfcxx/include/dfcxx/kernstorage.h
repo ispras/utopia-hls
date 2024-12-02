@@ -26,7 +26,11 @@ public:
 
   DFVariableImpl *addVariable(DFVariableImpl *var);
 
+  void deleteVariable(DFVariableImpl *var);
+
   ~KernStorage();
+
+  void transferFrom(KernStorage &&storage);
 };
 
 } // namespace dfcxx

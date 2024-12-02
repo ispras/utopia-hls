@@ -13,7 +13,7 @@ static const int32_t kSIZE = kDIM * kDIM;
 
 class IDCT : public dfcxx::Kernel {
 public:
-  std::string_view getName() override {
+  std::string_view getName() const override {
     return "IDCT";
   }
 

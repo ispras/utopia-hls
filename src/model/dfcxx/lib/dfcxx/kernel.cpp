@@ -147,6 +147,34 @@ bool Kernel::compileDot(llvm::raw_fd_ostream *stream) {
   return true;
 }
 
+void Kernel::rebindInput(DFVariable source, Node input, Kernel &kern) {
+  auto sourceNode = meta.graph.findNode(source);
+  meta.graph.rebindInput(sourceNode,
+                         input,
+                         kern.meta.graph);
+
+  kern.deleteNode(input);
+}
+
+DFVariable Kernel::rebindOutput(Node output, DFVariable target, Kernel &kern) {
+  auto targetNode = meta.graph.findNode(target);
+  auto node = meta.graph.rebindOutput(output,
+                                      targetNode,
+                                      kern.meta.graph);
+
+  if (targetNode != node) {
+    deleteNode(targetNode);
+  }
+
+  kern.deleteNode(output);
+  return node.var;
+}
+
+void Kernel::deleteNode(Node node) {
+  meta.graph.deleteNode(node);
+  meta.storage.deleteVariable(node.var);
+}
+
 bool Kernel::compile(const DFLatencyConfig &config,
                      const std::vector<std::string> &outputPaths,
                      const Scheduler &sched) {
@@ -202,6 +230,32 @@ bool Kernel::simulate(const std::string &inDataPath,
   }
   std::ofstream output(outFilePath, std::ios::out);
   return sim.simulate(input, output);
+}
+
+bool Kernel::check() const {
+  const auto &nodes = meta.graph.getNodes();
+  const auto &startNodes = meta.graph.getStartNodes();
+  const auto &connections = meta.graph.getConnections();
+  std::cout << "[UTOPIA] Kernel: " << getName() << std::endl;
+  std::cout << "[UTOPIA] Nodes: " << nodes.size() << std::endl;
+  std::cout << "[UTOPIA] Start nodes: " << startNodes.size() << std::endl;
+  std::cout << "[UTOPIA] Connections: " << connections.size() << std::endl;
+
+  return checkValidNodes();
+}
+
+bool Kernel::checkValidNodes() const {
+  std::cout << "[UTOPIA] Checking whether constructed nodes are valid: ";
+  
+  const auto &nodes = meta.graph.getNodes();
+  for (const Node &node: nodes) {
+    if (node.type == OpType::NONE) {
+      std::cout << "found invalid node(s). Abort." << std::endl;
+      return false;
+    }
+  }
+  std::cout << "finished." << std::endl;
+  return true;
 }
 
 } // namespace dfcxx
