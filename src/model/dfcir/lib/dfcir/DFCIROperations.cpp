@@ -339,7 +339,7 @@ ParseResult MuxOp::parse(OpAsmParser &parser, OperationState &result) {
   if (parser.parseRParen() || parser.parseColon() ||
       parser.parseType(resType) ||
       parser.parseOptionalAttrDict(result.attributes)) { return failure(); }
-
+  
   if (parser.resolveOperand(control, controlType, 
                             result.operands)) { return failure(); }
 
@@ -355,7 +355,6 @@ ParseResult MuxOp::parse(OpAsmParser &parser, OperationState &result) {
 void MuxOp::print(OpAsmPrinter &p) {
   Value value = getControl();
   p << "(" << value << ": " << value.getType();
-
   auto vars = getVars();
   auto resType = getType();
   for (const auto &var: vars) {
@@ -501,6 +500,57 @@ void LatencyOp::print(OpAsmPrinter &printer) {
   llvm::SmallVector<llvm::StringRef, 2> elidedAttrs;
   printer.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
 }
+
+ParseResult SimpleCounterOp::parse(OpAsmParser &parser, OperationState &result) {
+  Type resRawTypes[1];
+  llvm::ArrayRef<Type> resTypes(resRawTypes);
+  OpAsmParser::UnresolvedOperand maxRawOperands[1];
+  llvm::ArrayRef<::mlir::OpAsmParser::UnresolvedOperand> maxOperands(maxRawOperands);
+  llvm::SMLoc maxOperandsLoc;
+
+  Type maxRawTypes[1];
+  llvm::ArrayRef<::mlir::Type> maxTypes(maxRawTypes);
+  if (parser.parseLess())
+    return failure();
+
+  Type streamType;
+  if (parser.parseCustomTypeWithFallback(streamType)) { return failure(); }
+  DFCIRStreamType type = DFCIRStreamType::get(result.getContext(), streamType);
+  resRawTypes[0] = type;
+  if (parser.parseGreater() || parser.parseLParen())
+    return failure();
+  maxOperandsLoc = parser.getCurrentLocation();
+  if (parser.parseOperand(maxRawOperands[0]))
+    return failure();
+  if (parser.parseColon())
+    return failure();
+  DFCIRScalarType maxType;
+  if (parser.parseCustomTypeWithFallback(maxType)) {
+    return failure();
+  }
+  maxRawTypes[0] = maxType;
+  if (parser.parseRParen())
+    return failure();
+  if (parser.parseOptionalAttrDict(result.attributes))
+    return failure();
+
+  result.addTypes(resTypes);
+  if (parser.resolveOperands(maxOperands, maxTypes, maxOperandsLoc, result.operands))
+    return ::mlir::failure();
+  return success();
+}
+
+void SimpleCounterOp::print(::mlir::OpAsmPrinter &printer) {
+  printer << "<";
+  printer << getRes().getType().getStreamType();
+  printer << "> (";
+  printer << getMax();
+  printer << ")";
+  ::llvm::SmallVector<::llvm::StringRef, 2> elidedAttrs;
+  elidedAttrs.push_back("max");
+  printer.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
+}
+
 
 } // namespace mlir::dfcir
 

@@ -436,6 +436,16 @@ def ShiftLeftOp : DFCIR_ShiftOp<"shl", []>;
 
 def ShiftRightOp : DFCIR_ShiftOp<"shr", []>;
 
+def SimpleCounterOp : DFCIR_Op<"simpleCounter", []> {
+	let arguments = (ins
+		Scalar:$max
+  );
+
+  let hasCustomAssemblyFormat = 1;
+
+	let results = (outs Stream:$res);
+}
+
 // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
 // Type system rework required.
 
