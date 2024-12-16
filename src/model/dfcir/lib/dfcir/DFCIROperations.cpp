@@ -313,27 +313,60 @@ llvm::StringRef OutputOp::getValueName() {
 ParseResult MuxOp::parse(OpAsmParser &parser, OperationState &result) {
   OpAsmParser::UnresolvedOperand control;
   SmallVector<OpAsmParser::UnresolvedOperand, 16> vars;
-  Type controlType, varType;
+  SmallVector<Type, 16> types;
+  Type controlType, resType;
 
   if (parser.parseLParen() || parser.parseOperand(control) ||
       parser.parseColon() || parser.parseType(controlType) || 
-      parser.parseComma() || parser.parseOperandList(vars) ||
-      parser.parseRParen() || parser.parseColon() ||
-      parser.parseType(varType) ||
-      parser.parseOptionalAttrDict(result.attributes)) { return failure(); }
+      parser.parseComma()) { return failure(); }
+      
 
+  llvm::SMLoc varLocation = parser.getCurrentLocation();
+  do {
+    OpAsmParser::UnresolvedOperand var;
+    Type varType;
+    if (parser.parseOperand(var)) {
+      return failure();
+    }
+    vars.push_back(var);
+
+    if (succeeded(parser.parseOptionalColon()) && parser.parseType(varType)) {
+      return failure();
+    }
+
+    types.push_back(varType);
+  } while(succeeded(parser.parseOptionalComma()));
+
+  if (parser.parseRParen() || parser.parseColon() ||
+      parser.parseType(resType) ||
+      parser.parseOptionalAttrDict(result.attributes)) { return failure(); }
+  
   if (parser.resolveOperand(control, controlType, 
                             result.operands)) { return failure(); }
-
-  result.addTypes(varType);
-  return parser.resolveOperands(vars, varType, result.operands);
+  
+  result.addTypes(resType);
+  for (Type &type: types) {
+    if (!type) {
+      type = resType;
+    }
+  }
+  return parser.resolveOperands(vars, types, varLocation, result.operands);
 }
 
 void MuxOp::print(OpAsmPrinter &p) {
   Value value = getControl();
-  p << "(" << value << ": " << value.getType() << ", ";
-  p.printOperands(getVars());
-  p << ") : " << getType();
+  p << "(" << value << ": " << value.getType();
+  
+  auto vars = getVars();
+  auto resType = getType();
+  for (const auto &var: vars) {
+    p << ", " << var;
+    auto type = var.getType();
+    if (type != resType) {
+      p << ": " << type;
+    }
+  }
+  p << ") : " << resType;
   p.printOptionalAttrDict((*this)->getAttrs());
 }
 
@@ -421,6 +454,57 @@ void mlir::dfcir::OffsetOp::print(OpAsmPrinter &printer) {
   printer.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
   printer << " : " << getRes().getType();
 }
+
+ParseResult SimpleCounterOp::parse(OpAsmParser &parser, OperationState &result) {
+  Type resRawTypes[1];
+  llvm::ArrayRef<Type> resTypes(resRawTypes);
+  OpAsmParser::UnresolvedOperand maxRawOperands[1];
+  llvm::ArrayRef<::mlir::OpAsmParser::UnresolvedOperand> maxOperands(maxRawOperands);
+  llvm::SMLoc maxOperandsLoc;
+
+  Type maxRawTypes[1];
+  llvm::ArrayRef<::mlir::Type> maxTypes(maxRawTypes);
+  if (parser.parseLess())
+    return failure();
+
+  Type streamType;
+  if (parser.parseCustomTypeWithFallback(streamType)) { return failure(); }
+  DFCIRStreamType type = DFCIRStreamType::get(result.getContext(), streamType);
+  resRawTypes[0] = type;
+  if (parser.parseGreater() || parser.parseLParen())
+    return failure();
+  maxOperandsLoc = parser.getCurrentLocation();
+  if (parser.parseOperand(maxRawOperands[0]))
+    return failure();
+  if (parser.parseColon())
+    return failure();
+  DFCIRScalarType maxType;
+  if (parser.parseCustomTypeWithFallback(maxType)) {
+    return failure();
+  }
+  maxRawTypes[0] = maxType;
+  if (parser.parseRParen())
+    return failure();
+  if (parser.parseOptionalAttrDict(result.attributes))
+    return failure();
+
+  result.addTypes(resTypes);
+  if (parser.resolveOperands(maxOperands, maxTypes, maxOperandsLoc, result.operands))
+    return ::mlir::failure();
+  return success();
+}
+
+void SimpleCounterOp::print(::mlir::OpAsmPrinter &printer) {
+  printer << "<";
+  printer << getRes().getType().getStreamType();
+  printer << "> (";
+  printer << getMax();
+  printer << ")";
+  ::llvm::SmallVector<::llvm::StringRef, 2> elidedAttrs;
+  elidedAttrs.push_back("max");
+  printer.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
+}
+
 
 } // namespace mlir::dfcir
 

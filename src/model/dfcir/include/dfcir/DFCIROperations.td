@@ -335,6 +335,16 @@ def CastOp : DFCIR_Op<"cast", []> {
   let results = (outs CastVariable:$res);
 }
 
+def SimpleCounterOp : DFCIR_Op<"simpleCounter", []> {
+	let arguments = (ins
+		Scalar:$max
+  );
+
+  let hasCustomAssemblyFormat = 1;
+
+	let results = (outs Stream:$res);
+}
+
 // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
 // Type system rework required.
 
