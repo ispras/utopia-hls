@@ -41,6 +41,9 @@
 #define OUT_FIRRTL_JSON "out_firrtl"
 #define OUT_DOT_JSON "out_dot"
 
+#define DFCIR_OPS_ID_JSON "dfcir"
+#define EXTERNAL_OPS_ID_JSON "external"
+
 #define SIM_ID_JSON "sim"
 #define SIM_IN_JSON "in"
 #define SIM_OUT_JSON "out"
@@ -223,7 +226,7 @@ struct HlsOptions final : public AppOptions {
     get(json, OUT_SV_LIB_JSON,     outNames[OUT_FORMAT_ID_INT(SVLibrary)]);
     get(json, OUT_DFCIR_JSON,      outNames[OUT_FORMAT_ID_INT(DFCIR)]);
     get(json, OUT_FIRRTL_JSON,     outNames[OUT_FORMAT_ID_INT(FIRRTL)]);
-    get(json, OUT_DOT_JSON,     outNames[OUT_FORMAT_ID_INT(DOT)]);
+    get(json, OUT_DOT_JSON,        outNames[OUT_FORMAT_ID_INT(DOT)]);
   }
   
   dfcxx::Ops convertFieldToEnum(const std::string field) {
@@ -260,13 +263,26 @@ struct HlsOptions final : public AppOptions {
     return dfcxx::ADD_INT;
   }
 
+  void parseInternalOpsConfig(Json json) {
+    if (!json.contains(DFCIR_OPS_ID_JSON)) { return; }
+    for (auto &[key, val] : json[DFCIR_OPS_ID_JSON].items()) {
+      latencyCfg.internalOps[convertFieldToEnum(key)] = val;
+    }
+  }
+
+  void parseExternalOpsConfig(Json json) {
+    if (!json.contains(EXTERNAL_OPS_ID_JSON)) { return; }
+    for (auto &[key, val] : json[EXTERNAL_OPS_ID_JSON].items()) {
+      latencyCfg.externalOps[key] = val;
+    }
+  }
+
   void parseLatencyConfig() {
     std::ifstream in(latencyCfgFile);
     if (!in.good()) { return; }
-    auto json = Json::parse(in);
-    for (auto &[key, val] : json.items()) {
-      latencyCfg[convertFieldToEnum(key)] = val;
-    }
+    Json json = Json::parse(in);
+    parseInternalOpsConfig(json);
+    parseExternalOpsConfig(json);
   }
 
   std::string latencyCfgFile;

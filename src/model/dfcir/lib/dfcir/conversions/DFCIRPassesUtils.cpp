@@ -10,349 +10,259 @@
 
 #include "circt/Dialect/FIRRTL/FIRRTLInstanceGraph.h"
 
-namespace circt::firrtl::utils {
 
-inline FExtModuleOp createBufferModule(OpBuilder &builder,
-                                       llvm::StringRef name, Type type,
-                                       Location loc, unsigned stages) {
-  SmallVector<circt::firrtl::PortInfo> ports = {
-    circt::firrtl::PortInfo(
-        mlir::StringAttr::get(builder.getContext(), "res1"),
-        type,
-        circt::firrtl::Direction::Out),
-    circt::firrtl::PortInfo(
-        mlir::StringAttr::get(builder.getContext(), "arg1"),
-        type,
-        circt::firrtl::Direction::In),
-    circt::firrtl::PortInfo(
-        mlir::StringAttr::get(builder.getContext(), "clk"),
-        circt::firrtl::ClockType::get(builder.getContext()),
-        circt::firrtl::Direction::In)
-  };
-  auto typeWidth =
-      circt::firrtl::getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(type));
-  assert(typeWidth.has_value());
-  IntegerType attrType = mlir::IntegerType::get(builder.getContext(), 32,
-                                                mlir::IntegerType::Unsigned);
-  auto module = builder.create<FExtModuleOp>(
-      loc,
-      mlir::StringAttr::get(builder.getContext(), name),
-      circt::firrtl::ConventionAttr::get(builder.getContext(),
-                                         Convention::Internal),
-      ports,
-      StringRef(name),
-      mlir::ArrayAttr());
-  module->setAttr(INSTANCE_LATENCY_ATTR,
-                  mlir::IntegerAttr::get(attrType, stages));
-  return module;
-}
-
-inline FExtModuleOp createBufferModuleWithTypeName(OpBuilder &builder,
-                                                   Type type, Location loc,
-                                                   unsigned stages) {
-  using circt::firrtl::getBitWidth;
-  using circt::firrtl::FIRRTLBaseType;
-
-  std::string name = BUF_MODULE;
-  llvm::raw_string_ostream nameStream(name);
-  auto width = getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(type));
-  assert(width.has_value());
-  nameStream << "_IN_" << *width << "_OUT_" << *width << "_" << stages;
-  return createBufferModule(builder, name, type, loc, stages);
-}
-
-FExtModuleOp findOrCreateBufferModule(OpBuilder &builder, Type type,
-                                      Location loc, unsigned stages) {
-  using circt::firrtl::getBitWidth;
-  using circt::firrtl::FIRRTLBaseType;
-
-  CircuitOp circuit = findCircuit(builder.getInsertionPoint());
-  Block *block = circuit.getBodyBlock();
-  std::string name = BUF_MODULE;
-  llvm::raw_string_ostream nameStream(name);
-  auto width = getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(type));
-  assert(width.has_value());
-  nameStream << "_IN_" << *width << "_OUT_" << *width << "_" << stages;
-
-  auto begin = block->op_begin<FExtModuleOp>();
-  auto end = block->op_end<FExtModuleOp>();
-  for (auto op = begin; op != end; ++op) {
-    if ((*op).getModuleName() == name) {
-      return *op;
-    }
-  }
-  auto save = builder.saveInsertionPoint();
-  builder.setInsertionPointToStart(block);
-  FExtModuleOp result = createBufferModuleWithTypeName(builder, type,
-                                                       loc, stages);
-  builder.restoreInsertionPoint(save);
-  return result;
-}
-
-bool isAStartWire(Operation *op) {
-  auto casted = llvm::dyn_cast<circt::firrtl::WireOp>(op);
-  if (!casted) return false;
-
-  for (const auto &val: op->getUses()) {
-    auto found = llvm::dyn_cast<circt::firrtl::ConnectOp>(val.getOwner());
-    if (found && found.getDest() == casted.getResult()) return false;
-  }
-  return true;
-}
-
-std::pair<Value, Operation *> unrollConnectChain(Value value) {
-  Value cur_val = value;
-  Operation *connect_op = nullptr;
-  bool flag;
-  do {
-    flag = false;
-    for (const auto &operand: cur_val.getUses()) {
-      auto found = llvm::dyn_cast<circt::firrtl::ConnectOp>(operand.getOwner());
-      if (found && found.getDest() == operand.get()) {
-        cur_val = found.getSrc();
-        if (!connect_op) {
-          connect_op = found.getOperation();
-        }
-        flag = true;
-      }
-    }
-  } while (flag);
-  return std::make_pair(cur_val, connect_op);
-}
-
-Value getBlockArgument(Block *block, unsigned ind) {
-  return block->getArgument(ind);
-}
-
-Value getBlockArgumentFromOpBlock(Operation *op, unsigned ind) {
-  return getBlockArgument(op->getBlock(), ind);
-}
-
-Value getClockVar(Block *block) {
-  Value arg = getBlockArgument(block, block->getNumArguments() - 1);
-  if (arg.getType().isa<ClockType>()) {
-    return arg;
-  }
-  return nullptr;
-}
-
-Value getClockVarFromOpBlock(Operation *op) {
-  return getClockVar(op->getBlock());
-}
-
-ConnectOp createConnect(OpBuilder &builder, Value destination,
-                        Value source, int offset) {
-  auto connect = builder.create<ConnectOp>(builder.getUnknownLoc(),
-                                           destination, source);
-  connect->setAttr(CONNECT_OFFSET_ATTR, builder.getI32IntegerAttr(offset));
-  return connect;
-}
-
-int getConnectOffset(ConnectOp connect) {
-  return (connect && connect->hasAttr(CONNECT_OFFSET_ATTR))
-      ? connect->getAttr(CONNECT_OFFSET_ATTR).cast<IntegerAttr>().getInt()
-      : 0;
-}
-
-int setConnectOffset(ConnectOp connect, int offset) {
-  connect->setAttr(
-      CONNECT_OFFSET_ATTR,
-      mlir::IntegerAttr::get(mlir::IntegerType::get(connect.getContext(), 32,
-                                                    mlir::IntegerType::Signed),
-                             offset));
-  return getConnectOffset(connect);
-}
-
-} // namespace circt::firrtl::utils
 
 namespace mlir::dfcir::utils {
 
-Node::Node(Operation *op, unsigned latency,
-           bool isConst, long argInd) : op(op), latency(latency),
-                                        isConst(isConst), argInd(argInd) {}
+std::pair<Value, int32_t> findNearestNodeValue(Value value) {
+  Value curVal = value;
+  int32_t offsetSum = 0;
+  bool flag;
+  do {
+    flag = false;
+
+    for (const auto &operand: curVal.getUses()) {
+      auto possConnect = llvm::dyn_cast<ConnectOp>(operand.getOwner());
+      if (!possConnect) { continue; }
+      if (possConnect.getDest() == operand.get()) {
+        curVal = possConnect.getSrc();
+        flag = true;
+        break;
+      }
+    }
+    
+    if (!flag) {
+      auto possOffset = llvm::dyn_cast<OffsetOp>(curVal.getDefiningOp());
+      if (possOffset) {
+        offsetSum += static_cast<int32_t>(possOffset.getOffset().getInt());
+        curVal = possOffset.getStream();
+        flag = true;
+      }
+    }
+  
+  } while (flag);
+
+  return std::make_pair(curVal, offsetSum);
+}
+
+Node::Node(Operation *op, int32_t latency) : op(op), latency(latency) {}
 
 Node::Node() : Node(nullptr) {}
 
 bool Node::operator==(const Node &node) const {
-  return this->op == node.op && this->latency == node.latency &&
-         this->isConst == node.isConst && this->argInd == node.argInd;
+  return this->op == node.op;
 }
 
-Channel::Channel(Node source, Node target, Value val,
-                 unsigned valInd, Operation *connectOp,
-                 int offset) : source(source), target(target),
-                               val(val), valInd(valInd), 
-                               connectOp(connectOp), offset(offset) {}
-
-Channel::Channel() : source(), target(), val(),
-                     valInd(0), connectOp(nullptr), offset(0) {}
+Channel::Channel(Node *source, Node *target,
+                 int8_t valInd, int32_t offset) :
+                 source(source), target(target),
+                 valInd(valInd), offset(offset) {}
 
 bool Channel::operator==(const Channel &channel) const {
-  return this->source == channel.source && this->target == channel.target &&
-         this->val == channel.val && this->valInd == channel.valInd;
+  return this->source == channel.source &&
+         this->target == channel.target &&
+         this->valInd == channel.valInd;
 }
 
-Graph::Graph() {
-  nodes = std::unordered_set<Node>();
-  startNodes = std::unordered_set<Node>();
-  inputs = std::unordered_map<Node, std::unordered_set<Channel>>();
-  outputs = std::unordered_map<Node, std::unordered_set<Channel>>();
+Graph::~Graph() {
+  for (Node *node: nodes) {
+    delete node;
+  }
+
+  for (Channel *channel: channels) {
+    delete channel;
+  }
 }
 
-auto Graph::findNode(const std::pair<Value, Operation *> &connectInfo) {
-  bool isArg = connectInfo.first.isa<BlockArgument>();
-  const Value &val = connectInfo.first;
+auto Graph::findNode(Operation *op) {
   return std::find_if(nodes.begin(), nodes.end(),
-      [&](const Node &n) {
-        if (isArg) {
-          return n.argInd == val.cast<BlockArgument>().getArgNumber();
-        } else {
-          return n.op == val.getDefiningOp();
-        }
+      [&](Node *n) {
+        return n->op == op;
       });
 }
 
-Graph::Graph(FModuleOp module) : Graph() {
-  using circt::firrtl::ClockType;
-  using circt::firrtl::InstanceOp;
-  using circt::firrtl::ConnectOp;
-  using circt::firrtl::MultibitMuxOp;
-  using circt::firrtl::ConstantOp;
-  using circt::firrtl::ShlPrimOp;
-  using circt::firrtl::ShrPrimOp;
-  using circt::firrtl::utils::isAStartWire;
-  using circt::firrtl::utils::getConnectOffset;
-  using circt::firrtl::utils::unrollConnectChain;
-  using circt::firrtl::InstanceGraph;
+auto Graph::findNode(const Value &val) {
+  return std::find_if(nodes.begin(), nodes.end(),
+      [&](Node *n) {
+        return n->op == val.getDefiningOp();
+      });
+}
 
-  assert(module);
-  InstanceGraph instanceGraph(module->getParentOp());
+void Graph::applyConfig(const LatencyConfig &cfg) {
+  for (Node *node: nodes) {
+    auto casted = llvm::dyn_cast<Scheduled>(node->op);
+    if (!casted) { continue; }
 
-  for (BlockArgument arg: module.getArguments()) {
-    if (!(arg.getType().isa<circt::firrtl::ClockType>())) {
-      Node newNode(nullptr, 0, false, arg.getArgNumber());
-      nodes.insert(newNode);
-      if (module.getPortDirection(arg.getArgNumber()) ==
-          circt::firrtl::Direction::In) {
-        startNodes.insert(newNode);
-      }
-    }
+    Ops opType = resolveInternalOpType(node->op);
+
+    auto found = cfg.internalOps.find(opType);
+
+    int32_t latency = (found != cfg.internalOps.end()) ?
+                      (*found).second :
+                      1;
+    
+    casted.setLatency(latency);
+
+    node->latency = latency;
   }
+}
 
-  for (Operation &op: module.getBodyBlock()->getOperations()) {
-    if (auto constOp = llvm::dyn_cast<ConstantOp>(&op)) {
-      Node newNode(constOp, 0, true);
-      nodes.insert(newNode);
-      startNodes.insert(newNode);
-    } else if (auto muxOp = llvm::dyn_cast<MultibitMuxOp>(&op)) {
-      Node newNode(muxOp);
-      nodes.insert(newNode);
-      for (size_t index = 0, count = muxOp.getOperands().size();
-           index < count;
-           ++index) {
-        auto operand = muxOp.getOperand(index);
-        if (!llvm::isa<ClockType>(operand.getType())) {
-          auto connectInfo = unrollConnectChain(operand);
+template <>
+void Graph::process<InputOutputOpInterface>(InputOutputOpInterface &op) {
+  Node *newNode = new Node(op, 0);
+  nodes.insert(newNode);
+  if (llvm::isa<InputOpInterface>(op.getOperation())) {
+    startNodes.insert(newNode);
+  }
+}
 
-          auto found = findNode(connectInfo);
+template <>
+void Graph::process<ConstantOp>(ConstantOp &op) {
+  Node *newNode = new Node(op, 0);
+  nodes.insert(newNode);
+  startNodes.insert(newNode);
+}
 
-          if (found == nodes.end()) continue;
-          Channel newChan(*found, newNode, operand,
-                          index, connectInfo.second, 0);
-          outputs[*found].insert(newChan);
-          inputs[newNode].insert(newChan);
-        }
-      }
-    } else if (auto instanceOp = llvm::dyn_cast<InstanceOp>(&op)) {
-      auto instModule = instanceOp.getReferencedModule(instanceGraph);
-      unsigned latency =
-          instModule->getAttr(INSTANCE_LATENCY_ATTR)
-              .cast<IntegerAttr>().getUInt();
-      Node newNode(instanceOp, latency);
-      nodes.insert(newNode);
-      auto directions = instanceOp.getPortDirections();
-      for (size_t index = 0, count = instanceOp.getResults().size();
-           index < count;
-           ++index) {
-        auto operand = instanceOp.getResult(index);
-        if (!directions[index] && !(operand.getType().isa<ClockType>())) {
-          auto connectInfo = unrollConnectChain(operand);
+template <>
+void Graph::process<MuxOp>(MuxOp &op) {
+  Node *newNode = new Node(op, 0);
+  nodes.insert(newNode);
 
-          auto found = findNode(connectInfo);
+  for (size_t i = 0; i < op.getNumOperands(); ++i) {
+    auto operand = op.getOperand(i);
+    auto unrolledInfo = findNearestNodeValue(operand);
+    auto srcNode = findNode(unrolledInfo.first);
+    Channel *newChannel = new Channel(*srcNode, newNode, i, unrolledInfo.second);
+    channels.insert(newChannel);
+    outputs[*srcNode].insert(newChannel);
+    inputs[newNode].insert(newChannel);
+  }
+}
 
-          if (found == nodes.end()) continue;
-          int connectOffset =
-              getConnectOffset(llvm::cast<ConnectOp>(connectInfo.second));
-          Channel newChan(*found, newNode, operand, index, 
-                          connectInfo.second, connectOffset);
-          outputs[*found].insert(newChan);
-          inputs[newNode].insert(newChan);
-        }
-      }
-    } else if (llvm::isa<ShlPrimOp, ShrPrimOp>(&op)) {
-      Node newNode(&op);
-      nodes.insert(newNode);
-      auto operand = op.getOperand(0);
-      auto connectInfo = unrollConnectChain(operand);
-      auto found = findNode(connectInfo);
-      if (found == nodes.end()) continue;
-      Channel newChan(*found, newNode, operand,
-                      0, connectInfo.second, 0);
-      outputs[*found].insert(newChan);
-      inputs[newNode].insert(newChan);
+template <>
+void Graph::process<ConnectOp>(ConnectOp &op) {
+  if (!llvm::isa<OutputOpInterface>(op.getDest().getDefiningOp())) { return; }
+  auto unrolledInfo = findNearestNodeValue(op.getSrc());
+  auto srcNode = findNode(unrolledInfo.first);
+  auto dstNode = findNode(op);
+  Channel *newChannel = new Channel(*srcNode, *dstNode, 0, unrolledInfo.second);
+  channels.insert(newChannel);
+  outputs[*srcNode].insert(newChannel);
+  inputs[*dstNode].insert(newChannel);
+}
+
+template <>
+void Graph::process<NaryOpInterface>(NaryOpInterface &op) {
+  Node *newNode = new Node(op, -1);
+  nodes.insert(newNode);
+
+  Operation *opPtr = op.getOperation();
+
+  for (size_t i = 0; i < opPtr->getNumOperands(); ++i) {
+    auto operand = opPtr->getOperand(i);
+    auto unrolledInfo = findNearestNodeValue(operand);
+    auto srcNode = findNode(unrolledInfo.first);
+    Channel *newChannel = new Channel(*srcNode, newNode, i, unrolledInfo.second);
+    channels.insert(newChannel);
+    outputs[*srcNode].insert(newChannel);
+    inputs[newNode].insert(newChannel);
+  }
+}
+
+template <>
+void Graph::process<ShiftOpInterface>(ShiftOpInterface &op) {
+  Node *newNode = new Node(op, 0);
+  nodes.insert(newNode);
+
+  Operation *opPtr = op.getOperation();
+
+  auto operand = opPtr->getOperand(0);
+  auto unrolledInfo = findNearestNodeValue(operand);
+  auto srcNode = findNode(unrolledInfo.first);
+  Channel *newChannel = new Channel(*srcNode, newNode, 0, unrolledInfo.second);
+  outputs[*srcNode].insert(newChannel);
+  inputs[newNode].insert(newChannel);
+}
+
+Graph::Graph(KernelOp kernel) : Graph() {
+
+  for (Operation &op: kernel.getBody().front().getOperations()) {
+    if (auto casted = llvm::dyn_cast<InputOutputOpInterface>(&op)) {
+      process<InputOutputOpInterface>(casted);
+    } else if (auto casted = llvm::dyn_cast<ConstantOp>(&op)) {
+      process<ConstantOp>(casted);
+    } else if (auto casted = llvm::dyn_cast<MuxOp>(&op)) {
+      process<MuxOp>(casted);
+    } else if (auto casted = llvm::dyn_cast<ConnectOp>(&op)) {
+      process<ConnectOp>(casted);
+    } else if (auto casted = llvm::dyn_cast<NaryOpInterface>(&op)) {
+      process<NaryOpInterface>(casted);
+    } else if (auto casted = llvm::dyn_cast<ShiftOpInterface>(&op)) {
+      process<ShiftOpInterface>(casted);
     }
   }
 }
 
-Graph::Graph(CircuitOp circuit, StringRef name)
-    : Graph(llvm::dyn_cast<FModuleOp>(circuit.lookupSymbol(
-        name.empty() 
-          ? circuit.CircuitOp::getName() 
-          : name))) {}
+Graph::Graph(ModuleOp module)
+    : Graph(mlir::utils::findFirstOccurence<KernelOp>(module)) {}
 
-Graph::Graph(ModuleOp op, StringRef name)
-    : Graph(mlir::utils::findFirstOccurence<CircuitOp>(op), name) {}
 
-void insertBuffer(OpBuilder &builder, circt::firrtl::InstanceOp buf,
-                  const Channel &channel) {
-  using circt::firrtl::InstanceOp;
-  using circt::firrtl::ConnectOp;
-  using circt::firrtl::MultibitMuxOp;
-  using circt::firrtl::utils::createConnect;
-  using circt::firrtl::utils::getClockVarFromOpBlock;
-  assert(!channel.source.isConst);
+void insertBuffer(OpBuilder &builder, Channel *channel) {
 
-  if (llvm::isa<InstanceOp>(channel.target.op)) {
-    ConnectOp castedConnect = llvm::dyn_cast<ConnectOp>(channel.connectOp);
-    // Take the original connectee operand and bind it to a newly created
-    // ConnectOp.
-    Value connecteeVal = castedConnect.getSrc();
-    createConnect(builder, buf.getResult(1), connecteeVal);
-    createConnect(builder, buf.getResult(2), getClockVarFromOpBlock(buf));
-    // Set the original connectee operand to the newly created ConnectOp's
-    // result.
-    castedConnect.setOperand(1, buf.getResult(0));
-  } else if (auto muxOp = llvm::dyn_cast<MultibitMuxOp>(channel.target.op)) {
-    // Just bind the newly created 'ConnectOp'.
-    createConnect(builder, buf.getResult(1), channel.val);
-    createConnect(builder, buf.getResult(2), getClockVarFromOpBlock(buf));
-    muxOp.setOperand(channel.valInd, buf.getResult(0));
-  }
+  builder.setInsertionPoint(channel->target->op);
+  auto value = channel->target->op->getOperand(channel->valInd);
+
+  auto latencyOp = builder.create<LatencyOp>(builder.getUnknownLoc(),
+                                              value.getType(), value);
+  channel->target->op->setOperand(channel->valInd, latencyOp.getRes());
 }
 
 void insertBuffers(mlir::MLIRContext &ctx, const Buffers &buffers) {
-  using circt::firrtl::InstanceOp;
-  using circt::firrtl::utils::findOrCreateBufferModule;
   OpBuilder builder(&ctx);
   for (auto &[channel, latency]: buffers) {
-    assert(!channel.source.isConst);
-    builder.setInsertionPoint(channel.target.op);
-    auto bufModule = findOrCreateBufferModule(builder, channel.val.getType(),
-                                              builder.getUnknownLoc(), latency);
-    auto instance = builder.create<InstanceOp>(builder.getUnknownLoc(),
-                                               bufModule, "placeholder");
-    insertBuffer(builder, instance, channel);
+    insertBuffer(builder, channel);
   }
+}
+
+Ops resolveInternalOpType(mlir::Operation *op) {
+  auto resultType = op->getResult(0).getType();
+  auto dfType = llvm::dyn_cast<DFType>(resultType).getDFType();
+  bool isFloat = llvm::isa<DFCIRFloatType>(dfType);
+ 
+  if (llvm::isa<AddOp>(op)) {
+    return (isFloat) ? Ops::ADD_FLOAT : Ops::ADD_INT;
+  } else if (llvm::isa<SubOp>(op)) {
+    return (isFloat) ? Ops::SUB_FLOAT : Ops::SUB_INT;
+  } else if (llvm::isa<MulOp>(op)) {
+    return (isFloat) ? Ops::MUL_FLOAT : Ops::MUL_INT;
+  } else if (llvm::isa<DivOp>(op)) {
+    return (isFloat) ? Ops::DIV_FLOAT : Ops::DIV_INT;
+  } else if (llvm::isa<NegOp>(op)) {
+    return (isFloat) ? Ops::NEG_FLOAT : Ops::NEG_INT;
+  } else if (llvm::isa<AndOp>(op)) {
+    return (isFloat) ? Ops::AND_FLOAT : Ops::AND_INT;
+  } else if (llvm::isa<OrOp>(op)) {
+    return (isFloat) ? Ops::OR_FLOAT : Ops::OR_INT;
+  } else if (llvm::isa<XorOp>(op)) {
+    return (isFloat) ? Ops::XOR_FLOAT : Ops::XOR_INT;
+  } else if (llvm::isa<NotOp>(op)) {
+    return (isFloat) ? Ops::NOT_FLOAT : Ops::NOT_INT;
+  } else if (llvm::isa<LessOp>(op)) {
+    return (isFloat) ? Ops::LESS_FLOAT : Ops::LESS_INT;
+  } else if (llvm::isa<LessEqOp>(op)) {
+    return (isFloat) ? Ops::LESSEQ_FLOAT : Ops::LESSEQ_INT;
+  } else if (llvm::isa<GreaterOp>(op)) {
+    return (isFloat) ? Ops::GREATER_FLOAT : Ops::GREATER_INT;
+  } else if (llvm::isa<GreaterEqOp>(op)) {
+    return (isFloat) ? Ops::GREATEREQ_FLOAT : Ops::GREATEREQ_INT;
+  } else if (llvm::isa<EqOp>(op)) {
+    return (isFloat) ? Ops::EQ_FLOAT : Ops::EQ_INT;
+  } else if (llvm::isa<NotEqOp>(op)) {
+    return (isFloat) ? Ops::NEQ_FLOAT : Ops::NEQ_INT;
+  }
+
+  assert(false && "Shouldn't reach this");
+  return Ops::UNDEFINED;
 }
 
 } // namespace mlir::dfcir::utils

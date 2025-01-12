@@ -21,6 +21,8 @@ namespace mlir::dfcir {
 
 #include "dfcir/conversions/DFCIRPasses.h.inc"
 
+typedef std::unordered_map<mlir::dfcir::utils::Node *, int32_t> Latencies;
+
 class DFCIRASAPSchedulerPass
     : public impl::DFCIRASAPSchedulerPassBase<DFCIRASAPSchedulerPass> {
   using Node = utils::Node;
@@ -34,9 +36,9 @@ class DFCIRASAPSchedulerPass
   public:
     explicit ChannelComp(Latencies &map) : map(map) {}
 
-    bool operator()(const Channel &lhs, const Channel &rhs) const {
-      return map[lhs.source] + int(lhs.source.latency) + lhs.offset <
-             map[rhs.source] + int(rhs.source.latency) + rhs.offset;
+    bool operator()(Channel *lhs, const Channel *rhs) const {
+      return map[lhs->source] + lhs->source->latency + lhs->offset <
+             map[rhs->source] + rhs->source->latency + rhs->offset;
     }
   };
 
@@ -44,43 +46,43 @@ private:
   Buffers schedule(Graph &graph) {
     Latencies map;
     using ChannelQueue = 
-        std::priority_queue<Channel, std::vector<Channel>, ChannelComp>;
+        std::priority_queue<Channel *, std::vector<Channel *>, ChannelComp>;
     ChannelQueue chanQueue((ChannelComp(map)));
 
     auto visitChannel =
-      [&](const Channel &channel) {
-        map[channel.target] = std::max(map[channel.target],
-                                       map[channel.source] +
-                                       int(channel.source.latency) +
-                                       channel.offset);
+      [&](Channel *channel) {
+        map[channel->target] = std::max(map[channel->target],
+                                        map[channel->source] +
+                                        channel->source->latency +
+                                        channel->offset);
     };
 
-    auto visitNode = [&](const Node &node) {
-      for (const Channel &out: graph.outputs[node]) {
+    auto visitNode = [&](Node *node) {
+      for (Channel *out: graph.outputs[node]) {
         chanQueue.push(out);
         visitChannel(out);
       }
     };
 
-    for (const Node &node: graph.startNodes) {
+    for (Node *node: graph.startNodes) {
       visitNode(node);
     }
 
     while (!chanQueue.empty()) {
-      Node outNode = chanQueue.top().target;
+      Node *outNode = chanQueue.top()->target;
       chanQueue.pop();
       visitNode(outNode);
     }
 
     Buffers buffers;
 
-    for (const Node &node: graph.nodes) {
-      for (const Channel &channel: graph.inputs[node]) {
-        int delta = map[channel.target] -
-                    (map[channel.source] +
-                     int(channel.source.latency) +
-                     channel.offset);
-        if (!channel.source.isConst && delta) {
+    for (Node *node: graph.nodes) {
+      for (Channel *channel: graph.inputs[node]) {
+        int32_t delta = map[channel->target] -
+                       (map[channel->source] +
+                        channel->source->latency +
+                        channel->offset);
+        if (delta) {
           buffers[channel] = delta;
         }
       }
@@ -89,9 +91,15 @@ private:
   }
 
 public:
+  explicit DFCIRASAPSchedulerPass(const DFCIRASAPSchedulerPassOptions &options)
+      : impl::DFCIRASAPSchedulerPassBase<DFCIRASAPSchedulerPass>(options) {}
+
   void runOnOperation() override {
     // Convert kernel into graph.
     Graph graph(llvm::dyn_cast<ModuleOp>(getOperation()));
+
+    // Apply latency config to the graph.
+    graph.applyConfig(*latencyConfig);
 
     // Execute scheduler.
     auto buffers = schedule(graph);
@@ -101,8 +109,10 @@ public:
   }
 };
 
-std::unique_ptr<mlir::Pass> createDFCIRASAPSchedulerPass() {
-  return std::make_unique<DFCIRASAPSchedulerPass>();
+std::unique_ptr<mlir::Pass> createDFCIRASAPSchedulerPass(LatencyConfig *config) {
+  DFCIRASAPSchedulerPassOptions options;
+  options.latencyConfig = config;
+  return std::make_unique<DFCIRASAPSchedulerPass>(options);
 }
 
 } // namespace mlir::dfcir

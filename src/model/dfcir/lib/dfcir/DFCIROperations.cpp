@@ -422,6 +422,54 @@ void mlir::dfcir::OffsetOp::print(OpAsmPrinter &printer) {
   printer << " : " << getRes().getType();
 }
 
+ParseResult LatencyOp::parse(OpAsmParser &parser, OperationState &result) {
+  IntegerAttr latencyAttr;
+  OpAsmParser::UnresolvedOperand inputRawOperands[1];
+  llvm::ArrayRef<OpAsmParser::UnresolvedOperand> inputOperands(inputRawOperands);
+  llvm::SMLoc inputOperandsLoc;
+  Type inputRawTypes[1];
+  llvm::ArrayRef<Type> inputTypes(inputRawTypes);
+  Type resRawTypes[1];
+  llvm::ArrayRef<Type> resTypes(resRawTypes);
+  if (parser.parseLSquare() ||
+      parser.parseCustomAttributeWithFallback(latencyAttr, Type{})) {
+    return failure();
+  }
+  
+  if (latencyAttr) {
+    result.getOrAddProperties<LessOp::Properties>().latency = latencyAttr;
+  }
+
+  if (parser.parseRSquare() || 
+      parser.parseLParen()) {
+    return failure();
+  }
+
+  inputOperandsLoc = parser.getCurrentLocation();
+  if (parser.parseOperand(inputRawOperands[0]) ||
+      parser.parseColon() ||
+      parser.parseCustomTypeWithFallback(inputRawTypes[0]) ||
+      parser.parseRParen() ||
+      parser.parseColon() ||
+      parser.parseCustomTypeWithFallback(resRawTypes[0]) ||
+      parser.parseOptionalAttrDict(result.attributes)) {
+    return failure();
+  }
+  result.addTypes(resTypes);
+  if (parser.resolveOperands(inputOperands, inputTypes, inputOperandsLoc, result.operands)) {
+    return failure();
+  }
+  return success();
+}
+
+void LatencyOp::print(OpAsmPrinter &printer) {
+  printer << "[" << getLatency() << "] (";
+  printer << getInput() << " : " << getInput().getType() << ") : ";
+  printer << getRes().getType();
+  llvm::SmallVector<llvm::StringRef, 2> elidedAttrs;
+  printer.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
+}
+
 } // namespace mlir::dfcir
 
 #define GET_OP_CLASSES

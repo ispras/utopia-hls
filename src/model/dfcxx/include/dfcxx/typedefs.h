@@ -74,7 +74,11 @@ enum class OutputFormatID : uint8_t {
 
 } // namespace dfcxx
 
-typedef std::unordered_map<dfcxx::Ops, unsigned> DFLatencyConfig;
+struct DFLatencyConfig {
+  std::unordered_map<dfcxx::Ops, uint16_t> internalOps;
+  std::unordered_map<std::string, uint16_t> externalOps;
+};
+
 typedef std::unordered_map<dfcxx::OutputFormatID, std::string> DFOutputPaths;
 
 #endif // DFCXX_TYPEDEFS_H

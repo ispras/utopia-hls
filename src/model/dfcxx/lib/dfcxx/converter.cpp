@@ -43,10 +43,11 @@ std::unique_ptr<mlir::Pass> createDFCIRDumperPass(llvm::raw_fd_ostream *stream) 
 
 DFCIRConverter::DFCIRConverter(const DFLatencyConfig &config) {
   this->config = LatencyConfig();
-  for (auto [op, latency]: config) {
-    this->config[static_cast<mlir::dfcir::Ops>(op)] = latency;
+  for (auto [op, latency]: config.internalOps) {
+    this->config.internalOps[static_cast<mlir::dfcir::Ops>(op)] = latency;
   }
-  this->config[mlir::dfcir::UNDEFINED] = 0;
+  this->config.internalOps[mlir::dfcir::UNDEFINED] = 0;
+  this->config.externalOps = config.externalOps;
 }
 
 bool DFCIRConverter::convertAndPrint(mlir::ModuleOp module,
@@ -62,15 +63,16 @@ bool DFCIRConverter::convertAndPrint(mlir::ModuleOp module,
     module.print(*stream);
   }
 
-  pm.addPass(mlir::dfcir::createDFCIRToFIRRTLPass(&config));
   switch (sched) {
     case Linear:
-      pm.addPass(mlir::dfcir::createDFCIRLinearSchedulerPass());
+      pm.addPass(mlir::dfcir::createDFCIRLinearSchedulerPass(&config));
       break;
     case ASAP:
-      pm.addPass(mlir::dfcir::createDFCIRASAPSchedulerPass());
+      pm.addPass(mlir::dfcir::createDFCIRASAPSchedulerPass(&config));
       break;
   }
+
+  pm.addPass(mlir::dfcir::createDFCIRToFIRRTLPass());
 
   // Dump FIRRTL if the corresponding option is specified.
   if (auto *stream = outputStreams[OUT_FORMAT_ID_INT(FIRRTL)]) {

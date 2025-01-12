@@ -16,6 +16,32 @@
 #include "mlir/IR/Dialect.h"
 #include "mlir/Transforms/DialectConversion.h"
 
+#include "dfcir/conversions/ModuleDefines.inc"
+
+namespace circt::firrtl::utils {
+
+Value getBlockArgument(Block *block, unsigned ind) {
+  return block->getArgument(ind);
+}
+
+Value getBlockArgumentFromOpBlock(Operation *op, unsigned ind) {
+  return getBlockArgument(op->getBlock(), ind);
+}
+
+Value getClockVar(Block *block) {
+  Value arg = getBlockArgument(block, block->getNumArguments() - 1);
+  if (arg.getType().isa<ClockType>()) {
+    return arg;
+  }
+  return nullptr;
+}
+
+Value getClockVarFromOpBlock(Operation *op) {
+  return getClockVar(op->getBlock());
+}
+
+} // namespace circt::firrtl::utils
+
 template <>
 struct std::hash<std::pair<mlir::Operation *, unsigned>> {
   size_t operator()(
@@ -103,31 +129,25 @@ class FIRRTLOpConversionPattern : public OpConversionPattern<OperationType> {
 public:
   using OpConversionPattern<OperationType>::OpConversionPattern;
   using ConvertedOps = mlir::DenseSet<mlir::Operation *>;
-  using OffsetMap =
-      std::unordered_map<std::pair<mlir::Operation *, unsigned>, signed>;
   using OldTypeMap =
       std::unordered_map<std::pair<mlir::Operation *, unsigned>, mlir::Type>;
 
+protected:
   mutable ConvertedOps *convertedOps;
-  const LatencyConfig *latencyConfig;
-  OffsetMap *offsetMap;
   // TODO: Change when replaceAllUsesWith-related 
   // pull request for MLIR is approved.
   // Issue #17 (https://github.com/ispras/utopia-hls/issues/17).
   OldTypeMap *oldTypeMap;   
   ModuleArgMap *moduleArgMap;
 
+public:
   FIRRTLOpConversionPattern(MLIRContext *context,
                             TypeConverter &typeConverter,
                             ConvertedOps *convertedOps,
-                            LatencyConfig *latencyConfig,
-                            OffsetMap *offsetMap,
                             OldTypeMap *oldTypeMap,
                             ModuleArgMap *moduleArgMap)
     : OpConversionPattern<OperationType>(typeConverter, context),
       convertedOps(convertedOps),
-      latencyConfig(latencyConfig),
-      offsetMap(offsetMap),
       oldTypeMap(oldTypeMap),
       moduleArgMap(moduleArgMap) {
     // Required to allow root updates, which imply recursive
@@ -149,7 +169,7 @@ public:
 
   LogicalResult matchAndRewrite(KernelOp kernelOp, OpAdaptor adaptor,
                                 Rewriter &rewriter) const override {
-    Block *kernelBlock = &(kernelOp.getBodyRegion().getBlocks().front());
+    Block *kernelBlock = &(kernelOp.getBody().front());
     auto save = rewriter.saveInsertionPoint();
 
     // Create a new circuit to substitute the kernel with.
@@ -171,7 +191,7 @@ public:
         modulePorts.emplace_back(
           mlir::StringAttr::get(getContext(), name),
           converted,
-          (llvm::isa<InputOp, ScalarInputOp>(op))
+          (llvm::isa<InputOpInterface>(op))
             ? circt::firrtl::Direction::In
             : circt::firrtl::Direction::Out);
       }
@@ -251,16 +271,16 @@ public:
 
   LogicalResult matchAndRewrite(OutputOp outputOp, OpAdaptor adaptor,
                                 Rewriter &rewriter) const override {
-    using circt::firrtl::utils::createConnect;
     using circt::firrtl::utils::getBlockArgumentFromOpBlock;
 
     // TODO: Add control stream functionality.
     // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
     if (outputOp.getStream()) {
-      createConnect(rewriter,
-                    getBlockArgumentFromOpBlock(outputOp,
-                                                (*moduleArgMap)[outputOp]),
-                    adaptor.getStream());
+      rewriter.create<circt::firrtl::ConnectOp>(
+          rewriter.getUnknownLoc(),
+          getBlockArgumentFromOpBlock(outputOp, (*moduleArgMap)[outputOp]),
+          adaptor.getStream()
+      );
     }
     rewriter.eraseOp(outputOp);
     return mlir::success();
@@ -277,16 +297,17 @@ public:
   LogicalResult matchAndRewrite(ScalarOutputOp scalarOutputOp,
                                 OpAdaptor adaptor,
                                 Rewriter &rewriter) const override {
-    using circt::firrtl::utils::createConnect;
     using circt::firrtl::utils::getBlockArgumentFromOpBlock;
 
     // TODO: Add control stream functionality.
     // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
     if (scalarOutputOp.getStream()) {
-      createConnect(rewriter,
-                    getBlockArgumentFromOpBlock(scalarOutputOp,
-                                                (*moduleArgMap)[scalarOutputOp]),
-                    adaptor.getStream());
+      rewriter.create<circt::firrtl::ConnectOp>(
+          rewriter.getUnknownLoc(),
+          getBlockArgumentFromOpBlock(scalarOutputOp,
+                                      (*moduleArgMap)[scalarOutputOp]),
+          adaptor.getStream()
+      );
     }
     rewriter.eraseOp(scalarOutputOp);
     return mlir::success();
@@ -331,6 +352,25 @@ public:
   }
 };
 
+SmallVector<circt::firrtl::PortInfo> getUnaryOpPorts(mlir::Type outType,
+                                                     mlir::Type firstType,
+                                                     mlir::MLIRContext *ctx) {
+  return SmallVector<circt::firrtl::PortInfo>  {
+    circt::firrtl::PortInfo(
+        mlir::StringAttr::get(ctx, "res1"),
+        outType,
+        circt::firrtl::Direction::Out),
+    circt::firrtl::PortInfo(
+        mlir::StringAttr::get(ctx, "arg1"),
+        firstType,
+        circt::firrtl::Direction::In),
+    circt::firrtl::PortInfo(
+        mlir::StringAttr::get(ctx, "clk"),
+        circt::firrtl::ClockType::get(ctx),
+        circt::firrtl::Direction::In)
+  };
+}
+
 SmallVector<circt::firrtl::PortInfo> getBinaryOpPorts(mlir::Type outType,
                                                       mlir::Type firstType,
                                                       mlir::Type secondType,
@@ -355,80 +395,108 @@ SmallVector<circt::firrtl::PortInfo> getBinaryOpPorts(mlir::Type outType,
   };
 }
 
-SmallVector<circt::firrtl::PortInfo> getUnaryOpPorts(mlir::Type outType,
-                                                     mlir::Type firstType,
-                                                     mlir::MLIRContext *ctx) {
-  return SmallVector<circt::firrtl::PortInfo>  {
-    circt::firrtl::PortInfo(
-        mlir::StringAttr::get(ctx, "res1"),
-        outType,
-        circt::firrtl::Direction::Out),
-    circt::firrtl::PortInfo(
-        mlir::StringAttr::get(ctx, "arg1"),
-        firstType,
-        circt::firrtl::Direction::In),
-    circt::firrtl::PortInfo(
-        mlir::StringAttr::get(ctx, "clk"),
-        circt::firrtl::ClockType::get(ctx),
-        circt::firrtl::Direction::In)
-  };
-}
-
-#define CAT(FIRST, SECOND) FIRST ## SECOND
-#define CAT_E(FIRST, SECOND) CAT(FIRST, SECOND)
-
-#define GET_SCHED_OP_NAME(OP_NAME)                                           \
-std::string name = CAT_E(OP_NAME,_MODULE);                                   \
-llvm::raw_string_ostream nameStream(name);                                   \
-                                                                             \
-for (unsigned id = 0; id < op->getNumOperands(); ++id) {                     \
-  nameStream << "_IN_";                                                      \
-  Type oldType = (*oldTypeMap)[std::make_pair(op, id)];                      \
-  Type innerType = llvm::cast<DFType>(oldType).getDFType();                  \
-  llvm::cast<SVSynthesizable>(innerType).printSVSignature(nameStream);       \
-}                                                                            \
-                                                                             \
-for (unsigned id = 0; id < op->getNumResults(); ++id) {                      \
-  nameStream << "_OUT_";                                                     \
-  Type oldType = (*oldTypeMap)[std::make_pair(op, id)];                      \
-  Type innerType = llvm::cast<DFType>(oldType).getDFType();                  \
-  llvm::cast<SVSynthesizable>(innerType).printSVSignature(nameStream);       \
-  bool isFloat = innerType.isa<DFCIRFloatType>();                            \
-  if (isFloat) {                                                             \
-    nameStream << "_" << latencyConfig->find(CAT_E(OP_NAME,_FLOAT))->second; \
-  } else {                                                                   \
-    nameStream << "_" << latencyConfig->find(CAT_E(OP_NAME,_INT))->second;   \
-  }                                                                          \
-}                                                                            \
-return name;
-
-// Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
-#define GET_OP_SV_PARAMS(CTX, ATTR_TYPE, LATENCY, WIDTH) { }
-
 template <typename OperationType, typename AdaptorType>
-class SchedulableOpConversionPattern {
+class SchedulableOpConversionPattern 
+    : public FIRRTLOpConversionPattern<OperationType> {
   using FExtModuleOp = circt::firrtl::FExtModuleOp;
   using InstanceOp = circt::firrtl::InstanceOp;
   using CircuitOp = circt::firrtl::CircuitOp;
   using Rewriter = ConversionPatternRewriter;
 
   virtual std::string
-  constructModuleName(const OperationType &op, AdaptorType &adaptor) const = 0;
+  getBaseModuleName() const = 0;
+
+  virtual std::string
+  constructModuleName(OperationType &op, AdaptorType &adaptor) const {
+    std::string name = getBaseModuleName();
+    llvm::raw_string_ostream nameStream(name);
+  
+    for (unsigned id = 0; id < op->getNumOperands(); ++id) {
+      nameStream << "_IN_";
+      Type oldType = (*this->oldTypeMap)[std::make_pair(op, id)];
+      Type innerType = llvm::cast<DFType>(oldType).getDFType();
+      llvm::cast<SVSynthesizable>(innerType).printSVSignature(nameStream);
+    }
+
+    for (unsigned id = 0; id < op->getNumResults(); ++id) {
+      nameStream << "_OUT_";
+      Type oldType = (*this->oldTypeMap)[std::make_pair(op, id)];
+      Type innerType = llvm::cast<DFType>(oldType).getDFType();
+      llvm::cast<SVSynthesizable>(innerType).printSVSignature(nameStream);
+      nameStream << "_" << llvm::cast<Scheduled>(op.getOperation()).getLatency();
+    }
+    return name;
+  }
 
   virtual FExtModuleOp
-  createModule(const std::string &name, const OperationType &op,
-               AdaptorType &adaptor, Rewriter &rewriter) const = 0;
+  createModule(const std::string &name, OperationType &op,
+               AdaptorType &adaptor, Rewriter &rewriter) const {
+    Type type = op->getResult(0).getType();
+    Type convertedType = this->getTypeConverter()->convertType(type);
+
+    SmallVector<circt::firrtl::PortInfo> ports;
+    auto adaptorOperands = adaptor.getOperands();
+    if (op->getNumOperands() == 1) {
+      ports = getUnaryOpPorts(convertedType,
+                              adaptorOperands[0].getType(),
+                              rewriter.getContext());
+    } else {
+      ports = getBinaryOpPorts(convertedType,
+                               adaptorOperands[0].getType(),
+                               adaptorOperands[1].getType(),
+                               rewriter.getContext());
+    }
+
+    IntegerType attrType = mlir::IntegerType::get(rewriter.getContext(), 32,
+                                                  mlir::IntegerType::Unsigned);
+
+    int32_t latency = llvm::cast<Scheduled>(op.getOperation()).getLatency();
+    auto module = rewriter.create<FExtModuleOp>(
+        rewriter.getUnknownLoc(),
+        mlir::StringAttr::get(rewriter.getContext(), name),
+        circt::firrtl::ConventionAttr::get(rewriter.getContext(),
+                                           circt::firrtl::Convention::Internal),
+        ports,
+        StringRef(name));
+    module->setAttr(INSTANCE_LATENCY_ATTR,
+                    mlir::IntegerAttr::get(attrType, latency));
+    return module;
+  }
 
   virtual void
   remapUses(OperationType &oldOp, AdaptorType &adaptor,
-            InstanceOp &newOp, Rewriter &rewriter) const = 0;
+            InstanceOp &newOp, Rewriter &rewriter) const {
+    using circt::firrtl::utils::getClockVarFromOpBlock;
+  
+    unsigned id = 1;
+    auto adaptorOperands = adaptor.getOperands();
+    for (; id <= (newOp.getNumResults() - 2); ++id) {
+      rewriter.create<circt::firrtl::ConnectOp>(
+          rewriter.getUnknownLoc(),
+          newOp.getResult(id),
+          adaptorOperands[id - 1]
+      );
+    }
+    rewriter.create<circt::firrtl::ConnectOp>(
+        rewriter.getUnknownLoc(),
+        newOp.getResult(id),
+        getClockVarFromOpBlock(newOp)
+    );
+
+    for (auto &operand: llvm::make_early_inc_range(oldOp.getRes().getUses())) {
+      (*this->oldTypeMap)[std::make_pair(operand.getOwner(),
+                                         operand.getOperandNumber())] =
+                                             operand.get().getType();
+      operand.set(newOp.getResult(0));
+    }
+  };
 
 protected:
-  FExtModuleOp findOrCreateModule(const OperationType &op,
+  FExtModuleOp findOrCreateModule(OperationType &op,
                                   AdaptorType &adaptor,
                                   Rewriter &rewriter) const {
     std::string moduleName = constructModuleName(op, adaptor);
-    CircuitOp circuit = circt::firrtl::utils::findCircuit(op);
+    CircuitOp circuit = op->template getParentOfType<CircuitOp>();
 
     auto foundModule = circuit.template lookupSymbol<FExtModuleOp>(moduleName);
     if (foundModule) return foundModule;
@@ -440,90 +508,43 @@ protected:
     return newModule;
   }
 
+public:
+  // Inherit existing constructor.
+  using FIRRTLOpConversionPattern<OperationType>::FIRRTLOpConversionPattern;
+
+  LogicalResult matchAndRewrite(OperationType oldOp, AdaptorType adaptor,
+                                Rewriter &rewriter) const override {
+    FExtModuleOp module = findOrCreateModule(oldOp, adaptor, rewriter);
+
+    auto newOp =
+        rewriter.create<InstanceOp>(oldOp.getLoc(), module, "placeholder");
+    remapUses(oldOp, adaptor, newOp, rewriter);
+    rewriter.eraseOp(oldOp);
+    return mlir::success();
+  }
+
   virtual ~SchedulableOpConversionPattern() = default;
 };
 
+#define CAT(FIRST, SECOND) FIRST ## SECOND
+#define CAT_E(FIRST, SECOND) CAT(FIRST, SECOND)
 #define OP_CLASS(CLASS_PREF) CAT_E(CLASS_PREF, Op)
-#define OP_CLASS_ADAPTOR(CLASS_REF) OP_CLASS(CLASS_REF)::Adaptor
+#define OP_CLASS_ADAPTOR(CLASS_PREF) OP_CLASS(CLASS_PREF)::Adaptor
 
-#define OP_CLASS_CONV_PATTERN(CLASS_PREF) CAT_E(OP_CLASS(CLASS_PREF),ConversionPattern)
-#define SCHED_OP_CONV_PATTERN_SPEC(CLASS_PREF) OP_CLASS(CLASS_PREF) , OP_CLASS_ADAPTOR(CLASS_PREF)
+#define OP_CLASS_CONV_PATTERN(CLASS_PREF) CAT_E(OP_CLASS(CLASS_PREF), ConversionPattern)
+#define SCHED_OP_CONV_PATTERN_SPEC(CLASS_PREF) OP_CLASS(CLASS_PREF), OP_CLASS_ADAPTOR(CLASS_PREF)
 
-#define DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(CLASS_PREF, OP_NAME)                                \
-class OP_CLASS_CONV_PATTERN(CLASS_PREF)                                                             \
-    : public FIRRTLOpConversionPattern< OP_CLASS(CLASS_PREF) >,                                     \
-             SchedulableOpConversionPattern< SCHED_OP_CONV_PATTERN_SPEC(CLASS_PREF) > {             \
-public:                                                                                             \
-  using FIRRTLOpConversionPattern<OP_CLASS(CLASS_PREF)>::FIRRTLOpConversionPattern;                 \
-  using OpAdaptor = typename OP_CLASS_ADAPTOR(CLASS_PREF);                                          \
-  using FExtModuleOp = circt::firrtl::FExtModuleOp;                                                 \
-  using InstanceOp = circt::firrtl::InstanceOp;                                                     \
-  using IntType = circt::firrtl::IntType;                                                           \
-  using Rewriter = ConversionPatternRewriter;                                                       \
-                                                                                                    \
-  std::string constructModuleName(const OP_CLASS(CLASS_PREF) &op,                                   \
-                                  OpAdaptor &adaptor) const override {                              \
-    GET_SCHED_OP_NAME(OP_NAME)                                                                      \
-  }                                                                                                 \
-                                                                                                    \
-  FExtModuleOp createModule(const std::string &name,                                                \
-                            const OP_CLASS(CLASS_PREF) &op,                                         \
-                            OpAdaptor &adaptor,                                                     \
-                            Rewriter &rewriter) const override {                                    \
-    Type type = op->getResult(0).getType();                                                         \
-    Type innerType = llvm::cast<DFType>(type).getDFType();                                          \
-    Type convertedType = getTypeConverter()->convertType(type);                                     \
-    auto ports = getBinaryOpPorts(convertedType, adaptor.getFirst().getType(),                      \
-                                  adaptor.getSecond().getType(),                                    \
-                                  rewriter.getContext());                                           \
-    IntegerType attrType = mlir::IntegerType::get(rewriter.getContext(), 32,                        \
-                                                  mlir::IntegerType::Unsigned);                     \
-                                                                                                    \
-    bool isFloat = innerType.isa<DFCIRFloatType>();                                                 \
-    unsigned latency = latencyConfig->find(                                                         \
-        (isFloat) ? CAT_E(OP_NAME,_FLOAT) : CAT_E(OP_NAME,_INT))->second;                           \
-    auto module = rewriter.create<FExtModuleOp>(                                                    \
-        rewriter.getUnknownLoc(),                                                                   \
-        mlir::StringAttr::get(rewriter.getContext(), name),                                         \
-        circt::firrtl::ConventionAttr::get(rewriter.getContext(),                                   \
-                                           circt::firrtl::Convention::Internal),                    \
-        ports,                                                                                      \
-        StringRef(name));                                                                           \
-    module->setAttr(INSTANCE_LATENCY_ATTR,                                                          \
-                    mlir::IntegerAttr::get(attrType, latency));                                     \
-    return module;                                                                                  \
-  }                                                                                                 \
-                                                                                                    \
-  void remapUses( OP_CLASS(CLASS_PREF) &oldOp, OpAdaptor &adaptor,                                  \
-                 InstanceOp &newOp, Rewriter &rewriter) const override {                            \
-    using circt::firrtl::utils::createConnect;                                                      \
-    using circt::firrtl::utils::getClockVarFromOpBlock;                                             \
-    createConnect(rewriter, newOp.getResult(1), adaptor.getFirst(),                                 \
-                  (*offsetMap)[std::make_pair(oldOp, 0)]);                                          \
-    createConnect(rewriter, newOp.getResult(2), adaptor.getSecond(),                                \
-                  (*offsetMap)[std::make_pair(oldOp, 1)]);                                          \
-    createConnect(rewriter, newOp.getResult(3), getClockVarFromOpBlock(newOp));                     \
-                                                                                                    \
-    for (auto &operand: llvm::make_early_inc_range(oldOp.getRes().getUses())) {                     \
-      (*oldTypeMap)[std::make_pair(operand.getOwner(),                                              \
-                                   operand.getOperandNumber())] =                                   \
-                                       operand.get().getType();                                     \
-      operand.set(newOp.getResult(0));                                                              \
-    }                                                                                               \
-  }                                                                                                 \
-                                                                                                    \
-  LogicalResult matchAndRewrite( OP_CLASS(CLASS_PREF) oldOp, OpAdaptor adaptor,                     \
-                                Rewriter &rewriter) const override {                                \
-    FExtModuleOp module = findOrCreateModule(oldOp, adaptor, rewriter);                             \
-                                                                                                    \
-    auto newOp = rewriter.create<InstanceOp>(oldOp.getLoc(),                                        \
-                                             module,                                                \
-                                             "placeholder");                                        \
-    remapUses(oldOp, adaptor, newOp, rewriter);                                                     \
-    rewriter.eraseOp(oldOp);                                                                        \
-    return mlir::success();                                                                         \
-  }                                                                                                 \
-};                                                                                                  \
+#define DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(CLASS_PREF, OP_NAME)                                               \
+class OP_CLASS_CONV_PATTERN(CLASS_PREF)                                                                            \
+    : public SchedulableOpConversionPattern< SCHED_OP_CONV_PATTERN_SPEC(CLASS_PREF) > {                            \
+                                                                                                                   \
+public:                                                                                                            \
+  using SchedulableOpConversionPattern<  SCHED_OP_CONV_PATTERN_SPEC(CLASS_PREF) >::SchedulableOpConversionPattern; \
+                                                                                                                   \
+  std::string getBaseModuleName() const override {                                                                 \
+    return CAT_E(OP_NAME,_MODULE);                                                                                 \
+  }                                                                                                                \
+};
 
 // AddOpConversionPattern.
 DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(Add, ADD)
@@ -546,82 +567,16 @@ DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(Or, OR)
 // XorOpConversionPattern.
 DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(Xor, XOR)
 
-#define DECL_SCHED_UNARY_ARITH_OP_CONV_PATTERN(CLASS_PREF, OP_NAME)                                 \
-class OP_CLASS_CONV_PATTERN(CLASS_PREF)                                                             \
-    : public FIRRTLOpConversionPattern< OP_CLASS(CLASS_PREF) >,                                     \
-             SchedulableOpConversionPattern< SCHED_OP_CONV_PATTERN_SPEC(CLASS_PREF) > {             \
-public:                                                                                             \
-  using FIRRTLOpConversionPattern<OP_CLASS(CLASS_PREF)>::FIRRTLOpConversionPattern;                 \
-  using OpAdaptor = typename OP_CLASS_ADAPTOR(CLASS_PREF);                                          \
-  using FExtModuleOp = circt::firrtl::FExtModuleOp;                                                 \
-  using InstanceOp = circt::firrtl::InstanceOp;                                                     \
-  using IntType = circt::firrtl::IntType;                                                           \
-  using Rewriter = ConversionPatternRewriter;                                                       \
-                                                                                                    \
-  std::string constructModuleName(const OP_CLASS(CLASS_PREF) &op,                                   \
-                                  OpAdaptor &adaptor) const override {                              \
-    GET_SCHED_OP_NAME(OP_NAME)                                                                      \
-  }                                                                                                 \
-                                                                                                    \
-  FExtModuleOp createModule(const std::string &name,                                                \
-                            const OP_CLASS(CLASS_PREF) &op, OpAdaptor &adaptor,                     \
-                            Rewriter &rewriter) const override {                                    \
-    Type type = op->getResult(0).getType();                                                         \
-    Type innerType = llvm::cast<DFType>(type).getDFType();                                          \
-    Type firstType = (*oldTypeMap)[std::make_pair(op, 0)];                                          \
-    Type firstInnerType = llvm::cast<DFType>(firstType).getDFType();                                \
-    Type convertedType = getTypeConverter()->convertType(type);                                     \
-    auto ports = getUnaryOpPorts(convertedType, adaptor.getFirst().getType(),                       \
-                                 rewriter.getContext());                                            \
-    IntegerType attrType = mlir::IntegerType::get(rewriter.getContext(), 32,                        \
-                                                  mlir::IntegerType::Unsigned);                     \
-    auto outTypeWidth = llvm::cast<SVSynthesizable>(innerType).getBitWidth();                       \
-    auto firstTypeWidth = llvm::cast<SVSynthesizable>(firstInnerType).getBitWidth();                \
-    assert(outTypeWidth == firstTypeWidth);                                                         \
-                                                                                                    \
-    bool isFloat = innerType.isa<DFCIRFloatType>();                                                 \
-    unsigned latency =                                                                              \
-        latencyConfig->find((isFloat)                                                               \
-                            ? CAT_E(OP_NAME,_FLOAT)                                                 \
-                            : CAT_E(OP_NAME,_INT))->second;                                         \
-    auto module = rewriter.create<FExtModuleOp>(                                                    \
-        rewriter.getUnknownLoc(),                                                                   \
-        mlir::StringAttr::get(rewriter.getContext(), name),                                         \
-        circt::firrtl::ConventionAttr::get(rewriter.getContext(),                                   \
-                                           circt::firrtl::Convention::Internal),                    \
-        ports,                                                                                      \
-        StringRef(name));                                                                           \
-    module->setAttr(INSTANCE_LATENCY_ATTR,                                                          \
-                    mlir::IntegerAttr::get(attrType, latency));                                     \
-    return module;                                                                                  \
-  }                                                                                                 \
-                                                                                                    \
-  void remapUses( OP_CLASS(CLASS_PREF) &oldOp, OpAdaptor &adaptor,                                  \
-                 InstanceOp &newOp, Rewriter &rewriter) const override {                            \
-    using circt::firrtl::utils::createConnect;                                                      \
-    using circt::firrtl::utils::getClockVarFromOpBlock;                                             \
-    createConnect(rewriter, newOp.getResult(1), adaptor.getFirst(),                                 \
-                  (*offsetMap)[std::make_pair(oldOp, 0)]);                                          \
-    createConnect(rewriter, newOp.getResult(2), getClockVarFromOpBlock(newOp));                     \
-                                                                                                    \
-    for (auto &operand: llvm::make_early_inc_range(oldOp.getRes().getUses())) {                     \
-      (*oldTypeMap)[std::make_pair(operand.getOwner(),                                              \
-                                   operand.getOperandNumber())] =                                   \
-                                       operand.get().getType();                                     \
-      operand.set(newOp.getResult(0));                                                              \
-    }                                                                                               \
-  }                                                                                                 \
-                                                                                                    \
-  LogicalResult matchAndRewrite( OP_CLASS(CLASS_PREF) oldOp, OpAdaptor adaptor,                     \
-                                Rewriter &rewriter) const override {                                \
-    FExtModuleOp module = findOrCreateModule(oldOp, adaptor, rewriter);                             \
-                                                                                                    \
-    auto newOp =                                                                                    \
-        rewriter.create<InstanceOp>(oldOp.getLoc(), module, "placeholder");                         \
-    remapUses(oldOp, adaptor, newOp, rewriter);                                                     \
-    rewriter.eraseOp(oldOp);                                                                        \
-    return mlir::success();                                                                         \
-  }                                                                                                 \
+#define DECL_SCHED_UNARY_ARITH_OP_CONV_PATTERN(CLASS_PREF, OP_NAME)                                                \
+class OP_CLASS_CONV_PATTERN(CLASS_PREF)                                                                            \
+    : public SchedulableOpConversionPattern< SCHED_OP_CONV_PATTERN_SPEC(CLASS_PREF) > {                            \
+                                                                                                                   \
+public:                                                                                                            \
+  using SchedulableOpConversionPattern<  SCHED_OP_CONV_PATTERN_SPEC(CLASS_PREF) >::SchedulableOpConversionPattern; \
+                                                                                                                   \
+  std::string getBaseModuleName() const override {                                                                 \
+    return CAT_E(OP_NAME,_MODULE);                                                                                 \
+  }                                                                                                                \
 };
 
 // NotOpConversionPattern.
@@ -647,6 +602,32 @@ DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(Eq, EQ)
 
 // NotEqOpConversionPattern.
 DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(NotEq, NEQ)
+
+class LatencyOpConversionPattern
+    : public SchedulableOpConversionPattern<LatencyOp, LatencyOp::Adaptor> {
+
+public:
+  std::string
+  getBaseModuleName() const override {
+    return BUF_MODULE;
+  }
+
+  std::string
+  constructModuleName(LatencyOp &op, LatencyOp::Adaptor &adaptor) const override {
+    using circt::firrtl::getBitWidth;
+    using circt::firrtl::FIRRTLBaseType;
+
+    std::string name = getBaseModuleName();
+    llvm::raw_string_ostream nameStream(name);
+  
+    auto convertedType = getTypeConverter()->convertType(op->getResult(0).getType());
+    auto width = getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(convertedType));
+    int32_t latency = llvm::cast<Scheduled>(op.getOperation()).getLatency();
+    nameStream << "_IN_" << *width << "_OUT_" << *width << "_" << latency;
+
+    return name;
+  }
+};
 
 class ShiftLeftOpConversionPattern 
     : public FIRRTLOpConversionPattern<ShiftLeftOp> {
@@ -715,38 +696,13 @@ public:
 
   LogicalResult matchAndRewrite(ConnectOp connectOp, OpAdaptor adaptor,
                                 Rewriter &rewriter) const override {
-    using circt::firrtl::utils::createConnect;
 
-    auto newOp = createConnect(rewriter,
-                               adaptor.getDest(),
-                               adaptor.getSrc());
+    auto newOp = rewriter.create<circt::firrtl::ConnectOp>(
+        rewriter.getUnknownLoc(),
+        adaptor.getDest(),
+        adaptor.getSrc()
+    );
     rewriter.replaceOp(connectOp, newOp);
-    return mlir::success();
-  }
-};
-
-class OffsetOpConversionPattern
-    : public FIRRTLOpConversionPattern<OffsetOp> {
-public:
-  using FIRRTLOpConversionPattern<OffsetOp>::FIRRTLOpConversionPattern;
-  using OpAdaptor = typename OffsetOp::Adaptor;
-  using Rewriter = ConversionPatternRewriter;
-
-  LogicalResult matchAndRewrite(OffsetOp offsetOp, OpAdaptor adaptor,
-                                Rewriter &rewriter) const override {
-    int offset = adaptor.getOffset().getInt();
-
-    for (auto &operand: llvm::make_early_inc_range(
-            offsetOp.getRes().getUses())) {
-      (*oldTypeMap)[std::make_pair(operand.getOwner(),
-                                   operand.getOperandNumber())] =
-                                       operand.get().getType();
-      operand.set(offsetOp.getOperand());
-      (*offsetMap)[std::make_pair(operand.getOwner(),
-                                  operand.getOperandNumber())] = offset;
-    }
-
-    rewriter.eraseOp(offsetOp);
     return mlir::success();
   }
 };
@@ -778,13 +734,10 @@ class DFCIRToFIRRTLPass
     : public impl::DFCIRToFIRRTLPassBase<DFCIRToFIRRTLPass> {
 public:
   using ConvertedOps = mlir::DenseSet<mlir::Operation *>;
-  using OffsetMap =
-      std::unordered_map<std::pair<mlir::Operation *, unsigned>, signed>;
   using OldTypeMap =
       std::unordered_map<std::pair<mlir::Operation *, unsigned>, mlir::Type>;
 
-  explicit DFCIRToFIRRTLPass(const DFCIRToFIRRTLPassOptions &options)
-      : impl::DFCIRToFIRRTLPassBase<DFCIRToFIRRTLPass>(options) {}
+  explicit DFCIRToFIRRTLPass() : impl::DFCIRToFIRRTLPassBase<DFCIRToFIRRTLPass>() {}
 
   void runOnOperation() override {
     // Define the conversion target.
@@ -797,7 +750,6 @@ public:
     // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
     FIRRTLTypeConverter typeConverter;
     ConvertedOps convertedOps;
-    OffsetMap offsetMap;
     OldTypeMap oldTypeMap;
 
     ModuleArgMap moduleArgMap;
@@ -809,8 +761,6 @@ public:
         &getContext(),
         typeConverter,
         &convertedOps,
-        latencyConfig,
-        &offsetMap,
         &oldTypeMap,
         &moduleArgMap
     );
@@ -826,13 +776,13 @@ public:
     patterns.clear();
     target.addIllegalDialect<DFCIRDialect>();
     target.addIllegalOp<UnrealizedConversionCastOp>();
+    target.addIllegalOp<OffsetOp>();
     patterns.add<
         InputOpConversionPattern,
         ScalarInputOpConversionPattern,
         OutputOpConversionPattern,
         ScalarOutputOpConversionPattern,
         ConstantOpConversionPattern,
-        OffsetOpConversionPattern,
         MuxOpConversionPattern,
         AddOpConversionPattern,
         SubOpConversionPattern,
@@ -855,8 +805,6 @@ public:
         &getContext(),
         typeConverter,
         &convertedOps,
-        latencyConfig,
-        &offsetMap,
         &oldTypeMap,
         &moduleArgMap
     );
@@ -870,10 +818,8 @@ public:
   }
 };
 
-std::unique_ptr<mlir::Pass> createDFCIRToFIRRTLPass(LatencyConfig *config) {
-  DFCIRToFIRRTLPassOptions options;
-  options.latencyConfig = config;
-  return std::make_unique<DFCIRToFIRRTLPass>(options);
+std::unique_ptr<mlir::Pass> createDFCIRToFIRRTLPass() {
+  return std::make_unique<DFCIRToFIRRTLPass>();
 }
 
 } // namespace mlir::dfcir

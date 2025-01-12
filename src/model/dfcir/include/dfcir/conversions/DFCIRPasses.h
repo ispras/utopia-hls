@@ -60,18 +60,21 @@ enum Ops {
 
 } // namespace mlir::dfcir
 
-typedef std::unordered_map<mlir::dfcir::Ops, unsigned> LatencyConfig;
+struct LatencyConfig {
+  std::unordered_map<mlir::dfcir::Ops, uint16_t> internalOps;
+  std::unordered_map<std::string, uint16_t> externalOps;
+};
 
 namespace mlir::dfcir {
 
 using std::unique_ptr;
 using mlir::Pass;
 
-unique_ptr<Pass> createDFCIRToFIRRTLPass(LatencyConfig *config);
+unique_ptr<Pass> createDFCIRToFIRRTLPass();
 
-unique_ptr<Pass> createDFCIRASAPSchedulerPass();
+unique_ptr<Pass> createDFCIRASAPSchedulerPass(LatencyConfig *config);
 
-unique_ptr<Pass> createDFCIRLinearSchedulerPass();
+unique_ptr<Pass> createDFCIRLinearSchedulerPass(LatencyConfig *config);
 
 unique_ptr<Pass> createFIRRTLStubGeneratorPass(llvm::raw_ostream *stream);
 
