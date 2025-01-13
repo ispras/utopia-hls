@@ -1,4 +1,6 @@
 {
-  "ADD_INT": 2,
-  "MUL_INT": 3
+  "dfcir": {
+    "ADD_INT": 2,
+    "MUL_INT": 3
+  }
 }
