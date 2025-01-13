@@ -10,6 +10,7 @@
 #define DFCXX_TYPEDEFS_H
 
 #include <cstdint>
+#include <initializer_list>
 #include <string>
 #include <unordered_map>
 
@@ -76,8 +77,19 @@ enum class OutputFormatID : uint8_t {
 } // namespace dfcxx
 
 struct DFLatencyConfig {
+public:  
   std::unordered_map<dfcxx::Ops, uint16_t> internalOps;
   std::unordered_map<std::string, uint16_t> externalOps;
+
+  DFLatencyConfig() = default;
+
+  DFLatencyConfig(const DFLatencyConfig &) = default;
+
+  DFLatencyConfig(
+      std::initializer_list<std::pair<const dfcxx::Ops, uint16_t>> internals,
+      std::initializer_list<std::pair<const std::string, uint16_t>> externals
+  ) : internalOps(internals), externalOps(externals) {}
+  
 };
 
 typedef std::unordered_map<dfcxx::OutputFormatID, std::string> DFOutputPaths;

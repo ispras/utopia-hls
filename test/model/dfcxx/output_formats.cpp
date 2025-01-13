@@ -13,7 +13,7 @@
 static const Polynomial2 kernel;
 
 static const DFLatencyConfig config =
-    {{dfcxx::ADD_INT, 2}, {dfcxx::MUL_INT, 3}};
+    DFLatencyConfig({{dfcxx::ADD_INT, 2}, {dfcxx::MUL_INT, 3}}, {});
 
 TEST(DFCxxOutputFormats, SystemVerilog) {
   Polynomial2 kernel;
@@ -31,10 +31,10 @@ TEST(DFCxxOutputFormats, SystemVerilogLibrary) {
   EXPECT_EQ(kernel.compile(config, paths, dfcxx::ASAP), true);
 }
 
-TEST(DFCxxOutputFormats, DFCIR) {
+TEST(DFCxxOutputFormats, UnscheduledDFCIR) {
   Polynomial2 kernel;
   DFOutputPaths paths = {
-    {dfcxx::OutputFormatID::DFCIR, NULLDEVICE}
+    {dfcxx::OutputFormatID::UnscheduledDFCIR, NULLDEVICE}
   };
   EXPECT_EQ(kernel.compile(config, paths, dfcxx::ASAP), true);
 }
@@ -60,7 +60,8 @@ TEST(DFCxxOutputFormats, All) {
   DFOutputPaths paths = {
     {dfcxx::OutputFormatID::SystemVerilog, NULLDEVICE},
     {dfcxx::OutputFormatID::SVLibrary, NULLDEVICE},
-    {dfcxx::OutputFormatID::DFCIR, NULLDEVICE},
+    {dfcxx::OutputFormatID::UnscheduledDFCIR, NULLDEVICE},
+    {dfcxx::OutputFormatID::ScheduledDFCIR, NULLDEVICE},
     {dfcxx::OutputFormatID::FIRRTL, NULLDEVICE},
     {dfcxx::OutputFormatID::DOT, NULLDEVICE}
   };

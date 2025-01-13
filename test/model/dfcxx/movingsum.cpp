@@ -15,32 +15,44 @@ static const DFOutputPaths nullDevicePath =
 
 TEST(DFCxx, MovingSumAddInt2Asap) {
   MovingSum kernel;
-  DFLatencyConfig config = {
-    {dfcxx::ADD_INT, 2}
-  };
+  DFLatencyConfig config = DFLatencyConfig(
+    {
+      {dfcxx::ADD_INT, 2},
+    },
+    {}
+  );
   EXPECT_EQ(kernel.compile(config, nullDevicePath, dfcxx::ASAP), true);
 }
 
 TEST(DFCxx, MovingSumAddInt2Linear) {
   MovingSum kernel;
-  DFLatencyConfig config = {
-    {dfcxx::ADD_INT, 2}
-  };
+  DFLatencyConfig config = DFLatencyConfig(
+    {
+      {dfcxx::ADD_INT, 2},
+    },
+    {}
+  );
   EXPECT_EQ(kernel.compile(config, nullDevicePath, dfcxx::Linear), true);
 }
 
 TEST(DFCxx, MovingSumAddInt8Asap) {
   MovingSum kernel;
-  DFLatencyConfig config = {
-    {dfcxx::ADD_INT, 8}
-  };
+  DFLatencyConfig config = DFLatencyConfig(
+    {
+      {dfcxx::ADD_INT, 8},
+    },
+    {}
+  );
   EXPECT_EQ(kernel.compile(config, nullDevicePath, dfcxx::ASAP), true);
 }
 
 TEST(DFCxx, MovingSumAddInt8Linear) {
   MovingSum kernel;
-  DFLatencyConfig config = {
-    {dfcxx::ADD_INT, 8}
-  };
+  DFLatencyConfig config = DFLatencyConfig(
+    {
+      {dfcxx::ADD_INT, 8},
+    },
+    {}
+  );
   EXPECT_EQ(kernel.compile(config, nullDevicePath, dfcxx::Linear), true);
 }

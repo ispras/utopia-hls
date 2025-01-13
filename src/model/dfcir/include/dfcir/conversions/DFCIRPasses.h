@@ -14,7 +14,8 @@
 #include "mlir/Pass/Pass.h"
 #include "llvm/Support/raw_ostream.h"
 
-#include "memory"
+#include <initializer_list>
+#include <memory>
 
 namespace mlir::dfcir {
 
@@ -61,8 +62,18 @@ enum Ops {
 } // namespace mlir::dfcir
 
 struct LatencyConfig {
+public:
   std::unordered_map<mlir::dfcir::Ops, uint16_t> internalOps;
   std::unordered_map<std::string, uint16_t> externalOps;
+
+  LatencyConfig() = default;
+
+  LatencyConfig(const LatencyConfig &) = default;
+
+  LatencyConfig(
+      std::initializer_list<std::pair<const mlir::dfcir::Ops, uint16_t>> internals,
+      std::initializer_list<std::pair<const std::string, uint16_t>> externals
+  ) : internalOps(internals), externalOps(externals) {}
 };
 
 namespace mlir::dfcir {
