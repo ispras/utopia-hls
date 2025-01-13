@@ -134,6 +134,19 @@ def LatencyOp : DFCIR_Op<"latency", []> {
 
   let results = (outs Variable:$res);
 
+  let builders = [
+    OpBuilder<(ins
+      "Type":$res,
+      "Value":$input,
+      "int32_t":$latency
+    ), [{
+      auto attr =
+            mlir::IntegerAttr::get(IntegerType::get($_builder.getContext(), 32),
+                                   latency);
+      build($_builder, $_state, res, input, attr);
+    }]>
+  ];
+
   let hasCustomAssemblyFormat = 1;
 }
 
@@ -153,7 +166,7 @@ class DFCIR_UnaryOp<string name, Constraint firstType,
       "Value":$first,
       CArg<"int32_t", "-1">:$latency
     ), [{
-      auto attr = 
+      auto attr =
             mlir::IntegerAttr::get(IntegerType::get($_builder.getContext(), 32),
                                    latency);
       build($_builder, $_state, res, first, attr);

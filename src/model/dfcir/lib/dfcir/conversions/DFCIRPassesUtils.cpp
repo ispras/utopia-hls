@@ -207,20 +207,22 @@ Graph::Graph(ModuleOp module)
     : Graph(mlir::utils::findFirstOccurence<KernelOp>(module)) {}
 
 
-void insertBuffer(OpBuilder &builder, Channel *channel) {
+void insertBuffer(OpBuilder &builder, Channel *channel, int32_t latency) {
 
   builder.setInsertionPoint(channel->target->op);
   auto value = channel->target->op->getOperand(channel->valInd);
 
   auto latencyOp = builder.create<LatencyOp>(builder.getUnknownLoc(),
-                                              value.getType(), value);
+                                             value.getType(),
+                                             value,
+                                             latency);
   channel->target->op->setOperand(channel->valInd, latencyOp.getRes());
 }
 
 void insertBuffers(mlir::MLIRContext &ctx, const Buffers &buffers) {
   OpBuilder builder(&ctx);
   for (auto &[channel, latency]: buffers) {
-    insertBuffer(builder, channel);
+    insertBuffer(builder, channel, latency);
   }
 }
 
