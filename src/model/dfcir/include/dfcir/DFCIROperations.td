@@ -35,7 +35,8 @@ def KernelOp : DFCIR_Op<"kernel",
 }
 
 def ScalarInputOp : DFCIR_Op<"scalarInput",
-    [DeclareOpInterfaceMethods<NamedOpVal>, DeclareOpInterfaceMethods<InputOpInterface>]> {
+    [DeclareOpInterfaceMethods<NamedOpVal>, DeclareOpInterfaceMethods<InputOpInterface>,
+     DeclareOpInterfaceMethods<ConstantInputInterface>]> {
   let arguments = (ins
     StrAttr:$name
   );
@@ -98,7 +99,7 @@ def OutputOp : DFCIR_Op<"output",
   }];
 }
 
-def ConstantOp : DFCIR_Op<"constant", []> {
+def ConstantOp : DFCIR_Op<"constant", [DeclareOpInterfaceMethods<ConstantInputInterface>]> {
   let arguments = (ins AnyAttrOf<[Builtin_IntegerAttr,
                                   Builtin_FloatAttr]>:$value);
 

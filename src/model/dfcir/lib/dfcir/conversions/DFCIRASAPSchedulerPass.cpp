@@ -82,7 +82,9 @@ private:
                        (map[channel->source] +
                         channel->source->latency +
                         channel->offset);
-        if (delta) {
+
+        using mlir::dfcir::utils::hasConstantInput;
+        if (delta && !hasConstantInput(channel->source->op)) {
           buffers[channel] = delta;
         }
       }

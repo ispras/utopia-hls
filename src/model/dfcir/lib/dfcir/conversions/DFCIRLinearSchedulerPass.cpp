@@ -122,7 +122,9 @@ private:
       for (const auto &[chan, id]: bufMap) {
         // lp_solve positions start with 1.
         int32_t latency = result[id - 1];
-        if (latency) {
+
+        using mlir::dfcir::utils::hasConstantInput;
+        if (latency && !hasConstantInput(chan->source->op)) {
           buffers[chan] = latency;
         }
       }

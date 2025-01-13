@@ -54,6 +54,10 @@ def ShiftOpInterface : OpInterface<"ShiftOpInterface"> {
   let cppNamespace = "mlir::dfcir";
 }
 
+def ConstantInputInterface : OpInterface<"ConstantInputInterface"> {
+  let cppNamespace = "mlir::dfcir";
+}
+
 def Scheduled : OpInterface<"Scheduled"> {
   let cppNamespace = "mlir::dfcir";
 

@@ -237,6 +237,10 @@ void eraseOffsets(mlir::Operation *op) {
   });
 }
 
+bool hasConstantInput(mlir::Operation *op) {
+  return llvm::isa<ConstantInputInterface>(op);
+}
+
 Ops resolveInternalOpType(mlir::Operation *op) {
   auto resultType = op->getResult(0).getType();
   auto dfType = llvm::dyn_cast<DFType>(resultType).getDFType();

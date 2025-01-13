@@ -137,6 +137,8 @@ void insertBuffers(mlir::MLIRContext &ctx, const Buffers &buffers);
 
 void eraseOffsets(mlir::Operation *op);
 
+bool hasConstantInput(mlir::Operation *op);
+
 Ops resolveInternalOpType(mlir::Operation *op);
 
 } // namespace mlir::dfcir::utils
