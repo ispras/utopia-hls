@@ -106,6 +106,9 @@ public:
 
     // Insert buffers.
     mlir::dfcir::utils::insertBuffers(this->getContext(), buffers);
+
+    // Erase old "dfcir.offset" operations.
+    mlir::dfcir::utils::eraseOffsets(getOperation());
   }
 };
 

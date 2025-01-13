@@ -135,6 +135,8 @@ void insertBuffer(OpBuilder &builder, Channel *channel, int32_t latency);
 
 void insertBuffers(mlir::MLIRContext &ctx, const Buffers &buffers);
 
+void eraseOffsets(mlir::Operation *op);
+
 Ops resolveInternalOpType(mlir::Operation *op);
 
 } // namespace mlir::dfcir::utils

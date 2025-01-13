@@ -226,6 +226,17 @@ void insertBuffers(mlir::MLIRContext &ctx, const Buffers &buffers) {
   }
 }
 
+void eraseOffsets(mlir::Operation *op) {
+  op->walk([](OffsetOp offset) {
+    auto input = offset->getOperand(0);
+    auto result = offset->getResult(0);
+    for (auto &operand: llvm::make_early_inc_range(result.getUses())) {
+      operand.set(input);
+    }
+    offset->erase();
+  });
+}
+
 Ops resolveInternalOpType(mlir::Operation *op) {
   auto resultType = op->getResult(0).getType();
   auto dfType = llvm::dyn_cast<DFType>(resultType).getDFType();
