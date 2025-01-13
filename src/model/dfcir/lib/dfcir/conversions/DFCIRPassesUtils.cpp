@@ -144,7 +144,7 @@ void Graph::process<ConnectOp>(ConnectOp &op) {
   if (!llvm::isa<OutputOpInterface>(op.getDest().getDefiningOp())) { return; }
   auto unrolledInfo = findNearestNodeValue(op.getSrc());
   auto srcNode = findNode(unrolledInfo.first);
-  auto dstNode = findNode(op);
+  auto dstNode = findNode(op.getDest());
   Channel *newChannel = new Channel(*srcNode, *dstNode, 0, unrolledInfo.second);
   channels.insert(newChannel);
   outputs[*srcNode].insert(newChannel);
