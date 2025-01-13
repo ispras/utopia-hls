@@ -124,7 +124,7 @@ def CastOp : DFCIR_Op<"cast", []> {
   let results = (outs CastVariable:$res);
 }
 
-def LatencyOp : DFCIR_Op<"latency", []> {
+def LatencyOp : DFCIR_Op<"latency", [DeclareOpInterfaceMethods<Scheduled>]> {
   let summary = "Sets a clock latency for the input.";
 
   let arguments = (ins

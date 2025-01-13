@@ -603,32 +603,6 @@ DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(Eq, EQ)
 // NotEqOpConversionPattern.
 DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(NotEq, NEQ)
 
-class LatencyOpConversionPattern
-    : public SchedulableOpConversionPattern<LatencyOp, LatencyOp::Adaptor> {
-
-public:
-  std::string
-  getBaseModuleName() const override {
-    return BUF_MODULE;
-  }
-
-  std::string
-  constructModuleName(LatencyOp &op, LatencyOp::Adaptor &adaptor) const override {
-    using circt::firrtl::getBitWidth;
-    using circt::firrtl::FIRRTLBaseType;
-
-    std::string name = getBaseModuleName();
-    llvm::raw_string_ostream nameStream(name);
-  
-    auto convertedType = getTypeConverter()->convertType(op->getResult(0).getType());
-    auto width = getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(convertedType));
-    int32_t latency = llvm::cast<Scheduled>(op.getOperation()).getLatency();
-    nameStream << "_IN_" << *width << "_OUT_" << *width << "_" << latency;
-
-    return name;
-  }
-};
-
 class ShiftLeftOpConversionPattern 
     : public FIRRTLOpConversionPattern<ShiftLeftOp> {
 public:
@@ -730,6 +704,34 @@ public:
   }
 };
 
+class LatencyOpConversionPattern
+    : public SchedulableOpConversionPattern<LatencyOp, LatencyOp::Adaptor> {
+
+public:
+  using SchedulableOpConversionPattern<LatencyOp, LatencyOp::Adaptor>::SchedulableOpConversionPattern;
+
+  std::string
+  getBaseModuleName() const override {
+    return BUF_MODULE;
+  }
+
+  std::string
+  constructModuleName(LatencyOp &op, LatencyOp::Adaptor &adaptor) const override {
+    using circt::firrtl::getBitWidth;
+    using circt::firrtl::FIRRTLBaseType;
+
+    std::string name = getBaseModuleName();
+    llvm::raw_string_ostream nameStream(name);
+  
+    auto convertedType = getTypeConverter()->convertType(op->getResult(0).getType());
+    auto width = getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(convertedType));
+    int32_t latency = llvm::cast<Scheduled>(op.getOperation()).getLatency();
+    nameStream << "_IN_" << *width << "_OUT_" << *width << "_" << latency;
+
+    return name;
+  }
+};
+
 class DFCIRToFIRRTLPass
     : public impl::DFCIRToFIRRTLPassBase<DFCIRToFIRRTLPass> {
 public:
@@ -801,7 +803,8 @@ public:
         NotEqOpConversionPattern,
         ShiftLeftOpConversionPattern,
         ShiftRightOpConversionPattern,
-        ConnectOpConversionPattern>(
+        ConnectOpConversionPattern,
+        LatencyOpConversionPattern>(
         &getContext(),
         typeConverter,
         &convertedOps,
