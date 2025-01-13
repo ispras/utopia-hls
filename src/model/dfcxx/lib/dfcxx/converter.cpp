@@ -58,8 +58,8 @@ bool DFCIRConverter::convertAndPrint(mlir::ModuleOp module,
   context->getOrLoadDialect<circt::sv::SVDialect>();
   mlir::PassManager pm(context);
 
-  // Dump DFCIR if the corresponding option is specified.
-  if (auto *stream = outputStreams[OUT_FORMAT_ID_INT(DFCIR)]) {
+  // Dump unscheduled DFCIR if the corresponding option is specified.
+  if (auto *stream = outputStreams[OUT_FORMAT_ID_INT(UnscheduledDFCIR)]) {
     module.print(*stream);
   }
 
@@ -70,6 +70,11 @@ bool DFCIRConverter::convertAndPrint(mlir::ModuleOp module,
     case ASAP:
       pm.addPass(mlir::dfcir::createDFCIRASAPSchedulerPass(&config));
       break;
+  }
+
+  // Dump scheduled DFCIR if the corresponding option is specified.
+  if (auto *stream = outputStreams[OUT_FORMAT_ID_INT(ScheduledDFCIR)]) {
+    pm.addPass(createDFCIRDumperPass(stream));
   }
 
   pm.addPass(mlir::dfcir::createDFCIRToFIRRTLPass());

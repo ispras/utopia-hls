@@ -37,7 +37,8 @@
 #define LP_SCHEDULER_JSON "lp_scheduler"
 #define OUT_SV_JSON "out_sv"
 #define OUT_SV_LIB_JSON "out_sv_lib"
-#define OUT_DFCIR_JSON "out_dfcir"
+#define OUT_UNSCHEDULED_DFCIR_JSON "out_dfcir"
+#define OUT_SCHEDULED_DFCIR_JSON "out_scheduled_dfcir"
 #define OUT_FIRRTL_JSON "out_firrtl"
 #define OUT_DOT_JSON "out_dot"
 
@@ -60,7 +61,8 @@
 #define OUTPUT_GROUP "output"
 #define OUT_SV_ARG CLI_ARG("out-sv")
 #define OUT_SV_LIB_ARG CLI_ARG("out-sv-lib")
-#define OUT_DFCIR_ARG CLI_ARG("out-dfcir")
+#define OUT_UNSCHEDULED_DFCIR_ARG CLI_ARG("out-dfcir")
+#define OUT_SCHEDULED_DFCIR_ARG CLI_ARG("out-scheduled-dfcir")
 #define OUT_FIRRTL_ARG CLI_ARG("out-firrtl")
 #define OUT_DOT_ARG CLI_ARG("out-dot")
 
@@ -206,9 +208,12 @@ struct HlsOptions final : public AppOptions {
     outputGroup->add_option(OUT_SV_LIB_ARG,
                             outNames[OUT_FORMAT_ID_INT(SVLibrary)],
                             "Path to output SystemVerilog modules for generated operations");
-    outputGroup->add_option(OUT_DFCIR_ARG,
-                            outNames[OUT_FORMAT_ID_INT(DFCIR)],
+    outputGroup->add_option(OUT_UNSCHEDULED_DFCIR_ARG,
+                            outNames[OUT_FORMAT_ID_INT(UnscheduledDFCIR)],
                             "Path to output unscheduled DFCIR");
+    outputGroup->add_option(OUT_SCHEDULED_DFCIR_ARG,
+                            outNames[OUT_FORMAT_ID_INT(ScheduledDFCIR)],
+                            "Path to output scheduled DFCIR");
     outputGroup->add_option(OUT_FIRRTL_ARG,
                             outNames[OUT_FORMAT_ID_INT(FIRRTL)],
                             "Path to output scheduled FIRRTL");
@@ -219,14 +224,15 @@ struct HlsOptions final : public AppOptions {
   }
 
   void fromJson(Json json) override {
-    get(json, CONFIG_JSON,         latencyCfgFile);
-    get(json, ASAP_SCHEDULER_JSON, asapScheduler);
-    get(json, LP_SCHEDULER_JSON,   lpScheduler);
-    get(json, OUT_SV_JSON,         outNames[OUT_FORMAT_ID_INT(SystemVerilog)]);
-    get(json, OUT_SV_LIB_JSON,     outNames[OUT_FORMAT_ID_INT(SVLibrary)]);
-    get(json, OUT_DFCIR_JSON,      outNames[OUT_FORMAT_ID_INT(DFCIR)]);
-    get(json, OUT_FIRRTL_JSON,     outNames[OUT_FORMAT_ID_INT(FIRRTL)]);
-    get(json, OUT_DOT_JSON,        outNames[OUT_FORMAT_ID_INT(DOT)]);
+    get(json, CONFIG_JSON,                latencyCfgFile);
+    get(json, ASAP_SCHEDULER_JSON,        asapScheduler);
+    get(json, LP_SCHEDULER_JSON,          lpScheduler);
+    get(json, OUT_SV_JSON,                outNames[OUT_FORMAT_ID_INT(SystemVerilog)]);
+    get(json, OUT_SV_LIB_JSON,            outNames[OUT_FORMAT_ID_INT(SVLibrary)]);
+    get(json, OUT_UNSCHEDULED_DFCIR_JSON, outNames[OUT_FORMAT_ID_INT(UnscheduledDFCIR)]);
+    get(json, OUT_SCHEDULED_DFCIR_JSON,   outNames[OUT_FORMAT_ID_INT(ScheduledDFCIR)]);
+    get(json, OUT_FIRRTL_JSON,            outNames[OUT_FORMAT_ID_INT(FIRRTL)]);
+    get(json, OUT_DOT_JSON,               outNames[OUT_FORMAT_ID_INT(DOT)]);
   }
   
   dfcxx::Ops convertFieldToEnum(const std::string field) {

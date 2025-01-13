@@ -63,7 +63,8 @@ enum Scheduler {
 enum class OutputFormatID : uint8_t {
   SystemVerilog = 0,
   SVLibrary,
-  DFCIR,
+  UnscheduledDFCIR,
+  ScheduledDFCIR,
   FIRRTL,
   DOT,
   // Utility value. Constains the number of elements in the enum.

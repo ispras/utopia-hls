@@ -1,13 +1,14 @@
 {
   "hls": {
-    "config"         : "",
-    "asap_scheduler" : false,
-    "lp_scheduler"   : false,
-    "out_sv"         : "",
-    "out_sv_lib"     : "",
-    "out_dfcir"      : "",
-    "out_firrtl"     : "",
-    "out_dot"        : ""
+    "config"             : "",
+    "asap_scheduler"     : false,
+    "lp_scheduler"       : false,
+    "out_sv"             : "",
+    "out_sv_lib"         : "",
+    "out_dfcir"          : "",
+    "out_scheduled_dfcir": "",
+    "out_firrtl"         : "",
+    "out_dot"            : ""
   },
   "sim": {
     "in"           : "sim.txt",
