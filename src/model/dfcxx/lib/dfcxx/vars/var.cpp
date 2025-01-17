@@ -49,6 +49,15 @@ void DFVariableImpl::connect(DFVariableImpl *connectee) {
   meta.graph.addChannel(connectee, this, 0, true);
 }
 
+DFVariableImpl *DFVariableImpl::cast(DFTypeImpl *type) {
+  DFVariableImpl *var =
+      meta.varBuilder.buildStream("", IODirection::NONE, meta, type);
+  meta.storage.addVariable(var);
+  meta.graph.addNode(var, OpType::CAST, NodeData {});
+  meta.graph.addChannel(this, var, 0, false);
+  return var;
+}
+
 DFVariable::DFVariable(DFVariableImpl *impl) : impl(impl) {}
 
 DFVariable::operator DFVariableImpl*() const {
@@ -149,6 +158,10 @@ bool DFVariable::isScalar() const {
 
 bool DFVariable::isConstant() const {
   return impl->isConstant();
+}
+
+DFVariable DFVariable::cast(const DFType &type) {
+  return impl->cast(type);
 }
 
 void DFVariable::connect(const DFVariable &connectee) {

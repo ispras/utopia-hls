@@ -253,6 +253,12 @@ void DFCIRBuilder::translate(Node node, const Graph &graph,
                                                    map[second]);
       break;
     }
+    case CAST: {
+      Node first = ins[0].source;
+      newOp = builder.create<mlir::dfcir::CastOp>(loc, conv[node.var],
+                                                  map[first]);
+      break;
+    }
     case SHL: {
       Node first = ins[0].source;
       auto attrType = mlir::IntegerType::get(builder.getContext(), 32,

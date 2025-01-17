@@ -25,6 +25,8 @@
 #define EQ_MODULE "__EQ"
 #define NEQ_MODULE "__NEQ"
 
+#define CAST_MODULE "__CAST"
+
 // Specification names for operation's types.
 #define FLOAT_SPEC "FLOAT"
 #define INT_SPEC "INT"

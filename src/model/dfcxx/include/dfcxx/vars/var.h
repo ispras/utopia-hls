@@ -93,6 +93,8 @@ public:
   virtual DFVariableImpl *operator>>(uint8_t bits) = 0;
 
   void connect(DFVariableImpl *connectee);
+
+  DFVariableImpl *cast(DFTypeImpl *type);
 };
 
 class DFVariable {
@@ -157,6 +159,8 @@ public:
   bool isConstant() const;
 
   void connect(const DFVariable &connectee);
+
+  DFVariable cast(const DFType &type);
 
   DFVariable &operator=(const DFVariable &var);
 };

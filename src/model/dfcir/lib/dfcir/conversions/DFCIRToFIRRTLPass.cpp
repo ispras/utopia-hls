@@ -603,6 +603,9 @@ DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(Eq, EQ)
 // NotEqOpConversionPattern.
 DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(NotEq, NEQ)
 
+// CastOpConversionPattern.
+DECL_SCHED_UNARY_ARITH_OP_CONV_PATTERN(Cast, CAST)
+
 class ShiftLeftOpConversionPattern 
     : public FIRRTLOpConversionPattern<ShiftLeftOp> {
 public:
@@ -801,6 +804,7 @@ public:
         GreaterEqOpConversionPattern,
         EqOpConversionPattern,
         NotEqOpConversionPattern,
+        CastOpConversionPattern,
         ShiftLeftOpConversionPattern,
         ShiftRightOpConversionPattern,
         ConnectOpConversionPattern,

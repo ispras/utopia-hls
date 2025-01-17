@@ -117,14 +117,6 @@ def ConnectOp : DFCIR_Op<"connect", []> {
   let assemblyFormat = "`(` $dest `:` type($dest) `,` $src `:` type($src) `)` attr-dict";
 }
 
-def CastOp : DFCIR_Op<"cast", []> {
-  let arguments = (ins CastVariable:$var);
-
-  let assemblyFormat = "`<` type($res) `>` `(` $var `:` type($var) `)` attr-dict";
-
-  let results = (outs CastVariable:$res);
-}
-
 def LatencyOp : DFCIR_Op<"latency", [DeclareOpInterfaceMethods<Scheduled>]> {
   let summary = "Sets a clock latency for the input.";
 
@@ -425,6 +417,8 @@ def SubOp : DFCIR_BinaryOp<"sub", Variable, Variable, Variable, []>;
 def MulOp : DFCIR_BinaryOp<"mul", Variable, Variable, Variable, []>;
 
 def DivOp : DFCIR_BinaryOp<"div", Variable, Variable, Variable, []>;
+
+def CastOp : DFCIR_UnaryOp<"cast", Variable, Variable, []>;
 
 def ShiftLeftOp : DFCIR_Op<"shl", [DeclareOpInterfaceMethods<ShiftOpInterface>]> {
   let arguments = (ins 

@@ -35,6 +35,7 @@ enum OpType : uint8_t {
   GREATEREQ,
   EQ,
   NEQ,
+  CAST,
   SHL,
   SHR
 };

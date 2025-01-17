@@ -158,6 +158,21 @@ void Graph::process<ConnectOp>(ConnectOp &op) {
 }
 
 template <>
+void Graph::process<CastOp>(CastOp &op) {
+  Node *newNode = new Node(op, 0);
+  nodes.insert(newNode);
+
+  Operation *opPtr = op.getOperation();
+
+  auto operand = opPtr->getOperand(0);
+  auto unrolledInfo = findNearestNodeValue(operand);
+  auto srcNode = findNode(unrolledInfo.first);
+  Channel *newChannel = new Channel(*srcNode, newNode, 0, unrolledInfo.second);
+  outputs[*srcNode].insert(newChannel);
+  inputs[newNode].insert(newChannel);
+}
+
+template <>
 void Graph::process<NaryOpInterface>(NaryOpInterface &op) {
   Node *newNode = new Node(op, -1);
   nodes.insert(newNode);
@@ -201,6 +216,8 @@ Graph::Graph(KernelOp kernel) : Graph() {
       process<MuxOp>(casted);
     } else if (auto casted = llvm::dyn_cast<ConnectOp>(&op)) {
       process<ConnectOp>(casted);
+    } else if (auto casted = llvm::dyn_cast<CastOp>(&op)) {
+      process<CastOp>(casted);
     } else if (auto casted = llvm::dyn_cast<NaryOpInterface>(&op)) {
       process<NaryOpInterface>(casted);
     } else if (auto casted = llvm::dyn_cast<ShiftOpInterface>(&op)) {
