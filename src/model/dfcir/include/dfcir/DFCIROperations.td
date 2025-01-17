@@ -35,7 +35,8 @@ def KernelOp : DFCIR_Op<"kernel",
 }
 
 def ScalarInputOp : DFCIR_Op<"scalarInput",
-    [DeclareOpInterfaceMethods<NamedOpVal>]> {
+    [DeclareOpInterfaceMethods<NamedOpVal>, DeclareOpInterfaceMethods<InputOpInterface>,
+     DeclareOpInterfaceMethods<ConstantInputInterface>]> {
   let arguments = (ins
     StrAttr:$name
   );
@@ -50,7 +51,7 @@ def ScalarInputOp : DFCIR_Op<"scalarInput",
 }
 
 def ScalarOutputOp : DFCIR_Op<"scalarOutput", 
-    [DeclareOpInterfaceMethods<NamedOpVal>]> {
+    [DeclareOpInterfaceMethods<NamedOpVal>, DeclareOpInterfaceMethods<OutputOpInterface>]> {
   let arguments = (ins
     StrAttr:$name,
     Optional<Stream>:$stream
@@ -66,7 +67,7 @@ def ScalarOutputOp : DFCIR_Op<"scalarOutput",
 }
 
 def InputOp : DFCIR_Op<"input",
-    [DeclareOpInterfaceMethods<NamedOpVal>]> {
+    [DeclareOpInterfaceMethods<NamedOpVal>, DeclareOpInterfaceMethods<InputOpInterface>]> {
   let arguments = (ins
     StrAttr:$name,
     Optional<Stream>:$ctrl
@@ -82,7 +83,7 @@ def InputOp : DFCIR_Op<"input",
 }
 
 def OutputOp : DFCIR_Op<"output", 
-    [AttrSizedOperandSegments, DeclareOpInterfaceMethods<NamedOpVal>]> {
+    [AttrSizedOperandSegments, DeclareOpInterfaceMethods<NamedOpVal>, DeclareOpInterfaceMethods<OutputOpInterface>]> {
   let arguments = (ins
     StrAttr:$name,
     Optional<Stream>:$ctrl,
@@ -98,6 +99,15 @@ def OutputOp : DFCIR_Op<"output",
   }];
 }
 
+def ConstantOp : DFCIR_Op<"constant", [DeclareOpInterfaceMethods<ConstantInputInterface>]> {
+  let arguments = (ins AnyAttrOf<[Builtin_IntegerAttr,
+                                  Builtin_FloatAttr]>:$value);
+
+  let hasCustomAssemblyFormat = 1;
+
+  let results = (outs Const:$res);
+}
+
 def ConnectOp : DFCIR_Op<"connect", []> {
   let arguments = (ins
     Variable:$dest,
@@ -105,6 +115,259 @@ def ConnectOp : DFCIR_Op<"connect", []> {
   );
 
   let assemblyFormat = "`(` $dest `:` type($dest) `,` $src `:` type($src) `)` attr-dict";
+}
+
+def CastOp : DFCIR_Op<"cast", []> {
+  let arguments = (ins CastVariable:$var);
+
+  let assemblyFormat = "`<` type($res) `>` `(` $var `:` type($var) `)` attr-dict";
+
+  let results = (outs CastVariable:$res);
+}
+
+def LatencyOp : DFCIR_Op<"latency", [DeclareOpInterfaceMethods<Scheduled>]> {
+  let summary = "Sets a clock latency for the input.";
+
+  let arguments = (ins
+    Variable:$input,
+    Builtin_IntegerAttr:$latency
+  );
+
+  let results = (outs Variable:$res);
+
+  let builders = [
+    OpBuilder<(ins
+      "Type":$res,
+      "Value":$input,
+      "int32_t":$latency
+    ), [{
+      auto attr =
+            mlir::IntegerAttr::get(IntegerType::get($_builder.getContext(), 32),
+                                   latency);
+      build($_builder, $_state, res, input, attr);
+    }]>
+  ];
+
+  let hasCustomAssemblyFormat = 1;
+}
+
+class DFCIR_UnaryOp<string name, Constraint firstType,
+                  Type resultType, list<Trait> traits = []> :
+    DFCIR_Op<name, traits # [DeclareOpInterfaceMethods<Scheduled>, DeclareOpInterfaceMethods<UnaryOpInterface>]> {
+  let arguments = (ins
+    firstType:$first,
+    Builtin_IntegerAttr:$latency
+  );
+
+  let results = (outs resultType:$res);
+
+  let builders = [
+    OpBuilder<(ins
+      "Type":$res,
+      "Value":$first,
+      CArg<"int32_t", "-1">:$latency
+    ), [{
+      auto attr =
+            mlir::IntegerAttr::get(IntegerType::get($_builder.getContext(), 32),
+                                   latency);
+      build($_builder, $_state, res, first, attr);
+    }]>
+  ];
+
+  let extraClassDeclaration = [{
+    int32_t getValueName();
+  }];
+
+  let hasCustomAssemblyFormat = 1;
+
+  let extraClassDefinition = [{
+    ParseResult $cppClass::parse(OpAsmParser &parser, OperationState &result) {
+      IntegerAttr latencyAttr;
+      OpAsmParser::UnresolvedOperand firstRawOperands[1];
+      llvm::ArrayRef<OpAsmParser::UnresolvedOperand> firstOperands(firstRawOperands);
+      llvm::SMLoc firstOperandsLoc;
+      Type firstRawTypes[1];
+      llvm::ArrayRef<Type> firstTypes(firstRawTypes);
+      Type resRawTypes[1];
+      llvm::ArrayRef<Type> resTypes(resRawTypes);
+      if (parser.parseLSquare()) {
+        return failure();
+      }
+
+      llvm::SMLoc latencyLoc = parser.getCurrentLocation();
+      if (auto noQuestion = parser.parseOptionalQuestion()) {
+        auto noAttr = parser.parseCustomAttributeWithFallback(latencyAttr, Type{}) ||
+                      !latencyAttr;
+        // !XOR(A, B) <=> A == B.
+        if (bool(noQuestion) == bool(noAttr)) {
+          auto newErr = parser.emitError(latencyLoc);
+          return newErr << "'" << result.name.getStringRef()
+                        << "' op requires either '?' or valid latency specified";
+        }
+      } else {
+        latencyAttr =
+            IntegerAttr::get(IntegerType::get(parser.getContext(), 32), -1);
+      }
+
+      result.getOrAddProperties<LessOp::Properties>().latency = latencyAttr;
+
+      if (parser.parseRSquare() || 
+          parser.parseLParen()) {
+        return failure();
+      }
+
+      firstOperandsLoc = parser.getCurrentLocation();
+      if (parser.parseOperand(firstRawOperands[0]) ||
+          parser.parseColon() ||
+          parser.parseCustomTypeWithFallback(firstRawTypes[0]) ||
+          parser.parseRParen() ||
+          parser.parseColon() ||
+          parser.parseCustomTypeWithFallback(resRawTypes[0]) ||
+          parser.parseOptionalAttrDict(result.attributes)) {
+        return failure();
+      }
+      result.addTypes(resTypes);
+      if (parser.resolveOperands(firstOperands, firstTypes, firstOperandsLoc, result.operands)) {
+        return failure();
+      }
+      return success();
+    }
+
+    void $cppClass::print(OpAsmPrinter &printer) {
+      printer << "[";
+      auto latencyInt = static_cast<int32_t>(getLatency().getSInt());
+      if (latencyInt == -1) {
+        printer << "?";
+      } else {
+        printer << getLatency();
+      }
+      printer << "] (";
+      printer << getFirst() << " : " << getFirst().getType() << ") : ";
+      printer << getRes().getType();
+      llvm::SmallVector<llvm::StringRef, 2> elidedAttrs;
+      printer.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
+    }
+  }];
+}
+
+def NotOp : DFCIR_UnaryOp<"not", Variable, Variable, [SameOperandsAndResultType]>;
+
+def NegOp : DFCIR_UnaryOp<"neg", Variable, Variable, [SameOperandsAndResultType]>;
+
+class DFCIR_BinaryOp<string name, Constraint firstType, Constraint secondType,
+                  Type resultType, list<Trait> traits = []> :
+    DFCIR_Op<name, traits # [DeclareOpInterfaceMethods<Scheduled>, DeclareOpInterfaceMethods<BinaryOpInterface>]> {
+  let arguments = (ins
+    firstType:$first,
+    secondType:$second,
+    Builtin_IntegerAttr:$latency
+  );
+
+  let results = (outs resultType:$res);
+
+  let builders = [
+    OpBuilder<(ins
+      "Type":$res,
+      "Value":$first,
+      "Value":$second,
+      CArg<"int32_t", "-1">:$latency
+    ), [{
+      auto attr = 
+            mlir::IntegerAttr::get(IntegerType::get($_builder.getContext(), 32),
+                                   latency);
+      build($_builder, $_state, res, first, second, attr);
+    }]>
+  ];
+
+  let extraClassDeclaration = [{
+    int32_t getValueName();
+  }];
+
+  let hasCustomAssemblyFormat = 1;
+
+  let extraClassDefinition = [{
+    ParseResult $cppClass::parse(OpAsmParser &parser, OperationState &result) {
+      IntegerAttr latencyAttr;
+      OpAsmParser::UnresolvedOperand firstRawOperands[1];
+      llvm::ArrayRef<OpAsmParser::UnresolvedOperand> firstOperands(firstRawOperands);
+      llvm::SMLoc firstOperandsLoc;
+      Type firstRawTypes[1];
+      llvm::ArrayRef<Type> firstTypes(firstRawTypes);
+      OpAsmParser::UnresolvedOperand secondRawOperands[1];
+      llvm::ArrayRef<OpAsmParser::UnresolvedOperand> secondOperands(secondRawOperands);
+      llvm::SMLoc secondOperandsLoc;
+      Type secondRawTypes[1];
+      llvm::ArrayRef<Type> secondTypes(secondRawTypes);
+      Type resRawTypes[1];
+      llvm::ArrayRef<Type> resTypes(resRawTypes);
+      if (parser.parseLSquare()) {
+        return failure();
+      }
+      
+      llvm::SMLoc latencyLoc = parser.getCurrentLocation();
+      if (auto noQuestion = parser.parseOptionalQuestion()) {
+        auto noAttr = parser.parseCustomAttributeWithFallback(latencyAttr, Type{}) ||
+                      !latencyAttr;
+        // !XOR(A, B) <=> A == B.
+        if (bool(noQuestion) == bool(noAttr)) {
+          auto newErr = parser.emitError(latencyLoc);
+          return newErr << "'" << result.name.getStringRef()
+                        << "' op requires either '?' or valid latency specified";  
+        }
+      } else {
+        latencyAttr =
+            IntegerAttr::get(IntegerType::get(parser.getContext(), 32), -1);
+      }
+
+      result.getOrAddProperties<LessOp::Properties>().latency = latencyAttr;
+
+      if (parser.parseRSquare() || 
+          parser.parseLParen()) {
+        return failure();
+      }
+
+      firstOperandsLoc = parser.getCurrentLocation();
+      if (parser.parseOperand(firstRawOperands[0]) ||
+          parser.parseColon() ||
+          parser.parseCustomTypeWithFallback(firstRawTypes[0]) ||
+          parser.parseComma()) {
+        return failure();
+      }
+  
+      secondOperandsLoc = parser.getCurrentLocation();
+      if (parser.parseOperand(secondRawOperands[0]) ||
+          parser.parseColon() || 
+          parser.parseCustomTypeWithFallback(secondRawTypes[0]) ||
+          parser.parseRParen() ||
+          parser.parseColon() ||
+          parser.parseCustomTypeWithFallback(resRawTypes[0]) ||
+          parser.parseOptionalAttrDict(result.attributes)) {
+        return failure();
+      }
+      result.addTypes(resTypes);
+      if (parser.resolveOperands(firstOperands, firstTypes, firstOperandsLoc, result.operands) ||
+          parser.resolveOperands(secondOperands, secondTypes, secondOperandsLoc, result.operands)) {
+        return failure();
+      }
+      return success();
+    }
+
+    void $cppClass::print(OpAsmPrinter &printer) {
+      printer << "[";
+      auto latencyInt = static_cast<int32_t>(getLatency().getSInt());
+      if (latencyInt == -1) {
+        printer << "?";
+      } else {
+        printer << getLatency();
+      }
+      printer << "] (";
+      printer << getFirst() << " : " << getFirst().getType() << ", ";
+      printer << getSecond() << " : " << getSecond().getType() << ") : ";
+      printer << getRes().getType();
+      llvm::SmallVector<llvm::StringRef, 2> elidedAttrs;
+      printer.printOptionalAttrDict((*this)->getAttrs(), elidedAttrs);
+    }
+  }];
 }
 
 def OffsetOp : DFCIR_Op<"offset", []> {
@@ -137,202 +400,52 @@ def MuxOp : DFCIR_Op<"mux", []> {
   let results = (outs Variable:$res);
 }
 
-def LessOp : DFCIR_Op<"less", []> {
-  let arguments = (ins
-    Variable:$first,
-    Variable:$second
-  );
+def LessOp : DFCIR_BinaryOp<"less", Variable, Variable, Variable, []>;
 
-  let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
+def LessEqOp : DFCIR_BinaryOp<"lessEq", Variable, Variable, Variable, []>;
 
-  let results = (outs Variable:$res);
-}
+def GreaterOp : DFCIR_BinaryOp<"greater", Variable, Variable, Variable, []>;
 
-def LessEqOp : DFCIR_Op<"lessEq", []> {
-  let arguments = (ins
-    Variable:$first,
-    Variable:$second
-  );
+def GreaterEqOp : DFCIR_BinaryOp<"greaterEq", Variable, Variable, Variable, []>;
 
-  let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
+def EqOp : DFCIR_BinaryOp<"eq", Variable, Variable, Variable, []>;
 
-  let results = (outs Variable:$res);
-}
+def NotEqOp : DFCIR_BinaryOp<"notEq", Variable, Variable, Variable, []>;
 
-def GreaterOp : DFCIR_Op<"greater", []> {
-  let arguments = (ins
-    Variable:$first,
-    Variable:$second
-  );
+def AndOp : DFCIR_BinaryOp<"and", Variable, Variable, Variable, []>;
 
-  let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
+def OrOp : DFCIR_BinaryOp<"or", Variable, Variable, Variable, []>;
 
-  let results = (outs Variable:$res);
-}
+def XorOp : DFCIR_BinaryOp<"xor", Variable, Variable, Variable, []>;
 
-def GreaterEqOp : DFCIR_Op<"greaterEq", []> {
-  let arguments = (ins
-    Variable:$first,
-    Variable:$second
-  );
+def AddOp : DFCIR_BinaryOp<"add", Variable, Variable, Variable, []>;
 
-  let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
+def SubOp : DFCIR_BinaryOp<"sub", Variable, Variable, Variable, []>;
 
-  let results = (outs Variable:$res);
-}
+def MulOp : DFCIR_BinaryOp<"mul", Variable, Variable, Variable, []>;
 
-def EqOp : DFCIR_Op<"eq", []> {
-  let arguments = (ins
-    Variable:$first,
-    Variable:$second
-  );
+def DivOp : DFCIR_BinaryOp<"div", Variable, Variable, Variable, []>;
 
-  let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-
-  let results = (outs Variable:$res);
-}
-
-def NotEqOp : DFCIR_Op<"notEq", []> {
-  let arguments = (ins
-    Variable:$first,
-    Variable:$second
-  );
-
-  let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-
-  let results = (outs Variable:$res);
-}
-
-def AndOp : DFCIR_Op<"and", []> {
-  let arguments = (ins
-    Variable:$first,
-    Variable:$second
-  );
-
-  let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-
-  let results = (outs Variable:$res);
-}
-
-def OrOp : DFCIR_Op<"or", []> {
-  let arguments = (ins
-    Variable:$first,
-    Variable:$second
-  );
-
-  let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-
-  let results = (outs Variable:$res);
-}
-
-def XorOp : DFCIR_Op<"xor", []> {
-  let arguments = (ins
-    Variable:$first,
-    Variable:$second
-  );
-
-  let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-
-  let results = (outs Variable:$res);
-}
-
-def NotOp : DFCIR_Op<"not", [SameOperandsAndResultType, ]> {
-  let arguments = (ins Variable:$first);
-
-  let assemblyFormat = "`(` $first `:` type($first) `)` attr-dict `:` type($res)";
-
-  let results = (outs Variable:$res);
-}
-
-def NegOp : DFCIR_Op<"neg", [SameOperandsAndResultType, ]> {
-  let arguments = (ins Variable:$first);
-
-  let assemblyFormat = "`(` $first `:` type($first) `)` attr-dict `:` type($res)";
-
-  let results = (outs Variable:$res);
-}
-
-def AddOp : DFCIR_Op<"add", []> {
-  let arguments = (ins
-    Variable:$first,
-    Variable:$second
-  );
-
-  let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-
-  let results = (outs Variable:$res);
-}
-
-def SubOp : DFCIR_Op<"sub", []> {
-  let arguments = (ins
-    Variable:$first,
-    Variable:$second
-  );
-
-  let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-
-  let results = (outs Variable:$res);
-}
-
-def MulOp : DFCIR_Op<"mul", []> {
-  let arguments = (ins
-    Variable:$first,
-    Variable:$second
-  );
-
-  let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-
-  let results = (outs Variable:$res);
-}
-
-def DivOp : DFCIR_Op<"div", []> {
-  let arguments = (ins
-    Variable:$first,
-    Variable:$second
-  );
-
-  let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second)`)` attr-dict `:` type($res)";
-
-  let results = (outs Variable:$res);
-}
-
-def ShiftLeftOp : DFCIR_Op<"shl", []> {
+def ShiftLeftOp : DFCIR_Op<"shl", [DeclareOpInterfaceMethods<ShiftOpInterface>]> {
   let arguments = (ins 
     Variable:$first,
     Builtin_IntegerAttr:$bits
   );
 
-  let assemblyFormat = "`(` $first `:` type($first) `,` $bits `)` attr-dict `:` type($res)";
+  let assemblyFormat = "`(` $first `:` type($first) `,` $bits `)` `:` type($res) attr-dict";
 
   let results = (outs Variable:$res);
 }
 
-def ShiftRightOp : DFCIR_Op<"shr", []> {
+def ShiftRightOp : DFCIR_Op<"shr", [DeclareOpInterfaceMethods<ShiftOpInterface>]> {
   let arguments = (ins 
     Variable:$first,
     Builtin_IntegerAttr:$bits
   );
 
-  let assemblyFormat = "`(` $first `:` type($first) `,` $bits `)` attr-dict `:` type($res)";
+  let assemblyFormat = "`(` $first `:` type($first) `,` $bits `)` `:` type($res) attr-dict";
 
   let results = (outs Variable:$res);
-}
-
-def ConstantOp : DFCIR_Op<"constant", []> {
-  let arguments = (ins AnyAttrOf<[Builtin_IntegerAttr,
-                                  Builtin_FloatAttr]>:$value);
-
-  let hasCustomAssemblyFormat = 1;
-
-  let results = (outs Const:$res);
-}
-
-def CastOp : DFCIR_Op<"cast", []> {
-  let arguments = (ins CastVariable:$var);
-
-  let assemblyFormat = "`<` type($res) `>` `(` $var `:` type($var) `)` attr-dict";
-
-  let results = (outs CastVariable:$res);
 }
 
 // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).

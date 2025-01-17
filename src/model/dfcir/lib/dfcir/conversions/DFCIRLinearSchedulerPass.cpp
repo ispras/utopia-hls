@@ -37,7 +37,7 @@ class DFCIRLinearSchedulerPass
   using Status = utils::lp::Status;
 
 private:
-  void synchronizeInput(const Node &node) {
+  void synchronizeInput(Node *node) {
     int *var = new int[1]{nodeMap[node]};
     double *coeff = new double[1]{1.0};
 
@@ -45,19 +45,19 @@ private:
     problem.addConstraint(1, var, coeff, OpType::Equal, 0);
   }
 
-  void addLatencyConstraint(const Channel &chan) {
-    int *vars = new int[2]{nodeMap[chan.target], nodeMap[chan.source]};
+  void addLatencyConstraint(Channel *chan) {
+    int *vars = new int[2]{nodeMap[chan->target], nodeMap[chan->source]};
     double *coeffs = new double[2]{1.0, -1.0};
 
     // t_next >= t_prev + prev_latency + next_prev_offset
     problem.addConstraint(2, vars, coeffs, OpType::GreaterOrEqual,
-                          int(chan.source.latency) + chan.offset);
+                          int(chan->source->latency) + chan->offset);
   }
 
-  int addDeltaConstraint(const Channel &chan) {
+  int addDeltaConstraint(Channel *chan) {
     int deltaID = problem.addVariable();
-    int *vars = new int[3]{deltaID, nodeMap[chan.target],
-                           nodeMap[chan.source]};
+    int *vars = new int[3]{deltaID, nodeMap[chan->target],
+                           nodeMap[chan->source]};
     double *coeffs = new double[3]{1.0, -1.0, 1.0};
 
     // delta_t = t_next - t_prev
@@ -65,17 +65,17 @@ private:
     return deltaID;
   }
 
-  void addBufferConstraint(const Channel &chan) {
+  void addBufferConstraint(Channel *chan) {
     int bufID = problem.addVariable();
     bufMap[chan] = bufID;
     int *vars = new int[3]{bufID,
-                           nodeMap[chan.target],
-                           nodeMap[chan.source]};
+                           nodeMap[chan->target],
+                           nodeMap[chan->source]};
     double *coeffs = new double[3]{1.0, -1.0, 1.0};
 
     // buf_next_prev = t_next - (t_prev + prev_latency + next_prev_offset)
     problem.addConstraint(3, vars, coeffs, OpType::Equal,
-                          -1.0 * (int(chan.source.latency) + chan.offset));
+                          -1.0 * (int(chan->source->latency) + chan->offset));
 
     // buf_next_prev >= 0
     problem.addConstraint(1, new int[1]{bufID}, new double[1]{1.0},
@@ -83,12 +83,12 @@ private:
   }
 
   LPProblem problem;
-  std::unordered_map<Node, int> nodeMap;
-  std::unordered_map<Channel, int> bufMap;
+  std::unordered_map<Node *, int> nodeMap;
+  std::unordered_map<Channel *, int> bufMap;
 
   Buffers schedule(Graph &graph) {
     size_t chanCount = 0;
-    for (const Node &node: graph.nodes) {
+    for (Node *node: graph.nodes) {
       chanCount += graph.inputs[node].size();
       nodeMap[node] = problem.addVariable();
       if (graph.startNodes.find(node) != graph.startNodes.end()) {
@@ -99,8 +99,8 @@ private:
     int *deltaIDs = new int[chanCount];
     double *deltaCoeffs = new double[chanCount];
     int curr_id = 0;
-    for (const Node &node: graph.nodes) {
-      for (const Channel &chan: graph.inputs[node]) {
+    for (Node *node: graph.nodes) {
+      for (Channel *chan: graph.inputs[node]) {
         addLatencyConstraint(chan);
         deltaCoeffs[curr_id] = 1.0;
         deltaIDs[curr_id++] = addDeltaConstraint(chan);
@@ -121,8 +121,10 @@ private:
       problem.getResults(&result);
       for (const auto &[chan, id]: bufMap) {
         // lp_solve positions start with 1.
-        int latency = result[id - 1];
-        if (!chan.source.isConst && latency) {
+        int32_t latency = result[id - 1];
+
+        using mlir::dfcir::utils::hasConstantInput;
+        if (latency && !hasConstantInput(chan->source->op)) {
           buffers[chan] = latency;
         }
       }
@@ -139,20 +141,31 @@ private:
   }
 
 public:
+  explicit DFCIRLinearSchedulerPass(const DFCIRLinearSchedulerPassOptions &options)
+      : impl::DFCIRLinearSchedulerPassBase<DFCIRLinearSchedulerPass>(options) {}
+
   void runOnOperation() override {
     // Convert kernel into graph.
     Graph graph(llvm::dyn_cast<ModuleOp>(getOperation()));
+
+    // Apply latency config to the graph.
+    graph.applyConfig(*latencyConfig);
 
     // Execute scheduler.
     auto buffers = schedule(graph);
 
     // Insert buffers.
     mlir::dfcir::utils::insertBuffers(this->getContext(), buffers);
+
+    // Erase old "dfcir.offset" operations.
+    mlir::dfcir::utils::eraseOffsets(getOperation());
   }
 };
 
-std::unique_ptr<mlir::Pass> createDFCIRLinearSchedulerPass() {
-  return std::make_unique<DFCIRLinearSchedulerPass>();
+std::unique_ptr<mlir::Pass> createDFCIRLinearSchedulerPass(LatencyConfig *config) {
+  DFCIRLinearSchedulerPassOptions options;
+  options.latencyConfig = config;
+  return std::make_unique<DFCIRLinearSchedulerPass>(options);
 }
 
 } // namespace mlir::dfcir

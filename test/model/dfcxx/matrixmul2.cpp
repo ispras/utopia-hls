@@ -15,18 +15,24 @@ static const DFOutputPaths nullDevicePath =
 
 TEST(DFCxx, MatrixMul2AddInt2MulInt3Asap) {
   MatrixMul2 kernel;
-  DFLatencyConfig config = {
-    {dfcxx::ADD_INT, 2},
-    {dfcxx::MUL_INT, 3},
-  };
+  DFLatencyConfig config = DFLatencyConfig(
+    {
+      {dfcxx::ADD_INT, 2},
+      {dfcxx::MUL_INT, 3},
+    },
+    {}
+  );
   EXPECT_EQ(kernel.compile(config, nullDevicePath, dfcxx::ASAP), true);
 }
 
 TEST(DFCxx, MatrixMul2AddInt2MulInt3Linear) {
   MatrixMul2 kernel;
-  DFLatencyConfig config = {
-    {dfcxx::ADD_INT, 2},
-    {dfcxx::MUL_INT, 2},
-  };
+  DFLatencyConfig config = DFLatencyConfig(
+    {
+      {dfcxx::ADD_INT, 2},
+      {dfcxx::MUL_INT, 3},
+    },
+    {}
+  );
   EXPECT_EQ(kernel.compile(config, nullDevicePath, dfcxx::Linear), true);
 }

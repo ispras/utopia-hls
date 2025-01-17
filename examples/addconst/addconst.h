@@ -23,9 +23,10 @@ public:
     const DFType type = dfUInt(32);
     DFVariable x = io.input("x", type);
     DFVariable const5 = constant.var(type, uint64_t(5));
-    DFVariable sum1 = x + const5;
-    DFVariable sum2 = sum1 + x;
+    DFVariable sum1 = x + x;
+    DFVariable sum2 = sum1 + const5;
+    DFVariable sum3 = sum2 + x;
     DFVariable out = io.output("out", type);
-    out.connect(sum2);
+    out.connect(sum3);
   }
 };

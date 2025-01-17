@@ -24,8 +24,9 @@ namespace mlir::dfcir {
 
 #define GEN_PASS_DECL_FIRRTLSTUBGENERATORPASS
 #define GEN_PASS_DEF_FIRRTLSTUBGENERATORPASS
-
 #include "dfcir/conversions/DFCIRPasses.h.inc"
+
+#include "dfcir/conversions/ModuleDefines.inc"
 
 class FIRRTLStubGeneratorPass
     : public impl::FIRRTLStubGeneratorPassBase<FIRRTLStubGeneratorPass> {

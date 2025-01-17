@@ -1,7 +1,6 @@
 {
   "dfcir": {
-    "ADD_INT": 1,
-    "SUB_INT": 1,
+    "ADD_INT": 2,
     "MUL_INT": 3
   }
 }

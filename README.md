@@ -219,7 +219,8 @@ Unless neither of the three arguments is used, first argument is the mode which 
 * `--config <PATH>`: *required* filesystem-path option; used to specify the file for a JSON latency configuration file. Its format is presented in `docs/latency_config.md`.
 * `--out-sv <PATH>`: *optional* filesystem-path option; used to specify the output SystemVerilog file.
 * `--out-sv-lib <PATH>`: *optional* filesystem-path option; used to specify the output SystemVerilog file for generated operations library.
-* `--out-dfcir <PATH>`: *optional* filesystem-path option; used to specify the output DFCIR file.
+* `--out-dfcir <PATH>`: *optional* filesystem-path option; used to specify the output unscheduled DFCIR file.
+* `--out-scheduled-dfcir <PATH>`: *optional* filesystem-path option; used to specify the output scheduled DFCIR file.
 * `--out-firrtl <PATH>`: *optional* filesystem-path option; used to specify the output FIRRTL file.
 * `--out-dot <PATH>`: *optional* filesystem-path option; used to specify the output DOT file.
 * `-a` or `-l`: *required* flag; used to specify the chosen scheduling strategy - either as-soon-as-possible or linear programming. **Exactly one of these flags has to be specified**.
