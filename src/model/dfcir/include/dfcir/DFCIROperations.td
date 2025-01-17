@@ -197,12 +197,13 @@ class DFCIR_UnaryOp<string name, Constraint firstType,
       llvm::SMLoc latencyLoc = parser.getCurrentLocation();
       if (auto noQuestion = parser.parseOptionalQuestion()) {
         auto noAttr = parser.parseCustomAttributeWithFallback(latencyAttr, Type{}) ||
-	                    !latencyAttr;
+                      !latencyAttr;
         // !XOR(A, B) <=> A == B.
-	      if (bool(noQuestion) == bool(noAttr)) {
-	        return parser.emitError(latencyLoc) << "'" << result.name.getStringRef() <<
-	               "' op requires either '?' or valid latency specified";	
-	      }
+        if (bool(noQuestion) == bool(noAttr)) {
+          auto newErr = parser.emitError(latencyLoc);
+          return newErr << "'" << result.name.getStringRef()
+                        << "' op requires either '?' or valid latency specified";
+        }
       } else {
         latencyAttr =
             IntegerAttr::get(IntegerType::get(parser.getContext(), 32), -1);
@@ -219,10 +220,10 @@ class DFCIR_UnaryOp<string name, Constraint firstType,
       if (parser.parseOperand(firstRawOperands[0]) ||
           parser.parseColon() ||
           parser.parseCustomTypeWithFallback(firstRawTypes[0]) ||
-	        parser.parseRParen() ||
+          parser.parseRParen() ||
           parser.parseColon() ||
-	        parser.parseCustomTypeWithFallback(resRawTypes[0]) ||
-	        parser.parseOptionalAttrDict(result.attributes)) {
+          parser.parseCustomTypeWithFallback(resRawTypes[0]) ||
+          parser.parseOptionalAttrDict(result.attributes)) {
         return failure();
       }
       result.addTypes(resTypes);
@@ -306,12 +307,13 @@ class DFCIR_BinaryOp<string name, Constraint firstType, Constraint secondType,
       llvm::SMLoc latencyLoc = parser.getCurrentLocation();
       if (auto noQuestion = parser.parseOptionalQuestion()) {
         auto noAttr = parser.parseCustomAttributeWithFallback(latencyAttr, Type{}) ||
-	                    !latencyAttr;
+                      !latencyAttr;
         // !XOR(A, B) <=> A == B.
-	      if (bool(noQuestion) == bool(noAttr)) {
-	        return parser.emitError(latencyLoc) << "'" << result.name.getStringRef() <<
-	               "' op requires either '?' or valid latency specified";	
-	      }
+        if (bool(noQuestion) == bool(noAttr)) {
+          auto newErr = parser.emitError(latencyLoc);
+          return newErr << "'" << result.name.getStringRef()
+                        << "' op requires either '?' or valid latency specified";  
+        }
       } else {
         latencyAttr =
             IntegerAttr::get(IntegerType::get(parser.getContext(), 32), -1);
@@ -335,11 +337,11 @@ class DFCIR_BinaryOp<string name, Constraint firstType, Constraint secondType,
       secondOperandsLoc = parser.getCurrentLocation();
       if (parser.parseOperand(secondRawOperands[0]) ||
           parser.parseColon() || 
-	        parser.parseCustomTypeWithFallback(secondRawTypes[0]) ||
-	        parser.parseRParen() ||
+          parser.parseCustomTypeWithFallback(secondRawTypes[0]) ||
+          parser.parseRParen() ||
           parser.parseColon() ||
-	        parser.parseCustomTypeWithFallback(resRawTypes[0]) ||
-	        parser.parseOptionalAttrDict(result.attributes)) {
+          parser.parseCustomTypeWithFallback(resRawTypes[0]) ||
+          parser.parseOptionalAttrDict(result.attributes)) {
         return failure();
       }
       result.addTypes(resTypes);

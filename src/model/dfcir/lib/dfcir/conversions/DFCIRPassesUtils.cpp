@@ -10,7 +10,7 @@
 
 #include "circt/Dialect/FIRRTL/FIRRTLInstanceGraph.h"
 
-
+#include <iostream>
 
 namespace mlir::dfcir::utils {
 
@@ -97,9 +97,15 @@ void Graph::applyConfig(const LatencyConfig &cfg) {
 
     auto found = cfg.internalOps.find(opType);
 
-    int32_t latency = (found != cfg.internalOps.end()) ?
-                      (*found).second :
-                      1;
+    int32_t latency;
+    if (found != cfg.internalOps.end()) {
+      latency = (*found).second;
+    } else {
+      std::cout << "No explicit config for operation type "
+                << opTypeToString(opType)
+                << " - latency 1 will be used" << std::endl;
+      latency = 1;
+    }
     
     casted.setLatency(latency);
 
@@ -206,7 +212,6 @@ Graph::Graph(KernelOp kernel) : Graph() {
 Graph::Graph(ModuleOp module)
     : Graph(mlir::utils::findFirstOccurence<KernelOp>(module)) {}
 
-
 void insertBuffer(OpBuilder &builder, Channel *channel, int32_t latency) {
 
   builder.setInsertionPoint(channel->target->op);
@@ -278,8 +283,46 @@ Ops resolveInternalOpType(mlir::Operation *op) {
     return (isFloat) ? Ops::NEQ_FLOAT : Ops::NEQ_INT;
   }
 
-  assert(false && "Shouldn't reach this");
+  std::cout << "Couldn't find deduce the type for the operation below.";
+  std::cout << "Latency 0 will be used." << std::endl;
+  op->dump();
   return Ops::UNDEFINED;
+}
+
+std::string opTypeToString(const Ops &opType) {
+  switch (opType) {
+  case ADD_INT: return "ADD_INT";
+  case ADD_FLOAT: return "ADD_FLOAT";
+  case SUB_INT: return "SUB_INT";
+  case SUB_FLOAT: return "SUB_FLOAT";
+  case MUL_INT: return "MUL_INT";
+  case MUL_FLOAT: return "MUL_FLOAT";
+  case DIV_INT: return "DIV_INT";
+  case DIV_FLOAT: return "DIV_FLOAT";
+  case NEG_INT: return "NEG_INT";
+  case NEG_FLOAT: return "NEG_FLOAT";
+  case AND_INT: return "AND_INT";
+  case AND_FLOAT: return "AND_FLOAT";
+  case OR_INT: return "OR_INT";
+  case OR_FLOAT: return "OR_FLOAT";
+  case XOR_INT: return "XOR_INT";
+  case XOR_FLOAT: return "XOR_FLOAT";
+  case NOT_INT: return "NOT_INT";
+  case NOT_FLOAT: return "NOT_FLOAT";
+  case LESS_INT: return "LESS_INT";
+  case LESS_FLOAT: return "LESS_FLOAT";
+  case LESSEQ_INT: return "LESSEQ_INT";
+  case LESSEQ_FLOAT: return "LESSEQ_FLOAT";
+  case GREATER_INT: return "GREATER_INT";
+  case GREATER_FLOAT: return "GREATER_FLOAT";
+  case GREATEREQ_INT: return "GREATEREQ_INT";
+  case GREATEREQ_FLOAT: return "GREATEREQ_FLOAT";
+  case EQ_INT: return "EQ_INT";
+  case EQ_FLOAT: return "EQ_FLOAT";
+  case NEQ_INT: return "NEQ_INT";
+  case NEQ_FLOAT: return "NEQ_FLOAT";
+  default: return "<unknown>";
+  }
 }
 
 } // namespace mlir::dfcir::utils

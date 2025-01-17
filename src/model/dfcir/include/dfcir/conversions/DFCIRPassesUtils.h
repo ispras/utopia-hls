@@ -141,6 +141,8 @@ bool hasConstantInput(mlir::Operation *op);
 
 Ops resolveInternalOpType(mlir::Operation *op);
 
+std::string opTypeToString(const Ops &opType);
+
 } // namespace mlir::dfcir::utils
 
 #endif // DFCIR_PASSES_UTILS_H
