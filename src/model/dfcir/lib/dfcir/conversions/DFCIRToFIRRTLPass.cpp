@@ -699,7 +699,6 @@ public:
     using circt::firrtl::CatPrimOp;
     using circt::firrtl::AsUIntPrimOp;
 
-
     auto oldType = getTypeConverter()->convertType(shRightOp->getResult(0).getType());
     uint32_t oldWidth = *getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(oldType));
     bool isSInt = llvm::isa<SIntType>(oldType);
@@ -805,10 +804,28 @@ public:
 
   LogicalResult matchAndRewrite(MuxOp muxOp, OpAdaptor adaptor,
                                 Rewriter &rewriter) const override {
-    auto newOp = rewriter.create<circt::firrtl::MultibitMuxOp>(
-        rewriter.getUnknownLoc(),
-        adaptor.getControl(),
+    using circt::firrtl::UIntType;
+    using circt::firrtl::AsUIntPrimOp;
+    using circt::firrtl::MultibitMuxOp;
+
+    Value oldControl = adaptor.getControl();
+    Location oldLoc = muxOp.getLoc();
+
+    if (!llvm::isa<UIntType>(oldControl.getType())) {
+      auto newReinterpret = rewriter.create<AsUIntPrimOp>(
+          oldLoc,
+          oldControl
+      );
+
+      oldLoc = rewriter.getUnknownLoc();
+      oldControl = newReinterpret->getResult(0);
+    }
+
+    auto newOp = rewriter.create<MultibitMuxOp>(
+        oldLoc,
+        oldControl,
         adaptor.getVars());
+
     for (auto &operand: llvm::make_early_inc_range(muxOp.getRes().getUses())) {
       (*oldTypeMap)[std::make_pair(operand.getOwner(),
                                    operand.getOperandNumber())] =
