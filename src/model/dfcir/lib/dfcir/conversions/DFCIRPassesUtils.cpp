@@ -95,6 +95,12 @@ void Graph::applyConfig(const LatencyConfig &cfg) {
 
     Ops opType = resolveInternalOpType(node->op);
 
+    if (opType == Ops::UNDEFINED) {
+      std::cout << "Couldn't deduce the type for the operation below. ";
+      std::cout << "Latency 0 will be used." << std::endl;
+      node->op->dump();
+    }
+
     auto found = cfg.internalOps.find(opType);
 
     int32_t latency;
@@ -103,7 +109,7 @@ void Graph::applyConfig(const LatencyConfig &cfg) {
     } else {
       std::cout << "No explicit config for operation type "
                 << opTypeToString(opType)
-                << " - latency 1 will be used" << std::endl;
+                << "." << std::endl << "Latency 1 will be used." << std::endl;
       latency = 1;
     }
     
@@ -300,9 +306,6 @@ Ops resolveInternalOpType(mlir::Operation *op) {
     return (isFloat) ? Ops::NEQ_FLOAT : Ops::NEQ_INT;
   }
 
-  std::cout << "Couldn't find deduce the type for the operation below.";
-  std::cout << "Latency 0 will be used." << std::endl;
-  op->dump();
   return Ops::UNDEFINED;
 }
 
