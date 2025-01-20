@@ -194,11 +194,9 @@ DFVariableImpl *DFConstant::operator<<(uint8_t bits) {
   DFVariableImpl *newVar;
   Value val {};
   val.uint_ = value.uint_ << bits;
-  DFTypeImpl *newType = meta.storage.addType(
-      meta.typeBuilder.buildShiftedType(&type, bits));
-  newVar = meta.varBuilder.buildConstant(meta, newType, val);
+  newVar = meta.varBuilder.buildConstant(meta, &type, val);
   meta.storage.addVariable(newVar);
-  meta.graph.addNode(newVar, OpType::CONST, NodeData {.bitShift=bits});
+  meta.graph.addNode(newVar, OpType::CONST, NodeData {});
   return newVar;
 }
 
@@ -206,11 +204,9 @@ DFVariableImpl *DFConstant::operator>>(uint8_t bits) {
   DFVariableImpl *newVar;
   Value val {};
   val.uint_ = value.uint_ >> bits;
-  DFTypeImpl *newType = meta.storage.addType(
-      meta.typeBuilder.buildShiftedType(&type, int8_t(bits) * -1));
-  newVar = meta.varBuilder.buildConstant(meta, newType, val);
+  newVar = meta.varBuilder.buildConstant(meta, &type, val);
   meta.storage.addVariable(newVar);
-  meta.graph.addNode(newVar, OpType::CONST, NodeData {.bitShift=bits});
+  meta.graph.addNode(newVar, OpType::CONST, NodeData {});
   return newVar;
 }
 

@@ -420,7 +420,8 @@ def DivOp : DFCIR_BinaryOp<"div", Variable, Variable, Variable, []>;
 
 def CastOp : DFCIR_UnaryOp<"cast", Variable, Variable, []>;
 
-def ShiftLeftOp : DFCIR_Op<"shl", [DeclareOpInterfaceMethods<ShiftOpInterface>]> {
+class DFCIR_ShiftOp<string name, list<Trait> traits = []> :
+    DFCIR_Op<name, traits # [DeclareOpInterfaceMethods<ShiftOpInterface>]> {
   let arguments = (ins 
     Variable:$first,
     Builtin_IntegerAttr:$bits
@@ -431,16 +432,9 @@ def ShiftLeftOp : DFCIR_Op<"shl", [DeclareOpInterfaceMethods<ShiftOpInterface>]>
   let results = (outs Variable:$res);
 }
 
-def ShiftRightOp : DFCIR_Op<"shr", [DeclareOpInterfaceMethods<ShiftOpInterface>]> {
-  let arguments = (ins 
-    Variable:$first,
-    Builtin_IntegerAttr:$bits
-  );
+def ShiftLeftOp : DFCIR_ShiftOp<"shl", []>;
 
-  let assemblyFormat = "`(` $first `:` type($first) `,` $bits `)` `:` type($res) attr-dict";
-
-  let results = (outs Variable:$res);
-}
+def ShiftRightOp : DFCIR_ShiftOp<"shr", []>;
 
 // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
 // Type system rework required.

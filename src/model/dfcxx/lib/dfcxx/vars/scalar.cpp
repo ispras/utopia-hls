@@ -111,10 +111,8 @@ DFVariableImpl *DFScalar::operator!=(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl *DFScalar::operator<<(uint8_t bits) {
-  DFTypeImpl *newType = meta.storage.addType(
-      meta.typeBuilder.buildShiftedType(&type, bits));
   DFVariableImpl *newVar =
-      meta.varBuilder.buildStream("", IODirection::NONE, meta, newType);
+      meta.varBuilder.buildStream("", IODirection::NONE, meta, &type);
   meta.storage.addVariable(newVar);
   meta.graph.addNode(newVar, OpType::SHL, NodeData {.bitShift=bits});
   meta.graph.addChannel(this, newVar, 0, false);
@@ -122,10 +120,8 @@ DFVariableImpl *DFScalar::operator<<(uint8_t bits) {
 }
 
 DFVariableImpl *DFScalar::operator>>(uint8_t bits) {
-  DFTypeImpl *newType = meta.storage.addType(
-      meta.typeBuilder.buildShiftedType(&type, int8_t(bits) * -1));
   DFVariableImpl *newVar =
-      meta.varBuilder.buildStream("", IODirection::NONE, meta, newType);
+      meta.varBuilder.buildStream("", IODirection::NONE, meta, &type);
   meta.storage.addVariable(newVar);
   meta.graph.addNode(newVar, OpType::SHR, NodeData {.bitShift=bits});
   meta.graph.addChannel(this, newVar, 0, false);

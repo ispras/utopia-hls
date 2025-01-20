@@ -473,13 +473,13 @@ class SchedulableOpConversionPattern
     for (; id <= (newOp.getNumResults() - 2); ++id) {
       rewriter.create<circt::firrtl::ConnectOp>(
           rewriter.getUnknownLoc(),
-          newOp.getResult(id),
+          newOp->getResult(id),
           adaptorOperands[id - 1]
       );
     }
     rewriter.create<circt::firrtl::ConnectOp>(
         rewriter.getUnknownLoc(),
-        newOp.getResult(id),
+        newOp->getResult(id),
         getClockVarFromOpBlock(newOp)
     );
 
@@ -487,7 +487,7 @@ class SchedulableOpConversionPattern
       (*this->oldTypeMap)[std::make_pair(operand.getOwner(),
                                          operand.getOperandNumber())] =
                                              operand.get().getType();
-      operand.set(newOp.getResult(0));
+      operand.set(newOp->getResult(0));
     }
   };
 
@@ -616,12 +616,57 @@ public:
 
   LogicalResult matchAndRewrite(ShiftLeftOp shLeftOp, OpAdaptor adaptor,
                                 Rewriter &rewriter) const override {
-    auto newOp = rewriter.create<ShlPrimOp>(
-        shLeftOp.getLoc(),
-        getTypeConverter()->convertType(shLeftOp->getResult(0).getType()),
-        adaptor.getFirst(),
-        adaptor.getBits());
+    using circt::firrtl::getBitWidth;
+    using circt::firrtl::SIntType;
+    using circt::firrtl::AsSIntPrimOp;
+    using circt::firrtl::FIRRTLBaseType;
+    using circt::firrtl::BitsPrimOp;
+    using circt::firrtl::AsUIntPrimOp;
+
+    auto oldType = getTypeConverter()->convertType(shLeftOp->getResult(0).getType());
+    uint32_t oldWidth = *getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(oldType));
+    bool isSInt = llvm::isa<SIntType>(oldType);
+    Value oldInput = adaptor.getFirst();
+    Location oldLoc = shLeftOp.getLoc();
+
+    if (isSInt) {
+      auto newReinterpret = rewriter.create<AsUIntPrimOp>(
+          oldLoc,
+          oldInput
+      );
+
+      oldLoc = rewriter.getUnknownLoc();
+      oldInput = newReinterpret->getResult(0);
+    }
     
+    auto newShl = rewriter.create<ShlPrimOp>(
+        oldLoc,
+        oldInput,
+        adaptor.getBits()
+    );
+    auto newShlResult = newShl->getResult(0);
+    auto newShlResultType = newShlResult.getType();
+    uint32_t newWidth =
+        *getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(newShlResultType));
+
+    Operation *newOp = nullptr;
+
+    newOp = rewriter.create<BitsPrimOp>(
+        rewriter.getUnknownLoc(),
+        newShlResult,
+        newWidth - 1,
+        newWidth - oldWidth
+    );
+
+    if (isSInt) {
+      auto newReinterpret = rewriter.create<AsSIntPrimOp>(
+          rewriter.getUnknownLoc(),
+          newOp->getResult(0)
+      );
+
+      newOp = newReinterpret;
+    }
+
     for (auto &operand:
         llvm::make_early_inc_range(shLeftOp.getRes().getUses())) {
       (*oldTypeMap)[std::make_pair(operand.getOwner(),
@@ -645,12 +690,80 @@ public:
 
   LogicalResult matchAndRewrite(ShiftRightOp shRightOp, OpAdaptor adaptor,
                                 Rewriter &rewriter) const override {
-    auto newOp = rewriter.create<ShrPrimOp>(
-        shRightOp.getLoc(),
-        getTypeConverter()->convertType(shRightOp->getResult(0).getType()),
-        adaptor.getFirst(),
-        adaptor.getBits());
+    using circt::firrtl::getBitWidth;
+    using circt::firrtl::SIntType;
+    using circt::firrtl::AsSIntPrimOp;
+    using circt::firrtl::FIRRTLBaseType;
+    using circt::firrtl::UIntType;
+    using circt::firrtl::ConstantOp;
+    using circt::firrtl::CatPrimOp;
+    using circt::firrtl::AsUIntPrimOp;
+
+
+    auto oldType = getTypeConverter()->convertType(shRightOp->getResult(0).getType());
+    uint32_t oldWidth = *getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(oldType));
+    bool isSInt = llvm::isa<SIntType>(oldType);
+    Value oldInput = adaptor.getFirst();
+    Location oldLoc = shRightOp.getLoc();
+
+    if (isSInt) {
+      auto newReinterpret = rewriter.create<AsUIntPrimOp>(
+          oldLoc,
+          oldInput
+      );
+
+      oldLoc = rewriter.getUnknownLoc();
+      oldInput = newReinterpret->getResult(0);
+    }
+
+    auto newShr = rewriter.create<ShrPrimOp>(
+        oldLoc,
+        oldInput,
+        adaptor.getBits()
+    );
+    auto newShrResult = newShr->getResult(0);
+    auto newShrResultType = newShrResult.getType();
+    uint32_t newWidth =
+        *getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(newShrResultType));
     
+    Operation *newOp = nullptr;
+
+    auto newConstType = UIntType::get(
+        rewriter.getContext(),
+        static_cast<int32_t>(oldWidth - newWidth),
+        true // isConst
+    );
+    auto newConstAttrType = IntegerType::get(
+        rewriter.getContext(),
+        oldWidth - newWidth,
+        IntegerType::SignednessSemantics::Unsigned
+    );
+    auto newConstAttr = IntegerAttr::get(
+        newConstAttrType,
+        0 // value
+    );
+    auto newConst = rewriter.create<ConstantOp>(
+        rewriter.getUnknownLoc(),
+        newConstType,
+        newConstAttr
+    );
+    auto newConstResult = newConst->getResult(0);
+
+    newOp = rewriter.create<CatPrimOp>(
+        rewriter.getUnknownLoc(),
+        newConstResult,
+        newShrResult
+    );
+
+    if (isSInt) {
+      auto newReinterpret = rewriter.create<AsSIntPrimOp>(
+          rewriter.getUnknownLoc(),
+          newOp->getResult(0)
+      );
+
+      newOp = newReinterpret;
+    }
+
     for (auto &operand:
         llvm::make_early_inc_range(shRightOp.getRes().getUses())) {
       (*oldTypeMap)[std::make_pair(operand.getOwner(),
