@@ -2,7 +2,7 @@
 //
 // Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2025 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -17,8 +17,10 @@
 
 #include <algorithm>
 #include <ctime>
+#include <iostream>
 #include <optional>
 #include <string>
+#include <string_view>
 
 namespace mlir::dfcir {
 
@@ -38,7 +40,8 @@ class FIRRTLStubGeneratorPass
 
 private:
   TemplateDictionary *processFIFOModule(TemplateDictionary *dict,
-                                        FExtModuleOp module) {
+                                        FExtModuleOp module,
+                                        uint32_t latency) {
     TemplateDictionary *result = dict->AddSectionDictionary("FIFO_MODULES");
     auto ports = module.getPorts();
     auto res1Type = llvm::cast<FIRRTLBaseType>(module.getPortType(0));
@@ -50,50 +53,117 @@ private:
     return result;
   }
 
-  TemplateDictionary *processBinModule(TemplateDictionary *dict,
-                                       FExtModuleOp module,
-                                       unsigned latency) {
-    TemplateDictionary *result = dict->AddSectionDictionary("BINARY_MODULES");
-    auto moduleName = module.getModuleName();
-    if (moduleName.contains(ADD_MODULE)) {
-      result->SetValue("OP", "+");
-    } else if (moduleName.contains(SUB_MODULE)) {
-      result->SetValue("OP", "-");
-    } else if (moduleName.contains(MUL_MODULE)) {
-      result->SetValue("OP", "*");
-    } else {
-      module.emitError("Unsupported binary operation.");
-      return nullptr;
-    }
+  TemplateDictionary *processSimpleCastModule(TemplateDictionary *dict,
+                                              FExtModuleOp module,
+                                              uint32_t latency) {
+    std::string_view templateName =
+        (latency) ? "CAST_MODULES" : "COMB_CAST_MODULES";
+    TemplateDictionary *result = dict->AddSectionDictionary(templateName.data());
+
     auto ports = module.getPorts();
+    result->SetValue("RES1", ports[0].getName().data());
+    auto arg1 = ports[1].getName().data();
+    result->SetValue("ARG1", arg1);
+    result->SetValue("CLK", ports[2].getName().data());
+
     auto res1Type = llvm::cast<FIRRTLBaseType>(module.getPortType(0));
     bool isSigned = llvm::cast<IntType>(res1Type).isSigned();
-    int32_t width3 = res1Type.getBitWidthOrSentinel();
-    result->SetFormattedValue("WIDTH3", "%d", width3 - 1);
+    int32_t width2 = res1Type.getBitWidthOrSentinel();
+    result->SetFormattedValue("WIDTH2", "%d", width2 - 1);
+
     auto arg1Type = llvm::cast<FIRRTLBaseType>(module.getPortType(1));
     int32_t width1 = arg1Type.getBitWidthOrSentinel();
     result->SetFormattedValue("WIDTH1", "%d", width1 - 1);
-    auto arg2Type = llvm::cast<FIRRTLBaseType>(module.getPortType(2));
-    int32_t width2 = arg2Type.getBitWidthOrSentinel();
-    result->SetFormattedValue("WIDTH2", "%d", width2 - 1);
-    int32_t rWidth = std::max(width1, width2);
-    result->SetFormattedValue("RWIDTH", "%d", rWidth - 1);
+
+    int32_t repeat = std::max(width2 - width1, 0);
+    result->SetFormattedValue("REPEAT", "%d", repeat);
+
+    int32_t diff = std::min(width2, width1);
+    result->SetFormattedValue("DIFF", "%d", diff - 1);
+
+    int32_t cat = std::max(width2, width1);
+    result->SetFormattedValue("CAT", "%d", cat - 1);
+
+    if (isSigned) {
+      result->SetFormattedValue("REPEAT_VAL", "%s[%d]", arg1, width1 - 1);
+    } else {
+      result->SetValue("REPEAT_VAL", "1'h0");
+    }
+
+    return result;
+  }
+
+  TemplateDictionary *processBinModule(TemplateDictionary *dict,
+                                       FExtModuleOp module,
+                                       uint32_t latency) {
+    std::string_view opChar;
+    auto moduleName = module.getModuleName();
+    if (moduleName.contains(ADD_MODULE)) {
+      opChar = "+";
+    } else if (moduleName.contains(SUB_MODULE)) {
+      opChar = "-";
+    } else if (moduleName.contains(MUL_MODULE)) {
+      opChar = "*";
+    } else if (moduleName.contains(LESS_MODULE)) {
+      opChar = "<";
+    } else if (moduleName.contains(LESSEQ_MODULE)) {
+      opChar = "<=";
+    } else if (moduleName.contains(GREATER_MODULE)) {
+      opChar = ">";
+    } else if (moduleName.contains(GREATEREQ_MODULE)) {
+      opChar = ">=";
+    } else if (moduleName.contains(EQ_MODULE)) {
+      opChar = "==";
+    } else if (moduleName.contains(NEQ_MODULE)) {
+      opChar = "!=";
+    } else {
+      std::cout << "Unsupported binary operation:" << std::endl;
+      module.dump();
+      return nullptr;
+    }
+
+    std::string_view templateName =
+        (latency) ? "BINARY_MODULES" : "COMB_BINARY_MODULES";
+    TemplateDictionary *result = dict->AddSectionDictionary(templateName.data());
+
+    result->SetValue("OP", opChar.data());
+    auto ports = module.getPorts();
     result->SetValue("RES1", ports[0].getName().data());
     auto arg1 = ports[1].getName().data();
     result->SetValue("ARG1", arg1);
     auto arg2 = ports[2].getName().data();
     result->SetValue("ARG2", arg2);
     result->SetValue("CLK", ports[3].getName().data());
+
+    auto res1Type = llvm::cast<FIRRTLBaseType>(module.getPortType(0));
+    bool isSigned = llvm::cast<IntType>(res1Type).isSigned();
+    int32_t width3 = res1Type.getBitWidthOrSentinel();
+    result->SetFormattedValue("WIDTH3", "%d", width3 - 1);
+
+    auto arg1Type = llvm::cast<FIRRTLBaseType>(module.getPortType(1));
+    int32_t width1 = arg1Type.getBitWidthOrSentinel();
+    result->SetFormattedValue("WIDTH1", "%d", width1 - 1);
+
+    auto arg2Type = llvm::cast<FIRRTLBaseType>(module.getPortType(2));
+    int32_t width2 = arg2Type.getBitWidthOrSentinel();
+    result->SetFormattedValue("WIDTH2", "%d", width2 - 1);
+
+    int32_t rWidth = std::max(width1, width2);
+    result->SetFormattedValue("RWIDTH", "%d", rWidth - 1);
+
     int32_t repeat1 = std::max(rWidth - width1, 0);
     result->SetFormattedValue("REPEAT1", "%d", repeat1);
     int32_t repeat2 = std::max(rWidth - width2, 0);
     result->SetFormattedValue("REPEAT2", "%d", repeat2);
     int32_t repeat3 = std::max(width3 - rWidth, 0);
     result->SetFormattedValue("REPEAT3", "%d", repeat3);
+
     int32_t diff = std::min(width3, rWidth);
     result->SetFormattedValue("DIFF", "%d", diff - 1);
+
     int32_t cat = std::max(width3, rWidth);
     result->SetFormattedValue("CAT", "%d", cat - 1);
+
     if (isSigned) {
       result->SetFormattedValue("REPEAT_VAL1", "%s[%d]", arg1, width1 - 1);
       result->SetFormattedValue("REPEAT_VAL2", "%s[%d]", arg2, width2 - 1);
@@ -104,6 +174,7 @@ private:
       result->SetValue("REPEAT_VAL2", "1'h0");
       result->SetValue("REPEAT_VAL3", "1'h0");
     }
+
     return result;
   }
 
@@ -113,16 +184,26 @@ private:
     auto end = block->op_end<FExtModuleOp>();
     for (auto op = begin; op != end; ++op) {
       auto moduleName = (*op).getModuleName();
-      unsigned latency =
+      uint32_t latency =
           (*op)->getAttr(INSTANCE_LATENCY_ATTR)
               .cast<IntegerAttr>().getUInt();
-      TemplateDictionary *moduleDict =
-          moduleName.contains(BUF_MODULE) ?
-          processFIFOModule(dict, *op) :
-          processBinModule(dict, *op, latency);
-      if (!moduleDict) {
-        return failure();
+      TemplateDictionary *moduleDict;
+      if (moduleName.contains(BUF_MODULE)) {
+        moduleDict = processFIFOModule(dict, *op, latency);
+      } else if (moduleName.contains(CAST_MODULE)) {
+        moduleDict = processSimpleCastModule(dict, *op, latency);
+      } else {
+        moduleDict = processBinModule(dict, *op, latency);
       }
+
+      if (!moduleDict) {
+        continue;
+      }
+
+      // It is assumed that for :latency" == 0 respective
+      // process*Module-methods know how to handle it,
+      // so here we can subtract 1 from "latency"
+      // without handling the mentioned case.
       moduleDict->SetFormattedValue("LATENCY", "%u", latency - 1);
       moduleDict->SetValue("MODULE_NAME", moduleName.data());
     }

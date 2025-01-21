@@ -50,6 +50,10 @@ void DFVariableImpl::connect(DFVariableImpl *connectee) {
 }
 
 DFVariableImpl *DFVariableImpl::cast(DFTypeImpl *type) {
+  if (type == getType()) {
+    return this;
+  }
+
   DFVariableImpl *var =
       meta.varBuilder.buildStream("", IODirection::NONE, meta, type);
   meta.storage.addVariable(var);

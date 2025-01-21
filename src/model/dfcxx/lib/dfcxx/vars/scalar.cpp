@@ -76,14 +76,14 @@ DFVariableImpl *DFScalar::operator-() {
   GENERIC_STREAM_UNARY_OP(OpType::NEG, newVar)
 }
 
-#define GENERIC_STREAM_COMP_OP(OP_TYPE, VAR, TYPE_VAR, RHS)                \
-DFTypeImpl *TYPE_VAR = meta.storage.addType(meta.typeBuilder.buildBool()); \
-  DFVariableImpl *VAR =                                                    \
-      meta.varBuilder.buildStream("", IODirection::NONE, meta, TYPE_VAR);  \
-  meta.storage.addVariable(VAR);                                           \
-  meta.graph.addNode(VAR, OP_TYPE, NodeData {});                           \
-  meta.graph.addChannel(this, VAR, 0, false);                              \
-  meta.graph.addChannel(&RHS, VAR, 1, false);                              \
+#define GENERIC_STREAM_COMP_OP(OP_TYPE, VAR, TYPE_VAR, RHS)                  \
+  DFTypeImpl *TYPE_VAR = meta.storage.addType(meta.typeBuilder.buildBool()); \
+  DFVariableImpl *VAR =                                                      \
+      meta.varBuilder.buildStream("", IODirection::NONE, meta, TYPE_VAR);    \
+  meta.storage.addVariable(VAR);                                             \
+  meta.graph.addNode(VAR, OP_TYPE, NodeData {});                             \
+  meta.graph.addChannel(this, VAR, 0, false);                                \
+  meta.graph.addChannel(&RHS, VAR, 1, false);                                \
   return VAR;
 
 DFVariableImpl *DFScalar::operator<(DFVariableImpl &rhs) {
