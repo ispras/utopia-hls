@@ -45,6 +45,16 @@ std::pair<Value, int32_t> findNearestNodeValue(Value value) {
   return std::make_pair(curVal, offsetSum);
 }
 
+ConnectOp getDstValueConnect(Value value) {
+  for (auto &operand: llvm::make_early_inc_range(value.getUses())) {
+    auto castedConnect = llvm::dyn_cast<ConnectOp>(operand.getOwner());
+    if (castedConnect && castedConnect.getDest() == value) {
+      return castedConnect;
+    }
+  }
+  return nullptr;
+}
+
 Node::Node(Operation *op, int32_t latency) : op(op), latency(latency) {}
 
 Node::Node() : Node(nullptr) {}
@@ -157,7 +167,12 @@ void Graph::process<ConnectOp>(ConnectOp &op) {
   auto unrolledInfo = findNearestNodeValue(op.getSrc());
   auto srcNode = findNode(unrolledInfo.first);
   auto dstNode = findNode(op.getDest());
-  Channel *newChannel = new Channel(*srcNode, *dstNode, 0, unrolledInfo.second);
+
+  auto dstCasted = llvm::cast<OpResult>(op.getDest());
+  int8_t resId = static_cast<int8_t>(dstCasted.getResultNumber());
+  int8_t valInd = -resId - 1;
+
+  Channel *newChannel = new Channel(*srcNode, *dstNode, valInd, unrolledInfo.second);
   channels.insert(newChannel);
   outputs[*srcNode].insert(newChannel);
   inputs[*dstNode].insert(newChannel);
@@ -237,14 +252,28 @@ Graph::Graph(ModuleOp module)
 
 void insertBuffer(OpBuilder &builder, Channel *channel, int32_t latency) {
 
-  builder.setInsertionPoint(channel->target->op);
-  auto value = channel->target->op->getOperand(channel->valInd);
+  if (channel->valInd >= 0) {
+    builder.setInsertionPoint(channel->target->op);
+    auto value = channel->target->op->getOperand(channel->valInd);
 
-  auto latencyOp = builder.create<LatencyOp>(builder.getUnknownLoc(),
-                                             value.getType(),
-                                             value,
-                                             latency);
-  channel->target->op->setOperand(channel->valInd, latencyOp.getRes());
+    auto latencyOp = builder.create<LatencyOp>(builder.getUnknownLoc(),
+                                               value.getType(),
+                                               value,
+                                               latency);
+    channel->target->op->setOperand(channel->valInd, latencyOp.getRes());
+  } else {
+    unsigned resId = static_cast<unsigned>(-(channel->valInd + 1));
+    auto targetRes = channel->target->op->getResult(resId);
+    auto foundConnect = getDstValueConnect(targetRes);
+    assert(foundConnect);
+    builder.setInsertionPoint(foundConnect);
+    auto foundConnectSrc = foundConnect.getSrc();
+    auto latencyOp = builder.create<LatencyOp>(builder.getUnknownLoc(),
+                                               foundConnectSrc.getType(),
+                                               foundConnectSrc,
+                                               latency);
+    foundConnect.getSrcMutable().assign(latencyOp.getRes());
+  }
 }
 
 void insertBuffers(mlir::MLIRContext &ctx, const Buffers &buffers) {

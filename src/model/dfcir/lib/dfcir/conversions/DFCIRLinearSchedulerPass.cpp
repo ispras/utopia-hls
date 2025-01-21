@@ -45,6 +45,14 @@ private:
     problem.addConstraint(1, var, coeff, OpType::Equal, 0);
   }
 
+  void synchronizeOutput(Node *left, Node *right) {
+    int *vars = new int[2]{nodeMap[left], nodeMap[right]};
+    double *coeffs = new double[2]{1.0, -1.0};
+
+    // t_out_left = t_out_right
+    problem.addConstraint(2, vars, coeffs, OpType::Equal, 0);
+  }
+
   void addLatencyConstraint(Channel *chan) {
     int *vars = new int[2]{nodeMap[chan->target], nodeMap[chan->source]};
     double *coeffs = new double[2]{1.0, -1.0};
@@ -86,6 +94,8 @@ private:
   std::unordered_map<Node *, int> nodeMap;
   std::unordered_map<Channel *, int> bufMap;
 
+  Node *prevOutputNode = nullptr;
+
   Buffers schedule(Graph &graph) {
     size_t chanCount = 0;
     for (Node *node: graph.nodes) {
@@ -93,6 +103,13 @@ private:
       nodeMap[node] = problem.addVariable();
       if (graph.startNodes.find(node) != graph.startNodes.end()) {
         synchronizeInput(node);
+      }
+
+      if (llvm::isa<OutputOpInterface>(node->op)) {
+        if (prevOutputNode) {
+          synchronizeOutput(prevOutputNode, node);
+        }
+        prevOutputNode = node;
       }
     }
 
