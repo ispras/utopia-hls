@@ -95,6 +95,7 @@ private:
                                        uint32_t latency) {
     std::string_view opChar;
     auto moduleName = module.getModuleName();
+    bool isCompOp = false;
     if (moduleName.contains(ADD_MODULE)) {
       opChar = "+";
     } else if (moduleName.contains(SUB_MODULE)) {
@@ -102,17 +103,17 @@ private:
     } else if (moduleName.contains(MUL_MODULE)) {
       opChar = "*";
     } else if (moduleName.contains(LESS_MODULE)) {
-      opChar = "<";
+      opChar = "<"; isCompOp = true;
     } else if (moduleName.contains(LESSEQ_MODULE)) {
-      opChar = "<=";
+      opChar = "<="; isCompOp = true;
     } else if (moduleName.contains(GREATER_MODULE)) {
-      opChar = ">";
+      opChar = ">"; isCompOp = true;
     } else if (moduleName.contains(GREATEREQ_MODULE)) {
-      opChar = ">=";
+      opChar = ">="; isCompOp = true;
     } else if (moduleName.contains(EQ_MODULE)) {
-      opChar = "==";
+      opChar = "=="; isCompOp = true;
     } else if (moduleName.contains(NEQ_MODULE)) {
-      opChar = "!=";
+      opChar = "!="; isCompOp = true;
     } else {
       std::cout << "Unsupported binary operation:" << std::endl;
       module.dump();
@@ -145,7 +146,8 @@ private:
     int32_t width2 = arg2Type.getBitWidthOrSentinel();
     result->SetFormattedValue("WIDTH2", "%d", width2 - 1);
 
-    int32_t rWidth = std::max(width1, width2);
+    int32_t rWidth =
+        (isCompOp) ? 1 : std::max(width1, width2);
     result->SetFormattedValue("RWIDTH", "%d", rWidth - 1);
 
     int32_t repeat1 = std::max(rWidth - width1, 0);
