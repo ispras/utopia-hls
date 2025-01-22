@@ -78,9 +78,6 @@ private:
     int32_t repeat = std::max(width2 - width1, 0);
     result->SetFormattedValue("REPEAT", "%d", repeat);
 
-    int32_t diff = std::min(width2, width1);
-    result->SetFormattedValue("DIFF", "%d", diff - 1);
-
     int32_t cat = std::max(width2, width1);
     result->SetFormattedValue("CAT", "%d", cat - 1);
 
@@ -158,9 +155,6 @@ private:
     int32_t repeat3 = std::max(width3 - rWidth, 0);
     result->SetFormattedValue("REPEAT3", "%d", repeat3);
 
-    int32_t diff = std::min(width3, rWidth);
-    result->SetFormattedValue("DIFF", "%d", diff - 1);
-
     int32_t cat = std::max(width3, rWidth);
     result->SetFormattedValue("CAT", "%d", cat - 1);
 
@@ -200,7 +194,7 @@ private:
         continue;
       }
 
-      // It is assumed that for :latency" == 0 respective
+      // It is assumed that for "latency" == 0 respective
       // process*Module-methods know how to handle it,
       // so here we can subtract 1 from "latency"
       // without handling the mentioned case.
