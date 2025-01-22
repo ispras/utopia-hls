@@ -420,11 +420,14 @@ class SchedulableOpConversionPattern
 
     for (unsigned id = 0; id < op->getNumResults(); ++id) {
       nameStream << "_OUT_";
-      Type oldType = (*this->oldTypeMap)[std::make_pair(op, id)];
+      auto res = op->getResult(id);
+      Type oldType = res.getType();
       Type innerType = llvm::cast<DFType>(oldType).getDFType();
       llvm::cast<SVSynthesizable>(innerType).printSVSignature(nameStream);
-      nameStream << "_" << llvm::cast<Scheduled>(op.getOperation()).getLatency();
     }
+
+    nameStream << "_" << llvm::cast<Scheduled>(op.getOperation()).getLatency();
+
     return name;
   }
 
