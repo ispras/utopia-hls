@@ -14,6 +14,10 @@
 #include "mlir/Transforms/DialectConversion.h"
 
 #include <queue>
+#include <utility>
+// TODO: Replace with a normal logger.
+// Issue #13 (https://github.com/ispras/utopia-hls/issues/13).
+#include <iostream>
 
 namespace mlir::dfcir {
 #define GEN_PASS_DECL_DFCIRASAPSCHEDULERPASS
@@ -43,7 +47,7 @@ class DFCIRASAPSchedulerPass
   };
 
 private:
-  Buffers schedule(Graph &graph) {
+  std::pair<Buffers, int32_t> schedule(Graph &graph) {
     Latencies map;
     using ChannelQueue = 
         std::priority_queue<Channel *, std::vector<Channel *>, ChannelComp>;
@@ -102,7 +106,7 @@ private:
         }
       }
     }
-    return buffers;
+    return std::make_pair(buffers, calculateOverallLatency(graph, buffers));
   }
 
 public:
@@ -117,7 +121,16 @@ public:
     graph.applyConfig(*latencyConfig);
 
     // Execute scheduler.
-    auto buffers = schedule(graph);
+    auto [buffers, latency] = schedule(graph);
+    latencyStatistic = latency;
+
+    // Check whether the scheduling finished successfully.
+    if (latency < 0) {
+      std::cout << "Scheduling failed." << std::endl;
+      return;
+    } else {
+      std::cout << "Top-level kernel overall latency: " << latency << std::endl;
+    }
 
     // Insert buffers.
     mlir::dfcir::utils::insertBuffers(this->getContext(), buffers);

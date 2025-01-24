@@ -16,6 +16,7 @@
 
 #include <unordered_set>
 #include <unordered_map>
+#include <utility>
 // TODO: Replace with a normal logger.
 // Issue #13 (https://github.com/ispras/utopia-hls/issues/13).
 #include <iostream>  
@@ -96,7 +97,7 @@ private:
 
   Node *prevOutputNode = nullptr;
 
-  Buffers schedule(Graph &graph) {
+  std::pair<Buffers, int32_t> schedule(Graph &graph) {
     size_t chanCount = 0;
     for (Node *node: graph.nodes) {
       chanCount += graph.inputs[node].size();
@@ -154,7 +155,7 @@ private:
 
     delete []deltaIDs;
     delete []deltaCoeffs;
-    return buffers;
+    return std::make_pair(buffers, calculateOverallLatency(graph, buffers));
   }
 
 public:
@@ -169,7 +170,16 @@ public:
     graph.applyConfig(*latencyConfig);
 
     // Execute scheduler.
-    auto buffers = schedule(graph);
+    auto [buffers, latency] = schedule(graph);
+    latencyStatistic = latency;
+
+    // Check whether the scheduling finished successfully.
+    if (latency < 0) {
+      std::cout << "Scheduling failed." << std::endl;
+      return;
+    } else {
+      std::cout << "Top-level kernel overall latency: " << latency << std::endl;
+    }
 
     // Insert buffers.
     mlir::dfcir::utils::insertBuffers(this->getContext(), buffers);

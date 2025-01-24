@@ -294,6 +294,27 @@ void eraseOffsets(mlir::Operation *op) {
   });
 }
 
+int32_t calculateOverallLatency(const Graph &graph, const Buffers &buffers) {
+  assert(!graph.startNodes.empty());
+
+  int32_t latency = 0;
+  Node *node = *(graph.startNodes.begin());
+  while (!llvm::isa<OutputOpInterface>(node->op)) {
+    latency += node->latency;
+    const auto &channels = graph.outputs.at(node);
+    assert(!channels.empty());
+    Channel *channel = *(channels.begin());
+
+    auto foundBuf = buffers.find(channel);
+    if (foundBuf != buffers.end()) {
+      latency += foundBuf->second;
+    }
+
+    node = channel->target;
+  }
+  return latency;
+}
+
 bool hasConstantInput(mlir::Operation *op) {
   return llvm::isa<ConstantInputInterface>(op);
 }
