@@ -621,53 +621,60 @@ public:
                                 Rewriter &rewriter) const override {
     using circt::firrtl::getBitWidth;
     using circt::firrtl::SIntType;
-    using circt::firrtl::AsSIntPrimOp;
     using circt::firrtl::FIRRTLBaseType;
     using circt::firrtl::BitsPrimOp;
-    using circt::firrtl::AsUIntPrimOp;
+    using circt::firrtl::CatPrimOp;
+    using circt::firrtl::AsSIntPrimOp;
 
     auto oldType = getTypeConverter()->convertType(shLeftOp->getResult(0).getType());
     uint32_t oldWidth = *getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(oldType));
     bool isSInt = llvm::isa<SIntType>(oldType);
-    Value oldInput = adaptor.getFirst();
-    Location oldLoc = shLeftOp.getLoc();
-
-    if (isSInt) {
-      auto newReinterpret = rewriter.create<AsUIntPrimOp>(
-          oldLoc,
-          oldInput
-      );
-
-      oldLoc = rewriter.getUnknownLoc();
-      oldInput = newReinterpret->getResult(0);
-    }
-    
-    auto newShl = rewriter.create<ShlPrimOp>(
-        oldLoc,
-        oldInput,
-        adaptor.getBits()
-    );
-    auto newShlResult = newShl->getResult(0);
-    auto newShlResultType = newShlResult.getType();
-    uint32_t newWidth =
-        *getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(newShlResultType));
 
     Operation *newOp = nullptr;
 
-    newOp = rewriter.create<BitsPrimOp>(
-        rewriter.getUnknownLoc(),
-        newShlResult,
-        newWidth - 1,
-        newWidth - oldWidth
+    auto newShl = rewriter.create<ShlPrimOp>(
+      shLeftOp.getLoc(),
+      adaptor.getFirst(),
+      adaptor.getBits()
     );
 
     if (isSInt) {
-      auto newReinterpret = rewriter.create<AsSIntPrimOp>(
-          rewriter.getUnknownLoc(),
-          newOp->getResult(0)
+      auto getSignOp = rewriter.create<BitsPrimOp>(
+        rewriter.getUnknownLoc(),
+        adaptor.getFirst(),
+        oldWidth - 1,
+        oldWidth - 1
       );
 
-      newOp = newReinterpret;
+      auto castedSignOp = rewriter.create<AsSIntPrimOp>(
+        rewriter.getUnknownLoc(),
+        getSignOp->getResult(0)
+      );
+
+      auto bitsOp = rewriter.create<BitsPrimOp>(
+        rewriter.getUnknownLoc(),
+        newShl->getResult(0),
+        oldWidth - 3,
+        0
+      );
+
+      auto castedBitsOp = rewriter.create<AsSIntPrimOp>(
+        rewriter.getUnknownLoc(),
+        getSignOp->getResult(0)
+      );
+
+      newOp = rewriter.create<CatPrimOp>(
+        rewriter.getUnknownLoc(),
+        castedSignOp->getResult(0),
+        castedBitsOp->getResult(0)
+      );
+    } else {
+      newOp = rewriter.create<BitsPrimOp>(
+        rewriter.getUnknownLoc(),
+        newShl->getResult(0),
+        oldWidth - 1,
+        0
+      );
     }
 
     for (auto &operand:
@@ -695,75 +702,72 @@ public:
                                 Rewriter &rewriter) const override {
     using circt::firrtl::getBitWidth;
     using circt::firrtl::SIntType;
-    using circt::firrtl::AsSIntPrimOp;
     using circt::firrtl::FIRRTLBaseType;
+    using circt::firrtl::BitsPrimOp;
     using circt::firrtl::UIntType;
     using circt::firrtl::ConstantOp;
     using circt::firrtl::CatPrimOp;
-    using circt::firrtl::AsUIntPrimOp;
+    using circt::firrtl::AsSIntPrimOp;
 
     auto oldType = getTypeConverter()->convertType(shRightOp->getResult(0).getType());
     uint32_t oldWidth = *getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(oldType));
     bool isSInt = llvm::isa<SIntType>(oldType);
-    Value oldInput = adaptor.getFirst();
-    Location oldLoc = shRightOp.getLoc();
 
-    if (isSInt) {
-      auto newReinterpret = rewriter.create<AsUIntPrimOp>(
-          oldLoc,
-          oldInput
-      );
-
-      oldLoc = rewriter.getUnknownLoc();
-      oldInput = newReinterpret->getResult(0);
-    }
-
-    auto newShr = rewriter.create<ShrPrimOp>(
-        oldLoc,
-        oldInput,
-        adaptor.getBits()
-    );
-    auto newShrResult = newShr->getResult(0);
-    auto newShrResultType = newShrResult.getType();
-    uint32_t newWidth =
-        *getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(newShrResultType));
-    
     Operation *newOp = nullptr;
 
-    auto newConstType = UIntType::get(
+    auto newShr = rewriter.create<ShrPrimOp>(
+      shRightOp.getLoc(),
+      adaptor.getFirst(),
+      adaptor.getBits()
+    );
+
+    if (isSInt) {
+      auto getSignOp = rewriter.create<BitsPrimOp>(
+        rewriter.getUnknownLoc(),
+        adaptor.getFirst(),
+        oldWidth - 1,
+        oldWidth - 1
+      );
+
+      auto castedSignOp = rewriter.create<AsSIntPrimOp>(
+        rewriter.getUnknownLoc(),
+        getSignOp->getResult(0)
+      );
+
+      newOp = rewriter.create<CatPrimOp>(
+        rewriter.getUnknownLoc(),
+        castedSignOp->getResult(0),
+        newShr->getResult(0)
+      );
+    } else {
+      auto newConstType = UIntType::get(
         rewriter.getContext(),
-        static_cast<int32_t>(oldWidth - newWidth),
+        1, // width
         true // isConst
-    );
-    auto newConstAttrType = IntegerType::get(
+      );
+
+      auto newConstAttrType = IntegerType::get(
         rewriter.getContext(),
-        oldWidth - newWidth,
+        1, // width
         IntegerType::SignednessSemantics::Unsigned
-    );
-    auto newConstAttr = IntegerAttr::get(
+      );
+
+      auto newConstAttr = IntegerAttr::get(
         newConstAttrType,
         0 // value
-    );
-    auto newConst = rewriter.create<ConstantOp>(
+      );
+
+      auto newConst = rewriter.create<ConstantOp>(
         rewriter.getUnknownLoc(),
         newConstType,
         newConstAttr
-    );
-    auto newConstResult = newConst->getResult(0);
-
-    newOp = rewriter.create<CatPrimOp>(
-        rewriter.getUnknownLoc(),
-        newConstResult,
-        newShrResult
-    );
-
-    if (isSInt) {
-      auto newReinterpret = rewriter.create<AsSIntPrimOp>(
-          rewriter.getUnknownLoc(),
-          newOp->getResult(0)
       );
 
-      newOp = newReinterpret;
+      newOp = rewriter.create<CatPrimOp>(
+        rewriter.getUnknownLoc(),
+        newConst->getResult(0),
+        newShr->getResult(0)
+      );
     }
 
     for (auto &operand:
