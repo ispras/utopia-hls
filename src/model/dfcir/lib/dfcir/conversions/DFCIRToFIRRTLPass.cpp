@@ -654,20 +654,26 @@ public:
       auto bitsOp = rewriter.create<BitsPrimOp>(
         rewriter.getUnknownLoc(),
         newShl->getResult(0),
-        oldWidth - 3,
+        oldWidth - 2,
         0
       );
 
       auto castedBitsOp = rewriter.create<AsSIntPrimOp>(
         rewriter.getUnknownLoc(),
-        getSignOp->getResult(0)
+        bitsOp->getResult(0)
       );
 
-      newOp = rewriter.create<CatPrimOp>(
+      auto catOp = rewriter.create<CatPrimOp>(
         rewriter.getUnknownLoc(),
         castedSignOp->getResult(0),
         castedBitsOp->getResult(0)
       );
+
+      newOp = rewriter.create<AsSIntPrimOp>(
+        rewriter.getUnknownLoc(),
+        catOp->getResult(0)
+      );
+
     } else {
       newOp = rewriter.create<BitsPrimOp>(
         rewriter.getUnknownLoc(),
@@ -721,6 +727,10 @@ public:
       adaptor.getBits()
     );
 
+    auto newType = newShr->getResult(0).getType();
+    uint32_t newWidth = *getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(newType));
+    uint32_t widthDelta = oldWidth - newWidth;
+
     if (isSInt) {
       auto getSignOp = rewriter.create<BitsPrimOp>(
         rewriter.getUnknownLoc(),
@@ -729,26 +739,40 @@ public:
         oldWidth - 1
       );
 
-      auto castedSignOp = rewriter.create<AsSIntPrimOp>(
+      Operation *currSignConcatOp = getSignOp;
+      for (uint32_t i = 1; i < widthDelta; ++i) {
+        currSignConcatOp = rewriter.create<CatPrimOp>(
+          rewriter.getUnknownLoc(),
+          getSignOp->getResult(0),
+          currSignConcatOp->getResult(0)
+        );
+      }
+
+      auto castedSignConcatOp = rewriter.create<AsSIntPrimOp>(
         rewriter.getUnknownLoc(),
-        getSignOp->getResult(0)
+        currSignConcatOp->getResult(0)
       );
 
-      newOp = rewriter.create<CatPrimOp>(
+      auto catOp = rewriter.create<CatPrimOp>(
         rewriter.getUnknownLoc(),
-        castedSignOp->getResult(0),
+        castedSignConcatOp->getResult(0),
         newShr->getResult(0)
+      );
+
+      newOp = rewriter.create<AsSIntPrimOp>(
+        rewriter.getUnknownLoc(),
+        catOp->getResult(0)
       );
     } else {
       auto newConstType = UIntType::get(
         rewriter.getContext(),
-        1, // width
+        widthDelta, // width
         true // isConst
       );
 
       auto newConstAttrType = IntegerType::get(
         rewriter.getContext(),
-        1, // width
+        widthDelta, // width
         IntegerType::SignednessSemantics::Unsigned
       );
 
