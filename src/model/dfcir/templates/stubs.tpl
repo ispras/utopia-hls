@@ -46,26 +46,39 @@ endmodule // {{MODULE_NAME}}
 endmodule // {{MODULE_NAME}}
 
 {{/CAST_MODULES}}
-{{#COMB_BINARY_MODULES}}module {{MODULE_NAME}} (input [{{WIDTH1}}:0] {{ARG1}}, input [{{WIDTH2}}:0] {{ARG2}}, output [{{WIDTH3}}:0] {{RES1}}, input {{CLK}});
-  wire [{{CAT}}:0] r;
+{{#COMB_BINARY_MODULES}}module {{MODULE_NAME}} (input {{SIGNED1}}[{{WIDTH1}}:0] {{ARG1}}, input {{SIGNED2}}[{{WIDTH2}}:0] {{ARG2}}, output {{SIGNED3}}[{{WIDTH3}}:0] {{RES1}}, input {{CLK}});
+  wire [{{RWIDTH}}:0] r;
   wire [{{CAT}}:0] cat;
 
-  assign result = {{{{REPEAT1}}{{{REPEAT_VAL1}}}}, {{ARG1}}} {{OP}} {{{{REPEAT2}}{{{REPEAT_VAL2}}}}, {{ARG2}}};
-  assign cat = {{{{REPEAT3}}{{{REPEAT_VAL3}}}}, r[{{LATENCY}}]};
+  wire {{SIGNED1}}[{{RWIDTH}}:0] {{ARG1}}_prepared;
+  wire {{SIGNED2}}[{{RWIDTH}}:0] {{ARG2}}_prepared;
+
+  assign {{ARG1}}_prepared = {{{{REPEAT1}}{{{REPEAT_VAL1}}}}, {{ARG1}}};
+  assign {{ARG2}}_prepared = {{{{REPEAT2}}{{{REPEAT_VAL2}}}}, {{ARG2}}};
+
+  assign r = {{ARG1}}_prepared {{OP}} {{ARG2}}_prepared;
+
+  assign cat = {{{{REPEAT3}}{{{REPEAT_VAL3}}}}, r};
   assign {{RES1}} = cat[{{WIDTH3}}:0];
 endmodule // {{MODULE_NAME}}
 
 {{/COMB_BINARY_MODULES}}
-{{#BINARY_MODULES}}module {{MODULE_NAME}} (input [{{WIDTH1}}:0] {{ARG1}}, input [{{WIDTH2}}:0] {{ARG2}}, output [{{WIDTH3}}:0] {{RES1}}, input {{CLK}});
+{{#BINARY_MODULES}}module {{MODULE_NAME}} (input {{SIGNED1}}[{{WIDTH1}}:0] {{ARG1}}, input {{SIGNED2}}[{{WIDTH2}}:0] {{ARG2}}, output {{SIGNED3}}[{{WIDTH3}}:0] {{RES1}}, input {{CLK}});
   reg [{{RWIDTH}}:0] r[{{LATENCY}}:0];
   wire [{{CAT}}:0] cat;
+
+  wire {{SIGNED1}}[{{RWIDTH}}:0] {{ARG1}}_prepared;
+  wire {{SIGNED2}}[{{RWIDTH}}:0] {{ARG2}}_prepared;
+
+  assign {{ARG1}}_prepared = {{{{REPEAT1}}{{{REPEAT_VAL1}}}}, {{ARG1}}};
+  assign {{ARG2}}_prepared = {{{{REPEAT2}}{{{REPEAT_VAL2}}}}, {{ARG2}}};
 
   integer i;
   always @ (posedge {{CLK}}) begin
     for (i = {{LATENCY}}; i != 0; i = i - 1) begin
       r[i] <= r[i - 1];
     end
-    r[0] <= {{{{REPEAT1}}{{{REPEAT_VAL1}}}}, {{ARG1}}} {{OP}} {{{{REPEAT2}}{{{REPEAT_VAL2}}}}, {{ARG2}}};
+    r[0] <= {{ARG1}}_prepared {{OP}} {{ARG2}}_prepared;
   end
   assign cat = {{{{REPEAT3}}{{{REPEAT_VAL3}}}}, r[{{LATENCY}}]};
   assign {{RES1}} = cat[{{WIDTH3}}:0];

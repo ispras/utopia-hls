@@ -134,15 +134,23 @@ private:
     result->SetValue("CLK", ports[3].getName().data());
 
     auto res1Type = llvm::cast<FIRRTLBaseType>(module.getPortType(0));
-    bool isSigned = llvm::cast<IntType>(res1Type).isSigned();
+    bool isSigned3 = llvm::cast<IntType>(res1Type).isSigned();
+    std::string_view signed3 = (isSigned3) ? "signed " : "";
+    result->SetFormattedValue("SIGNED3", "%s", signed3.data());
     int32_t width3 = res1Type.getBitWidthOrSentinel();
     result->SetFormattedValue("WIDTH3", "%d", width3 - 1);
 
     auto arg1Type = llvm::cast<FIRRTLBaseType>(module.getPortType(1));
+    bool isSigned1 = llvm::cast<IntType>(arg1Type).isSigned();
+    std::string_view signed1 = (isSigned1) ? "signed " : "";
+    result->SetFormattedValue("SIGNED1", "%s", signed1.data());
     int32_t width1 = arg1Type.getBitWidthOrSentinel();
     result->SetFormattedValue("WIDTH1", "%d", width1 - 1);
 
     auto arg2Type = llvm::cast<FIRRTLBaseType>(module.getPortType(2));
+    bool isSigned2 = llvm::cast<IntType>(arg2Type).isSigned();
+    std::string_view signed2 = (isSigned2) ? "signed " : "";
+    result->SetFormattedValue("SIGNED2", "%s", signed2.data());
     int32_t width2 = arg2Type.getBitWidthOrSentinel();
     result->SetFormattedValue("WIDTH2", "%d", width2 - 1);
 
@@ -160,7 +168,7 @@ private:
     int32_t cat = std::max(width3, rWidth);
     result->SetFormattedValue("CAT", "%d", cat - 1);
 
-    if (isSigned) {
+    if (isSigned3) {
       result->SetFormattedValue("REPEAT_VAL1", "%s[%d]", arg1, width1 - 1);
       result->SetFormattedValue("REPEAT_VAL2", "%s[%d]", arg2, width2 - 1);
       result->SetFormattedValue("REPEAT_VAL3", "r[%d][%d]",
