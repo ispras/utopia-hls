@@ -23,7 +23,7 @@ public:
   using DFVariable = dfcxx::DFVariable;
 
   DFVariable iclp(DFVariable var, DFVariable left, DFVariable right) {
-    const DFType muxType = dfInt(4);
+    const DFType muxType = dfUInt(2);
     DFVariable firstRange = (var >= left).cast(muxType);
     DFVariable secondRange = (var > right).cast(muxType);
     DFVariable muxValue = firstRange + secondRange;
