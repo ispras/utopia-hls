@@ -313,27 +313,59 @@ llvm::StringRef OutputOp::getValueName() {
 ParseResult MuxOp::parse(OpAsmParser &parser, OperationState &result) {
   OpAsmParser::UnresolvedOperand control;
   SmallVector<OpAsmParser::UnresolvedOperand, 16> vars;
-  Type controlType, varType;
+  SmallVector<Type, 16> types;
+  Type controlType, resType;
 
   if (parser.parseLParen() || parser.parseOperand(control) ||
       parser.parseColon() || parser.parseType(controlType) || 
-      parser.parseComma() || parser.parseOperandList(vars) ||
-      parser.parseRParen() || parser.parseColon() ||
-      parser.parseType(varType) ||
+      parser.parseComma()) { return failure(); }
+
+  llvm::SMLoc varLocation = parser.getCurrentLocation();
+  do {
+    OpAsmParser::UnresolvedOperand var;
+    Type varType;
+    if (parser.parseOperand(var)) {
+      return failure();
+    }
+    vars.push_back(var);
+
+    if (succeeded(parser.parseOptionalColon()) && parser.parseType(varType)) {
+      return failure();
+    }
+
+    types.push_back(varType);
+  } while(succeeded(parser.parseOptionalComma()));
+
+  if (parser.parseRParen() || parser.parseColon() ||
+      parser.parseType(resType) ||
       parser.parseOptionalAttrDict(result.attributes)) { return failure(); }
 
   if (parser.resolveOperand(control, controlType, 
                             result.operands)) { return failure(); }
 
-  result.addTypes(varType);
-  return parser.resolveOperands(vars, varType, result.operands);
+  result.addTypes(resType);
+  for (Type &type: types) {
+    if (!type) {
+      type = resType;
+    }
+  }
+  return parser.resolveOperands(vars, types, varLocation, result.operands);
 }
 
 void MuxOp::print(OpAsmPrinter &p) {
   Value value = getControl();
-  p << "(" << value << ": " << value.getType() << ", ";
-  p.printOperands(getVars());
-  p << ") : " << getType();
+  p << "(" << value << ": " << value.getType();
+
+  auto vars = getVars();
+  auto resType = getType();
+  for (const auto &var: vars) {
+    p << ", " << var;
+    auto type = var.getType();
+    if (type != resType) {
+      p << ": " << type;
+    }
+  }
+  p << ") : " << resType;
   p.printOptionalAttrDict((*this)->getAttrs());
 }
 
