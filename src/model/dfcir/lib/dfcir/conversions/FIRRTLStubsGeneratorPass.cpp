@@ -102,14 +102,14 @@ private:
       opChar = "-";
     } else if (moduleName.contains(MUL_MODULE)) {
       opChar = "*";
-    } else if (moduleName.contains(LESS_MODULE)) {
-      opChar = "<"; isCompOp = true;
     } else if (moduleName.contains(LESSEQ_MODULE)) {
       opChar = "<="; isCompOp = true;
-    } else if (moduleName.contains(GREATER_MODULE)) {
-      opChar = ">"; isCompOp = true;
     } else if (moduleName.contains(GREATEREQ_MODULE)) {
       opChar = ">="; isCompOp = true;
+    } else if (moduleName.contains(LESS_MODULE)) {
+      opChar = "<"; isCompOp = true;
+    }  else if (moduleName.contains(GREATER_MODULE)) {
+      opChar = ">"; isCompOp = true;
     } else if (moduleName.contains(EQ_MODULE)) {
       opChar = "=="; isCompOp = true;
     } else if (moduleName.contains(NEQ_MODULE)) {
@@ -157,6 +157,9 @@ private:
     int32_t rWidth =
         (isCompOp) ? 1 : std::max(width1, width2);
     result->SetFormattedValue("RWIDTH", "%d", rWidth - 1);
+
+    int32_t preparedWidth = std::max(width1, width2);
+    result->SetFormattedValue("PREPARED_WIDTH", "%d", preparedWidth - 1);
 
     int32_t repeat1 = std::max(rWidth - width1, 0);
     result->SetFormattedValue("REPEAT1", "%d", repeat1);

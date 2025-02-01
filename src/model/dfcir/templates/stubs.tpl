@@ -50,8 +50,8 @@ endmodule // {{MODULE_NAME}}
   wire [{{RWIDTH}}:0] r;
   wire [{{CAT}}:0] cat;
 
-  wire {{SIGNED1}}[{{RWIDTH}}:0] {{ARG1}}_prepared;
-  wire {{SIGNED2}}[{{RWIDTH}}:0] {{ARG2}}_prepared;
+  wire {{SIGNED1}}[{{PREPARED_WIDTH}}:0] {{ARG1}}_prepared;
+  wire {{SIGNED2}}[{{PREPARED_WIDTH}}:0] {{ARG2}}_prepared;
 
   assign {{ARG1}}_prepared = {{{{REPEAT1}}{{{REPEAT_VAL1}}}}, {{ARG1}}};
   assign {{ARG2}}_prepared = {{{{REPEAT2}}{{{REPEAT_VAL2}}}}, {{ARG2}}};
@@ -67,8 +67,8 @@ endmodule // {{MODULE_NAME}}
   reg [{{RWIDTH}}:0] r[{{LATENCY}}:0];
   wire [{{CAT}}:0] cat;
 
-  wire {{SIGNED1}}[{{RWIDTH}}:0] {{ARG1}}_prepared;
-  wire {{SIGNED2}}[{{RWIDTH}}:0] {{ARG2}}_prepared;
+  wire {{SIGNED1}}[{{PREPARED_WIDTH}}:0] {{ARG1}}_prepared;
+  wire {{SIGNED2}}[{{PREPARED_WIDTH}}:0] {{ARG2}}_prepared;
 
   assign {{ARG1}}_prepared = {{{{REPEAT1}}{{{REPEAT_VAL1}}}}, {{ARG1}}};
   assign {{ARG2}}_prepared = {{{{REPEAT2}}{{{REPEAT_VAL2}}}}, {{ARG2}}};
