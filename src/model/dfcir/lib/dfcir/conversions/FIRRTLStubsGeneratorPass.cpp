@@ -208,7 +208,7 @@ private:
       }
 
       // It is assumed that for "latency" == 0 respective
-      // process*Module-methods know how to handle it,
+      // "process*Module" methods know how to handle it,
       // so here we can subtract 1 from "latency"
       // without handling the mentioned case.
       moduleDict->SetFormattedValue("LATENCY", "%u", latency - 1);
