@@ -16,6 +16,7 @@
 
 #include <unordered_set>
 #include <unordered_map>
+#include <utility>
 // TODO: Replace with a normal logger.
 // Issue #13 (https://github.com/ispras/utopia-hls/issues/13).
 #include <iostream>  
@@ -43,6 +44,14 @@ private:
 
     // t_source = 0
     problem.addConstraint(1, var, coeff, OpType::Equal, 0);
+  }
+
+  void synchronizeOutput(Node *left, Node *right) {
+    int *vars = new int[2]{nodeMap[left], nodeMap[right]};
+    double *coeffs = new double[2]{1.0, -1.0};
+
+    // t_out_left = t_out_right
+    problem.addConstraint(2, vars, coeffs, OpType::Equal, 0);
   }
 
   void addLatencyConstraint(Channel *chan) {
@@ -86,13 +95,22 @@ private:
   std::unordered_map<Node *, int> nodeMap;
   std::unordered_map<Channel *, int> bufMap;
 
-  Buffers schedule(Graph &graph) {
+  Node *prevOutputNode = nullptr;
+
+  std::pair<Buffers, int32_t> schedule(Graph &graph) {
     size_t chanCount = 0;
     for (Node *node: graph.nodes) {
       chanCount += graph.inputs[node].size();
       nodeMap[node] = problem.addVariable();
       if (graph.startNodes.find(node) != graph.startNodes.end()) {
         synchronizeInput(node);
+      }
+
+      if (llvm::isa<OutputOpInterface>(node->op)) {
+        if (prevOutputNode) {
+          synchronizeOutput(prevOutputNode, node);
+        }
+        prevOutputNode = node;
       }
     }
 
@@ -137,7 +155,7 @@ private:
 
     delete []deltaIDs;
     delete []deltaCoeffs;
-    return buffers;
+    return std::make_pair(buffers, calculateOverallLatency(graph, buffers));
   }
 
 public:
@@ -152,7 +170,16 @@ public:
     graph.applyConfig(*latencyConfig);
 
     // Execute scheduler.
-    auto buffers = schedule(graph);
+    auto [buffers, latency] = schedule(graph);
+    latencyStatistic = latency;
+
+    // Check whether the scheduling finished successfully.
+    if (latency < 0) {
+      std::cout << "Scheduling failed." << std::endl;
+      return;
+    } else {
+      std::cout << "Top-level kernel overall latency: " << latency << std::endl;
+    }
 
     // Insert buffers.
     mlir::dfcir::utils::insertBuffers(this->getContext(), buffers);

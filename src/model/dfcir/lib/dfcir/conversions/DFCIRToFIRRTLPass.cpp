@@ -420,11 +420,14 @@ class SchedulableOpConversionPattern
 
     for (unsigned id = 0; id < op->getNumResults(); ++id) {
       nameStream << "_OUT_";
-      Type oldType = (*this->oldTypeMap)[std::make_pair(op, id)];
+      auto res = op->getResult(id);
+      Type oldType = res.getType();
       Type innerType = llvm::cast<DFType>(oldType).getDFType();
       llvm::cast<SVSynthesizable>(innerType).printSVSignature(nameStream);
-      nameStream << "_" << llvm::cast<Scheduled>(op.getOperation()).getLatency();
     }
+
+    nameStream << "_" << llvm::cast<Scheduled>(op.getOperation()).getLatency();
+
     return name;
   }
 
@@ -473,13 +476,13 @@ class SchedulableOpConversionPattern
     for (; id <= (newOp.getNumResults() - 2); ++id) {
       rewriter.create<circt::firrtl::ConnectOp>(
           rewriter.getUnknownLoc(),
-          newOp.getResult(id),
+          newOp->getResult(id),
           adaptorOperands[id - 1]
       );
     }
     rewriter.create<circt::firrtl::ConnectOp>(
         rewriter.getUnknownLoc(),
-        newOp.getResult(id),
+        newOp->getResult(id),
         getClockVarFromOpBlock(newOp)
     );
 
@@ -487,7 +490,7 @@ class SchedulableOpConversionPattern
       (*this->oldTypeMap)[std::make_pair(operand.getOwner(),
                                          operand.getOperandNumber())] =
                                              operand.get().getType();
-      operand.set(newOp.getResult(0));
+      operand.set(newOp->getResult(0));
     }
   };
 
@@ -603,6 +606,9 @@ DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(Eq, EQ)
 // NotEqOpConversionPattern.
 DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(NotEq, NEQ)
 
+// CastOpConversionPattern.
+DECL_SCHED_UNARY_ARITH_OP_CONV_PATTERN(Cast, CAST)
+
 class ShiftLeftOpConversionPattern 
     : public FIRRTLOpConversionPattern<ShiftLeftOp> {
 public:
@@ -613,12 +619,70 @@ public:
 
   LogicalResult matchAndRewrite(ShiftLeftOp shLeftOp, OpAdaptor adaptor,
                                 Rewriter &rewriter) const override {
-    auto newOp = rewriter.create<ShlPrimOp>(
-        shLeftOp.getLoc(),
-        getTypeConverter()->convertType(shLeftOp->getResult(0).getType()),
+    using circt::firrtl::getBitWidth;
+    using circt::firrtl::SIntType;
+    using circt::firrtl::FIRRTLBaseType;
+    using circt::firrtl::BitsPrimOp;
+    using circt::firrtl::CatPrimOp;
+    using circt::firrtl::AsSIntPrimOp;
+
+    auto oldType = getTypeConverter()->convertType(shLeftOp->getResult(0).getType());
+    uint32_t oldWidth = *getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(oldType));
+    bool isSInt = llvm::isa<SIntType>(oldType);
+
+    Operation *newOp = nullptr;
+
+    auto newShl = rewriter.create<ShlPrimOp>(
+      shLeftOp.getLoc(),
+      adaptor.getFirst(),
+      adaptor.getBits()
+    );
+
+    if (isSInt) {
+      auto getSignOp = rewriter.create<BitsPrimOp>(
+        rewriter.getUnknownLoc(),
         adaptor.getFirst(),
-        adaptor.getBits());
-    
+        oldWidth - 1,
+        oldWidth - 1
+      );
+
+      auto castedSignOp = rewriter.create<AsSIntPrimOp>(
+        rewriter.getUnknownLoc(),
+        getSignOp->getResult(0)
+      );
+
+      auto bitsOp = rewriter.create<BitsPrimOp>(
+        rewriter.getUnknownLoc(),
+        newShl->getResult(0),
+        oldWidth - 2,
+        0
+      );
+
+      auto castedBitsOp = rewriter.create<AsSIntPrimOp>(
+        rewriter.getUnknownLoc(),
+        bitsOp->getResult(0)
+      );
+
+      auto catOp = rewriter.create<CatPrimOp>(
+        rewriter.getUnknownLoc(),
+        castedSignOp->getResult(0),
+        castedBitsOp->getResult(0)
+      );
+
+      newOp = rewriter.create<AsSIntPrimOp>(
+        rewriter.getUnknownLoc(),
+        catOp->getResult(0)
+      );
+
+    } else {
+      newOp = rewriter.create<BitsPrimOp>(
+        rewriter.getUnknownLoc(),
+        newShl->getResult(0),
+        oldWidth - 1,
+        0
+      );
+    }
+
     for (auto &operand:
         llvm::make_early_inc_range(shLeftOp.getRes().getUses())) {
       (*oldTypeMap)[std::make_pair(operand.getOwner(),
@@ -642,12 +706,94 @@ public:
 
   LogicalResult matchAndRewrite(ShiftRightOp shRightOp, OpAdaptor adaptor,
                                 Rewriter &rewriter) const override {
-    auto newOp = rewriter.create<ShrPrimOp>(
-        shRightOp.getLoc(),
-        getTypeConverter()->convertType(shRightOp->getResult(0).getType()),
+    using circt::firrtl::getBitWidth;
+    using circt::firrtl::SIntType;
+    using circt::firrtl::FIRRTLBaseType;
+    using circt::firrtl::BitsPrimOp;
+    using circt::firrtl::UIntType;
+    using circt::firrtl::ConstantOp;
+    using circt::firrtl::CatPrimOp;
+    using circt::firrtl::AsSIntPrimOp;
+
+    auto oldType = getTypeConverter()->convertType(shRightOp->getResult(0).getType());
+    uint32_t oldWidth = *getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(oldType));
+    bool isSInt = llvm::isa<SIntType>(oldType);
+
+    Operation *newOp = nullptr;
+
+    auto newShr = rewriter.create<ShrPrimOp>(
+      shRightOp.getLoc(),
+      adaptor.getFirst(),
+      adaptor.getBits()
+    );
+
+    auto newType = newShr->getResult(0).getType();
+    uint32_t newWidth = *getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(newType));
+    uint32_t widthDelta = oldWidth - newWidth;
+
+    if (isSInt) {
+      auto getSignOp = rewriter.create<BitsPrimOp>(
+        rewriter.getUnknownLoc(),
         adaptor.getFirst(),
-        adaptor.getBits());
-    
+        oldWidth - 1,
+        oldWidth - 1
+      );
+
+      Operation *currSignConcatOp = getSignOp;
+      for (uint32_t i = 1; i < widthDelta; ++i) {
+        currSignConcatOp = rewriter.create<CatPrimOp>(
+          rewriter.getUnknownLoc(),
+          getSignOp->getResult(0),
+          currSignConcatOp->getResult(0)
+        );
+      }
+
+      auto castedSignConcatOp = rewriter.create<AsSIntPrimOp>(
+        rewriter.getUnknownLoc(),
+        currSignConcatOp->getResult(0)
+      );
+
+      auto catOp = rewriter.create<CatPrimOp>(
+        rewriter.getUnknownLoc(),
+        castedSignConcatOp->getResult(0),
+        newShr->getResult(0)
+      );
+
+      newOp = rewriter.create<AsSIntPrimOp>(
+        rewriter.getUnknownLoc(),
+        catOp->getResult(0)
+      );
+    } else {
+      auto newConstType = UIntType::get(
+        rewriter.getContext(),
+        widthDelta, // width
+        true // isConst
+      );
+
+      auto newConstAttrType = IntegerType::get(
+        rewriter.getContext(),
+        widthDelta, // width
+        IntegerType::SignednessSemantics::Unsigned
+      );
+
+      auto newConstAttr = IntegerAttr::get(
+        newConstAttrType,
+        0 // value
+      );
+
+      auto newConst = rewriter.create<ConstantOp>(
+        rewriter.getUnknownLoc(),
+        newConstType,
+        newConstAttr
+      );
+
+      newOp = rewriter.create<CatPrimOp>(
+        rewriter.getUnknownLoc(),
+        newConst->getResult(0),
+        newShr->getResult(0)
+      );
+    }
+
     for (auto &operand:
         llvm::make_early_inc_range(shRightOp.getRes().getUses())) {
       (*oldTypeMap)[std::make_pair(operand.getOwner(),
@@ -689,10 +835,28 @@ public:
 
   LogicalResult matchAndRewrite(MuxOp muxOp, OpAdaptor adaptor,
                                 Rewriter &rewriter) const override {
-    auto newOp = rewriter.create<circt::firrtl::MultibitMuxOp>(
-        rewriter.getUnknownLoc(),
-        adaptor.getControl(),
+    using circt::firrtl::UIntType;
+    using circt::firrtl::AsUIntPrimOp;
+    using circt::firrtl::MultibitMuxOp;
+
+    Value oldControl = adaptor.getControl();
+    Location oldLoc = muxOp.getLoc();
+
+    if (!llvm::isa<UIntType>(oldControl.getType())) {
+      auto newReinterpret = rewriter.create<AsUIntPrimOp>(
+          oldLoc,
+          oldControl
+      );
+
+      oldLoc = rewriter.getUnknownLoc();
+      oldControl = newReinterpret->getResult(0);
+    }
+
+    auto newOp = rewriter.create<MultibitMuxOp>(
+        oldLoc,
+        oldControl,
         adaptor.getVars());
+
     for (auto &operand: llvm::make_early_inc_range(muxOp.getRes().getUses())) {
       (*oldTypeMap)[std::make_pair(operand.getOwner(),
                                    operand.getOperandNumber())] =
@@ -801,6 +965,7 @@ public:
         GreaterEqOpConversionPattern,
         EqOpConversionPattern,
         NotEqOpConversionPattern,
+        CastOpConversionPattern,
         ShiftLeftOpConversionPattern,
         ShiftRightOpConversionPattern,
         ConnectOpConversionPattern,

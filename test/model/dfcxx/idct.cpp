@@ -20,6 +20,8 @@ TEST(DFCxx, IdctAsap) {
       {dfcxx::ADD_INT, 1},
       {dfcxx::SUB_INT, 1},
       {dfcxx::MUL_INT, 3},
+      {dfcxx::GREATER_INT, 3},
+      {dfcxx::GREATEREQ_INT, 3},
     },
     {}
   );
@@ -35,6 +37,8 @@ TEST(DFCxx, IdctAsap) {
 //       {dfcxx::ADD_INT, 1},
 //       {dfcxx::SUB_INT, 1},
 //       {dfcxx::MUL_INT, 3},
+//       {dfcxx::GREATEREQ_INT, 3},
+//       {dfcxx::GREATEREQ_INT, 3},
 //     },
 //     {}
 //   );

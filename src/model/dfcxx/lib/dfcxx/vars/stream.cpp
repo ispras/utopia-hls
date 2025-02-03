@@ -76,14 +76,14 @@ DFVariableImpl *DFStream::operator-() {
   GENERIC_STREAM_UNARY_OP(OpType::NEG, newVar)
 }
 
-#define GENERIC_STREAM_COMP_OP(OP_TYPE, VAR, TYPE_VAR, RHS)                \
-DFTypeImpl *TYPE_VAR = meta.storage.addType(meta.typeBuilder.buildBool()); \
-  DFVariableImpl *VAR =                                                    \
-      meta.varBuilder.buildStream("", IODirection::NONE, meta, TYPE_VAR);  \
-  meta.storage.addVariable(VAR);                                           \
-  meta.graph.addNode(VAR, OP_TYPE, NodeData {});                           \
-  meta.graph.addChannel(this, VAR, 0, false);                              \
-  meta.graph.addChannel(&RHS, VAR, 1, false);                              \
+#define GENERIC_STREAM_COMP_OP(OP_TYPE, VAR, TYPE_VAR, RHS)                  \
+  DFTypeImpl *TYPE_VAR = meta.storage.addType(meta.typeBuilder.buildBool()); \
+  DFVariableImpl *VAR =                                                      \
+      meta.varBuilder.buildStream("", IODirection::NONE, meta, TYPE_VAR);    \
+  meta.storage.addVariable(VAR);                                             \
+  meta.graph.addNode(VAR, OP_TYPE, NodeData {});                             \
+  meta.graph.addChannel(this, VAR, 0, false);                                \
+  meta.graph.addChannel(&RHS, VAR, 1, false);                                \
   return VAR;
 
 DFVariableImpl *DFStream::operator<(DFVariableImpl &rhs) {
@@ -111,10 +111,8 @@ DFVariableImpl *DFStream::operator!=(DFVariableImpl &rhs) {
 }
 
 DFVariableImpl *DFStream::operator<<(uint8_t bits) {
-  DFTypeImpl *newType = meta.storage.addType(
-      meta.typeBuilder.buildShiftedType(&type, bits));
   DFVariableImpl *newVar =
-      meta.varBuilder.buildStream("", IODirection::NONE, meta, newType);
+      meta.varBuilder.buildStream("", IODirection::NONE, meta, &type);
   meta.storage.addVariable(newVar);
   meta.graph.addNode(newVar, OpType::SHL, NodeData {.bitShift=bits});
   meta.graph.addChannel(this, newVar, 0, false);
@@ -122,10 +120,8 @@ DFVariableImpl *DFStream::operator<<(uint8_t bits) {
 }
 
 DFVariableImpl *DFStream::operator>>(uint8_t bits) {
-  DFTypeImpl *newType = meta.storage.addType(
-      meta.typeBuilder.buildShiftedType(&type, int8_t(bits) * -1));
   DFVariableImpl *newVar =
-      meta.varBuilder.buildStream("", IODirection::NONE, meta, newType);
+      meta.varBuilder.buildStream("", IODirection::NONE, meta, &type);
   meta.storage.addVariable(newVar);
   meta.graph.addNode(newVar, OpType::SHR, NodeData {.bitShift=bits});
   meta.graph.addChannel(this, newVar, 0, false);

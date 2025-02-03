@@ -1,0 +1,9 @@
+{
+  "dfcir": {
+    "ADD_INT": 1,
+    "SUB_INT": 1,
+    "MUL_INT": 3,
+    "GREATER_INT": 3,
+    "GREATEREQ_INT": 3
+  }
+}

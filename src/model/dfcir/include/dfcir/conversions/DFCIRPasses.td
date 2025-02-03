@@ -17,8 +17,7 @@ def DFCIRToFIRRTLPass: Pass<"dfcir-to-firrtl-pass", "mlir::ModuleOp"> {
   let constructor = "mlir::dfcir::createDFCIRToFIRRTLPass()";
 }
 
-def DFCIRASAPSchedulerPass: Pass<"dfcir-asap-scheduler-pass", "mlir::ModuleOp"> {
-  let summary = "Schedule operations with a greedy as-soon-as-possible algorithm.";
+class DFCIRSchedulerPass<string name, string op>: Pass<name, op> {
 
   let options = [
     Option<"latencyConfig",
@@ -27,20 +26,20 @@ def DFCIRASAPSchedulerPass: Pass<"dfcir-asap-scheduler-pass", "mlir::ModuleOp"> 
            "nullptr",
            "Latency configuration for operations.">
   ];
+
+  let statistics = [
+    Statistic<"latencyStatistic", "latency-statistic", "Top-level kernel overall latency">
+  ];
+}
+
+def DFCIRASAPSchedulerPass: DFCIRSchedulerPass<"dfcir-asap-scheduler-pass", "mlir::ModuleOp"> {
+  let summary = "Schedule operations with a greedy as-soon-as-possible algorithm.";
 
   let constructor = "mlir::dfcir::createDFCIRASAPSchedulerPass()";
 }
 
-def DFCIRLinearSchedulerPass: Pass<"dfcir-linear-scheduler-pass", "mlir::ModuleOp"> {
+def DFCIRLinearSchedulerPass: DFCIRSchedulerPass<"dfcir-linear-scheduler-pass", "mlir::ModuleOp"> {
   let summary = "Schedule operations with linear programming algorithm.";
-
-  let options = [
-    Option<"latencyConfig",
-           "latencyConfig",
-           "LatencyConfig *",
-           "nullptr",
-           "Latency configuration for operations.">
-  ];
 
   let constructor = "mlir::dfcir::createDFCIRLinearSchedulerPass()";
 }
