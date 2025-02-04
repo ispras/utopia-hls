@@ -37,7 +37,7 @@
   .``port``48(``arr``[48]), .``port``49(``arr``[49]), .``port``50(``arr``[50]), .``port``51(``arr``[51]), .``port``52(``arr``[52]), .``port``53(``arr``[53]), .``port``54(``arr``[54]), .``port``55(``arr``[55]),\
   .``port``56(``arr``[56]), .``port``57(``arr``[57]), .``port``58(``arr``[58]), .``port``59(``arr``[59]), .``port``60(``arr``[60]), .``port``61(``arr``[61]), .``port``62(``arr``[62]), .``port``63(``arr``[63])
 
-module IDCT_test3();
+module IDCT_test5();
 
         localparam CIRCUIT_LATENCY = 29;
 
@@ -69,7 +69,7 @@ module IDCT_test3();
         initial begin
 
                 @(negedge clk);
-                $display("[IDCT: test 3] Input ready.");
+                $display("[IDCT: test 5] Input ready.");
                 for (j = 0; j < 64; j = j + 1) begin
                         x[j] = x_buffer[j];
 
@@ -82,9 +82,9 @@ module IDCT_test3();
                 // Wait for the first output.
                 #(2*CIRCUIT_LATENCY+3);
 
-                $dumpfile("IDCT_test3.vcd");
-                $dumpvars(0, IDCT_test3);
-                $display("[IDCT: test 3] Started...");
+                $dumpfile("IDCT_test5.vcd");
+                $dumpvars(0, IDCT_test5);
+                $display("[IDCT: test 5] Started...");
 
                 for (k = 0; k < 64; k = k + 1) begin
                         $display("Output[%0d]: %0d", k, out[k]);
@@ -92,12 +92,12 @@ module IDCT_test3();
                                 $display("GOOD: %0d == %0d", expected[k], out[k]);
                         end else begin
                                 $display("BAD: %0d != %0d", expected[k], out[k]);
-                                $display("[IDCT: test 3] Stopped.");
+                                $display("[IDCT: test 5] Stopped.");
                                 $finish;
                         end
                 end
 
-                $display("[IDCT: test 3] Stopped.");
+                $display("[IDCT: test 5] Stopped.");
                 $finish;
         end
 
