@@ -8,24 +8,24 @@
 `timescale 1s/1s
 
 `define INPUT_INIT(arr)\
-  arr[00]=16'd23; arr[01]=-16'd1; arr[02]=-16'd2; arr[03]=16'd0; arr[04]=16'd0; arr[05]=16'd0; arr[06]=16'd0; arr[07]=16'd0;\
-  arr[08]=16'd0; arr[09]=16'd0; arr[10]=16'd0; arr[11]=16'd0; arr[12]=16'd0; arr[13]=16'd0; arr[14]=16'd0; arr[15]=16'd0;\
-  arr[16]=16'd0; arr[17]=16'd0; arr[18]=16'd0; arr[19]=16'd0; arr[20]=16'd0; arr[21]=16'd0; arr[22]=16'd0; arr[23]=16'd0;\
-  arr[24]=16'd0; arr[25]=16'd0; arr[26]=16'd0; arr[27]=16'd0; arr[28]=16'd0; arr[29]=16'd0; arr[30]=16'd0; arr[31]=16'd0;\
-  arr[32]=16'd0; arr[33]=16'd0; arr[34]=16'd0; arr[35]=16'd0; arr[36]=16'd0; arr[37]=16'd0; arr[38]=16'd0; arr[39]=16'd0;\
-  arr[40]=16'd0; arr[41]=16'd0; arr[42]=16'd0; arr[43]=16'd0; arr[44]=16'd0; arr[45]=16'd0; arr[46]=16'd0; arr[47]=16'd0;\
-  arr[48]=16'd0; arr[49]=16'd0; arr[50]=16'd0; arr[51]=16'd0; arr[52]=16'd0; arr[53]=16'd0; arr[54]=16'd0; arr[55]=16'd0;\
-  arr[56]=16'd0; arr[57]=16'd0; arr[58]=16'd0; arr[59]=16'd0; arr[60]=16'd0; arr[61]=16'd0; arr[62]=16'd0; arr[63]=16'd0
+  arr[00]=16'd0; arr[01]=16'd1; arr[02]=16'd2; arr[03]=16'd3; arr[04]=16'd4; arr[05]=16'd5; arr[06]=16'd6; arr[07]=16'd7;\
+  arr[08]=16'd8; arr[09]=16'd9; arr[10]=16'd10; arr[11]=16'd11; arr[12]=16'd12; arr[13]=16'd13; arr[14]=16'd14; arr[15]=16'd15;\
+  arr[16]=16'd16; arr[17]=16'd17; arr[18]=16'd18; arr[19]=16'd19; arr[20]=16'd20; arr[21]=16'd21; arr[22]=16'd22; arr[23]=16'd23;\
+  arr[24]=16'd24; arr[25]=16'd25; arr[26]=16'd26; arr[27]=16'd27; arr[28]=16'd28; arr[29]=16'd29; arr[30]=16'd30; arr[31]=16'd31;\
+  arr[32]=16'd32; arr[33]=16'd33; arr[34]=16'd34; arr[35]=16'd35; arr[36]=16'd36; arr[37]=16'd37; arr[38]=16'd38; arr[39]=16'd39;\
+  arr[40]=16'd40; arr[41]=16'd41; arr[42]=16'd42; arr[43]=16'd43; arr[44]=16'd44; arr[45]=16'd45; arr[46]=16'd46; arr[47]=16'd47;\
+  arr[48]=16'd48; arr[49]=16'd49; arr[50]=16'd50; arr[51]=16'd51; arr[52]=16'd52; arr[53]=16'd53; arr[54]=16'd54; arr[55]=16'd55;\
+  arr[56]=16'd56; arr[57]=16'd57; arr[58]=16'd58; arr[59]=16'd59; arr[60]=16'd60; arr[61]=16'd61; arr[62]=16'd62; arr[63]=16'd63
 
 `define REF_INIT(arr)\
-  arr[00]=16'd2; arr[01]=16'd3; arr[02]=16'd3; arr[03]=16'd3; arr[04]=16'd3; arr[05]=16'd3; arr[06]=16'd3; arr[07]=16'd3;\
-  arr[08]=16'd2; arr[09]=16'd3; arr[10]=16'd3; arr[11]=16'd3; arr[12]=16'd3; arr[13]=16'd3; arr[14]=16'd3; arr[15]=16'd3;\
-  arr[16]=16'd2; arr[17]=16'd3; arr[18]=16'd3; arr[19]=16'd3; arr[20]=16'd3; arr[21]=16'd3; arr[22]=16'd3; arr[23]=16'd3;\
-  arr[24]=16'd2; arr[25]=16'd3; arr[26]=16'd3; arr[27]=16'd3; arr[28]=16'd3; arr[29]=16'd3; arr[30]=16'd3; arr[31]=16'd3;\
-  arr[32]=16'd2; arr[33]=16'd3; arr[34]=16'd3; arr[35]=16'd3; arr[36]=16'd3; arr[37]=16'd3; arr[38]=16'd3; arr[39]=16'd3;\
-  arr[40]=16'd2; arr[41]=16'd3; arr[42]=16'd3; arr[43]=16'd3; arr[44]=16'd3; arr[45]=16'd3; arr[46]=16'd3; arr[47]=16'd3;\
-  arr[48]=16'd2; arr[49]=16'd3; arr[50]=16'd3; arr[51]=16'd3; arr[52]=16'd3; arr[53]=16'd3; arr[54]=16'd3; arr[55]=16'd3;\
-  arr[56]=16'd2; arr[57]=16'd3; arr[58]=16'd3; arr[59]=16'd3; arr[60]=16'd3; arr[61]=16'd3; arr[62]=16'd3; arr[63]=16'd3
+  arr[00]=16'had; arr[01]=16'hffc1; arr[02]=16'h2a; arr[03]=16'hffed; arr[04]=16'h16; arr[05]=16'hfffb; arr[06]=16'hc; arr[07]=16'h4;\
+  arr[08]=16'hff50; arr[09]=16'h34; arr[10]=16'hffd9; arr[11]=16'hf; arr[12]=16'hffeb; arr[13]=16'h3; arr[14]=16'hfff4; arr[15]=16'hfffb;\
+  arr[16]=16'h47; arr[17]=16'hffe9; arr[18]=16'h10; arr[19]=16'hfff9; arr[20]=16'h9; arr[21]=16'hffff; arr[22]=16'h5; arr[23]=16'h2;\
+  arr[24]=16'hffc4; arr[25]=16'h11; arr[26]=16'hfff3; arr[27]=16'h5; arr[28]=16'hfff9; arr[29]=16'h1; arr[30]=16'hfffc; arr[31]=16'hfffe;\
+  arr[32]=16'h21; arr[33]=16'hfff5; arr[34]=16'h8; arr[35]=16'hfffd; arr[36]=16'h4; arr[37]=16'hffff; arr[38]=16'h2; arr[39]=16'h1;\
+  arr[40]=16'hffe6; arr[41]=16'h7; arr[42]=16'hfffa; arr[43]=16'h2; arr[44]=16'hfffd; arr[45]=16'h0; arr[46]=16'hfffe; arr[47]=16'hffff;\
+  arr[48]=16'hb; arr[49]=16'hfffc; arr[50]=16'h3; arr[51]=16'hffff; arr[52]=16'h1; arr[53]=16'h0; arr[54]=16'h1; arr[55]=16'h0;\
+  arr[56]=16'hfffa; arr[57]=16'h1; arr[58]=16'hffff; arr[59]=16'h0; arr[60]=16'hffff; arr[61]=16'h0; arr[62]=16'h0; arr[63]=16'h0
 
 `define ARRAY_BINDING(port, arr)\
   .``port``0(``arr``[00]), .``port``1(``arr``[01]), .``port``2(``arr``[02]), .``port``3(``arr``[03]), .``port``4(``arr``[04]), .``port``5(``arr``[05]), .``port``6(``arr``[06]), .``port``7(``arr``[07]),\
