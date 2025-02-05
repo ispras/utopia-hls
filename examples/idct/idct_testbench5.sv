@@ -39,66 +39,66 @@
 
 module IDCT_test5();
 
-        localparam CIRCUIT_LATENCY = 29;
+  localparam CIRCUIT_LATENCY = 29;
 
-        reg signed [15:0] x [63:0];
-        reg signed [15:0] out [63:0];
-        reg signed [15:0] x_buffer [63:0];
-        reg signed [15:0] expected [63:0];
-        reg clk;
+  reg signed [15:0] x [63:0];
+  reg signed [15:0] out [63:0];
+  reg signed [15:0] x_buffer [63:0];
+  reg signed [15:0] expected [63:0];
+  reg clk;
 
-        IDCT inst (
-                `ARRAY_BINDING(x, x),
-                `ARRAY_BINDING(out, out),
-                .clk (clk)
-        );
+  IDCT inst (
+    `ARRAY_BINDING(x, x),
+    `ARRAY_BINDING(out, out),
+    .clk (clk)
+  );
 
-        initial clk = 0;
+  initial clk = 0;
 
-        always #1 clk = ~clk;
+  always #1 clk = ~clk;
 
-        integer i;
-        integer j;
-        integer k;
-        
-        initial begin
-                `INPUT_INIT(x_buffer);
-                `REF_INIT(expected);
-        end
+  integer i;
+  integer j;
+  integer k;
 
-        initial begin
+  initial begin
+    `INPUT_INIT(x_buffer);
+    `REF_INIT(expected);
+  end
 
-                @(negedge clk);
-                $display("[IDCT: test 5] Input ready.");
-                for (j = 0; j < 64; j = j + 1) begin
-                        x[j] = x_buffer[j];
+  initial begin
 
-                        $display("Input[%0d]: [%0d]", j, x[j]);
+    @(negedge clk);
+    $display("[IDCT: test 5] Input ready.");
+    for (j = 0; j < 64; j = j + 1) begin
+      x[j] = x_buffer[j];
 
-                end
-        end
+      $display("Input[%0d]: [%0d]", j, x[j]);
 
-        initial begin
-                // Wait for the first output.
-                #(2*CIRCUIT_LATENCY+3);
+    end
+  end
 
-                $dumpfile("IDCT_test5.vcd");
-                $dumpvars(0, IDCT_test5);
-                $display("[IDCT: test 5] Started...");
+  initial begin
+    // Wait for the first output.
+    #(2*CIRCUIT_LATENCY+3);
 
-                for (k = 0; k < 64; k = k + 1) begin
-                        $display("Output[%0d]: %0d", k, out[k]);
-                        if (expected[k] == out[k]) begin
-                                $display("GOOD: %0d == %0d", expected[k], out[k]);
-                        end else begin
-                                $display("BAD: %0d != %0d", expected[k], out[k]);
-                                $display("[IDCT: test 5] Stopped.");
-                                $finish;
-                        end
-                end
+    $dumpfile("IDCT_test5.vcd");
+    $dumpvars(0, IDCT_test5);
+    $display("[IDCT: test 5] Started...");
 
-                $display("[IDCT: test 5] Stopped.");
-                $finish;
-        end
+    for (k = 0; k < 64; k = k + 1) begin
+      $display("Output[%0d]: %0d", k, out[k]);
+      if (expected[k] == out[k]) begin
+        $display("GOOD: %0d == %0d", expected[k], out[k]);
+      end else begin
+        $display("BAD: %0d != %0d", expected[k], out[k]);
+        $display("[IDCT: test 5] Stopped.");
+        $finish;
+      end
+    end
+
+    $display("[IDCT: test 5] Stopped.");
+    $finish;
+  end
 
 endmodule
