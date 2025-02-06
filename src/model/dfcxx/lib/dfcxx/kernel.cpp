@@ -35,7 +35,7 @@ DFType Kernel::dfUInt(uint8_t bits) {
 }
 
 DFType Kernel::dfInt(uint8_t bits) {
-  assert(bits > 0 && "Bits has to be greater than zero (for sign bit to exist).");
+  assert(bits > 0 && "Number of bits has to be greater than zero (for sign bit to exist).");
   auto *type = meta.typeBuilder.buildFixed(FixedType::SignMode::SIGNED,
                                            bits - 1,
                                            0);
