@@ -545,7 +545,7 @@ void SimpleCounterOp::print(::mlir::OpAsmPrinter &printer) {
   printer << "<";
   printer << getRes().getType().getStreamType();
   printer << "> (";
-  printer << getMax();
+  printer << getMax() << ": " << getMax().getType();
   printer << ")";
   ::llvm::SmallVector<::llvm::StringRef, 2> elidedAttrs;
   elidedAttrs.push_back("max");

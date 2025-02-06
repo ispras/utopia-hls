@@ -1,43 +1,23 @@
-// Объявление псевдонимов используемых типов.
-!ui32t = !dfcir.fixed<false, 32, 0>
-!ui32s = !dfcir.stream<!ui32t>
-!ui32v = !dfcir.scalar<!ui32t>
-!ui32c = !dfcir.const<!ui32t>
-!boolt = !dfcir.fixed<false, 1, 0>
-!bools = !dfcir.stream<!boolt>
-!f32t  = !dfcir.float<8, 24>
-!f32s  = !dfcir.stream<!f32t>
-!f32c  = !dfcir.const<!f32t>
-
-// Объявление ядра, вычисляющего скользящее среднее.
 dfcir.kernel "MovingAverage" {
-  // Объявление используемых констант и входных данных.
-  %C0   = dfcir.constant<!ui32t> 0: i64
-  %C0F  = dfcir.constant<!f32t> 0.0: f32
-  %C1   = dfcir.constant<!ui32t> 1: i64
-  %C2   = dfcir.constant<!ui32t> 2: i64
-  %C3   = dfcir.constant<!ui32t> 3: i64
-  %x    = dfcir.input<!f32t>("x")
-  %size = dfcir.scalarInput<!ui32t>("size")
-
-  %prevOrig = dfcir.offset(%x, -1: i64) : !f32s
-  %nextOrig = dfcir.offset(%x,  1: i64) : !f32s
-
-  // Объявление счетчика и вычисление предикатов.
-  %cnt = dfcir.simpleCounter<!ui32t>(%size: !ui32v)
-  %abvLowBnd = dfcir.greater(%cnt: !ui32s, %C0: !ui32c) : !bools
-  %lessThanSize = dfcir.sub(%size: !ui32v, %C1: !ui32c) : !ui32s
-  %blwUppBnd = dfcir.less(%cnt: !ui32s, %lessThanSize: !ui32s) : !bools
-  %inBounds = dfcir.and(%abvLowBnd: !bools, %blwUppBnd: !bools) : !bools
-  %prev = dfcir.mux(%abvLowBnd: !bools, %C0F: !f32c, %prevOrig) : !f32s
-  %next = dfcir.mux(%blwUppBnd: !bools, %C0F: !f32c, %nextOrig) : !f32s
-
-  // Вычисление суммы для подсчета скользящего среднего.
-  %divisor = dfcir.mux(%inBounds: !bools, %C2: !ui32c, %C3: !ui32c) : !ui32s
-  %sum1 = dfcir.add(%prev: !f32s, %x: !f32s) : !f32s
-  %sum2 = dfcir.add(%sum1: !f32s, %next: !f32s) : !f32s
-  %result = dfcir.div(%sum2: !f32s, %divisor: !ui32s) : !f32s
-
-  // Объявление выходного потока.
-  %y = dfcir.output<!f32t>("y") <= %result: !f32s
+  %0 = dfcir.constant<!dfcir.fixed<false, 32, 0>> 0 : i64
+  %1 = dfcir.constant<!dfcir.float<8, 24>> 0.000000e+00 : f32
+  %2 = dfcir.constant<!dfcir.fixed<false, 32, 0>> 1 : i64
+  %3 = dfcir.constant<!dfcir.fixed<false, 32, 0>> 2 : i64
+  %4 = dfcir.constant<!dfcir.fixed<false, 32, 0>> 3 : i64
+  %5 = dfcir.input<!dfcir.float<8, 24>> ("x")
+  %6 = dfcir.scalarInput<!dfcir.fixed<false, 32, 0>> ("size")
+  %7 = dfcir.offset(%5, -1 : i64) : !dfcir.stream<!dfcir.float<8, 24>>
+  %8 = dfcir.offset(%5, 1 : i64) : !dfcir.stream<!dfcir.float<8, 24>>
+  %9 = dfcir.simpleCounter<!dfcir.fixed<false, 32, 0>> (%6: !dfcir.scalar<!dfcir.fixed<false, 32, 0>>)
+  %10 = dfcir.greater[?] (%9 : !dfcir.stream<!dfcir.fixed<false, 32, 0>>, %0 : !dfcir.const<!dfcir.fixed<false, 32, 0>>) : !dfcir.stream<!dfcir.fixed<false, 1, 0>> {latency = -1 : i32}
+  %11 = dfcir.sub[?] (%6 : !dfcir.scalar<!dfcir.fixed<false, 32, 0>>, %2 : !dfcir.const<!dfcir.fixed<false, 32, 0>>) : !dfcir.stream<!dfcir.fixed<false, 32, 0>> {latency = -1 : i32}
+  %12 = dfcir.less[?] (%9 : !dfcir.stream<!dfcir.fixed<false, 32, 0>>, %11 : !dfcir.stream<!dfcir.fixed<false, 32, 0>>) : !dfcir.stream<!dfcir.fixed<false, 1, 0>> {latency = -1 : i32}
+  %13 = dfcir.and[?] (%10 : !dfcir.stream<!dfcir.fixed<false, 1, 0>>, %12 : !dfcir.stream<!dfcir.fixed<false, 1, 0>>) : !dfcir.stream<!dfcir.fixed<false, 1, 0>> {latency = -1 : i32}
+  %14 = dfcir.mux(%10: !dfcir.stream<!dfcir.fixed<false, 1, 0>>, %1: !dfcir.const<!dfcir.float<8, 24>>, %7) : !dfcir.stream<!dfcir.float<8, 24>>
+  %15 = dfcir.mux(%12: !dfcir.stream<!dfcir.fixed<false, 1, 0>>, %1: !dfcir.const<!dfcir.float<8, 24>>, %8) : !dfcir.stream<!dfcir.float<8, 24>>
+  %16 = dfcir.mux(%13: !dfcir.stream<!dfcir.fixed<false, 1, 0>>, %3: !dfcir.const<!dfcir.fixed<false, 32, 0>>, %4: !dfcir.const<!dfcir.fixed<false, 32, 0>>) : !dfcir.stream<!dfcir.fixed<false, 32, 0>>
+  %17 = dfcir.add[?] (%14 : !dfcir.stream<!dfcir.float<8, 24>>, %5 : !dfcir.stream<!dfcir.float<8, 24>>) : !dfcir.stream<!dfcir.float<8, 24>> {latency = -1 : i32}
+  %18 = dfcir.add[?] (%17 : !dfcir.stream<!dfcir.float<8, 24>>, %15 : !dfcir.stream<!dfcir.float<8, 24>>) : !dfcir.stream<!dfcir.float<8, 24>> {latency = -1 : i32}
+  %19 = dfcir.div[?] (%18 : !dfcir.stream<!dfcir.float<8, 24>>, %16 : !dfcir.stream<!dfcir.fixed<false, 32, 0>>) : !dfcir.stream<!dfcir.float<8, 24>> {latency = -1 : i32}
+  %20 = dfcir.output<!dfcir.float<8, 24>> ("y") <= %19 : !dfcir.stream<!dfcir.float<8, 24>> {operandSegmentSizes = array<i32: 0, 1>}
 }
