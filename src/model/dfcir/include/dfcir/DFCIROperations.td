@@ -416,6 +416,10 @@ def SubOp : DFCIR_BinaryOp<"sub", Variable, Variable, Variable, []>;
 
 def MulOp : DFCIR_BinaryOp<"mul", Variable, Variable, Variable, []>;
 
+def RemOp : DFCIR_BinaryOp<"red", Variable, Variable, Variable, []>;
+
+def ModOp : DFCIR_BinaryOp<"mod", Variable, Variable, Variable, []>;
+
 def DivOp : DFCIR_BinaryOp<"div", Variable, Variable, Variable, []>;
 
 def CastOp : DFCIR_UnaryOp<"cast", Variable, Variable, []>;
