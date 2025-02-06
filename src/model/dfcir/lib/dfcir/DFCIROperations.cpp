@@ -355,8 +355,8 @@ ParseResult MuxOp::parse(OpAsmParser &parser, OperationState &result) {
 void MuxOp::print(OpAsmPrinter &p) {
   Value value = getControl();
   p << "(" << value << ": " << value.getType();
-  auto vars = getVars();
 
+  auto vars = getVars();
   auto resType = getType();
   for (const auto &var: vars) {
     p << ", " << var;
