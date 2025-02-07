@@ -128,7 +128,9 @@ public:
 
 private:
   template <class OpGroup, class Op>
-  void process(Op &op);
+  Node *process(Op &op);
+
+  Node *processGenericOp(Operation &op, int32_t latency);
 };
 
 void insertBuffer(OpBuilder &builder, Channel *channel, int32_t latency);

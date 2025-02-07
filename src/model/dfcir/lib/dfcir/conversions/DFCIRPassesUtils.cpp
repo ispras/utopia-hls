@@ -130,40 +130,28 @@ void Graph::applyConfig(const LatencyConfig &cfg) {
 }
 
 template <>
-void Graph::process<InputOutputOpInterface>(InputOutputOpInterface &op) {
+Node *Graph::process<InputOutputOpInterface>(InputOutputOpInterface &op) {
   Node *newNode = new Node(op, 0);
   nodes.insert(newNode);
   if (llvm::isa<InputOpInterface>(op.getOperation())) {
     startNodes.insert(newNode);
   }
+
+  return newNode;
 }
 
 template <>
-void Graph::process<ConstantOp>(ConstantOp &op) {
+Node *Graph::process<ConstantOp>(ConstantOp &op) {
   Node *newNode = new Node(op, 0);
   nodes.insert(newNode);
   startNodes.insert(newNode);
+
+  return newNode;
 }
 
 template <>
-void Graph::process<MuxOp>(MuxOp &op) {
-  Node *newNode = new Node(op, 0);
-  nodes.insert(newNode);
-
-  for (size_t i = 0; i < op.getNumOperands(); ++i) {
-    auto operand = op.getOperand(i);
-    auto unrolledInfo = findNearestNodeValue(operand);
-    auto srcNode = findNode(unrolledInfo.first);
-    Channel *newChannel = new Channel(*srcNode, newNode, i, unrolledInfo.second);
-    channels.insert(newChannel);
-    outputs[*srcNode].insert(newChannel);
-    inputs[newNode].insert(newChannel);
-  }
-}
-
-template <>
-void Graph::process<ConnectOp>(ConnectOp &op) {
-  if (!llvm::isa<OutputOpInterface>(op.getDest().getDefiningOp())) { return; }
+Node *Graph::process<ConnectOp>(ConnectOp &op) {
+  if (!llvm::isa<OutputOpInterface>(op.getDest().getDefiningOp())) { return nullptr; }
   auto unrolledInfo = findNearestNodeValue(op.getSrc());
   auto srcNode = findNode(unrolledInfo.first);
   auto dstNode = findNode(op.getDest());
@@ -176,32 +164,16 @@ void Graph::process<ConnectOp>(ConnectOp &op) {
   channels.insert(newChannel);
   outputs[*srcNode].insert(newChannel);
   inputs[*dstNode].insert(newChannel);
+
+  return nullptr;
 }
 
-template <>
-void Graph::process<CastOp>(CastOp &op) {
-  Node *newNode = new Node(op, 0);
+ Node *Graph::processGenericOp(Operation &op, int32_t latency) {
+  Node *newNode = new Node(&op, latency);
   nodes.insert(newNode);
 
-  Operation *opPtr = op.getOperation();
-
-  auto operand = opPtr->getOperand(0);
-  auto unrolledInfo = findNearestNodeValue(operand);
-  auto srcNode = findNode(unrolledInfo.first);
-  Channel *newChannel = new Channel(*srcNode, newNode, 0, unrolledInfo.second);
-  outputs[*srcNode].insert(newChannel);
-  inputs[newNode].insert(newChannel);
-}
-
-template <>
-void Graph::process<NaryOpInterface>(NaryOpInterface &op) {
-  Node *newNode = new Node(op, -1);
-  nodes.insert(newNode);
-
-  Operation *opPtr = op.getOperation();
-
-  for (size_t i = 0; i < opPtr->getNumOperands(); ++i) {
-    auto operand = opPtr->getOperand(i);
+  for (size_t i = 0; i < op.getNumOperands(); ++i) {
+    auto operand = op.getOperand(i);
     auto unrolledInfo = findNearestNodeValue(operand);
     auto srcNode = findNode(unrolledInfo.first);
     Channel *newChannel = new Channel(*srcNode, newNode, i, unrolledInfo.second);
@@ -209,21 +181,8 @@ void Graph::process<NaryOpInterface>(NaryOpInterface &op) {
     outputs[*srcNode].insert(newChannel);
     inputs[newNode].insert(newChannel);
   }
-}
 
-template <>
-void Graph::process<ShiftOpInterface>(ShiftOpInterface &op) {
-  Node *newNode = new Node(op, 0);
-  nodes.insert(newNode);
-
-  Operation *opPtr = op.getOperation();
-
-  auto operand = opPtr->getOperand(0);
-  auto unrolledInfo = findNearestNodeValue(operand);
-  auto srcNode = findNode(unrolledInfo.first);
-  Channel *newChannel = new Channel(*srcNode, newNode, 0, unrolledInfo.second);
-  outputs[*srcNode].insert(newChannel);
-  inputs[newNode].insert(newChannel);
+  return newNode;
 }
 
 Graph::Graph(KernelOp kernel) : Graph() {
@@ -233,16 +192,13 @@ Graph::Graph(KernelOp kernel) : Graph() {
       process<InputOutputOpInterface>(casted);
     } else if (auto casted = llvm::dyn_cast<ConstantOp>(&op)) {
       process<ConstantOp>(casted);
-    } else if (auto casted = llvm::dyn_cast<MuxOp>(&op)) {
-      process<MuxOp>(casted);
     } else if (auto casted = llvm::dyn_cast<ConnectOp>(&op)) {
       process<ConnectOp>(casted);
-    } else if (auto casted = llvm::dyn_cast<CastOp>(&op)) {
-      process<CastOp>(casted);
-    } else if (auto casted = llvm::dyn_cast<NaryOpInterface>(&op)) {
-      process<NaryOpInterface>(casted);
-    } else if (auto casted = llvm::dyn_cast<ShiftOpInterface>(&op)) {
-      process<ShiftOpInterface>(casted);
+    } else if (llvm::isa<NaryOpInterface>(&op)) {
+      processGenericOp(op, -1);
+    } else if (llvm::isa<MuxOp, CastOp, ShiftOpInterface,
+                         BitsOp, CatOp>(&op)) {
+      processGenericOp(op, 0);
     }
   }
 }
