@@ -12,24 +12,20 @@
 namespace dfcxx {
 
 DFScalar::DFScalar(const std::string &name, IODirection direction,
-                   KernMeta &meta, DFTypeImpl *type) :
-                   DFVariableImpl(name, direction, meta), type(*type) {}
+                   KernMeta *meta, DFTypeImpl *type) :
+                   DFVariableImpl(name, direction, type, meta) {}
 
 DFVariableImpl *DFScalar::clone() const {
-  return new DFScalar(name, direction, meta, &type);
+  return new DFScalar(name, direction, meta, type);
 }
 
-DFTypeImpl *DFScalar::getType() {
-  return &type;
-}
-
-#define GENERIC_STREAM_BINARY_OP(OP_TYPE, VAR, RHS)                  \
-DFVariableImpl *VAR =                                                \
-    meta.varBuilder.buildStream("", IODirection::NONE, meta, &type); \
-meta.storage.addVariable(VAR);                                       \
-meta.graph.addNode(VAR, OP_TYPE, NodeData {});                       \
-meta.graph.addChannel(this, VAR, 0, false);                          \
-meta.graph.addChannel(&RHS, VAR, 1, false);                          \
+#define GENERIC_STREAM_BINARY_OP(OP_TYPE, VAR, RHS)                   \
+DFVariableImpl *VAR =                                                 \
+    meta->varBuilder.buildStream("", IODirection::NONE, meta, type);  \
+meta->storage.addVariable(VAR);                                       \
+meta->graph.addNode(VAR, OP_TYPE, NodeData {});                       \
+meta->graph.addChannel(this, VAR, 0, false);                          \
+meta->graph.addChannel(&RHS, VAR, 1, false);                          \
 return VAR;
 
 DFVariableImpl *DFScalar::operator+(DFVariableImpl &rhs) {
@@ -62,10 +58,10 @@ DFVariableImpl *DFScalar::operator^(DFVariableImpl &rhs) {
 
 #define GENERIC_STREAM_UNARY_OP(OP_TYPE, VAR)                        \
 DFVariableImpl *VAR =                                                \
-    meta.varBuilder.buildStream("", IODirection::NONE, meta, &type); \
-meta.storage.addVariable(VAR);                                       \
-meta.graph.addNode(VAR, OP_TYPE, NodeData {});                       \
-meta.graph.addChannel(this, VAR, 0, false);                          \
+    meta->varBuilder.buildStream("", IODirection::NONE, meta, type); \
+meta->storage.addVariable(VAR);                                      \
+meta->graph.addNode(VAR, OP_TYPE, NodeData {});                      \
+meta->graph.addChannel(this, VAR, 0, false);                         \
 return VAR;
 
 DFVariableImpl *DFScalar::operator!() {
@@ -76,14 +72,14 @@ DFVariableImpl *DFScalar::operator-() {
   GENERIC_STREAM_UNARY_OP(OpType::NEG, newVar)
 }
 
-#define GENERIC_STREAM_COMP_OP(OP_TYPE, VAR, TYPE_VAR, RHS)                  \
-  DFTypeImpl *TYPE_VAR = meta.storage.addType(meta.typeBuilder.buildBool()); \
-  DFVariableImpl *VAR =                                                      \
-      meta.varBuilder.buildStream("", IODirection::NONE, meta, TYPE_VAR);    \
-  meta.storage.addVariable(VAR);                                             \
-  meta.graph.addNode(VAR, OP_TYPE, NodeData {});                             \
-  meta.graph.addChannel(this, VAR, 0, false);                                \
-  meta.graph.addChannel(&RHS, VAR, 1, false);                                \
+#define GENERIC_STREAM_COMP_OP(OP_TYPE, VAR, TYPE_VAR, RHS)                    \
+  DFTypeImpl *TYPE_VAR = meta->storage.addType(meta->typeBuilder.buildBool()); \
+  DFVariableImpl *VAR =                                                        \
+      meta->varBuilder.buildStream("", IODirection::NONE, meta, TYPE_VAR);     \
+  meta->storage.addVariable(VAR);                                              \
+  meta->graph.addNode(VAR, OP_TYPE, NodeData {});                              \
+  meta->graph.addChannel(this, VAR, 0, false);                                 \
+  meta->graph.addChannel(&RHS, VAR, 1, false);                                 \
   return VAR;
 
 DFVariableImpl *DFScalar::operator<(DFVariableImpl &rhs) {
@@ -112,19 +108,19 @@ DFVariableImpl *DFScalar::operator!=(DFVariableImpl &rhs) {
 
 DFVariableImpl *DFScalar::operator<<(uint8_t bits) {
   DFVariableImpl *newVar =
-      meta.varBuilder.buildStream("", IODirection::NONE, meta, &type);
-  meta.storage.addVariable(newVar);
-  meta.graph.addNode(newVar, OpType::SHL, NodeData {.bitShift=bits});
-  meta.graph.addChannel(this, newVar, 0, false);
+      meta->varBuilder.buildStream("", IODirection::NONE, meta, type);
+  meta->storage.addVariable(newVar);
+  meta->graph.addNode(newVar, OpType::SHL, NodeData {.bitShift=bits});
+  meta->graph.addChannel(this, newVar, 0, false);
   return newVar;
 }
 
 DFVariableImpl *DFScalar::operator>>(uint8_t bits) {
   DFVariableImpl *newVar =
-      meta.varBuilder.buildStream("", IODirection::NONE, meta, &type);
-  meta.storage.addVariable(newVar);
-  meta.graph.addNode(newVar, OpType::SHR, NodeData {.bitShift=bits});
-  meta.graph.addChannel(this, newVar, 0, false);
+      meta->varBuilder.buildStream("", IODirection::NONE, meta, type);
+  meta->storage.addVariable(newVar);
+  meta->graph.addNode(newVar, OpType::SHR, NodeData {.bitShift=bits});
+  meta->graph.addChannel(this, newVar, 0, false);
   return newVar;
 }
 

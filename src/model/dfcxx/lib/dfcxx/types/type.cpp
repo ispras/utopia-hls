@@ -22,6 +22,10 @@ bool DFTypeImpl::isFloat() const {
   return false;
 }
 
+bool DFTypeImpl::isRawBits() const {
+  return false;
+}
+
 DFType::DFType(DFTypeImpl *impl) : impl(impl) {}
 
 DFType::operator DFTypeImpl*() const {
@@ -50,6 +54,10 @@ bool DFType::isFixed() const {
 
 bool DFType::isFloat() const {
   return impl->isFloat();
+}
+
+bool DFType::isRawBits() const {
+  return impl->isRawBits();
 }
 
 DFType &DFType::operator=(const DFType &type) {

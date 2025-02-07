@@ -101,7 +101,7 @@ void DFCIRBuilder::translate(Node node, const Graph &graph,
       auto constant = (DFConstant *) (node.var);
       int64_t val;
       mlir::IntegerType attrType;
-      unsigned width = constant->getType()->getTotalBits();
+      unsigned width = constant->getTotalBits();
       switch (constant->getKind()) {
         case DFConstant::TypeKind::INT:
           val = constant->getInt();
@@ -277,6 +277,30 @@ void DFCIRBuilder::translate(Node node, const Graph &graph,
                                   
       newOp = builder.create<mlir::dfcir::ShiftRightOp>(loc, conv[node.var],
                                                         map[first], attr);
+      break;
+    }
+    case BITS: {
+      Node first = ins[0].source;
+      auto attrType = mlir::IntegerType::get(builder.getContext(), 32,
+                                             mlir::IntegerType::Signless);
+      auto leftAttr = mlir::IntegerAttr::get(attrType,
+                                             node.data.bitsRange.left);
+      auto rightAttr = mlir::IntegerAttr::get(attrType,
+                                          node.data.bitsRange.right);
+
+      newOp = builder.create<mlir::dfcir::BitsOp>(loc, conv[node.var],
+                                                  map[first],
+                                                  leftAttr,
+                                                  rightAttr);
+      break;
+    }
+    case CAT: {
+      Node first = ins[0].source;
+      Node second = ins[1].source;
+
+      newOp = builder.create<mlir::dfcir::CatOp>(loc, conv[node.var],
+                                                 map[first],
+                                                 map[second]);
       break;
     }
     default: {

@@ -15,7 +15,7 @@ namespace dfcxx {
 
 class TypeBuilder;
 
-class FixedType : DFTypeImpl {
+class FixedType : public DFTypeImpl {
   friend TypeBuilder;
 
 public:

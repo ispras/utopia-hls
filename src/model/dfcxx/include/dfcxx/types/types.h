@@ -11,5 +11,6 @@
 
 #include "dfcxx/types/fixed.h"
 #include "dfcxx/types/float.h"
+#include "dfcxx/types/raw_bits.h"
 
 #endif // DFCXX_TYPES_H

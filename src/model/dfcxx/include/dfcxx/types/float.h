@@ -15,7 +15,7 @@ namespace dfcxx {
 
 class TypeBuilder;
 
-class FloatType : DFTypeImpl {
+class FloatType : public DFTypeImpl {
   friend TypeBuilder;
 
 private:

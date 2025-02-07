@@ -23,6 +23,8 @@ public:
   DFTypeImpl *buildFloat(uint8_t expBits, uint8_t fracBits);
 
   DFTypeImpl *buildShiftedType(DFTypeImpl *type, int8_t shift);
+
+  DFTypeImpl *buildRawBits(uint16_t bits);
 };
 
 } // namespace dfcxx

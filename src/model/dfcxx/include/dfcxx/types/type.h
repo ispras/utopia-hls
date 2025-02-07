@@ -26,6 +26,8 @@ public:
   virtual bool isFixed() const;
 
   virtual bool isFloat() const;
+
+  virtual bool isRawBits() const;
 };
 
 class DFType {
@@ -50,6 +52,8 @@ public:
   bool isFixed() const;
 
   bool isFloat() const;
+
+  bool isRawBits() const;
 
   DFType &operator=(const DFType &type);
 };

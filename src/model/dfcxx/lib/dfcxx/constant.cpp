@@ -13,7 +13,7 @@ namespace dfcxx {
 Constant::Constant(KernMeta &meta) : meta(meta) {} 
 
 DFVariable Constant::var(const DFType &type, int64_t value) {
-  auto *var = meta.varBuilder.buildConstant(meta, type,
+  auto *var = meta.varBuilder.buildConstant(&meta, type,
                                             DFConstant::Value {
                                               .int_ = value
                                             });
@@ -23,7 +23,7 @@ DFVariable Constant::var(const DFType &type, int64_t value) {
 }
 
 DFVariable Constant::var(const DFType &type, uint64_t value) {
-  auto *var = meta.varBuilder.buildConstant(meta, type,
+  auto *var = meta.varBuilder.buildConstant(&meta, type,
                                             DFConstant::Value {
                                               .uint_ = value
                                             });
@@ -33,7 +33,7 @@ DFVariable Constant::var(const DFType &type, uint64_t value) {
 }
 
 DFVariable Constant::var(const DFType &type, double value) {
-  auto *var = meta.varBuilder.buildConstant(meta, type,
+  auto *var = meta.varBuilder.buildConstant(&meta, type,
                                             DFConstant::Value {
                                               .double_ = value
                                             });
