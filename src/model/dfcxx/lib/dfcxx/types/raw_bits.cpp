@@ -17,8 +17,11 @@ uint16_t RawBitsType::getTotalBits() const {
 }
 
 bool RawBitsType::operator==(const DFTypeImpl &rhs) const {
-  const RawBitsType &casted = (const RawBitsType &) (rhs);
-  return bits == casted.bits;
+  if (rhs.isRawBits()) {
+    const RawBitsType &casted = (const RawBitsType &) (rhs);
+    return bits == casted.bits;
+  }
+  return false;
 }
 
 bool RawBitsType::isRawBits() const {

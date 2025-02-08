@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "dfcxx/constant.h"
+#include "dfcxx/vars/constant.h"
 
 namespace dfcxx {
 
@@ -17,7 +18,7 @@ DFVariable Constant::var(const DFType &type, int64_t value) {
                                             DFConstant::Value {
                                               .int_ = value
                                             });
-  meta.storage.addVariable(var);
+  var = meta.storage.addVariable(var, DFConstant::constCmp);
   meta.graph.addNode(var, OpType::CONST, NodeData {});
   return var;
 }
@@ -27,7 +28,7 @@ DFVariable Constant::var(const DFType &type, uint64_t value) {
                                             DFConstant::Value {
                                               .uint_ = value
                                             });
-  meta.storage.addVariable(var);
+  var = meta.storage.addVariable(var, DFConstant::constCmp);
   meta.graph.addNode(var, OpType::CONST, NodeData {});
   return var;
 }
@@ -37,7 +38,7 @@ DFVariable Constant::var(const DFType &type, double value) {
                                             DFConstant::Value {
                                               .double_ = value
                                             });
-  meta.storage.addVariable(var);
+  var = meta.storage.addVariable(var, DFConstant::constCmp);
   meta.graph.addNode(var, OpType::CONST, NodeData {});
   return var;
 }

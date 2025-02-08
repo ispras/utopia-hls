@@ -40,6 +40,8 @@ private:
   DFVariableImpl *clone() const override;
 
 public:
+  static bool constCmp(DFVariableImpl *lhs, DFVariableImpl *rhs);
+
   ~DFConstant() override = default;
   
   int64_t getInt() const;

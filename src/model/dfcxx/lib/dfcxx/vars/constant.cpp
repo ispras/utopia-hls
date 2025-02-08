@@ -29,6 +29,18 @@ DFVariableImpl *DFConstant::clone() const {
   return new DFConstant(meta, type, value);
 }
 
+bool DFConstant::constCmp(DFVariableImpl *lhs, DFVariableImpl *rhs) {
+  if (rhs->isConstant()) {
+    DFConstant *castedLhs = (DFConstant *) lhs;
+    DFConstant *castedRhs = (DFConstant *) rhs;
+
+    return castedLhs->getType()->operator==(*(castedRhs->getType())) &&
+           castedLhs->getKind() == castedRhs->getKind() &&
+           castedLhs->getUInt() == castedRhs->getUInt();
+  }
+  return false;
+}
+
 #define GENERIC_CONST_BINARY_OP(OP_TYPE, OP, VAR, RHS)                 \
 DFVariableImpl *VAR;                                                   \
 if (RHS.isConstant()) {                                                \
@@ -46,7 +58,7 @@ if (RHS.isConstant()) {                                                \
       break;                                                           \
   }                                                                    \
   VAR = meta->varBuilder.buildConstant(meta, type, val);               \
-  meta->storage.addVariable(VAR);                                      \
+  VAR = meta->storage.addVariable(VAR, constCmp);                      \
   meta->graph.addNode(VAR, OpType::CONST, NodeData {});                \
   return VAR;                                                          \
 }                                                                      \
@@ -80,7 +92,7 @@ if (RHS.isConstant()) {                                                \
   DFConstant &casted = (DFConstant &) (RHS);                           \
   val.uint_ = value.uint_ OP casted.value.uint_;                       \
   VAR = meta->varBuilder.buildConstant(meta, type, val);               \
-  meta->storage.addVariable(VAR);                                      \
+  VAR = meta->storage.addVariable(VAR, constCmp);                      \
   meta->graph.addNode(VAR, OpType::CONST, NodeData {});                \
   return VAR;                                                          \
 }                                                                      \
@@ -108,7 +120,7 @@ DFVariableImpl *DFConstant::operator!() {
   Value val {};
   val.uint_ = ~value.uint_;
   newVar = meta->varBuilder.buildConstant(meta, type, val);
-  meta->storage.addVariable(newVar);
+  newVar = meta->storage.addVariable(newVar, constCmp);
   meta->graph.addNode(newVar, OpType::CONST, NodeData {});
   return newVar;
 }
@@ -128,7 +140,7 @@ DFVariableImpl *DFConstant::operator-() {
       break;
   }
   newVar = meta->varBuilder.buildConstant(meta, type, val);
-  meta->storage.addVariable(newVar);
+  newVar = meta->storage.addVariable(newVar, constCmp);
   meta->graph.addNode(newVar, OpType::CONST, NodeData {});
   return newVar;
 }
@@ -150,7 +162,7 @@ if (RHS.isConstant()) {                                                      \
       break;                                                                 \
   }                                                                          \
   VAR = meta->varBuilder.buildConstant(meta, type, val);                     \
-  meta->storage.addVariable(VAR);                                            \
+  VAR = meta->storage.addVariable(VAR, constCmp);                            \
   meta->graph.addNode(VAR, OpType::CONST, NodeData {});                      \
   return VAR;                                                                \
 }                                                                            \
@@ -191,7 +203,7 @@ DFVariableImpl *DFConstant::operator<<(uint8_t bits) {
   Value val {};
   val.uint_ = value.uint_ << bits;
   newVar = meta->varBuilder.buildConstant(meta, type, val);
-  meta->storage.addVariable(newVar);
+  newVar = meta->storage.addVariable(newVar, constCmp);
   meta->graph.addNode(newVar, OpType::CONST, NodeData {});
   return newVar;
 }
@@ -201,7 +213,7 @@ DFVariableImpl *DFConstant::operator>>(uint8_t bits) {
   Value val {};
   val.uint_ = value.uint_ >> bits;
   newVar = meta->varBuilder.buildConstant(meta, type, val);
-  meta->storage.addVariable(newVar);
+  newVar = meta->storage.addVariable(newVar, constCmp);
   meta->graph.addNode(newVar, OpType::CONST, NodeData {});
   return newVar;
 }

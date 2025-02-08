@@ -26,8 +26,11 @@ uint16_t FloatType::getTotalBits() const {
 }
 
 bool FloatType::operator==(const DFTypeImpl &rhs) const {
-  const FloatType &casted = (const FloatType &) (rhs);
-  return expBits == casted.expBits && fracBits == casted.fracBits;
+  if (rhs.isFloat()) {
+    const FloatType &casted = (const FloatType &) (rhs);
+    return expBits == casted.expBits && fracBits == casted.fracBits;
+  }
+  return false;
 }
 
 bool FloatType::isFloat() const {

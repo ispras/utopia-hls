@@ -31,10 +31,13 @@ uint16_t FixedType::getTotalBits() const {
 }
 
 bool FixedType::operator==(const DFTypeImpl &rhs) const {
-  const FixedType &casted = (const FixedType &) (rhs);
-  return mode == casted.mode &&
-         intBits == casted.intBits &&
-         fracBits == casted.fracBits;
+  if (rhs.isFixed()) {
+    const FixedType &casted = (const FixedType &) (rhs);
+    return mode == casted.mode &&
+           intBits == casted.intBits &&
+           fracBits == casted.fracBits;
+  }
+  return false;
 }
 
 bool FixedType::isFixed() const {
