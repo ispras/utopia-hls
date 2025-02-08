@@ -868,6 +868,71 @@ public:
   }
 };
 
+class BitsOpConversionPattern : public FIRRTLOpConversionPattern<BitsOp> {
+  public:
+    using FIRRTLOpConversionPattern<BitsOp>::FIRRTLOpConversionPattern;
+    using OpAdaptor = typename BitsOp::Adaptor;
+    using Rewriter = ConversionPatternRewriter;
+
+    LogicalResult matchAndRewrite(BitsOp bitsOp, OpAdaptor adaptor,
+                                  Rewriter &rewriter) const override {
+      using circt::firrtl::BitsPrimOp;
+
+      auto leftAttr = adaptor.getLeft();
+      auto rightAttr = adaptor.getRight();
+
+      if (leftAttr.getSInt() < rightAttr.getSInt()) {
+        IntegerAttr buf;
+        buf = leftAttr;
+        rightAttr = leftAttr;
+        leftAttr = buf;
+      }
+
+      auto newOp = rewriter.create<BitsPrimOp>(
+          bitsOp.getLoc(),
+          adaptor.getInput(),
+          leftAttr,
+          rightAttr
+      );
+
+      for (auto &operand: llvm::make_early_inc_range(bitsOp.getRes().getUses())) {
+        (*oldTypeMap)[std::make_pair(operand.getOwner(),
+                                     operand.getOperandNumber())] =
+                                         operand.get().getType();
+        operand.set(newOp->getResult(0));
+      }
+      rewriter.eraseOp(bitsOp);
+      return mlir::success();
+    }
+};
+
+class CatOpConversionPattern : public FIRRTLOpConversionPattern<CatOp> {
+  public:
+    using FIRRTLOpConversionPattern<CatOp>::FIRRTLOpConversionPattern;
+    using OpAdaptor = typename CatOp::Adaptor;
+    using Rewriter = ConversionPatternRewriter;
+
+    LogicalResult matchAndRewrite(CatOp catOp, OpAdaptor adaptor,
+                                  Rewriter &rewriter) const override {
+      using circt::firrtl::CatPrimOp;
+
+      auto newOp = rewriter.create<CatPrimOp>(
+          catOp.getLoc(),
+          adaptor.getFirst(),
+          adaptor.getSecond()
+      );
+
+      for (auto &operand: llvm::make_early_inc_range(catOp.getRes().getUses())) {
+        (*oldTypeMap)[std::make_pair(operand.getOwner(),
+                                     operand.getOperandNumber())] =
+                                         operand.get().getType();
+        operand.set(newOp->getResult(0));
+      }
+      rewriter.eraseOp(catOp);
+      return mlir::success();
+    }
+};
+
 class LatencyOpConversionPattern
     : public SchedulableOpConversionPattern<LatencyOp, LatencyOp::Adaptor> {
 
@@ -969,6 +1034,8 @@ public:
         ShiftLeftOpConversionPattern,
         ShiftRightOpConversionPattern,
         ConnectOpConversionPattern,
+        BitsOpConversionPattern,
+        CatOpConversionPattern,
         LatencyOpConversionPattern>(
         &getContext(),
         typeConverter,
