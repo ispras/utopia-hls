@@ -48,6 +48,11 @@ Node Graph::findNode(DFVariableImpl *var) {
 
 void Graph::addNode(DFVariableImpl *var, OpType type, NodeData data) {
   auto node = nodes.emplace(var, type, data);
+
+  if (!node.second) {
+    return;
+  }
+
   if (type == IN || type == CONST) {
     startNodes.emplace(var, type, data);
   }
