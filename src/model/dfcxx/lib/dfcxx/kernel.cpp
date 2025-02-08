@@ -27,21 +27,21 @@ namespace dfcxx {
 Kernel::Kernel() : meta(), io(meta), offset(meta),
                    constant(meta), control(meta) {}
 
-DFType Kernel::dfUInt(uint8_t bits) {
+DFType Kernel::dfUInt(uint16_t bits) {
   auto *type = meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED,
                                            bits,
                                            0);
   return meta.storage.addType(type);
 }
 
-DFType Kernel::dfInt(uint8_t bits) {
+DFType Kernel::dfInt(uint16_t bits) {
   auto *type = meta.typeBuilder.buildFixed(FixedType::SignMode::SIGNED,
                                            bits,
                                            0);
   return meta.storage.addType(type);
 }
 
-DFType Kernel::dfFloat(uint8_t expBits, uint8_t fracBits) {
+DFType Kernel::dfFloat(uint16_t expBits, uint16_t fracBits) {
   auto *type = meta.typeBuilder.buildFloat(expBits, fracBits);
   return meta.storage.addType(type);
 }

@@ -26,17 +26,17 @@ public:
 
 private:
   SignMode mode;
-  uint8_t intBits;
-  uint8_t fracBits;
+  uint16_t intBits;
+  uint16_t fracBits;
 
-  FixedType(SignMode mode, uint8_t intBits, uint8_t fracBits);
+  FixedType(SignMode mode, uint16_t intBits, uint16_t fracBits);
 
 public:
   SignMode getSign() const;
 
-  uint8_t getIntBits() const;
+  uint16_t getIntBits() const;
 
-  uint8_t getFracBits() const;
+  uint16_t getFracBits() const;
 
   uint16_t getTotalBits() const override;
 
