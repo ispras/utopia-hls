@@ -118,7 +118,7 @@ public:
     DFVariable substituted = magmaPermut(7, sum(31, 28));
     for (int i = 1; i < 8; ++i) {
       int currSInd = 31 - i*4;
-      substituted = magmaPermut(7 - i, sum(currSInd, currSInd - 3)).cat(substituted);
+      substituted = substituted.cat(magmaPermut(7 - i, sum(currSInd, currSInd - 3)));
     }
     DFVariable shifted = substituted(20, 0).cat(substituted(31, 21));
     return left ^ shifted;
@@ -133,8 +133,8 @@ public:
     DFVariable currLeft = block(63, 32);
     DFVariable currRight = block(31, 0);
 
-    for (int i = 0; i < 2; ++i) {
-      for (int kInd = 0; kInd < 7; ++kInd) {
+    for (int i = 0; i < 3; ++i) {
+      for (int kInd = 0; kInd < 8; ++kInd) {
         int currKInd = 255 - 32*kInd;
         DFVariable buf = currRight;
         currRight = magmaIter(currLeft, currRight, key(currKInd, currKInd - 31));
@@ -142,16 +142,14 @@ public:
       }
     }
 
-    for (int kInd = 7; kInd >= 1; --kInd) {
+    for (int kInd = 7; kInd >= 0; --kInd) {
       int currKInd = 255 - 32*kInd;
       DFVariable buf = currRight;
       currRight = magmaIter(currLeft, currRight, key(currKInd, currKInd - 31));
       currLeft = buf;
     }
 
-    currLeft = magmaIter(currLeft, currRight, key(255, 224));
-
     DFVariable encoded = io.output("encoded", ioType);
-    encoded.connect(currLeft.cat(currRight));
+    encoded.connect(currRight.cat(currLeft));
   }
 };
