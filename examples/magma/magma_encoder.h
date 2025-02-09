@@ -121,7 +121,7 @@ public:
       substituted = magmaPermut(7 - i, sum(currSInd, currSInd - 3)).cat(substituted);
     }
     DFVariable shifted = substituted(20, 0).cat(substituted(31, 21));
-    return left + shifted;
+    return left ^ shifted;
   }
 
   MagmaEncoder() : dfcxx::Kernel() {
