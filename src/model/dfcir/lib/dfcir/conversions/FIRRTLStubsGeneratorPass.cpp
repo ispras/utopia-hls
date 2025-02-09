@@ -114,6 +114,12 @@ private:
       opChar = "=="; isCompOp = true;
     } else if (moduleName.contains(NEQ_MODULE)) {
       opChar = "!="; isCompOp = true;
+    } else if (moduleName.contains(AND_MODULE)) {
+      opChar = "&";
+    } else if (moduleName.contains(OR_MODULE)) {
+      opChar = "|";
+    } else if (moduleName.contains(XOR_MODULE)) {
+      opChar = "^";
     } else {
       std::cout << "Unsupported binary operation:" << std::endl;
       module.dump();
