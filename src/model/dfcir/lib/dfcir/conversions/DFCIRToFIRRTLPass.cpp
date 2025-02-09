@@ -62,64 +62,31 @@ class FIRRTLTypeConverter : public TypeConverter {
 public:
   FIRRTLTypeConverter() {
     addConversion([](Type type) -> Type { return type; });
-    addConversion([](DFCIRConstantType type) -> circt::firrtl::IntType {
-      Type constType = type.getConstType();
-      if (constType.isa<DFCIRFixedType>()) {
-        DFCIRFixedType fixedType = llvm::cast<DFCIRFixedType>(constType);
-        unsigned width =
-            fixedType.getIntegerBits() + fixedType.getFractionBits();
-        if (fixedType.getSign()) {
-          return circt::firrtl::SIntType::get(fixedType.getContext(), width);
-        } else {
-          return circt::firrtl::UIntType::get(fixedType.getContext(), width);
-        }
-      } else if (constType.isa<DFCIRFloatType>()) {
-        DFCIRFloatType floatType = llvm::cast<DFCIRFloatType>(constType);
-        unsigned width =
-            floatType.getExponentBits() + floatType.getFractionBits();
-        return circt::firrtl::UIntType::get(floatType.getContext(), width);
-      }
-      return {};
+    addConversion([](DFCIRRawBitsType type) -> Type {
+      return circt::firrtl::UIntType::get(type.getContext(), type.getBits());
     });
-    addConversion([](DFCIRScalarType type) -> circt::firrtl::IntType {
-      Type scalarType = type.getScalarType();
-      if (scalarType.isa<DFCIRFixedType>()) {
-        DFCIRFixedType fixedType = llvm::cast<DFCIRFixedType>(scalarType);
-        unsigned width =
-            fixedType.getIntegerBits() + fixedType.getFractionBits();
-        if (fixedType.getSign()) {
-          return circt::firrtl::SIntType::get(fixedType.getContext(), width,
-                                              true);
-        } else {
-          return circt::firrtl::UIntType::get(fixedType.getContext(), width,
-                                              true);
-        }
-      } else if (scalarType.isa<DFCIRFloatType>()) {
-        DFCIRFloatType floatType = llvm::cast<DFCIRFloatType>(scalarType);
-        unsigned width =
-            floatType.getExponentBits() + floatType.getFractionBits();
-        return circt::firrtl::UIntType::get(floatType.getContext(), width);
+    addConversion([](DFCIRFixedType type) -> Type {
+      uint32_t width = type.getSign() +
+                       type.getIntegerBits() +
+                       type.getFractionBits();
+      if (type.getSign()) {
+        return circt::firrtl::SIntType::get(type.getContext(), width);
+      } else {
+        return circt::firrtl::UIntType::get(type.getContext(), width);
       }
-      return {};
     });
-    addConversion([](DFCIRStreamType type) -> circt::firrtl::IntType {
-      Type streamType = type.getStreamType();
-      if (streamType.isa<DFCIRFixedType>()) {
-        DFCIRFixedType fixedType = llvm::cast<DFCIRFixedType>(streamType);
-        unsigned width =
-            fixedType.getIntegerBits() + fixedType.getFractionBits();
-        if (fixedType.getSign()) {
-          return circt::firrtl::SIntType::get(fixedType.getContext(), width);
-        } else {
-          return circt::firrtl::UIntType::get(fixedType.getContext(), width);
-        }
-      } else if (streamType.isa<DFCIRFloatType>()) {
-        DFCIRFloatType floatType = llvm::cast<DFCIRFloatType>(streamType);
-        unsigned width =
-            floatType.getExponentBits() + floatType.getFractionBits();
-        return circt::firrtl::UIntType::get(floatType.getContext(), width);
-      }
-      return {};
+    addConversion([](DFCIRFloatType type) -> Type {
+      uint32_t width = 1 + type.getExponentBits() + type.getFractionBits();
+      return circt::firrtl::UIntType::get(type.getContext(), width);
+    });
+    addConversion([this](DFCIRStreamType type) -> Type {
+      return convertType(type.getStreamType());
+    });
+    addConversion([this](DFCIRScalarType type) -> Type {
+      return convertType(type.getScalarType());
+    });
+    addConversion([this](DFCIRConstantType type) -> Type {
+      return convertType(type.getConstType());
     });
   }
 };
@@ -951,7 +918,7 @@ public:
 
     std::string name = getBaseModuleName();
     llvm::raw_string_ostream nameStream(name);
-  
+
     auto convertedType = getTypeConverter()->convertType(op->getResult(0).getType());
     auto width = getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(convertedType));
     int32_t latency = llvm::cast<Scheduled>(op.getOperation()).getLatency();
