@@ -53,18 +53,25 @@ private:
         std::priority_queue<Channel *, std::vector<Channel *>, ChannelComp>;
     ChannelQueue chanQueue((ChannelComp(map)));
 
+    std::unordered_set<Channel *> visited;
+
     auto visitChannel =
-      [&](Channel *channel) {
-        map[channel->target] = std::max(map[channel->target],
-                                        map[channel->source] +
-                                        channel->source->latency +
-                                        channel->offset);
+      [&](Channel *channel) -> bool {
+        int32_t newMax = std::max(map[channel->target],
+                                  map[channel->source] +
+                                  channel->source->latency +
+                                  channel->offset);
+        bool result = map[channel->target] < newMax;
+        map[channel->target] = newMax;
+        return result;
     };
 
     auto visitNode = [&](Node *node) {
       for (Channel *out: graph.outputs[node]) {
-        chanQueue.push(out);
-        visitChannel(out);
+        if (visitChannel(out) || visited.find(out) == visited.end()) {
+          chanQueue.push(out);
+          visited.emplace(out);
+        }
       }
     };
 
