@@ -25,8 +25,6 @@ namespace mlir::dfcir {
 
 #include "dfcir/conversions/DFCIRPasses.h.inc"
 
-typedef std::unordered_map<mlir::dfcir::utils::Node *, int32_t> Latencies;
-
 class DFCIRASAPSchedulerPass
     : public impl::DFCIRASAPSchedulerPassBase<DFCIRASAPSchedulerPass> {
   using Node = utils::Node;
@@ -87,20 +85,7 @@ private:
 
     Buffers buffers;
 
-    int32_t maxOutLatency = 0;
-
     for (Node *node: graph.nodes) {
-      if (llvm::isa<OutputOpInterface>(node->op) &&
-          map[node] > maxOutLatency) {
-        maxOutLatency = map[node];
-      }
-    }
-
-    for (Node *node: graph.nodes) {
-      if (llvm::isa<OutputOpInterface>(node->op)) {
-        map[node] = maxOutLatency;
-      }
-
       for (Channel *channel: graph.inputs[node]) {
         int32_t delta = map[channel->target] -
                        (map[channel->source] +
@@ -113,7 +98,10 @@ private:
         }
       }
     }
-    return std::make_pair(buffers, calculateOverallLatency(graph, buffers));
+
+    int32_t maxOutLatency = calculateOverallLatency(graph, buffers, &map);
+
+    return std::make_pair(buffers, maxOutLatency);
   }
 
 public:

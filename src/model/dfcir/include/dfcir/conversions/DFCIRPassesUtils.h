@@ -17,6 +17,7 @@
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 namespace mlir::dfcir::utils {
 struct Node;
@@ -24,6 +25,7 @@ struct Channel;
 struct Graph;
 } // namespace mlir::dfcir::utils
 
+typedef std::unordered_map<mlir::dfcir::utils::Node *, int32_t> Latencies;
 typedef std::unordered_map<mlir::dfcir::utils::Channel *, int32_t> Buffers;
 typedef std::unordered_map<mlir::Operation *, unsigned> ModuleArgMap;
 
@@ -109,8 +111,8 @@ public:
   std::unordered_set<Channel *> channels;
 
   std::unordered_set<Node *> startNodes;
-  std::unordered_map<Node *, std::unordered_set<Channel *>> inputs;
-  std::unordered_map<Node* , std::unordered_set<Channel *>> outputs;
+  std::unordered_map<Node *, std::vector<Channel *>> inputs;
+  std::unordered_map<Node* , std::vector<Channel *>> outputs;
 
   explicit Graph() = default;
 
@@ -137,7 +139,9 @@ void insertBuffer(OpBuilder &builder, Channel *channel, int32_t latency);
 
 void insertBuffers(mlir::MLIRContext &ctx, const Buffers &buffers);
 
-int32_t calculateOverallLatency(const Graph &graph, const Buffers &buffers);
+std::vector<Node *> topSortNodes(const Graph &graph);
+
+int32_t calculateOverallLatency(const Graph &graph, Buffers &buffers, Latencies *map = {});
 
 void eraseOffsets(mlir::Operation *op);
 
