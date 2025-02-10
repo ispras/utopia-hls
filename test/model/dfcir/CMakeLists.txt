@@ -5,6 +5,7 @@ set(DFCIR_TESTS
   model/dfcir/muxmul.cpp
   model/dfcir/addconst.cpp
   model/dfcir/movingsum.cpp
+  model/dfcir/movingaverage.cpp
   model/dfcir/idct.cpp
   PARENT_SCOPE
 )

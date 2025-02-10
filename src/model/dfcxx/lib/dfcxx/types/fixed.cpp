@@ -27,7 +27,7 @@ uint16_t FixedType::getFracBits() const {
 }
 
 uint16_t FixedType::getTotalBits() const {
-  return intBits + fracBits;
+  return uint16_t(isSigned()) + intBits + fracBits;
 }
 
 bool FixedType::operator==(const DFTypeImpl &rhs) const {

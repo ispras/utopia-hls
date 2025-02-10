@@ -66,7 +66,9 @@ public:
       return circt::firrtl::UIntType::get(type.getContext(), type.getBits());
     });
     addConversion([](DFCIRFixedType type) -> Type {
-      uint32_t width = type.getIntegerBits() + type.getFractionBits();
+      uint32_t width = uint32_t(type.getSign()) +
+                       type.getIntegerBits() +
+                       type.getFractionBits();
       if (type.getSign()) {
         return circt::firrtl::SIntType::get(type.getContext(), width);
       } else {
@@ -74,7 +76,7 @@ public:
       }
     });
     addConversion([](DFCIRFloatType type) -> Type {
-      uint32_t width = type.getExponentBits() + type.getFractionBits();
+      uint32_t width = 1 + type.getExponentBits() + type.getFractionBits();
       return circt::firrtl::UIntType::get(type.getContext(), width);
     });
     addConversion([this](DFCIRStreamType type) -> Type {

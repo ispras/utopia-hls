@@ -21,7 +21,7 @@ void DFCIRFixedType::printSVSignature(llvm::raw_string_ostream &out) {
 }
 
 uint64_t DFCIRFixedType::getBitWidth() {
-  return getIntegerBits() + getFractionBits();
+  return uint64_t(getSign()) + getIntegerBits() + getFractionBits();
 }
 
 void DFCIRFloatType::printSVSignature(llvm::raw_string_ostream &out) {
