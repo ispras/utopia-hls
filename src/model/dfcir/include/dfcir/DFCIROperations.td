@@ -416,6 +416,10 @@ def SubOp : DFCIR_BinaryOp<"sub", Variable, Variable, Variable, []>;
 
 def MulOp : DFCIR_BinaryOp<"mul", Variable, Variable, Variable, []>;
 
+def RemOp : DFCIR_BinaryOp<"red", Variable, Variable, Variable, []>;
+
+def ModOp : DFCIR_BinaryOp<"mod", Variable, Variable, Variable, []>;
+
 def DivOp : DFCIR_BinaryOp<"div", Variable, Variable, Variable, []>;
 
 def CastOp : DFCIR_UnaryOp<"cast", Variable, Variable, []>;
@@ -435,6 +439,16 @@ class DFCIR_ShiftOp<string name, list<Trait> traits = []> :
 def ShiftLeftOp : DFCIR_ShiftOp<"shl", []>;
 
 def ShiftRightOp : DFCIR_ShiftOp<"shr", []>;
+
+def SimpleCounterOp : DFCIR_Op<"simpleCounter", []> {
+	let arguments = (ins
+		Scalar:$max
+  );
+
+  let hasCustomAssemblyFormat = 1;
+
+	let results = (outs Stream:$res);
+}
 
 // Issue #12 (https://github.com/ispras/utopia-hls/issues/12).
 // Type system rework required.

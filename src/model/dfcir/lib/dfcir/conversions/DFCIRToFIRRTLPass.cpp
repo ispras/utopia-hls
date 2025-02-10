@@ -69,7 +69,7 @@ public:
         unsigned width =
             fixedType.getIntegerBits() + fixedType.getFractionBits();
         if (fixedType.getSign()) {
-          return circt::firrtl::SIntType::get(fixedType.getContext(), width);
+          return circt::firrtl::SIntType::get(fixedType.getContext(), width + 1);
         } else {
           return circt::firrtl::UIntType::get(fixedType.getContext(), width);
         }
@@ -88,7 +88,7 @@ public:
         unsigned width =
             fixedType.getIntegerBits() + fixedType.getFractionBits();
         if (fixedType.getSign()) {
-          return circt::firrtl::SIntType::get(fixedType.getContext(), width,
+          return circt::firrtl::SIntType::get(fixedType.getContext(), width + 1,
                                               true);
         } else {
           return circt::firrtl::UIntType::get(fixedType.getContext(), width,
@@ -109,7 +109,7 @@ public:
         unsigned width =
             fixedType.getIntegerBits() + fixedType.getFractionBits();
         if (fixedType.getSign()) {
-          return circt::firrtl::SIntType::get(fixedType.getContext(), width);
+          return circt::firrtl::SIntType::get(fixedType.getContext(), width + 1);
         } else {
           return circt::firrtl::UIntType::get(fixedType.getContext(), width);
         }
