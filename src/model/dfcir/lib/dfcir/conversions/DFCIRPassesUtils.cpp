@@ -174,7 +174,7 @@ Node *Graph::process<ConnectOp>(ConnectOp &op) {
   return nullptr;
 }
 
- Node *Graph::processGenericOp(Operation &op, int32_t latency) {
+Node *Graph::processGenericOp(Operation &op, int32_t latency) {
   Node *newNode = new Node(&op, latency);
   nodes.insert(newNode);
 
@@ -214,7 +214,14 @@ Graph::Graph(ModuleOp module)
     : Graph(mlir::utils::findFirstOccurence<KernelOp>(module)) {}
 
 void insertBuffer(OpBuilder &builder, Channel *channel, int32_t latency) {
-  assert(latency > 0);
+  if (latency <= 0) {
+    std::cout << "Scheduling created a buffer with latency <= 0 (" << latency;
+    std::cout << ')' << std::endl << "between";
+    channel->source->op->dump();
+    std::cout << "and";
+    channel->target->op->dump();
+    assert (latency > 0);
+  }
 
   if (channel->valInd >= 0) {
     builder.setInsertionPoint(channel->target->op);
