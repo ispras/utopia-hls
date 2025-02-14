@@ -57,7 +57,7 @@ private:
       [&](Channel *channel) -> bool {
         int32_t newMax = std::max(map[channel->target],
                                   map[channel->source] +
-                                  channel->source->latency +
+                                      channel->source->latency +
                                       channel->offset);
         bool result = map[channel->target] < newMax;
         map[channel->target] = newMax;
