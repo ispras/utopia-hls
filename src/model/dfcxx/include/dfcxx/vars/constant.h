@@ -15,7 +15,7 @@ namespace dfcxx {
 
 class VarBuilder;
 
-class DFConstant : DFVariableImpl {
+class DFConstant : public DFVariableImpl {
   friend VarBuilder;
 
 public:
@@ -32,15 +32,16 @@ public:
   };
 
 private:
-  DFTypeImpl &type;
   TypeKind kind;
   Value value;
 
-  DFConstant(KernMeta &meta, DFTypeImpl *type, Value value);
+  DFConstant(KernMeta *meta, DFTypeImpl *type, Value value);
 
   DFVariableImpl *clone() const override;
 
 public:
+  static bool constCmp(DFVariableImpl *lhs, DFVariableImpl *rhs);
+
   ~DFConstant() override = default;
   
   int64_t getInt() const;
@@ -48,8 +49,6 @@ public:
   uint64_t getUInt() const;
 
   double getDouble() const;
-
-  DFTypeImpl *getType() override;
 
   DFVariableImpl *operator+(DFVariableImpl &rhs) override;
 

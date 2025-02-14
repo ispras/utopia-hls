@@ -51,11 +51,11 @@ protected:
   Constant constant;
   Control control;
 
-  DFType dfUInt(uint8_t bits);
+  DFType dfUInt(uint16_t bits);
 
-  DFType dfInt(uint8_t bits);
+  DFType dfInt(uint16_t bits);
 
-  DFType dfFloat(uint8_t expBits, uint8_t fracBits);
+  DFType dfFloat(uint16_t expBits, uint16_t fracBits);
 
   DFType dfBool();
 

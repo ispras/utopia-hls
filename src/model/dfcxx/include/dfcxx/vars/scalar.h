@@ -15,21 +15,17 @@ namespace dfcxx {
 
 class VarBuilder;
 
-class DFScalar : DFVariableImpl {
+class DFScalar : public DFVariableImpl {
   friend VarBuilder;
 
 private:
-  DFTypeImpl &type;
-
   DFScalar(const std::string &name, IODirection direction,
-           KernMeta &meta, DFTypeImpl *type);
+           KernMeta *meta, DFTypeImpl *type);
 
   DFVariableImpl *clone() const override;
 
 public:
   ~DFScalar() override = default;
-
-  DFTypeImpl *getType() override;
 
   DFVariableImpl *operator+(DFVariableImpl &rhs) override;
 

@@ -20,12 +20,19 @@ dfcxx::DFTypeImpl *KernStorage::addType(dfcxx::DFTypeImpl *type) {
   if (found != types.end()) {
     delete type;
     return *found;
-  } else {
-    return *(types.insert(type).first);
   }
+  return *(types.insert(type).first);
 }
 
-DFVariableImpl *KernStorage::addVariable(DFVariableImpl *var) {
+DFVariableImpl *KernStorage::addVariable(DFVariableImpl *var,  VarComp cmp) {
+  if (cmp) {
+    for (DFVariableImpl *iter: variables) {
+      if (cmp(var, iter)) {
+        delete var;
+        return iter;
+      }
+    }
+  }
   return *(variables.insert(var).first);
 }
 

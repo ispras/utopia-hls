@@ -17,14 +17,18 @@ mlir::Type DFCIRTypeConverter::operator[](dfcxx::DFVariableImpl *var) {
   mlir::Type newInnerType;
 
   if (type->isFixed()) {
-    auto *casted = (FixedType *) (type);
+    auto *casted = (FixedType *) type;
     newInnerType = mlir::dfcir::DFCIRFixedType::get(ctx, casted->isSigned(),
                                                     casted->getIntBits(),
                                                     casted->getFracBits());
   } else if (type->isFloat()) {
-    auto *casted = (FloatType *) (type);
+    auto *casted = (FloatType *) type;
     newInnerType = mlir::dfcir::DFCIRFloatType::get(ctx, casted->getExpBits(),
                                                     casted->getFracBits());
+  } else if (type->isRawBits()) {
+    auto *casted = (RawBitsType *) type;
+    newInnerType =
+        mlir::dfcir::DFCIRRawBitsType::get(ctx, casted->getTotalBits());
   } else {
     return nullptr;
   }

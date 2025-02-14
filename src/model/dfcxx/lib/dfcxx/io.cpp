@@ -17,7 +17,7 @@ IO::IO(KernMeta &meta) : meta(meta) {}
 DFVariable IO::input(const std::string &name, const DFType &type) {
   auto *var = meta.varBuilder.buildStream(name, 
                                           IODirection::INPUT,
-                                          meta,
+                                          &meta,
                                           type);
   meta.storage.addVariable(var);
   meta.graph.addNode(var, OpType::IN, NodeData {});
@@ -27,7 +27,7 @@ DFVariable IO::input(const std::string &name, const DFType &type) {
 DFVariable IO::inputScalar(const std::string &name, const DFType &type) {
   auto *var = meta.varBuilder.buildScalar(name,
                                           IODirection::INPUT,
-                                          meta,
+                                          &meta,
                                           type);
   meta.storage.addVariable(var);
   meta.graph.addNode(var, OpType::IN, NodeData {});
@@ -37,7 +37,7 @@ DFVariable IO::inputScalar(const std::string &name, const DFType &type) {
 DFVariable IO::newStream(const DFType &type) {
   auto *var = meta.varBuilder.buildStream("",
                                           IODirection::NONE,
-                                          meta,
+                                          &meta,
                                           type);
   meta.storage.addVariable(var);
   meta.graph.addNode(var, OpType::NONE, NodeData {});
@@ -47,7 +47,7 @@ DFVariable IO::newStream(const DFType &type) {
 DFVariable IO::newScalar(const DFType &type) {
   auto *var = meta.varBuilder.buildScalar("",
                                           IODirection::NONE,
-                                          meta,
+                                          &meta,
                                           type);
   meta.storage.addVariable(var);
   meta.graph.addNode(var, OpType::NONE, NodeData {});
@@ -57,7 +57,7 @@ DFVariable IO::newScalar(const DFType &type) {
 DFVariable IO::output(const std::string &name, const DFType &type) {
   auto *var = meta.varBuilder.buildStream(name,
                                           IODirection::OUTPUT,
-                                          meta,
+                                          &meta,
                                           type);
   meta.storage.addVariable(var);
   meta.graph.addNode(var, OpType::OUT, NodeData {});
@@ -67,7 +67,7 @@ DFVariable IO::output(const std::string &name, const DFType &type) {
 DFVariable IO::outputScalar(const std::string &name, const DFType &type) {
   auto *var = meta.varBuilder.buildScalar(name,
                                           IODirection::OUTPUT,
-                                          meta,
+                                          &meta,
                                           type);
   meta.storage.addVariable(var);
   meta.graph.addNode(var, OpType::OUT, NodeData {});

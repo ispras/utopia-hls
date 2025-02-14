@@ -19,13 +19,13 @@ class VarBuilder {
 public:
   DFVariableImpl *buildStream(const std::string &name,
                               DFVariableImpl::IODirection direction,
-                              KernMeta &meta, DFTypeImpl *type);
+                              KernMeta *meta, DFTypeImpl *type);
 
   DFVariableImpl *buildScalar(const std::string &name,
                               DFVariableImpl::IODirection direction,
-                              KernMeta &meta, DFTypeImpl *type);
+                              KernMeta *meta, DFTypeImpl *type);
 
-  DFVariableImpl *buildConstant(KernMeta &meta,
+  DFVariableImpl *buildConstant(KernMeta *meta,
                                 DFTypeImpl *type,
                                 DFConstant::Value value);
 

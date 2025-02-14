@@ -11,11 +11,11 @@
 
 namespace dfcxx {
 
-DFConstant::DFConstant(KernMeta &meta, DFTypeImpl *type, Value value) :
-                       DFVariableImpl("", IODirection::NONE, meta),
-                       type(*type), value(value) {
-  if (this->type.isFixed()) {
-    if (((FixedType &) this->type).isSigned()) {
+DFConstant::DFConstant(KernMeta *meta, DFTypeImpl *type, Value value) :
+                       DFVariableImpl("", IODirection::NONE, type, meta),
+                       value(value) {
+  if (this->type->isFixed()) {
+    if (((FixedType *) this->type)->isSigned()) {
       kind = TypeKind::INT;
     } else {
       kind = TypeKind::UINT;
@@ -26,11 +26,19 @@ DFConstant::DFConstant(KernMeta &meta, DFTypeImpl *type, Value value) :
 }
 
 DFVariableImpl *DFConstant::clone() const {
-  return new DFConstant(meta, &type, value);
+  return new DFConstant(meta, type, value);
 }
 
-DFTypeImpl *DFConstant::getType() {
-  return &type;
+bool DFConstant::constCmp(DFVariableImpl *lhs, DFVariableImpl *rhs) {
+  if (rhs->isConstant()) {
+    DFConstant *castedLhs = (DFConstant *) lhs;
+    DFConstant *castedRhs = (DFConstant *) rhs;
+
+    return castedLhs->getType()->operator==(*(castedRhs->getType())) &&
+           castedLhs->getKind() == castedRhs->getKind() &&
+           castedLhs->getUInt() == castedRhs->getUInt();
+  }
+  return false;
 }
 
 #define GENERIC_CONST_BINARY_OP(OP_TYPE, OP, VAR, RHS)                 \
@@ -49,16 +57,16 @@ if (RHS.isConstant()) {                                                \
       val.double_ = value.double_ OP casted.value.double_;             \
       break;                                                           \
   }                                                                    \
-  VAR = meta.varBuilder.buildConstant(meta, &type, val);               \
-  meta.storage.addVariable(VAR);                                       \
-  meta.graph.addNode(VAR, OpType::CONST, NodeData {});                 \
+  VAR = meta->varBuilder.buildConstant(meta, type, val);               \
+  VAR = meta->storage.addVariable(VAR, constCmp);                      \
+  meta->graph.addNode(VAR, OpType::CONST, NodeData {});                \
   return VAR;                                                          \
 }                                                                      \
-VAR = meta.varBuilder.buildStream("", IODirection::NONE, meta, &type); \
-meta.storage.addVariable(VAR);                                         \
-meta.graph.addNode(VAR, OP_TYPE, NodeData {});                         \
-meta.graph.addChannel(this, VAR, 0, false);                            \
-meta.graph.addChannel(&RHS, VAR, 1, false);                            \
+VAR = meta->varBuilder.buildStream("", IODirection::NONE, meta, type); \
+meta->storage.addVariable(VAR);                                        \
+meta->graph.addNode(VAR, OP_TYPE, NodeData {});                        \
+meta->graph.addChannel(this, VAR, 0, false);                           \
+meta->graph.addChannel(&RHS, VAR, 1, false);                           \
 return VAR;
 
 DFVariableImpl *DFConstant::operator+(DFVariableImpl &rhs) {
@@ -83,16 +91,16 @@ if (RHS.isConstant()) {                                                \
   Value val {};                                                        \
   DFConstant &casted = (DFConstant &) (RHS);                           \
   val.uint_ = value.uint_ OP casted.value.uint_;                       \
-  VAR = meta.varBuilder.buildConstant(meta, &type, val);               \
-  meta.storage.addVariable(VAR);                                       \
-  meta.graph.addNode(VAR, OpType::CONST, NodeData {});                 \
+  VAR = meta->varBuilder.buildConstant(meta, type, val);               \
+  VAR = meta->storage.addVariable(VAR, constCmp);                      \
+  meta->graph.addNode(VAR, OpType::CONST, NodeData {});                \
   return VAR;                                                          \
 }                                                                      \
-VAR = meta.varBuilder.buildStream("", IODirection::NONE, meta, &type); \
-meta.storage.addVariable(VAR);                                         \
-meta.graph.addNode(VAR, OP_TYPE, NodeData {});                         \
-meta.graph.addChannel(this, VAR, 0, false);                            \
-meta.graph.addChannel(&RHS, VAR, 1, false);                            \
+VAR = meta->varBuilder.buildStream("", IODirection::NONE, meta, type); \
+meta->storage.addVariable(VAR);                                        \
+meta->graph.addNode(VAR, OP_TYPE, NodeData {});                        \
+meta->graph.addChannel(this, VAR, 0, false);                           \
+meta->graph.addChannel(&RHS, VAR, 1, false);                           \
 return VAR;
 
 DFVariableImpl *DFConstant::operator&(DFVariableImpl &rhs) {
@@ -111,9 +119,9 @@ DFVariableImpl *DFConstant::operator!() {
   DFVariableImpl *newVar;
   Value val {};
   val.uint_ = ~value.uint_;
-  newVar = meta.varBuilder.buildConstant(meta, &type, val);
-  meta.storage.addVariable(newVar);
-  meta.graph.addNode(newVar, OpType::CONST, NodeData {});
+  newVar = meta->varBuilder.buildConstant(meta, type, val);
+  newVar = meta->storage.addVariable(newVar, constCmp);
+  meta->graph.addNode(newVar, OpType::CONST, NodeData {});
   return newVar;
 }
 
@@ -131,39 +139,39 @@ DFVariableImpl *DFConstant::operator-() {
       val.double_ = -value.double_;
       break;
   }
-  newVar = meta.varBuilder.buildConstant(meta, &type, val);
-  meta.storage.addVariable(newVar);
-  meta.graph.addNode(newVar, OpType::CONST, NodeData {});
+  newVar = meta->varBuilder.buildConstant(meta, type, val);
+  newVar = meta->storage.addVariable(newVar, constCmp);
+  meta->graph.addNode(newVar, OpType::CONST, NodeData {});
   return newVar;
 }
 
-#define GENERIC_CONST_COMP_OP(OP_TYPE, OP, VAR, TYPE_VAR, RHS)             \
-DFVariableImpl *VAR;                                                       \
-if (RHS.isConstant()) {                                                    \
-  Value val {};                                                            \
-  DFConstant &casted = (DFConstant &) (RHS);                               \
-  switch (kind) {                                                          \
-    case INT:                                                              \
-      val.int_ = value.int_ OP casted.value.int_;                          \
-      break;                                                               \
-    case UINT:                                                             \
-      val.uint_ = value.uint_ OP casted.value.uint_;                       \
-      break;                                                               \
-    case FLOAT:                                                            \
-      val.double_ = value.double_ OP casted.value.double_;                 \
-      break;                                                               \
-  }                                                                        \
-  VAR = meta.varBuilder.buildConstant(meta, &type, val);                   \
-  meta.storage.addVariable(VAR);                                           \
-  meta.graph.addNode(VAR, OpType::CONST, NodeData {});                     \
-  return VAR;                                                              \
-}                                                                          \
-DFTypeImpl *TYPE_VAR = meta.storage.addType(meta.typeBuilder.buildBool()); \
-VAR = meta.varBuilder.buildStream("", IODirection::NONE, meta, TYPE_VAR);  \
-meta.storage.addVariable(VAR);                                             \
-meta.graph.addNode(VAR, OP_TYPE, NodeData {});                             \
-meta.graph.addChannel(this, VAR, 0, false);                                \
-meta.graph.addChannel(&RHS, VAR, 1, false);                                \
+#define GENERIC_CONST_COMP_OP(OP_TYPE, OP, VAR, TYPE_VAR, RHS)               \
+DFVariableImpl *VAR;                                                         \
+if (RHS.isConstant()) {                                                      \
+  Value val {};                                                              \
+  DFConstant &casted = (DFConstant &) (RHS);                                 \
+  switch (kind) {                                                            \
+    case INT:                                                                \
+      val.int_ = value.int_ OP casted.value.int_;                            \
+      break;                                                                 \
+    case UINT:                                                               \
+      val.uint_ = value.uint_ OP casted.value.uint_;                         \
+      break;                                                                 \
+    case FLOAT:                                                              \
+      val.double_ = value.double_ OP casted.value.double_;                   \
+      break;                                                                 \
+  }                                                                          \
+  VAR = meta->varBuilder.buildConstant(meta, type, val);                     \
+  VAR = meta->storage.addVariable(VAR, constCmp);                            \
+  meta->graph.addNode(VAR, OpType::CONST, NodeData {});                      \
+  return VAR;                                                                \
+}                                                                            \
+DFTypeImpl *TYPE_VAR = meta->storage.addType(meta->typeBuilder.buildBool()); \
+VAR = meta->varBuilder.buildStream("", IODirection::NONE, meta, TYPE_VAR);   \
+meta->storage.addVariable(VAR);                                              \
+meta->graph.addNode(VAR, OP_TYPE, NodeData {});                              \
+meta->graph.addChannel(this, VAR, 0, false);                                 \
+meta->graph.addChannel(&RHS, VAR, 1, false);                                 \
 return VAR;
 
 DFVariableImpl *DFConstant::operator<(DFVariableImpl &rhs) {
@@ -194,9 +202,9 @@ DFVariableImpl *DFConstant::operator<<(uint8_t bits) {
   DFVariableImpl *newVar;
   Value val {};
   val.uint_ = value.uint_ << bits;
-  newVar = meta.varBuilder.buildConstant(meta, &type, val);
-  meta.storage.addVariable(newVar);
-  meta.graph.addNode(newVar, OpType::CONST, NodeData {});
+  newVar = meta->varBuilder.buildConstant(meta, type, val);
+  newVar = meta->storage.addVariable(newVar, constCmp);
+  meta->graph.addNode(newVar, OpType::CONST, NodeData {});
   return newVar;
 }
 
@@ -204,9 +212,9 @@ DFVariableImpl *DFConstant::operator>>(uint8_t bits) {
   DFVariableImpl *newVar;
   Value val {};
   val.uint_ = value.uint_ >> bits;
-  newVar = meta.varBuilder.buildConstant(meta, &type, val);
-  meta.storage.addVariable(newVar);
-  meta.graph.addNode(newVar, OpType::CONST, NodeData {});
+  newVar = meta->varBuilder.buildConstant(meta, type, val);
+  newVar = meta->storage.addVariable(newVar, constCmp);
+  meta->graph.addNode(newVar, OpType::CONST, NodeData {});
   return newVar;
 }
 

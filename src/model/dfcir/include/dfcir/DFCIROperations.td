@@ -424,6 +424,29 @@ def DivOp : DFCIR_BinaryOp<"div", Variable, Variable, Variable, []>;
 
 def CastOp : DFCIR_UnaryOp<"cast", Variable, Variable, []>;
 
+def BitsOp : DFCIR_Op<"bits", []> {
+  let arguments = (ins
+    Variable:$input,
+    Builtin_IntegerAttr:$left,
+    Builtin_IntegerAttr:$right
+  );
+
+  let assemblyFormat = "`(` $input `:` type($input) `,` $left `,` $right `)` `:` type($res) attr-dict";
+
+  let results = (outs Variable:$res);
+}
+
+def CatOp : DFCIR_Op<"cat", []> {
+  let arguments = (ins
+    Variable:$first,
+    Variable:$second
+  );
+
+  let assemblyFormat = "`(` $first `:` type($first) `,`  $second `:` type($second) `)` `:` type($res) attr-dict";
+
+  let results = (outs Variable:$res);
+}
+
 class DFCIR_ShiftOp<string name, list<Trait> traits = []> :
     DFCIR_Op<name, traits # [DeclareOpInterfaceMethods<ShiftOpInterface>]> {
   let arguments = (ins 

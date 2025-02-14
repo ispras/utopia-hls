@@ -15,21 +15,17 @@ namespace dfcxx {
 
 class VarBuilder;
 
-class DFStream : DFVariableImpl {
+class DFStream : public DFVariableImpl {
   friend VarBuilder;
 
 private:
-  DFTypeImpl &type;
-
   DFStream(const std::string &name, IODirection direction,
-           KernMeta &meta, DFTypeImpl *type);
+           KernMeta *meta, DFTypeImpl *type);
 
   DFVariableImpl *clone() const override;
 
 public:
   ~DFStream() override = default;
-
-  DFTypeImpl *getType() override;
 
   DFVariableImpl *operator+(DFVariableImpl &rhs) override;
 

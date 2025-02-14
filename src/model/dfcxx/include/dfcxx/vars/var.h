@@ -32,13 +32,14 @@ public:
 protected:
   std::string name;
   IODirection direction;
-  KernMeta &meta;
+  DFTypeImpl *type;
+  KernMeta *meta;
 
   virtual DFVariableImpl *clone() const = 0;
 
 public:
   DFVariableImpl(const std::string &name, IODirection direction,
-                 KernMeta &meta);
+                 DFTypeImpl *type, KernMeta *meta);
 
   virtual ~DFVariableImpl() = default;
 
@@ -56,7 +57,11 @@ public:
 
   const KernMeta &getMeta() const;
 
-  virtual DFTypeImpl *getType() = 0;
+  DFTypeImpl *getType();
+
+  const DFTypeImpl *getType() const;
+
+  uint16_t getTotalBits() const;
 
   virtual DFVariableImpl *operator+(DFVariableImpl &rhs) = 0;
 
@@ -95,6 +100,10 @@ public:
   void connect(DFVariableImpl *connectee);
 
   DFVariableImpl *cast(DFTypeImpl *type);
+
+  virtual DFVariableImpl *operator()(uint8_t first, uint8_t second);
+
+  virtual DFVariableImpl *cat(DFVariableImpl &rhs);
 };
 
 class DFVariable {
@@ -117,6 +126,8 @@ public:
   const KernMeta &getMeta() const;
 
   DFType getType() const;
+
+  uint16_t getTotalBits() const;
 
   DFVariable operator+(const DFVariable &rhs);
 
@@ -161,6 +172,10 @@ public:
   void connect(const DFVariable &connectee);
 
   DFVariable cast(const DFType &type);
+
+  DFVariable operator()(uint8_t first, uint8_t second);
+
+  DFVariable cat(const DFVariable &rhs);
 
   DFVariable &operator=(const DFVariable &var);
 };

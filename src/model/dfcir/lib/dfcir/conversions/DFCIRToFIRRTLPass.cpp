@@ -62,64 +62,31 @@ class FIRRTLTypeConverter : public TypeConverter {
 public:
   FIRRTLTypeConverter() {
     addConversion([](Type type) -> Type { return type; });
-    addConversion([](DFCIRConstantType type) -> circt::firrtl::IntType {
-      Type constType = type.getConstType();
-      if (constType.isa<DFCIRFixedType>()) {
-        DFCIRFixedType fixedType = llvm::cast<DFCIRFixedType>(constType);
-        unsigned width =
-            fixedType.getIntegerBits() + fixedType.getFractionBits();
-        if (fixedType.getSign()) {
-          return circt::firrtl::SIntType::get(fixedType.getContext(), width + 1);
-        } else {
-          return circt::firrtl::UIntType::get(fixedType.getContext(), width);
-        }
-      } else if (constType.isa<DFCIRFloatType>()) {
-        DFCIRFloatType floatType = llvm::cast<DFCIRFloatType>(constType);
-        unsigned width =
-            floatType.getExponentBits() + floatType.getFractionBits();
-        return circt::firrtl::UIntType::get(floatType.getContext(), width);
-      }
-      return {};
+    addConversion([](DFCIRRawBitsType type) -> Type {
+      return circt::firrtl::UIntType::get(type.getContext(), type.getBits());
     });
-    addConversion([](DFCIRScalarType type) -> circt::firrtl::IntType {
-      Type scalarType = type.getScalarType();
-      if (scalarType.isa<DFCIRFixedType>()) {
-        DFCIRFixedType fixedType = llvm::cast<DFCIRFixedType>(scalarType);
-        unsigned width =
-            fixedType.getIntegerBits() + fixedType.getFractionBits();
-        if (fixedType.getSign()) {
-          return circt::firrtl::SIntType::get(fixedType.getContext(), width + 1,
-                                              true);
-        } else {
-          return circt::firrtl::UIntType::get(fixedType.getContext(), width,
-                                              true);
-        }
-      } else if (scalarType.isa<DFCIRFloatType>()) {
-        DFCIRFloatType floatType = llvm::cast<DFCIRFloatType>(scalarType);
-        unsigned width =
-            floatType.getExponentBits() + floatType.getFractionBits();
-        return circt::firrtl::UIntType::get(floatType.getContext(), width);
+    addConversion([](DFCIRFixedType type) -> Type {
+      uint32_t width = uint32_t(type.getSign()) +
+                       type.getIntegerBits() +
+                       type.getFractionBits();
+      if (type.getSign()) {
+        return circt::firrtl::SIntType::get(type.getContext(), width);
+      } else {
+        return circt::firrtl::UIntType::get(type.getContext(), width);
       }
-      return {};
     });
-    addConversion([](DFCIRStreamType type) -> circt::firrtl::IntType {
-      Type streamType = type.getStreamType();
-      if (streamType.isa<DFCIRFixedType>()) {
-        DFCIRFixedType fixedType = llvm::cast<DFCIRFixedType>(streamType);
-        unsigned width =
-            fixedType.getIntegerBits() + fixedType.getFractionBits();
-        if (fixedType.getSign()) {
-          return circt::firrtl::SIntType::get(fixedType.getContext(), width + 1);
-        } else {
-          return circt::firrtl::UIntType::get(fixedType.getContext(), width);
-        }
-      } else if (streamType.isa<DFCIRFloatType>()) {
-        DFCIRFloatType floatType = llvm::cast<DFCIRFloatType>(streamType);
-        unsigned width =
-            floatType.getExponentBits() + floatType.getFractionBits();
-        return circt::firrtl::UIntType::get(floatType.getContext(), width);
-      }
-      return {};
+    addConversion([](DFCIRFloatType type) -> Type {
+      uint32_t width = 1 + type.getExponentBits() + type.getFractionBits();
+      return circt::firrtl::UIntType::get(type.getContext(), width);
+    });
+    addConversion([this](DFCIRStreamType type) -> Type {
+      return convertType(type.getStreamType());
+    });
+    addConversion([this](DFCIRScalarType type) -> Type {
+      return convertType(type.getScalarType());
+    });
+    addConversion([this](DFCIRConstantType type) -> Type {
+      return convertType(type.getConstType());
     });
   }
 };
@@ -868,6 +835,71 @@ public:
   }
 };
 
+class BitsOpConversionPattern : public FIRRTLOpConversionPattern<BitsOp> {
+  public:
+    using FIRRTLOpConversionPattern<BitsOp>::FIRRTLOpConversionPattern;
+    using OpAdaptor = typename BitsOp::Adaptor;
+    using Rewriter = ConversionPatternRewriter;
+
+    LogicalResult matchAndRewrite(BitsOp bitsOp, OpAdaptor adaptor,
+                                  Rewriter &rewriter) const override {
+      using circt::firrtl::BitsPrimOp;
+
+      auto leftAttr = adaptor.getLeft();
+      auto rightAttr = adaptor.getRight();
+
+      if (leftAttr.getSInt() < rightAttr.getSInt()) {
+        IntegerAttr buf;
+        buf = leftAttr;
+        rightAttr = leftAttr;
+        leftAttr = buf;
+      }
+
+      auto newOp = rewriter.create<BitsPrimOp>(
+          bitsOp.getLoc(),
+          adaptor.getInput(),
+          leftAttr,
+          rightAttr
+      );
+
+      for (auto &operand: llvm::make_early_inc_range(bitsOp.getRes().getUses())) {
+        (*oldTypeMap)[std::make_pair(operand.getOwner(),
+                                     operand.getOperandNumber())] =
+                                         operand.get().getType();
+        operand.set(newOp->getResult(0));
+      }
+      rewriter.eraseOp(bitsOp);
+      return mlir::success();
+    }
+};
+
+class CatOpConversionPattern : public FIRRTLOpConversionPattern<CatOp> {
+  public:
+    using FIRRTLOpConversionPattern<CatOp>::FIRRTLOpConversionPattern;
+    using OpAdaptor = typename CatOp::Adaptor;
+    using Rewriter = ConversionPatternRewriter;
+
+    LogicalResult matchAndRewrite(CatOp catOp, OpAdaptor adaptor,
+                                  Rewriter &rewriter) const override {
+      using circt::firrtl::CatPrimOp;
+
+      auto newOp = rewriter.create<CatPrimOp>(
+          catOp.getLoc(),
+          adaptor.getFirst(),
+          adaptor.getSecond()
+      );
+
+      for (auto &operand: llvm::make_early_inc_range(catOp.getRes().getUses())) {
+        (*oldTypeMap)[std::make_pair(operand.getOwner(),
+                                     operand.getOperandNumber())] =
+                                         operand.get().getType();
+        operand.set(newOp->getResult(0));
+      }
+      rewriter.eraseOp(catOp);
+      return mlir::success();
+    }
+};
+
 class LatencyOpConversionPattern
     : public SchedulableOpConversionPattern<LatencyOp, LatencyOp::Adaptor> {
 
@@ -886,7 +918,7 @@ public:
 
     std::string name = getBaseModuleName();
     llvm::raw_string_ostream nameStream(name);
-  
+
     auto convertedType = getTypeConverter()->convertType(op->getResult(0).getType());
     auto width = getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(convertedType));
     int32_t latency = llvm::cast<Scheduled>(op.getOperation()).getLatency();
@@ -969,6 +1001,8 @@ public:
         ShiftLeftOpConversionPattern,
         ShiftRightOpConversionPattern,
         ConnectOpConversionPattern,
+        BitsOpConversionPattern,
+        CatOpConversionPattern,
         LatencyOpConversionPattern>(
         &getContext(),
         typeConverter,

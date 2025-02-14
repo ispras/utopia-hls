@@ -12,19 +12,19 @@ namespace dfcxx {
 
 DFVariableImpl *VarBuilder::buildStream(const std::string &name,
                                         DFVariableImpl::IODirection direction,
-                                        KernMeta &meta,
+                                        KernMeta *meta,
                                         DFTypeImpl *type) {
   return new DFStream(name, direction, meta, type);
 }
 
 DFVariableImpl *VarBuilder::buildScalar(const std::string &name,
                                         DFVariableImpl::IODirection direction,
-                                        KernMeta &meta,
+                                        KernMeta *meta,
                                         DFTypeImpl *type) {
   return new DFScalar(name, direction, meta, type);
 }
 
-DFVariableImpl *VarBuilder::buildConstant(KernMeta &meta,
+DFVariableImpl *VarBuilder::buildConstant(KernMeta *meta,
                                           DFTypeImpl *type,
                                           DFConstant::Value value) {
   return new DFConstant(meta, type, value);

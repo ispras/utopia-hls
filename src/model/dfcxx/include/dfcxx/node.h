@@ -37,13 +37,19 @@ enum OpType : uint8_t {
   NEQ,
   CAST,
   SHL,
-  SHR
+  SHR,
+  BITS,
+  CAT
 };
 
 union NodeData {
   int64_t offset;
   uint64_t muxId;
   uint8_t bitShift;
+  struct {
+    uint16_t left;
+    uint16_t right;
+  } bitsRange;
 };
 
 struct Node {

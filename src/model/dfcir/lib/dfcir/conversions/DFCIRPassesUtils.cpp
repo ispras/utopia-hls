@@ -10,7 +10,9 @@
 
 #include "circt/Dialect/FIRRTL/FIRRTLInstanceGraph.h"
 
+#include <algorithm>
 #include <iostream>
+#include <stack>
 
 namespace mlir::dfcir::utils {
 
@@ -130,40 +132,32 @@ void Graph::applyConfig(const LatencyConfig &cfg) {
 }
 
 template <>
-void Graph::process<InputOutputOpInterface>(InputOutputOpInterface &op) {
+Node *Graph::process<InputOutputOpInterface>(InputOutputOpInterface &op) {
   Node *newNode = new Node(op, 0);
   nodes.insert(newNode);
   if (llvm::isa<InputOpInterface>(op.getOperation())) {
     startNodes.insert(newNode);
   }
+
+  (void)inputs[newNode];
+  (void)outputs[newNode];
+  return newNode;
 }
 
 template <>
-void Graph::process<ConstantOp>(ConstantOp &op) {
+Node *Graph::process<ConstantOp>(ConstantOp &op) {
   Node *newNode = new Node(op, 0);
   nodes.insert(newNode);
   startNodes.insert(newNode);
+
+  (void)inputs[newNode];
+  (void)outputs[newNode];
+  return newNode;
 }
 
 template <>
-void Graph::process<MuxOp>(MuxOp &op) {
-  Node *newNode = new Node(op, 0);
-  nodes.insert(newNode);
-
-  for (size_t i = 0; i < op.getNumOperands(); ++i) {
-    auto operand = op.getOperand(i);
-    auto unrolledInfo = findNearestNodeValue(operand);
-    auto srcNode = findNode(unrolledInfo.first);
-    Channel *newChannel = new Channel(*srcNode, newNode, i, unrolledInfo.second);
-    channels.insert(newChannel);
-    outputs[*srcNode].insert(newChannel);
-    inputs[newNode].insert(newChannel);
-  }
-}
-
-template <>
-void Graph::process<ConnectOp>(ConnectOp &op) {
-  if (!llvm::isa<OutputOpInterface>(op.getDest().getDefiningOp())) { return; }
+Node *Graph::process<ConnectOp>(ConnectOp &op) {
+  if (!llvm::isa<OutputOpInterface>(op.getDest().getDefiningOp())) { return nullptr; }
   auto unrolledInfo = findNearestNodeValue(op.getSrc());
   auto srcNode = findNode(unrolledInfo.first);
   auto dstNode = findNode(op.getDest());
@@ -174,56 +168,28 @@ void Graph::process<ConnectOp>(ConnectOp &op) {
 
   Channel *newChannel = new Channel(*srcNode, *dstNode, valInd, unrolledInfo.second);
   channels.insert(newChannel);
-  outputs[*srcNode].insert(newChannel);
-  inputs[*dstNode].insert(newChannel);
+  outputs[*srcNode].push_back(newChannel);
+  inputs[*dstNode].push_back(newChannel);
+
+  return nullptr;
 }
 
-template <>
-void Graph::process<CastOp>(CastOp &op) {
-  Node *newNode = new Node(op, 0);
+Node *Graph::processGenericOp(Operation &op, int32_t latency) {
+  Node *newNode = new Node(&op, latency);
   nodes.insert(newNode);
 
-  Operation *opPtr = op.getOperation();
-
-  auto operand = opPtr->getOperand(0);
-  auto unrolledInfo = findNearestNodeValue(operand);
-  auto srcNode = findNode(unrolledInfo.first);
-  Channel *newChannel = new Channel(*srcNode, newNode, 0, unrolledInfo.second);
-  outputs[*srcNode].insert(newChannel);
-  inputs[newNode].insert(newChannel);
-}
-
-template <>
-void Graph::process<NaryOpInterface>(NaryOpInterface &op) {
-  Node *newNode = new Node(op, -1);
-  nodes.insert(newNode);
-
-  Operation *opPtr = op.getOperation();
-
-  for (size_t i = 0; i < opPtr->getNumOperands(); ++i) {
-    auto operand = opPtr->getOperand(i);
+  for (size_t i = 0; i < op.getNumOperands(); ++i) {
+    auto operand = op.getOperand(i);
     auto unrolledInfo = findNearestNodeValue(operand);
     auto srcNode = findNode(unrolledInfo.first);
     Channel *newChannel = new Channel(*srcNode, newNode, i, unrolledInfo.second);
     channels.insert(newChannel);
-    outputs[*srcNode].insert(newChannel);
-    inputs[newNode].insert(newChannel);
+    outputs[*srcNode].push_back(newChannel);
+    inputs[newNode].push_back(newChannel);
   }
-}
 
-template <>
-void Graph::process<ShiftOpInterface>(ShiftOpInterface &op) {
-  Node *newNode = new Node(op, 0);
-  nodes.insert(newNode);
-
-  Operation *opPtr = op.getOperation();
-
-  auto operand = opPtr->getOperand(0);
-  auto unrolledInfo = findNearestNodeValue(operand);
-  auto srcNode = findNode(unrolledInfo.first);
-  Channel *newChannel = new Channel(*srcNode, newNode, 0, unrolledInfo.second);
-  outputs[*srcNode].insert(newChannel);
-  inputs[newNode].insert(newChannel);
+  (void)outputs[newNode];
+  return newNode;
 }
 
 Graph::Graph(KernelOp kernel) : Graph() {
@@ -233,16 +199,13 @@ Graph::Graph(KernelOp kernel) : Graph() {
       process<InputOutputOpInterface>(casted);
     } else if (auto casted = llvm::dyn_cast<ConstantOp>(&op)) {
       process<ConstantOp>(casted);
-    } else if (auto casted = llvm::dyn_cast<MuxOp>(&op)) {
-      process<MuxOp>(casted);
     } else if (auto casted = llvm::dyn_cast<ConnectOp>(&op)) {
       process<ConnectOp>(casted);
-    } else if (auto casted = llvm::dyn_cast<CastOp>(&op)) {
-      process<CastOp>(casted);
-    } else if (auto casted = llvm::dyn_cast<NaryOpInterface>(&op)) {
-      process<NaryOpInterface>(casted);
-    } else if (auto casted = llvm::dyn_cast<ShiftOpInterface>(&op)) {
-      process<ShiftOpInterface>(casted);
+    } else if (llvm::isa<NaryOpInterface>(&op)) {
+      processGenericOp(op, -1);
+    } else if (llvm::isa<MuxOp, CastOp, ShiftOpInterface,
+                         BitsOp, CatOp>(&op)) {
+      processGenericOp(op, 0);
     }
   }
 }
@@ -251,6 +214,14 @@ Graph::Graph(ModuleOp module)
     : Graph(mlir::utils::findFirstOccurence<KernelOp>(module)) {}
 
 void insertBuffer(OpBuilder &builder, Channel *channel, int32_t latency) {
+  if (latency <= 0) {
+    std::cout << "Scheduling created a buffer with latency <= 0 (" << latency;
+    std::cout << ')' << std::endl << "between";
+    channel->source->op->dump();
+    std::cout << "and";
+    channel->target->op->dump();
+    assert (latency > 0);
+  }
 
   if (channel->valInd >= 0) {
     builder.setInsertionPoint(channel->target->op);
@@ -294,25 +265,104 @@ void eraseOffsets(mlir::Operation *op) {
   });
 }
 
-int32_t calculateOverallLatency(const Graph &graph, const Buffers &buffers) {
-  assert(!graph.startNodes.empty());
+std::vector<Node *> topSortNodes(const Graph &graph) {
+  size_t nodesCount = graph.nodes.size();
+  auto &outs = graph.outputs;
 
-  int32_t latency = 0;
-  Node *node = *(graph.startNodes.begin());
-  while (!llvm::isa<OutputOpInterface>(node->op)) {
-    latency += node->latency;
-    const auto &channels = graph.outputs.at(node);
-    assert(!channels.empty());
-    Channel *channel = *(channels.begin());
+  std::vector<Node *> result(nodesCount);
 
-    auto foundBuf = buffers.find(channel);
-    if (foundBuf != buffers.end()) {
-      latency += foundBuf->second;
+  std::unordered_map<Node *, size_t> checked;
+  std::stack<Node *> stack;
+
+  for (Node *node: graph.startNodes) {
+    stack.push(node);
+    checked[node] = 0;
+  }
+
+  size_t i = nodesCount - 1;
+  while (!stack.empty()) {
+    Node *node = stack.top();
+    size_t count = outs.at(node).size();
+    size_t curr;
+    bool flag = true;
+    for (curr = checked[node]; flag && curr < count; ++curr) {
+      Channel *next = outs.at(node)[curr];
+      if (!checked[next->target]) {
+        stack.push(next->target);
+        flag = false;
+      }
+      ++checked[node];
     }
 
-    node = channel->target;
+    if (flag) {
+      stack.pop();
+      result[i--] = node;
+    }
   }
-  return latency;
+  return result;
+}
+
+int32_t calculateOverallLatency(const Graph &graph, Buffers &buffers, Latencies *map) {
+  bool deleteMap = false;
+  int32_t maxLatency = 0;
+
+  if (!map) {
+    deleteMap = true;
+    const std::vector<Node *> sorted = topSortNodes(graph);
+    map = new Latencies();
+
+    for (Node *node : sorted) {
+      for (Channel *channel : graph.outputs.at(node)) {
+        int32_t latency = (*map)[node] + node->latency + channel->offset;
+        auto foundBuf = buffers.find(channel);
+        if (foundBuf != buffers.end()) {
+          latency += foundBuf->second;
+        }
+
+        if (latency > (*map)[channel->target]) {
+          (*map)[channel->target] = latency;
+        }
+
+        if (llvm::isa<OutputOpInterface>(channel->target->op) &&
+            latency > maxLatency) {
+          maxLatency = latency;
+        }
+      }
+    }
+  } else {
+    for (const auto &[node, latency] : *map) {
+      if (llvm::isa<OutputOpInterface>(node->op) &&
+          latency > maxLatency) {
+        maxLatency = latency;
+      }
+    }
+  }
+
+  for (auto &[node, latency] : *map) {
+    if (llvm::isa<OutputOpInterface>(node->op)) {
+      const auto &ins = graph.inputs.at(node);
+      Channel *channel = *(std::find_if(ins.begin(),
+                                        ins.end(), [] (Channel *ch) {
+        return ch->valInd == -1;
+      }));
+
+      int32_t delta = latency - (*map)[channel->source];
+      auto foundBuf = buffers.find(channel);
+      if (foundBuf != buffers.end()) {
+        delta -= foundBuf->second;
+      }
+
+      if (delta > 0) {
+        buffers[channel] = delta;
+      }
+    }
+  }
+
+  if (deleteMap) {
+    delete map;
+  }
+
+  return maxLatency;
 }
 
 bool hasConstantInput(mlir::Operation *op) {

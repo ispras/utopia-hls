@@ -10,19 +10,19 @@
 
 namespace dfcxx {
 
-FixedType::FixedType(SignMode mode, uint8_t intBits,
-                     uint8_t fracBits) : mode(mode), intBits(intBits),
-                                         fracBits(fracBits) {}
+FixedType::FixedType(SignMode mode, uint16_t intBits,
+                     uint16_t fracBits) : mode(mode), intBits(intBits),
+                                          fracBits(fracBits) {}
 
 FixedType::SignMode FixedType::getSign() const {
   return mode;
 }
 
-uint8_t FixedType::getIntBits() const {
+uint16_t FixedType::getIntBits() const {
   return intBits;
 }
 
-uint8_t FixedType::getFracBits() const {
+uint16_t FixedType::getFracBits() const {
   return fracBits;
 }
 
@@ -31,10 +31,13 @@ uint16_t FixedType::getTotalBits() const {
 }
 
 bool FixedType::operator==(const DFTypeImpl &rhs) const {
-  const FixedType &casted = (const FixedType &) (rhs);
-  return mode == casted.mode &&
-         intBits == casted.intBits &&
-         fracBits == casted.fracBits;
+  if (rhs.isFixed()) {
+    const FixedType &casted = (const FixedType &) (rhs);
+    return mode == casted.mode &&
+           intBits == casted.intBits &&
+           fracBits == casted.fracBits;
+  }
+  return false;
 }
 
 bool FixedType::isFixed() const {

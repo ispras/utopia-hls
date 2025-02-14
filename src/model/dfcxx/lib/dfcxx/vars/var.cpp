@@ -9,12 +9,17 @@
 #include "dfcxx/kernmeta.h"
 #include "dfcxx/vars/var.h"
 
+#include <sstream>
+#include <stdexcept>
+
 namespace dfcxx {
 
 DFVariableImpl::DFVariableImpl(const std::string &name,
                                IODirection direction,
-                               KernMeta &meta) : name(name),
+                               DFTypeImpl *type,
+                               KernMeta *meta) : name(name),
                                                  direction(direction),
+                                                 type(type),
                                                  meta(meta) {}
 
 std::string_view DFVariableImpl::getName() const {
@@ -30,7 +35,19 @@ DFVariableImpl::IODirection DFVariableImpl::getDirection() const {
 }
 
 const KernMeta &DFVariableImpl::getMeta() const {
-  return meta;
+  return *meta;
+}
+
+DFTypeImpl *DFVariableImpl::getType() {
+  return type;
+}
+
+const DFTypeImpl *DFVariableImpl::getType() const {
+  return type;
+}
+
+uint16_t DFVariableImpl::getTotalBits() const {
+  return getType()->getTotalBits();
 }
 
 bool DFVariableImpl::isStream() const {
@@ -46,7 +63,41 @@ bool DFVariableImpl::isConstant() const {
 }
 
 void DFVariableImpl::connect(DFVariableImpl *connectee) {
-  meta.graph.addChannel(connectee, this, 0, true);
+  meta->graph.addChannel(connectee, this, 0, true);
+}
+
+DFVariableImpl *DFVariableImpl::operator()(uint8_t first, uint8_t second) {
+  uint8_t left = (first > second) ? first : second;
+  uint8_t right = (first > second) ? second : first;
+  uint16_t total = getTotalBits();
+  if (total <= left) {
+    std::stringstream ss;
+    ss << "Invalid range [" << left << ", " << right;
+    ss << "] for " << total << " bits.";
+    throw new std::runtime_error(ss.str());
+  }
+  DFTypeImpl *newType = meta->storage.addType(
+      meta->typeBuilder.buildRawBits(left - right + 1));
+  DFVariableImpl *newVar =
+      meta->varBuilder.buildStream("", IODirection::NONE, meta, newType);
+  meta->storage.addVariable(newVar);
+  NodeData data = {.bitsRange={.left=left, .right=right}};
+  meta->graph.addNode(newVar, OpType::BITS, data);
+  meta->graph.addChannel(this, newVar, 0, false);
+  return newVar;
+}
+
+DFVariableImpl *DFVariableImpl::cat(DFVariableImpl &rhs) {
+  uint16_t total = getTotalBits() + rhs.getTotalBits();
+  DFTypeImpl *newType = meta->storage.addType(
+      meta->typeBuilder.buildRawBits(total));
+  DFVariableImpl *newVar =
+      meta->varBuilder.buildStream("", IODirection::NONE, meta, newType);
+  meta->storage.addVariable(newVar);
+  meta->graph.addNode(newVar, OpType::CAT, NodeData{});
+  meta->graph.addChannel(this, newVar, 0, false);
+  meta->graph.addChannel(&rhs, newVar, 1, false);
+  return newVar;
 }
 
 DFVariableImpl *DFVariableImpl::cast(DFTypeImpl *type) {
@@ -55,10 +106,10 @@ DFVariableImpl *DFVariableImpl::cast(DFTypeImpl *type) {
   }
 
   DFVariableImpl *var =
-      meta.varBuilder.buildStream("", IODirection::NONE, meta, type);
-  meta.storage.addVariable(var);
-  meta.graph.addNode(var, OpType::CAST, NodeData {});
-  meta.graph.addChannel(this, var, 0, false);
+      meta->varBuilder.buildStream("", IODirection::NONE, meta, type);
+  meta->storage.addVariable(var);
+  meta->graph.addNode(var, OpType::CAST, NodeData {});
+  meta->graph.addChannel(this, var, 0, false);
   return var;
 }
 
@@ -82,6 +133,10 @@ DFVariableImpl::IODirection DFVariable::getDirection() const {
 
 DFType DFVariable::getType() const {
   return DFType(impl->getType());
+}
+
+uint16_t DFVariable::getTotalBits() const {
+  return impl->getTotalBits();
 }
 
 DFVariable DFVariable::operator+(const DFVariable &rhs) {
@@ -170,6 +225,14 @@ DFVariable DFVariable::cast(const DFType &type) {
 
 void DFVariable::connect(const DFVariable &connectee) {
   impl->connect(connectee.impl);
+}
+
+DFVariable DFVariable::operator()(uint8_t first, uint8_t second) {
+  return DFVariable(impl->operator()(first, second));
+}
+
+DFVariable DFVariable::cat(const DFVariable &rhs) {
+  return DFVariable(impl->cat(*(rhs.impl)));
 }
 
 DFVariable &DFVariable::operator=(const DFVariable &var) {
