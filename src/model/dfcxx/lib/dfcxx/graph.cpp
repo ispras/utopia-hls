@@ -42,8 +42,7 @@ Node Graph::findNode(const std::string &name) {
 }
 
 Node Graph::findNode(DFVariableImpl *var) {
-  return *std::find_if(nodes.begin(), nodes.end(),
-                       [&](const Node &node) { return node.var == var; });
+  return *(nodes.find(Node(var, OpType::NONE, NodeData{})));
 }
 
 void Graph::addNode(DFVariableImpl *var, OpType type, NodeData data) {
