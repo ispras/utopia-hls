@@ -146,7 +146,7 @@ jobs:
 
       - name: Create test script
         run: |
-          echo "exit \$(./a.out | grep "BAD"  | wc -l)" > test_script.sh
+          echo "exit \$(./a.out | grep "BAD"  | wc -l)" > "${{env.TEST_SCRIPT_PATH}}"
 
       - name: Run test script
         run: |
