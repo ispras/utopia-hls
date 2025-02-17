@@ -11,6 +11,8 @@
 #include <cassert>
 #include <vector>
 
+#define C(NUM) constant.var(type, uint64_t(NUM))
+
 using dfcxx::DFType;
 using dfcxx::DFVariable;
 
@@ -27,7 +29,6 @@ public:
 
   DFVariable kuznechikTablePermut(DFVariable val) {
     const DFType type = dfUInt(8);
-    #define C(NUM) constant.var(type, uint64_t(NUM))
     return control.mux(val, {
       C(252), C(238), C(221), C(17), C(207), C(110), C(49), C(22),
       C(251), C(196), C(250), C(218), C(35), C(197), C(4), C(77),
@@ -99,7 +100,7 @@ public:
   }
 
   DFVariable kuznechikLinearMapping(DFVariable val) {
-    const DFType type = val.getType();
+    const DFType type = dfUInt(8);
     DFVariable result = kuznechikMulGf(constant.var(type, uint64_t(148)), val(127, 120));
     result = result ^ kuznechikMulGf(constant.var(type, uint64_t(32)), val(119, 112));
     result = result ^ kuznechikMulGf(constant.var(type, uint64_t(133)), val(111, 104));
@@ -132,18 +133,45 @@ public:
   }
 
   std::vector<DFVariable> kuznechikGenConsts() {
-    const DFType type = dfUInt(128);
-
-    std::vector<DFVariable> consts;
-    for (uint64_t i = 1; i <= 32; ++i) {
-      DFVariable newConst = constant.var(type, i);
-      consts.push_back(kuznechikLinearPermut(newConst));
-    }
-    return consts;
+    const DFType type = dfUInt(64);
+    return {
+      C(0x6ea276726c487ab8).cat(C(0x5d27bd10dd849401)),
+      C(0xdc87ece4d890f4b3).cat(C(0xba4eb92079cbeb02)),
+      C(0xb2259a96b4d88e0b).cat(C(0xe7690430a44f7f03)),
+      C(0x7bcd1b0b73e32ba5).cat(C(0xb79cb140f2551504)),
+      C(0x156f6d791fab511d).cat(C(0xeabb0c502fd18105)),
+      C(0xa74af7efab73df16).cat(C(0x0dd208608b9efe06)),
+      C(0xc9e8819dc73ba5ae).cat(C(0x50f5b570561a6a07)),
+      C(0xf6593616e6055689).cat(C(0xadfba18027aa2a08)),
+      C(0x98fb40648a4d2c31).cat(C(0xf0dc1c90fa2ebe09)),
+      C(0x2adedaf23e95a23a).cat(C(0x17b518a05e61c10a)),
+      C(0x447cac8052ddd882).cat(C(0x4a92a5b083e5550b)),
+      C(0x8d942d1d95e67d2c).cat(C(0x1a6710c0d5ff3f0c)),
+      C(0xe3365b6ff9ae0794).cat(C(0x4740add0087bab0d)),
+      C(0x5113c1f94d76899f).cat(C(0xa029a9e0ac34d40e)),
+      C(0x3fb1b78b213ef327).cat(C(0xfd0e14f071b0400f)),
+      C(0x2fb26c2c0f0aacd1).cat(C(0x993581c34e975410)),
+      C(0x41101a5e6342d669).cat(C(0xc4123cd39313c011)),
+      C(0xf33580c8d79a5862).cat(C(0x237b38e3375cbf12)),
+      C(0x9d97f6babbd222da).cat(C(0x7e5c85f3ead82b13)),
+      C(0x547f77277ce98774).cat(C(0x2ea93083bcc24114)),
+      C(0x3add015510a1fdcc).cat(C(0x738e8d936146d515)),
+      C(0x88f89bc3a47973c7).cat(C(0x94e789a3c509aa16)),
+      C(0xe65aedb1c831097f).cat(C(0xc9c034b3188d3e17)),
+      C(0xd9eb5a3ae90ffa58).cat(C(0x34ce2043693d7e18)),
+      C(0xb7492c48854780e0).cat(C(0x69e99d53b4b9ea19)),
+      C(0x056cb6de319f0eeb).cat(C(0x8e80996310f6951a)),
+      C(0x6bcec0ac5dd77453).cat(C(0xd3a72473cd72011b)),
+      C(0xa22641319aecd1fd).cat(C(0x835291039b686b1c)),
+      C(0xcc843743f6a4ab45).cat(C(0xde752c1346ecff1d)),
+      C(0x7ea1add5427c254e).cat(C(0x391c2823e2a3801e)),
+      C(0x1003dba72e345ff6).cat(C(0x643b95333f27141f)),
+      C(0x5ea7d8581e149b61).cat(C(0xf16ac1459ceda820))
+    };
   }
 
   std::pair<DFVariable, DFVariable> kuznechikFMapping(DFVariable constVal, DFVariable a1, DFVariable a0) {
-    return std::make_pair(kuznechikLSXPermut(constVal, a1).cat(a0), a0);
+    return std::make_pair(kuznechikLSXPermut(constVal, a1) ^ a0, a0);
   }
 
   std::vector<DFVariable> kuznechikGenKeys(DFVariable k0, DFVariable k1) {
