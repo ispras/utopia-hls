@@ -142,7 +142,7 @@ jobs:
 
       - name: Run Icarus Verilog
         run: |
-          iverilog -g2005-sv -s "${{matrix.top}}" "${{env.MODULE_OUTPUT_PATH}}" "${{env.LIBRARY_OUTPUT_PATH}}" "${{matrix.cpp}}_testbench${{matrix.test}}"
+          iverilog -g2005-sv -s "${{matrix.top}}" "${{env.MODULE_OUTPUT_PATH}}" "${{env.LIBRARY_OUTPUT_PATH}}" "${{github.workspace}}/examples/${{matrix.kernel}}/${{matrix.cpp}}_testbench${{matrix.test}}"
 
       - name: Create test script
         run: |
