@@ -138,7 +138,7 @@ jobs:
         run: |
           "${{env.BUILD_DIR}}/${{env.UTOPIA_EXECUTABLE}}" hls --config \
           "${{github.workspace}}/examples/${{matrix.kernel}}/${{matrix.config}}.json" \
-          -l --out-sv "${{env.MODULE_OUTPUT_PATH}}" --out-sv-lib "${{env.LIBRARY_OUTPUT_PATH}}"
+          -a --out-sv "${{env.MODULE_OUTPUT_PATH}}" --out-sv-lib "${{env.LIBRARY_OUTPUT_PATH}}"
 
       - name: Run Icarus Verilog
         run: |
