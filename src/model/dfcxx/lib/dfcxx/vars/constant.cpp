@@ -105,7 +105,7 @@ if (rhs.isConstant()) {                                              \
 }                                                                    \
 newVar =                                                             \
     meta->varBuilder.buildStream("", IODirection::NONE, meta, type); \
-meta->graph.addNode(newVar, OP_TYPE, NodeData {});                      \
+meta->graph.addNode(newVar, OP_TYPE, NodeData {});                   \
 meta->graph.addChannel(this, newVar, 0, false);                      \
 meta->graph.addChannel(&rhs, newVar, 1, false);                      \
 meta->storage.addVariable(newVar);                                   \

@@ -27,6 +27,12 @@ struct NodePtrHash {
     return std::hash<Node>()(*node);
   }
 };
+
+struct NodePtrEq {
+  size_t operator()(Node *left, Node *right) const noexcept {
+    return *left == *right;
+  }
+};
   
 struct ChannelPtrHash {
   size_t operator()(Channel *channel) const noexcept {
@@ -34,8 +40,14 @@ struct ChannelPtrHash {
   }
 };
 
-typedef std::unordered_set<Node *, NodePtrHash> Nodes;
-typedef std::unordered_set<Channel *, ChannelPtrHash> Channels;
+struct ChannelPtrEq {
+  size_t operator()(Channel *left, Channel *right) const noexcept {
+    return *left == *right;
+  }
+};
+
+typedef std::unordered_set<Node *, NodePtrHash, NodePtrEq> Nodes;
+typedef std::unordered_set<Channel *, ChannelPtrHash, ChannelPtrEq> Channels;
 typedef std::unordered_map<std::string_view, Node *> NodeNameMap;
 typedef std::unordered_map<Node *, std::vector<Channel *>> ChannelMap;
 typedef std::unordered_map<Node *, Channel *> ConnectionMap;

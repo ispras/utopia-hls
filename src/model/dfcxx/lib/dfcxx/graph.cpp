@@ -9,6 +9,7 @@
 #include "dfcxx/graph.h"
 
 #include <algorithm>
+#include <cassert>
 #include <stdexcept>
 
 namespace dfcxx {
@@ -91,6 +92,7 @@ std::pair<Node *, bool> Graph::addNode(DFVariableImpl *var,
 
 Channel *Graph::addChannel(Node *source, Node *target,
                            unsigned opInd, bool connect) {
+  assert(source && target);
   Channel *newChannel = new Channel(source, target, opInd);
 
   outputs[source].push_back(newChannel);
