@@ -80,10 +80,10 @@ DFVariableImpl *DFVariableImpl::operator()(uint8_t first, uint8_t second) {
       meta->typeBuilder.buildRawBits(left - right + 1));
   DFVariableImpl *newVar =
       meta->varBuilder.buildStream("", IODirection::NONE, meta, newType);
-  meta->storage.addVariable(newVar);
   NodeData data = {.bitsRange={.left=left, .right=right}};
   meta->graph.addNode(newVar, OpType::BITS, data);
   meta->graph.addChannel(this, newVar, 0, false);
+  meta->storage.addVariable(newVar);
   return newVar;
 }
 
@@ -93,10 +93,10 @@ DFVariableImpl *DFVariableImpl::cat(DFVariableImpl &rhs) {
       meta->typeBuilder.buildRawBits(total));
   DFVariableImpl *newVar =
       meta->varBuilder.buildStream("", IODirection::NONE, meta, newType);
-  meta->storage.addVariable(newVar);
   meta->graph.addNode(newVar, OpType::CAT, NodeData{});
   meta->graph.addChannel(this, newVar, 0, false);
   meta->graph.addChannel(&rhs, newVar, 1, false);
+  meta->storage.addVariable(newVar);
   return newVar;
 }
 
@@ -107,9 +107,9 @@ DFVariableImpl *DFVariableImpl::cast(DFTypeImpl *type) {
 
   DFVariableImpl *var =
       meta->varBuilder.buildStream("", IODirection::NONE, meta, type);
-  meta->storage.addVariable(var);
   meta->graph.addNode(var, OpType::CAST, NodeData {});
   meta->graph.addChannel(this, var, 0, false);
+  meta->storage.addVariable(var);
   return var;
 }
 

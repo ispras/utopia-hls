@@ -25,8 +25,8 @@ private:
   mlir::OwningOpRef<mlir::ModuleOp> module;
   DFCIRTypeConverter conv;
 
-  void translate(Node node, const Graph &graph, mlir::OpBuilder &builder,
-                 std::unordered_map<Node, mlir::Value> &map);
+  void translate(Node *node, const Graph &graph, mlir::OpBuilder &builder,
+                 std::unordered_map<Node *, mlir::Value> &map);
   
   void buildKernelBody(const Graph &graph, mlir::OpBuilder &builder);
 
