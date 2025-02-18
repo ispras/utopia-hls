@@ -1,7 +1,0 @@
-{
-  "dfcir": {
-    "XOR_INT": 1,
-    "AND_INT": 1,
-    "EQ_INT" : 2
-  }
-}

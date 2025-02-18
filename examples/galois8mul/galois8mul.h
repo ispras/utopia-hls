@@ -26,14 +26,13 @@ public:
     DFVariable right = io.input("right", ioType);
     
     DFVariable c0 = constant.var(ioType, uint64_t(0));
-    DFVariable c128 = constant.var(ioType, uint64_t(128));
     DFVariable c195 = constant.var(ioType, uint64_t(195));
     DFVariable currValue = c0;
 
     for (int i = 0; i < 8; ++i) {
-      DFVariable isBitSet = right(0, 0) == c0;
+      DFVariable isBitSet = right(0, 0);
       currValue = currValue ^ control.mux(isBitSet, {c0, left});
-      DFVariable aboutToOverflow = (left & c128) == c0;
+      DFVariable aboutToOverflow = left(7, 7);
       DFVariable muxed = control.mux(aboutToOverflow, {c0, c195});
       left = (left << 1) ^ muxed;
       right = right >> 1;
