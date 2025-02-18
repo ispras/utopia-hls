@@ -83,7 +83,6 @@ public:
     const DFType type = left.getType();
     assert(type.getTotalBits() == 8);
     DFVariable c0 = constant.var(type, uint64_t(0));
-    DFVariable c128 = constant.var(type, uint64_t(128));
     DFVariable c195 = constant.var(type, uint64_t(195));
     DFVariable currValue = c0;
 
