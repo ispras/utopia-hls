@@ -235,9 +235,4 @@ DFVariable DFVariable::cat(const DFVariable &rhs) {
   return DFVariable(impl->cat(*(rhs.impl)));
 }
 
-DFVariable &DFVariable::operator=(const DFVariable &var) {
-  impl = var.impl;
-  return *this;
-}
-
 } // namespace dfcxx

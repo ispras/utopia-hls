@@ -87,8 +87,6 @@ private:
   std::unordered_map<Node *, int> nodeMap;
   std::unordered_map<Channel *, int> bufMap;
 
-  Node *prevOutputNode = nullptr;
-
   std::pair<Buffers, int32_t> schedule(Graph &graph) {
     size_t chanCount = 0;
     for (Node *node: graph.nodes) {

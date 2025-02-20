@@ -113,9 +113,11 @@ private:
 public:
   DFVariable(DFVariableImpl *impl);
 
-  operator DFVariableImpl*() const;
-
   DFVariable(const DFVariable &) = default;
+
+  DFVariable &operator=(const DFVariable &var) = default;
+
+  operator DFVariableImpl*() const;
 
   DFVariableImpl *getImpl() const;
 
@@ -176,8 +178,6 @@ public:
   DFVariable operator()(uint8_t first, uint8_t second);
 
   DFVariable cat(const DFVariable &rhs);
-
-  DFVariable &operator=(const DFVariable &var);
 };
 
 } // namespace dfcxx
