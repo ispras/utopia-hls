@@ -210,7 +210,7 @@ public:
 
     DFVariable currValue = block;
     for (int i = 0; i < 9; ++i) {
-      DFVariable currValue = kuznechikLSXPermut(gKeys[i], currValue);
+      currValue = kuznechikLSXPermut(gKeys[i], currValue);
     }
 
     currValue = currValue + gKeys[9];
