@@ -9,6 +9,7 @@
 #include "dfcxx/DFCXX.h"
 
 #include <cassert>
+#include <iostream>
 #include <vector>
 
 #define C(NUM) constant.var(type, uint64_t(NUM))
@@ -194,6 +195,7 @@ public:
   }
 
   DFVariable kuznechikLSXPermut(DFVariable key, DFVariable value) {
+    std::cout << __func__ << ", line " << __LINE__ << ", value.impl = " << value.getImpl() << std::endl;
     DFVariable addedKey = key ^ value;
     DFVariable permut = kuznechikSPermut(addedKey);
     return kuznechikLinearPermut(permut);
@@ -210,6 +212,7 @@ public:
 
     DFVariable currValue = block;
     for (int i = 0; i < 9; ++i) {
+      std::cout << __func__ << ", line " << __LINE__ << ", currValue.impl = " << currValue.getImpl() << std::endl;
       DFVariable currValue = kuznechikLSXPermut(gKeys[i], currValue);
     }
 

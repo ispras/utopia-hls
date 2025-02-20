@@ -111,12 +111,15 @@ private:
   DFVariableImpl *impl;
 
 public:
-  DFVariable(DFVariableImpl *impl);
+  DFVariable(DFVariableImpl *impl) : impl(impl) {}
+  DFVariable(const DFVariable &) = default;
+  DFVariable &operator=(const DFVariable &var) = default;
+
+
+
 
   operator DFVariableImpl*() const;
-
-  DFVariable(const DFVariable &) = default;
-
+  
   DFVariableImpl *getImpl() const;
 
   std::string_view getName() const;
@@ -176,8 +179,6 @@ public:
   DFVariable operator()(uint8_t first, uint8_t second);
 
   DFVariable cat(const DFVariable &rhs);
-
-  DFVariable &operator=(const DFVariable &var);
 };
 
 } // namespace dfcxx

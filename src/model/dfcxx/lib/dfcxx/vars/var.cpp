@@ -113,7 +113,7 @@ DFVariableImpl *DFVariableImpl::cast(DFTypeImpl *type) {
   return var;
 }
 
-DFVariable::DFVariable(DFVariableImpl *impl) : impl(impl) {}
+//DFVariable::DFVariable(DFVariableImpl *impl) : impl(impl) {}
 
 DFVariable::operator DFVariableImpl*() const {
   return impl;
@@ -235,9 +235,9 @@ DFVariable DFVariable::cat(const DFVariable &rhs) {
   return DFVariable(impl->cat(*(rhs.impl)));
 }
 
-DFVariable &DFVariable::operator=(const DFVariable &var) {
-  impl = var.impl;
-  return *this;
-}
+// DFVariable &DFVariable::operator=(const DFVariable &var) {
+//   impl = var.impl;
+//   return *this;
+// }
 
 } // namespace dfcxx
