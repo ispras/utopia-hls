@@ -34,11 +34,11 @@ typedef uint64_t SimValue;
 
 typedef std::map<std::string, std::array<SimValue, SIM_DATA_BUF_SIZE>> IOVars;
 
-typedef std::unordered_map<Node, std::vector<Channel>> Inputs;
+typedef std::unordered_map<Node *, std::vector<Channel *>> Inputs;
 
-typedef std::unordered_map<Node, SimValue> RecordedValues;
+typedef std::unordered_map<Node *, SimValue> RecordedValues;
 
-typedef bool (*OpSimulationFunc)(RecordedValues &vals, const Node &node,
+typedef bool (*OpSimulationFunc)(RecordedValues &vals, Node *node,
                                  const Inputs &inputs, const IOVars &inData,
                                  uint64_t ind);
 
@@ -46,7 +46,7 @@ typedef std::unordered_map<OpType, OpSimulationFunc> OpSimulationFuncs;
 
 class DFCXXSimulator {
 public:
-  DFCXXSimulator(std::vector<Node> &nodes,
+  DFCXXSimulator(std::vector<Node *> &nodes,
                  const Inputs &inputs);
   bool simulate(std::ifstream &in, std::ofstream &out);
 
@@ -54,21 +54,21 @@ private:
   uint64_t readInput(std::ifstream &in, IOVars &inData);
   bool runSim(RecordedValues &vals, IOVars &inData, uint64_t iter);
   
-  bool processOp(RecordedValues &vals, const Node &node,
+  bool processOp(RecordedValues &vals, Node *node,
                  const IOVars &inData, uint64_t ind);
   
   void genHeader(ctemplate::TemplateDictionary *dict,
                  const RecordedValues &vals,
-                 std::unordered_map<Node, std::string> &idMap,
+                 std::unordered_map<Node *, std::string> &idMap,
                  uint64_t &counter);
 
   void writeOutput(ctemplate::TemplateDictionary *dict,
                    const RecordedValues &vals,
                    uint64_t startInd,
                    uint64_t iter,
-                   const std::unordered_map<Node, std::string> &idMap);
+                   const std::unordered_map<Node *, std::string> &idMap);
 
-  std::vector<Node> &nodes;
+  std::vector<Node *> &nodes;
   const Inputs &inputs;
   const OpSimulationFuncs funcs;
 };

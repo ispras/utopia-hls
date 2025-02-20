@@ -10,6 +10,10 @@
 
 namespace dfcxx {
 
+Node::Node(DFVariableImpl *var) : var(var),
+                                  type(OpType::NONE),
+                                  data(NodeData {}) {}
+
 Node::Node(DFVariableImpl *var, OpType type, NodeData data) : var(var),
                                                               type(type),
                                                               data(data) {}

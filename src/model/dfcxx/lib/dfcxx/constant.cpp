@@ -14,33 +14,18 @@ namespace dfcxx {
 Constant::Constant(KernMeta &meta) : meta(meta) {} 
 
 DFVariable Constant::var(const DFType &type, int64_t value) {
-  auto *var = meta.varBuilder.buildConstant(&meta, type,
-                                            DFConstant::Value {
-                                              .int_ = value
-                                            });
-  var = meta.storage.addVariable(var, DFConstant::constCmp);
-  meta.graph.addNode(var, OpType::CONST, NodeData {});
-  return var;
+  DFConstant::Value constVal { .int_ = value };
+  return DFConstant::createOrUseConst(&meta, type, constVal);
 }
 
 DFVariable Constant::var(const DFType &type, uint64_t value) {
-  auto *var = meta.varBuilder.buildConstant(&meta, type,
-                                            DFConstant::Value {
-                                              .uint_ = value
-                                            });
-  var = meta.storage.addVariable(var, DFConstant::constCmp);
-  meta.graph.addNode(var, OpType::CONST, NodeData {});
-  return var;
+  DFConstant::Value constVal { .uint_ = value };
+  return DFConstant::createOrUseConst(&meta, type, constVal);
 }
 
 DFVariable Constant::var(const DFType &type, double value) {
-  auto *var = meta.varBuilder.buildConstant(&meta, type,
-                                            DFConstant::Value {
-                                              .double_ = value
-                                            });
-  var = meta.storage.addVariable(var, DFConstant::constCmp);
-  meta.graph.addNode(var, OpType::CONST, NodeData {});
-  return var;
+  DFConstant::Value constVal { .double_ = value };
+  return DFConstant::createOrUseConst(&meta, type, constVal);
 }
 
 } // namespace dfcxx

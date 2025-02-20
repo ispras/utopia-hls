@@ -18,7 +18,7 @@
 
 namespace dfcxx {
 
-std::vector<Node> topSort(const Graph &graph);
+std::vector<Node *> topSort(const Graph &graph);
 
 } // namespace dfcxx
 

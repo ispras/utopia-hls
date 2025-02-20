@@ -14,12 +14,12 @@
 namespace dfcxx {
 
 struct Channel {
-  Node source;
-  Node target;
+  Node *source;
+  Node *target;
   unsigned opInd;
   
   Channel() = default;
-  Channel(Node source, Node target, unsigned opInd);
+  Channel(Node *source, Node *target, unsigned opInd);
 
   bool operator==(const Channel &channel) const;
 };
@@ -29,8 +29,9 @@ struct Channel {
 template <>
 struct std::hash<dfcxx::Channel> {
   size_t operator()(const dfcxx::Channel &ch) const noexcept {
-    return std::hash<dfcxx::DFVariableImpl *>()(ch.source.var) *
-           std::hash<dfcxx::DFVariableImpl *>()(ch.target.var);
+    return std::hash<dfcxx::DFVariableImpl *>()(ch.source->var) *
+           std::hash<dfcxx::DFVariableImpl *>()(ch.target->var) +
+           ch.opInd;
   }
 };
 

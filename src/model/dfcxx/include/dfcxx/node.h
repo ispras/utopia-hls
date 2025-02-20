@@ -58,6 +58,7 @@ struct Node {
   NodeData data;
   
   Node() = default;
+  explicit Node(DFVariableImpl *var);
   Node(DFVariableImpl *var, OpType type, NodeData data);
 
   bool operator==(const Node &node) const;

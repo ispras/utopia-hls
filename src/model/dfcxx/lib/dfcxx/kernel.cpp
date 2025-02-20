@@ -60,10 +60,10 @@ bool Kernel::compileDot(llvm::raw_fd_ostream *stream) {
   using ctemplate::TemplateDictionary;
   
   uint64_t counter = 0;
-  std::unordered_map<Node, std::string> idMapping;
-  auto getName = [&idMapping, &counter] (const Node &node) -> std::string {
+  std::unordered_map<const Node *, std::string> idMapping;
+  auto getName = [&idMapping, &counter] (const Node *node) -> std::string {
     // If the node is named - just return the name.
-    auto name = DFVariable(node.var).getName();
+    auto name = DFVariable(node->var).getName();
     if (!name.empty()) {
       return name.data();
     }
@@ -93,14 +93,14 @@ bool Kernel::compileDot(llvm::raw_fd_ostream *stream) {
   const auto &nodes = meta.graph.getNodes();
   const auto &inputs = meta.graph.getInputs();
 
-  for (const Node &node : nodes) {
+  for (Node *node : nodes) {
     TemplateDictionary *elem = dict->AddSectionDictionary("ELEMENTS");
     auto name = getName(node);
     elem->SetValue("NAME", name);
     std::string shape = "box";
     std::string label = name;
-    auto data = node.data;
-    switch (node.type) {
+    auto data = node->data;
+    switch (node->type) {
       case OFFSET:
         shape = "diamond";
         label = std::to_string(data.offset);
@@ -132,9 +132,9 @@ bool Kernel::compileDot(llvm::raw_fd_ostream *stream) {
     elem->SetValue("LABEL", label);
 
     unsigned i = 0;
-    for (Channel chan : inputs.at(node)) {
+    for (Channel *chan : inputs.at(node)) {
       TemplateDictionary *conn = elem->AddSectionDictionary("CONNECTIONS");
-      conn->SetValue("SRC_NAME", getName(chan.source));
+      conn->SetValue("SRC_NAME", getName(chan->source));
       conn->SetValue("TRG_NAME", name);
       conn->SetValue("CON_LABEL", std::to_string(i++));
     }
@@ -148,8 +148,8 @@ bool Kernel::compileDot(llvm::raw_fd_ostream *stream) {
   return true;
 }
 
-void Kernel::rebindInput(DFVariable source, Node input, Kernel &kern) {
-  auto sourceNode = meta.graph.findNode(source);
+void Kernel::rebindInput(DFVariable source, Node *input, Kernel &kern) {
+  Node *sourceNode = meta.graph.findNode(source);
   meta.graph.rebindInput(sourceNode,
                          input,
                          kern.meta.graph);
@@ -157,23 +157,23 @@ void Kernel::rebindInput(DFVariable source, Node input, Kernel &kern) {
   kern.deleteNode(input);
 }
 
-DFVariable Kernel::rebindOutput(Node output, DFVariable target, Kernel &kern) {
-  auto targetNode = meta.graph.findNode(target);
-  auto node = meta.graph.rebindOutput(output,
-                                      targetNode,
-                                      kern.meta.graph);
+DFVariable Kernel::rebindOutput(Node *output, DFVariable target, Kernel &kern) {
+  Node *targetNode = meta.graph.findNode(target);
+  Node *node = meta.graph.rebindOutput(output,
+                                       targetNode,
+                                       kern.meta.graph);
 
   if (targetNode != node) {
     deleteNode(targetNode);
   }
 
   kern.deleteNode(output);
-  return node.var;
+  return node->var;
 }
 
-void Kernel::deleteNode(Node node) {
+void Kernel::deleteNode(Node *node) {
   meta.graph.deleteNode(node);
-  meta.storage.deleteVariable(node.var);
+  meta.storage.deleteVariable(node->var);
 }
 
 bool Kernel::compile(const DFLatencyConfig &config,
@@ -223,7 +223,7 @@ bool Kernel::compile(const DFLatencyConfig &config,
 
 bool Kernel::simulate(const std::string &inDataPath,
                       const std::string &outFilePath) {
-  std::vector<Node> sorted = topSort(meta.graph);
+  std::vector<Node *> sorted = topSort(meta.graph);
   DFCXXSimulator sim(sorted, meta.graph.getInputs());
   std::ifstream input(inDataPath, std::ios::in);
   if (!input || input.bad() || input.eof() || input.fail() || !input.is_open()) {
@@ -249,8 +249,8 @@ bool Kernel::checkValidNodes() const {
   std::cout << "[UTOPIA] Checking whether constructed nodes are valid: ";
   
   const auto &nodes = meta.graph.getNodes();
-  for (const Node &node: nodes) {
-    if (node.type == OpType::NONE) {
+  for (const Node *node: nodes) {
+    if (node->type == OpType::NONE) {
       std::cout << "found invalid node(s). Abort." << std::endl;
       return false;
     }

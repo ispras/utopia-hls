@@ -11,6 +11,7 @@
 #include "circt/Dialect/FIRRTL/FIRRTLInstanceGraph.h"
 
 #include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <stack>
 
@@ -279,15 +280,16 @@ std::vector<Node *> topSortNodes(const Graph &graph) {
     checked[node] = 0;
   }
 
-  size_t i = nodesCount - 1;
-  while (!stack.empty()) {
+  size_t i = nodesCount;
+  while (!stack.empty() && i > 0) {
     Node *node = stack.top();
     size_t count = outs.at(node).size();
     size_t curr;
     bool flag = true;
     for (curr = checked[node]; flag && curr < count; ++curr) {
       Channel *next = outs.at(node)[curr];
-      if (!checked[next->target]) {
+      if (checked.find(next->target) == checked.end()) {
+        checked[next->target] = 0;
         stack.push(next->target);
         flag = false;
       }
@@ -296,9 +298,11 @@ std::vector<Node *> topSortNodes(const Graph &graph) {
 
     if (flag) {
       stack.pop();
-      result[i--] = node;
+      result[--i] = node;
     }
   }
+  assert(stack.empty());
+  assert(i == 0);
   return result;
 }
 

@@ -22,7 +22,7 @@
 namespace mlir::dfcir::utils {
 struct Node;
 struct Channel;
-struct Graph;
+class Graph;
 } // namespace mlir::dfcir::utils
 
 typedef std::unordered_map<mlir::dfcir::utils::Node *, int32_t> Latencies;
