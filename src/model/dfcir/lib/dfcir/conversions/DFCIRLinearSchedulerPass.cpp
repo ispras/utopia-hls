@@ -166,7 +166,7 @@ public:
 
   void runOnOperation() override {
     // Convert kernel into graph.
-    Graph graph(llvm::dyn_cast<ModuleOp>(getOperation()));
+    Graph graph(llvm::cast<ModuleOp>(getOperation()));
 
     // Apply latency config to the graph.
     graph.applyConfig(*latencyConfig);
