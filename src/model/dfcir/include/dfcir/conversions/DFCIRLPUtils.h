@@ -13,7 +13,7 @@
 
 #include "lpsolve/lp_lib.h"
 
-#include <unordered_set>
+#include <vector>
 
 namespace mlir::dfcir::utils::lp {
 
@@ -49,67 +49,31 @@ enum Verbosity {
   Full = FULL
 };
 
-struct LPVariable final {
-public:
-  int id;
-
-  explicit LPVariable(int id);
-
-  LPVariable(const LPVariable &) = default;
-
-  ~LPVariable() = default;
-
-  bool operator==(const LPVariable &other) const;
-};
-
 struct LPConstraint final {
 public:
-  int id;
   size_t count;
   int *vars;
   double *coeffs;
   OpType op;
   double rhs;
 
-  LPConstraint(int id, size_t count, int *vars,
+  LPConstraint(size_t count, int *vars,
                double *coeffs, OpType op, double rhs);
 
   LPConstraint(const LPConstraint &other);
 
   ~LPConstraint();
-
-  bool operator==(const LPConstraint &other) const;
 };
 
 } // namespace mlir::dfcir::utils::lp
-
-template <>
-struct std::hash<mlir::dfcir::utils::lp::LPVariable> {
-  using LPVariable = mlir::dfcir::utils::lp::LPVariable;
-
-  size_t operator()(const LPVariable &var) const noexcept {
-    return var.id;
-  }
-};
-
-template <>
-struct std::hash<mlir::dfcir::utils::lp::LPConstraint> {
-  using LPConstraint = mlir::dfcir::utils::lp::LPConstraint;
-
-  size_t operator()(const LPConstraint &cons) const noexcept {
-    return cons.id;
-  }
-};
 
 namespace mlir::dfcir::utils::lp {
 
 class LPProblem final {
 private:
   int currentCol;
-  int currentCon;
   lprec *lp;
-  std::unordered_set<LPVariable> variables;
-  std::unordered_set<LPConstraint> constraints;
+  std::vector<LPConstraint> constraints;
 
   void finalizeInit();
 
