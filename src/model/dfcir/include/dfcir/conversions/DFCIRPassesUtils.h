@@ -142,6 +142,7 @@ public:
   Nodes startNodes;
   ChannelMap inputs;
   ChannelMap outputs;
+  ConnectionMap connectionMap;
 
   explicit Graph() = default;
 
@@ -156,19 +157,28 @@ public:
   void applyConfig(const LatencyConfig &cfg);
 
 private:
-  template <class OpGroup, class Op>
-  Node *process(Op &op, ConnectionMap &map);
+  std::pair<Value, int32_t> findNearestNodeValue(Value value);
 
-  Node *processGenericOp(Operation &op, int32_t latency, ConnectionMap &map);
+  template <class OpGroup, class Op>
+  Node *process(Op &op);
+
+  Node *processGenericOp(Operation &op, int32_t latency);
 };
 
-void insertBuffer(OpBuilder &builder, Channel *channel, int32_t latency);
+void insertBuffer(OpBuilder &builder,
+                 Channel *channel,
+                 int32_t latency,
+                 const ConnectionMap &map);
 
-void insertBuffers(mlir::MLIRContext &ctx, const Buffers &buffers);
+void insertBuffers(mlir::MLIRContext &ctx,
+                   const Buffers &buffers,
+                   const ConnectionMap &map);
 
 std::vector<Node *> topSortNodes(const Graph &graph);
 
-int32_t calculateOverallLatency(const Graph &graph, Buffers &buffers, Latencies *map = {});
+int32_t calculateOverallLatency(const Graph &graph,
+                                Buffers &buffers,
+                                Latencies *map = {});
 
 void eraseOffsets(mlir::Operation *op);
 

@@ -17,42 +17,6 @@
 
 namespace mlir::dfcir::utils {
 
-ConnectOp getDstValueConnect(Value value) {
-  for (auto &operand: llvm::make_early_inc_range(value.getUses())) {
-    auto castedConnect = llvm::dyn_cast<ConnectOp>(operand.getOwner());
-    if (castedConnect && castedConnect.getDest() == value) {
-      return castedConnect;
-    }
-  }
-  return nullptr;
-}
-
-static std::pair<Value, int32_t> findNearestNodeValue(Value value,
-                                                      ConnectionMap &map) {
-  Value curVal = value;
-  int32_t offsetSum = 0;
-  bool flag;
-  do {
-    flag = false;
-
-    auto possOffset = llvm::dyn_cast<OffsetOp>(curVal.getDefiningOp());
-    if (possOffset) {
-      offsetSum += static_cast<int32_t>(possOffset.getOffset().getInt());
-      curVal = possOffset.getStream();
-      flag = true;
-    }
-    
-    auto foundConnect = map.find(curVal.getImpl());
-    if (foundConnect != map.end()) {
-      curVal = (*foundConnect).second.getSrc();
-      flag = true;
-    }
-  
-  } while (flag);
-
-  return std::make_pair(curVal, offsetSum);
-}
-
 Node::Node(Operation *op, int32_t latency) : op(op), latency(latency) {}
 
 Node::Node() : Node(nullptr) {}
@@ -123,9 +87,33 @@ void Graph::applyConfig(const LatencyConfig &cfg) {
   }
 }
 
+std::pair<Value, int32_t> Graph::findNearestNodeValue(Value value) {
+  Value curVal = value;
+  int32_t offsetSum = 0;
+  bool flag;
+  do {
+    flag = false;
+
+    auto possOffset = llvm::dyn_cast<OffsetOp>(curVal.getDefiningOp());
+    if (possOffset) {
+      offsetSum += static_cast<int32_t>(possOffset.getOffset().getInt());
+      curVal = possOffset.getStream();
+      flag = true;
+    }
+
+    auto foundConnect = connectionMap.find(curVal.getImpl());
+    if (foundConnect != connectionMap.end()) {
+      curVal = (*foundConnect).second.getSrc();
+      flag = true;
+    }
+
+  } while (flag);
+
+  return std::make_pair(curVal, offsetSum);
+}
+
 template <>
-Node *Graph::process<InputOutputOpInterface>(InputOutputOpInterface &op,
-                                             ConnectionMap &map) {
+Node *Graph::process<InputOutputOpInterface>(InputOutputOpInterface &op) {
   Node *newNode = new Node(op, 0);
   nodes.insert(newNode);
   if (llvm::isa<InputOpInterface>(op.getOperation())) {
@@ -138,7 +126,7 @@ Node *Graph::process<InputOutputOpInterface>(InputOutputOpInterface &op,
 }
 
 template <>
-Node *Graph::process<ConstantOp>(ConstantOp &op, ConnectionMap &map) {
+Node *Graph::process<ConstantOp>(ConstantOp &op) {
   Node *newNode = new Node(op, 0);
   nodes.insert(newNode);
   startNodes.insert(newNode);
@@ -149,11 +137,11 @@ Node *Graph::process<ConstantOp>(ConstantOp &op, ConnectionMap &map) {
 }
 
 template <>
-Node *Graph::process<ConnectOp>(ConnectOp &op, ConnectionMap &map) {
+Node *Graph::process<ConnectOp>(ConnectOp &op) {
   if (!llvm::isa<OutputOpInterface>(op.getDest().getDefiningOp())) {
     return nullptr;
   }
-  auto unrolledInfo = findNearestNodeValue(op.getSrc(), map);
+  auto unrolledInfo = findNearestNodeValue(op.getSrc());
   Node *srcNode = findNode(unrolledInfo.first.getDefiningOp());
   Node *dstNode = findNode(op.getDest().getDefiningOp());
 
@@ -169,13 +157,13 @@ Node *Graph::process<ConnectOp>(ConnectOp &op, ConnectionMap &map) {
   return nullptr;
 }
 
-Node *Graph::processGenericOp(Operation &op, int32_t latency, ConnectionMap &map) {
+Node *Graph::processGenericOp(Operation &op, int32_t latency) {
   Node *newNode = new Node(&op, latency);
   nodes.insert(newNode);
 
   for (size_t i = 0; i < op.getNumOperands(); ++i) {
     auto operand = op.getOperand(i);
-    auto unrolledInfo = findNearestNodeValue(operand, map);
+    auto unrolledInfo = findNearestNodeValue(operand);
     Node *srcNode = findNode(unrolledInfo.first.getDefiningOp());
     Channel *newChannel = new Channel(srcNode, newNode, i, unrolledInfo.second);
     channels.insert(newChannel);
@@ -190,23 +178,22 @@ Node *Graph::processGenericOp(Operation &op, int32_t latency, ConnectionMap &map
 Graph::Graph(KernelOp kernel) : Graph() {
   Block &block = kernel.getBody().front();
 
-  ConnectionMap map;
   for (ConnectOp connect: block.getOps<ConnectOp>()) {
-    map[connect.getDest().getImpl()] = connect;
+    connectionMap[connect.getDest().getImpl()] = connect;
   }
 
   for (Operation &op: block.getOperations()) {
     if (auto casted = llvm::dyn_cast<InputOutputOpInterface>(&op)) {
-      process<InputOutputOpInterface>(casted, map);
+      process<InputOutputOpInterface>(casted);
     } else if (auto casted = llvm::dyn_cast<ConstantOp>(&op)) {
-      process<ConstantOp>(casted, map);
+      process<ConstantOp>(casted);
     } else if (auto casted = llvm::dyn_cast<ConnectOp>(&op)) {
-      process<ConnectOp>(casted, map);
+      process<ConnectOp>(casted);
     } else if (llvm::isa<NaryOpInterface>(&op)) {
-      processGenericOp(op, -1, map);
+      processGenericOp(op, -1);
     } else if (llvm::isa<MuxOp, CastOp, ShiftOpInterface,
                          BitsOp, CatOp>(&op)) {
-      processGenericOp(op, 0, map);
+      processGenericOp(op, 0);
     }
   }
 }
@@ -214,7 +201,8 @@ Graph::Graph(KernelOp kernel) : Graph() {
 Graph::Graph(ModuleOp module)
     : Graph(mlir::utils::findFirstOccurence<KernelOp>(module)) {}
 
-void insertBuffer(OpBuilder &builder, Channel *channel, int32_t latency) {
+void insertBuffer(OpBuilder &builder, Channel *channel,
+                  int32_t latency,const ConnectionMap &map) {
   if (latency <= 0) {
     std::cout << "Scheduling created a buffer with latency <= 0 (" << latency;
     std::cout << ')' << std::endl << "between";
@@ -236,22 +224,24 @@ void insertBuffer(OpBuilder &builder, Channel *channel, int32_t latency) {
   } else {
     unsigned resId = static_cast<unsigned>(-(channel->valInd + 1));
     auto targetRes = channel->target->op->getResult(resId);
-    auto foundConnect = getDstValueConnect(targetRes);
-    assert(foundConnect);
-    builder.setInsertionPoint(foundConnect);
-    auto foundConnectSrc = foundConnect.getSrc();
+    auto foundConnect = map.find(targetRes.Value::getImpl());;
+    assert(foundConnect != map.end());
+    ConnectOp connect = (*foundConnect).second;
+    builder.setInsertionPoint(connect);
+    auto connectSrc = connect.getSrc();
     auto latencyOp = builder.create<LatencyOp>(builder.getUnknownLoc(),
-                                               foundConnectSrc.getType(),
-                                               foundConnectSrc,
+                                               connectSrc.getType(),
+                                               connectSrc,
                                                latency);
-    foundConnect.getSrcMutable().assign(latencyOp.getRes());
+    connect.getSrcMutable().assign(latencyOp.getRes());
   }
 }
 
-void insertBuffers(mlir::MLIRContext &ctx, const Buffers &buffers) {
+void insertBuffers(mlir::MLIRContext &ctx, const Buffers &buffers,
+                   const ConnectionMap &map) {
   OpBuilder builder(&ctx);
   for (auto &[channel, latency]: buffers) {
-    insertBuffer(builder, channel, latency);
+    insertBuffer(builder, channel, latency, map);
   }
 }
 
