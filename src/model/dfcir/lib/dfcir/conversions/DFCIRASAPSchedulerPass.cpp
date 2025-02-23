@@ -31,56 +31,19 @@ class DFCIRASAPSchedulerPass
   using Channel = utils::Channel;
   using Graph = utils::Graph;
 
-  class ChannelComp final {
-  private:
-    Latencies &map;
-
-  public:
-    explicit ChannelComp(Latencies &map) : map(map) {}
-
-    bool operator()(Channel *lhs, const Channel *rhs) const {
-      return map[lhs->source] + lhs->source->latency + lhs->offset <
-             map[rhs->source] + rhs->source->latency + rhs->offset;
-    }
-  };
-
 private:
   std::pair<Buffers, int32_t> schedule(Graph &graph) {
     Latencies map;
-    using ChannelQueue = 
-        std::priority_queue<Channel *, std::vector<Channel *>, ChannelComp>;
-    ChannelQueue chanQueue((ChannelComp(map)));
+    std::vector<Node *> sorted = topSortNodes(graph);
 
-    std::unordered_set<Channel *> visited;
+    for (Node *node : sorted) {
+      for (Channel *channel : graph.outputs.at(node)) {
+        int32_t latency = map[node] + node->latency + channel->offset;
 
-    auto visitChannel =
-      [&](Channel *channel) -> bool {
-        int32_t newMax = std::max(map[channel->target],
-                                  map[channel->source] +
-                                      channel->source->latency +
-                                      channel->offset);
-        bool result = map[channel->target] < newMax;
-        map[channel->target] = newMax;
-        return result;
-    };
-
-    auto visitNode = [&](Node *node) {
-      for (Channel *out: graph.outputs[node]) {
-        if (visitChannel(out) || visited.find(out) == visited.end()) {
-          chanQueue.push(out);
-          visited.emplace(out);
+        if (latency > map[channel->target]) {
+          map[channel->target] = latency;
         }
       }
-    };
-
-    for (Node *node: graph.startNodes) {
-      visitNode(node);
-    }
-
-    while (!chanQueue.empty()) {
-      Node *outNode = chanQueue.top()->target;
-      chanQueue.pop();
-      visitNode(outNode);
     }
 
     Buffers buffers;
