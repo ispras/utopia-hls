@@ -27,7 +27,8 @@ ConnectOp getDstValueConnect(Value value) {
   return nullptr;
 }
 
-std::pair<Value, int32_t> findNearestNodeValue(Value value) {
+static std::pair<Value, int32_t> findNearestNodeValue(Value value,
+                                                      ConnectionMap &map) {
   Value curVal = value;
   int32_t offsetSum = 0;
   bool flag;
@@ -41,8 +42,9 @@ std::pair<Value, int32_t> findNearestNodeValue(Value value) {
       flag = true;
     }
     
-    if (ConnectOp possConnect = getDstValueConnect(curVal)) {
-      curVal = possConnect.getSrc();
+    auto foundConnect = map.find(curVal.getImpl());
+    if (foundConnect != map.end()) {
+      curVal = (*foundConnect).second.getSrc();
       flag = true;
     }
   
@@ -122,7 +124,8 @@ void Graph::applyConfig(const LatencyConfig &cfg) {
 }
 
 template <>
-Node *Graph::process<InputOutputOpInterface>(InputOutputOpInterface &op) {
+Node *Graph::process<InputOutputOpInterface>(InputOutputOpInterface &op,
+                                             ConnectionMap &map) {
   Node *newNode = new Node(op, 0);
   nodes.insert(newNode);
   if (llvm::isa<InputOpInterface>(op.getOperation())) {
@@ -135,7 +138,7 @@ Node *Graph::process<InputOutputOpInterface>(InputOutputOpInterface &op) {
 }
 
 template <>
-Node *Graph::process<ConstantOp>(ConstantOp &op) {
+Node *Graph::process<ConstantOp>(ConstantOp &op, ConnectionMap &map) {
   Node *newNode = new Node(op, 0);
   nodes.insert(newNode);
   startNodes.insert(newNode);
@@ -146,9 +149,11 @@ Node *Graph::process<ConstantOp>(ConstantOp &op) {
 }
 
 template <>
-Node *Graph::process<ConnectOp>(ConnectOp &op) {
-  if (!llvm::isa<OutputOpInterface>(op.getDest().getDefiningOp())) { return nullptr; }
-  auto unrolledInfo = findNearestNodeValue(op.getSrc());
+Node *Graph::process<ConnectOp>(ConnectOp &op, ConnectionMap &map) {
+  if (!llvm::isa<OutputOpInterface>(op.getDest().getDefiningOp())) {
+    return nullptr;
+  }
+  auto unrolledInfo = findNearestNodeValue(op.getSrc(), map);
   Node *srcNode = findNode(unrolledInfo.first.getDefiningOp());
   Node *dstNode = findNode(op.getDest().getDefiningOp());
 
@@ -164,13 +169,13 @@ Node *Graph::process<ConnectOp>(ConnectOp &op) {
   return nullptr;
 }
 
-Node *Graph::processGenericOp(Operation &op, int32_t latency) {
+Node *Graph::processGenericOp(Operation &op, int32_t latency, ConnectionMap &map) {
   Node *newNode = new Node(&op, latency);
   nodes.insert(newNode);
 
   for (size_t i = 0; i < op.getNumOperands(); ++i) {
     auto operand = op.getOperand(i);
-    auto unrolledInfo = findNearestNodeValue(operand);
+    auto unrolledInfo = findNearestNodeValue(operand, map);
     Node *srcNode = findNode(unrolledInfo.first.getDefiningOp());
     Channel *newChannel = new Channel(srcNode, newNode, i, unrolledInfo.second);
     channels.insert(newChannel);
@@ -183,19 +188,25 @@ Node *Graph::processGenericOp(Operation &op, int32_t latency) {
 }
 
 Graph::Graph(KernelOp kernel) : Graph() {
+  Block &block = kernel.getBody().front();
 
-  for (Operation &op: kernel.getBody().front().getOperations()) {
+  ConnectionMap map;
+  for (ConnectOp connect: block.getOps<ConnectOp>()) {
+    map[connect.getDest().getImpl()] = connect;
+  }
+
+  for (Operation &op: block.getOperations()) {
     if (auto casted = llvm::dyn_cast<InputOutputOpInterface>(&op)) {
-      process<InputOutputOpInterface>(casted);
+      process<InputOutputOpInterface>(casted, map);
     } else if (auto casted = llvm::dyn_cast<ConstantOp>(&op)) {
-      process<ConstantOp>(casted);
+      process<ConstantOp>(casted, map);
     } else if (auto casted = llvm::dyn_cast<ConnectOp>(&op)) {
-      process<ConnectOp>(casted);
+      process<ConnectOp>(casted, map);
     } else if (llvm::isa<NaryOpInterface>(&op)) {
-      processGenericOp(op, -1);
+      processGenericOp(op, -1, map);
     } else if (llvm::isa<MuxOp, CastOp, ShiftOpInterface,
                          BitsOp, CatOp>(&op)) {
-      processGenericOp(op, 0);
+      processGenericOp(op, 0, map);
     }
   }
 }

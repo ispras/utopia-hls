@@ -128,16 +128,20 @@ struct ChannelPtrEq {
   }
 };
 
+typedef std::unordered_set<Node *, NodePtrHash, NodePtrEq> Nodes;
+typedef std::unordered_set<Channel *, ChannelPtrHash, ChannelPtrEq> Channels;
+typedef std::unordered_map<std::string_view, Node *> NodeNameMap;
+typedef std::unordered_map<Node *, std::vector<Channel *>> ChannelMap;
+typedef std::unordered_map<mlir::detail::ValueImpl *, ConnectOp> ConnectionMap;
+
 class Graph {
-  using StringRef = llvm::StringRef;
-
 public:
-  std::unordered_set<Node *, NodePtrHash, NodePtrEq> nodes;
-  std::unordered_set<Channel *, ChannelPtrHash, ChannelPtrEq> channels;
+  Nodes nodes;
+  Channels channels;
 
-  std::unordered_set<Node *, NodePtrHash, NodePtrEq> startNodes;
-  std::unordered_map<Node *, std::vector<Channel *>> inputs;
-  std::unordered_map<Node *, std::vector<Channel *>> outputs;
+  Nodes startNodes;
+  ChannelMap inputs;
+  ChannelMap outputs;
 
   explicit Graph() = default;
 
@@ -153,9 +157,9 @@ public:
 
 private:
   template <class OpGroup, class Op>
-  Node *process(Op &op);
+  Node *process(Op &op, ConnectionMap &map);
 
-  Node *processGenericOp(Operation &op, int32_t latency);
+  Node *processGenericOp(Operation &op, int32_t latency, ConnectionMap &map);
 };
 
 void insertBuffer(OpBuilder &builder, Channel *channel, int32_t latency);
