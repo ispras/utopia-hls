@@ -33,7 +33,7 @@ struct NodePtrEq {
     return *left == *right;
   }
 };
-  
+
 struct ChannelPtrHash {
   size_t operator()(Channel *channel) const noexcept {
     return std::hash<Channel>()(*channel);

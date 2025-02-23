@@ -103,24 +103,47 @@ struct std::hash<mlir::dfcir::utils::Channel> {
 };
 
 namespace mlir::dfcir::utils {
+
+struct NodePtrHash {
+  size_t operator()(Node *node) const noexcept {
+    return std::hash<Node>()(*node);
+  }
+};
+
+struct NodePtrEq {
+  size_t operator()(Node *left, Node *right) const noexcept {
+    return *left == *right;
+  }
+};
+
+struct ChannelPtrHash {
+  size_t operator()(Channel *channel) const noexcept {
+    return std::hash<Channel>()(*channel);
+  }
+};
+
+struct ChannelPtrEq {
+  size_t operator()(Channel *left, Channel *right) const noexcept {
+    return *left == *right;
+  }
+};
+
 class Graph {
   using StringRef = llvm::StringRef;
 
 public:
-  std::unordered_set<Node *> nodes;
-  std::unordered_set<Channel *> channels;
+  std::unordered_set<Node *, NodePtrHash, NodePtrEq> nodes;
+  std::unordered_set<Channel *, ChannelPtrHash, ChannelPtrEq> channels;
 
-  std::unordered_set<Node *> startNodes;
+  std::unordered_set<Node *, NodePtrHash, NodePtrEq> startNodes;
   std::unordered_map<Node *, std::vector<Channel *>> inputs;
-  std::unordered_map<Node* , std::vector<Channel *>> outputs;
+  std::unordered_map<Node *, std::vector<Channel *>> outputs;
 
   explicit Graph() = default;
 
   ~Graph();
 
-  auto findNode(Operation *op);
-
-  auto findNode(const Value &val);
+  Node *findNode(Operation *op);
 
   explicit Graph(KernelOp kernel);
 

@@ -35,8 +35,8 @@ Node *Graph::findNode(const std::string &name) {
 Node *Graph::findNode(DFVariableImpl *var) {
   Node *bufNode = new Node(var);
   auto found = nodes.find(bufNode);
+  delete bufNode;
   if (found != nodes.end()) {
-    delete bufNode;
     return *found;
   }
   return nullptr;
@@ -50,8 +50,8 @@ Node *Graph::findNodeIf(NodePtrPred pred) {
 Node *Graph::findStartNode(DFVariableImpl *var) {
   Node *bufNode = new Node(var);
   auto found = startNodes.find(bufNode);
+  delete bufNode;
   if (found != startNodes.end()) {
-    delete bufNode;
     return *found;
   }
   return nullptr;

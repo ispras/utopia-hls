@@ -17,37 +17,6 @@
 
 namespace mlir::dfcir::utils {
 
-std::pair<Value, int32_t> findNearestNodeValue(Value value) {
-  Value curVal = value;
-  int32_t offsetSum = 0;
-  bool flag;
-  do {
-    flag = false;
-
-    for (const auto &operand: curVal.getUses()) {
-      auto possConnect = llvm::dyn_cast<ConnectOp>(operand.getOwner());
-      if (!possConnect) { continue; }
-      if (possConnect.getDest() == operand.get()) {
-        curVal = possConnect.getSrc();
-        flag = true;
-        break;
-      }
-    }
-    
-    if (!flag) {
-      auto possOffset = llvm::dyn_cast<OffsetOp>(curVal.getDefiningOp());
-      if (possOffset) {
-        offsetSum += static_cast<int32_t>(possOffset.getOffset().getInt());
-        curVal = possOffset.getStream();
-        flag = true;
-      }
-    }
-  
-  } while (flag);
-
-  return std::make_pair(curVal, offsetSum);
-}
-
 ConnectOp getDstValueConnect(Value value) {
   for (auto &operand: llvm::make_early_inc_range(value.getUses())) {
     auto castedConnect = llvm::dyn_cast<ConnectOp>(operand.getOwner());
@@ -56,6 +25,30 @@ ConnectOp getDstValueConnect(Value value) {
     }
   }
   return nullptr;
+}
+
+std::pair<Value, int32_t> findNearestNodeValue(Value value) {
+  Value curVal = value;
+  int32_t offsetSum = 0;
+  bool flag;
+  do {
+    flag = false;
+
+    auto possOffset = llvm::dyn_cast<OffsetOp>(curVal.getDefiningOp());
+    if (possOffset) {
+      offsetSum += static_cast<int32_t>(possOffset.getOffset().getInt());
+      curVal = possOffset.getStream();
+      flag = true;
+    }
+    
+    if (ConnectOp possConnect = getDstValueConnect(curVal)) {
+      curVal = possConnect.getSrc();
+      flag = true;
+    }
+  
+  } while (flag);
+
+  return std::make_pair(curVal, offsetSum);
 }
 
 Node::Node(Operation *op, int32_t latency) : op(op), latency(latency) {}
@@ -87,18 +80,14 @@ Graph::~Graph() {
   }
 }
 
-auto Graph::findNode(Operation *op) {
-  return std::find_if(nodes.begin(), nodes.end(),
-      [&](Node *n) {
-        return n->op == op;
-      });
-}
-
-auto Graph::findNode(const Value &val) {
-  return std::find_if(nodes.begin(), nodes.end(),
-      [&](Node *n) {
-        return n->op == val.getDefiningOp();
-      });
+Node *Graph::findNode(Operation *op) {
+  Node *bufNode = new Node(op);
+  auto found = nodes.find(bufNode);
+  delete bufNode;
+  if (found != nodes.end()) {
+    return *found;
+  }
+  return nullptr;
 }
 
 void Graph::applyConfig(const LatencyConfig &cfg) {
@@ -160,17 +149,17 @@ template <>
 Node *Graph::process<ConnectOp>(ConnectOp &op) {
   if (!llvm::isa<OutputOpInterface>(op.getDest().getDefiningOp())) { return nullptr; }
   auto unrolledInfo = findNearestNodeValue(op.getSrc());
-  auto srcNode = findNode(unrolledInfo.first);
-  auto dstNode = findNode(op.getDest());
+  Node *srcNode = findNode(unrolledInfo.first.getDefiningOp());
+  Node *dstNode = findNode(op.getDest().getDefiningOp());
 
   auto dstCasted = llvm::cast<OpResult>(op.getDest());
   int8_t resId = static_cast<int8_t>(dstCasted.getResultNumber());
   int8_t valInd = -resId - 1;
 
-  Channel *newChannel = new Channel(*srcNode, *dstNode, valInd, unrolledInfo.second);
+  Channel *newChannel = new Channel(srcNode, dstNode, valInd, unrolledInfo.second);
   channels.insert(newChannel);
-  outputs[*srcNode].push_back(newChannel);
-  inputs[*dstNode].push_back(newChannel);
+  outputs[srcNode].push_back(newChannel);
+  inputs[dstNode].push_back(newChannel);
 
   return nullptr;
 }
@@ -182,10 +171,10 @@ Node *Graph::processGenericOp(Operation &op, int32_t latency) {
   for (size_t i = 0; i < op.getNumOperands(); ++i) {
     auto operand = op.getOperand(i);
     auto unrolledInfo = findNearestNodeValue(operand);
-    auto srcNode = findNode(unrolledInfo.first);
-    Channel *newChannel = new Channel(*srcNode, newNode, i, unrolledInfo.second);
+    Node *srcNode = findNode(unrolledInfo.first.getDefiningOp());
+    Channel *newChannel = new Channel(srcNode, newNode, i, unrolledInfo.second);
     channels.insert(newChannel);
-    outputs[*srcNode].push_back(newChannel);
+    outputs[srcNode].push_back(newChannel);
     inputs[newNode].push_back(newChannel);
   }
 
