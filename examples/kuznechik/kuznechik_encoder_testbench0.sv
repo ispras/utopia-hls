@@ -1,6 +1,4 @@
-// Addition (integer): 2 stages each.
-// XOR (integer): 2 stages each.
-// Total: 128 stages.
+// Total: 0 stages.
 
 `timescale 1s/1s
 
