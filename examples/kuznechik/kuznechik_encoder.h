@@ -86,7 +86,7 @@ public:
     DFVariable c195 = constant.var(type, uint64_t(195));
     DFVariable currValue = c0;
 
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < 7; ++i) {
       DFVariable isBitSet = right(0, 0);
       currValue = currValue ^ control.mux(isBitSet, {c0, left});
       DFVariable aboutToOverflow = left(7, 7);
@@ -94,6 +94,9 @@ public:
       left = (left << 1) ^ muxed;
       right = right >> 1;
     }
+
+    DFVariable isBitSet = right(0, 0);
+    currValue = currValue ^ control.mux(isBitSet, {c0, left});
 
     return currValue;
   }
