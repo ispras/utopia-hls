@@ -213,7 +213,7 @@ public:
       currValue = kuznechikLSXPermut(gKeys[i], currValue);
     }
 
-    currValue = currValue + gKeys[9];
+    currValue = currValue ^ gKeys[9];
 
     DFVariable encoded = io.output("encoded", ioType);
     encoded.connect(currValue);
