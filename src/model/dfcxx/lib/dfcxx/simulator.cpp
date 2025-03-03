@@ -238,7 +238,7 @@ bool DFCXXSimulator::runSim(RecordedValues &vals,
                             IOVars &inData,
                             uint64_t iter) {
   // Node->value mapping is updated. This allows us
-  // to remember the relevant value for the operand node->
+  // to remember the relevant value for the operand node.
   // With every single "clock" input nodes' mapping is updated
   // with the value from the buffer.
   for (Node *node : nodes) {

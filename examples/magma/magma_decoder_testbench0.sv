@@ -1,3 +1,11 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia HLS Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2025 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
 // Addition (integer): 2 stages each.
 // XOR (integer): 2 stages each.
 // Total: 128 stages.

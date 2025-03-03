@@ -14,7 +14,6 @@
 namespace dfcxx {
 
 class VarBuilder;
-struct Node; // For constPred.
 
 class DFConstant : public DFVariableImpl {
   friend VarBuilder;
