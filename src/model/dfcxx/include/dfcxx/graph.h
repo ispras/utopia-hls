@@ -17,48 +17,102 @@
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace dfcxx {
 
+struct NodePtrHash {
+  size_t operator()(Node *node) const noexcept {
+    return std::hash<Node>()(*node);
+  }
+};
+
+struct NodePtrEq {
+  size_t operator()(Node *left, Node *right) const noexcept {
+    return *left == *right;
+  }
+};
+
+struct ChannelPtrHash {
+  size_t operator()(Channel *channel) const noexcept {
+    return std::hash<Channel>()(*channel);
+  }
+};
+
+struct ChannelPtrEq {
+  size_t operator()(Channel *left, Channel *right) const noexcept {
+    return *left == *right;
+  }
+};
+
+typedef std::unordered_set<Node *, NodePtrHash, NodePtrEq> Nodes;
+typedef std::unordered_set<Channel *, ChannelPtrHash, ChannelPtrEq> Channels;
+typedef std::unordered_map<std::string_view, Node *> NodeNameMap;
+typedef std::unordered_map<Node *, std::vector<Channel *>> ChannelMap;
+typedef std::unordered_map<Node *, Channel *> ConnectionMap;
+
 class Graph {
+  using NodePtrPred = std::function<bool(Node *)>;
+
 private:
-  std::unordered_map<std::string_view, Node> nameMap;
-  std::unordered_set<Node> nodes;
-  std::unordered_set<Node> startNodes;
-  std::unordered_map<Node, std::vector<Channel>> inputs;
-  std::unordered_map<Node, std::vector<Channel>> outputs;
-  std::unordered_map<Node, Channel> connections;
+  Nodes nodes;
+  Channels channels;
+
+  NodeNameMap nameMap;
+  Nodes startNodes;
+  ChannelMap inputs;
+  ChannelMap outputs;
+  ConnectionMap connections;
 
 public:
-  const std::unordered_set<Node> &getNodes() const;
+  Graph() = default;
 
-  const std::unordered_set<Node> &getStartNodes() const;
+  Graph(const Graph &) = default;
 
-  const std::unordered_map<Node, std::vector<Channel>> &getInputs() const;
+  ~Graph();
 
-  const std::unordered_map<Node, std::vector<Channel>> &getOutputs() const;
+  const Nodes &getNodes() const { return nodes; }
 
-  const std::unordered_map<Node, Channel> &getConnections() const;
+  const Channels &getChannels() const { return channels; }
 
-  void addNode(DFVariableImpl *var, OpType type, NodeData data);
+  const NodeNameMap &getNameMap() const  { return nameMap; }
 
-  void addChannel(DFVariableImpl *source, DFVariableImpl *target,
-                  unsigned opInd, bool connect);
+  const Nodes &getStartNodes() const { return startNodes; }
+
+  const ChannelMap &getInputs() const { return inputs;}
+
+  const ChannelMap &getOutputs() const { return outputs; }
+
+  const ConnectionMap &getConnections() const { return connections; }
+
+  std::pair<Node *, bool> addNode(DFVariableImpl *var, OpType type, NodeData data);
+
+  Channel *addChannel(Node *source, Node *target,
+                      unsigned opInd, bool connect);
+
+  Channel *addChannel(DFVariableImpl *source, DFVariableImpl *target,
+                      unsigned opInd, bool connect);
 
   void transferFrom(Graph &&graph);
 
   void resetNodeName(const std::string &name);
 
-  void deleteNode(Node node);
+  void deleteNode(Node *node);
 
-  void rebindInput(Node source, Node input, Graph &graph);
+  void rebindInput(Node *source, Node *input, Graph &graph);
 
-  Node rebindOutput(Node output, Node target, Graph &graph);
+  Node *rebindOutput(Node *output, Node *target, Graph &graph);
 
-  Node findNode(const std::string &name);
+  Node *findNode(const std::string &name);
 
-  Node findNode(DFVariableImpl *var);
+  Node *findNode(DFVariableImpl *var);
+
+  Node *findNodeIf(NodePtrPred pred);
+
+  Node *findStartNode(DFVariableImpl *var);
+
+  Node *findStartNodeIf(NodePtrPred pred);
 };
 
 } // namespace dfcxx

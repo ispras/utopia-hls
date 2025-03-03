@@ -20,10 +20,10 @@ DFCIRBuilder::DFCIRBuilder() : ctx(), conv(&ctx) {
 }
 
 void DFCIRBuilder::buildKernelBody(const Graph &graph, mlir::OpBuilder &builder) {
-  std::vector<Node> sorted = topSort(graph);
+  std::vector<Node *> sorted = topSort(graph);
 
-  std::unordered_map<Node, mlir::Value> map;
-  for (Node node : sorted) {
+  std::unordered_map<Node *, mlir::Value> map;
+  for (Node *node : sorted) {
     translate(node, graph, builder, map);
   }
 }
@@ -51,54 +51,54 @@ mlir::ModuleOp DFCIRBuilder::buildModule(Kernel *kern) {
 
 #define MLIR_INT_ATTR_WIDTH 64
 
-void DFCIRBuilder::translate(Node node, const Graph &graph,
+void DFCIRBuilder::translate(Node *node, const Graph &graph,
                              mlir::OpBuilder &builder,
-                             std::unordered_map<Node, mlir::Value> &map) {
+                             std::unordered_map<Node *, mlir::Value> &map) {
   auto loc = builder.getUnknownLoc();
   
   const auto &ins = graph.getInputs().at(node);
 
-  auto nameAttr = mlir::StringAttr::get(&ctx, node.var->getName());
+  auto nameAttr = mlir::StringAttr::get(&ctx, node->var->getName());
 
   mlir::Operation *newOp = nullptr;
 
-  switch (node.type) {
+  switch (node->type) {
     case OFFSET: {
-      Node in = ins[0].source;
+      Node *in = ins[0]->source;
       auto type = mlir::IntegerType::get(builder.getContext(),
                                          MLIR_INT_ATTR_WIDTH,
                                          mlir::IntegerType::Signless);
-      auto attr = mlir::IntegerAttr::get(type, node.data.offset);
-      newOp = builder.create<mlir::dfcir::OffsetOp>(loc, conv[in.var],
+      auto attr = mlir::IntegerAttr::get(type, node->data.offset);
+      newOp = builder.create<mlir::dfcir::OffsetOp>(loc, conv[in->var],
                                                     map[in], attr);
       break;
     }
     case IN: {
-      if (node.var->isStream()) {
-        newOp = builder.create<mlir::dfcir::InputOp>(loc, conv[node.var],
+      if (node->var->isStream()) {
+        newOp = builder.create<mlir::dfcir::InputOp>(loc, conv[node->var],
                                                      nameAttr, nullptr);
       } else {
         newOp = builder.create<mlir::dfcir::ScalarInputOp>(loc,
-                                                           conv[node.var],
+                                                           conv[node->var],
                                                            nameAttr);
       }
       break;
     }
     case OUT: {
-      if (node.var->isStream()) {
-        newOp = builder.create<mlir::dfcir::OutputOp>(loc, conv[node.var],
+      if (node->var->isStream()) {
+        newOp = builder.create<mlir::dfcir::OutputOp>(loc, conv[node->var],
                                                       nameAttr, nullptr,
                                                       nullptr);
       } else {
         newOp = builder.create<mlir::dfcir::ScalarOutputOp>(loc,
-                                                            conv[node.var],
+                                                            conv[node->var],
                                                             nameAttr,
                                                             nullptr);
       }
       break;
     }
     case CONST: {
-      auto constant = (DFConstant *) (node.var);
+      auto constant = (DFConstant *) (node->var);
       int64_t val;
       mlir::IntegerType attrType;
       unsigned width = constant->getTotalBits();
@@ -124,188 +124,188 @@ void DFCIRBuilder::translate(Node node, const Graph &graph,
         }
       }
       auto attr = mlir::IntegerAttr::get(attrType, val);
-      newOp = builder.create<mlir::dfcir::ConstantOp>(loc, conv[node.var],
+      newOp = builder.create<mlir::dfcir::ConstantOp>(loc, conv[node->var],
                                                       attr);
       break;
     }
     case MUX: {
-      Node ctrl = ins[node.data.muxId].source;
+      Node *ctrl = ins[node->data.muxId]->source;
       llvm::SmallVector<mlir::Value> mux;
       uint64_t size = ins.size();
       for (uint64_t i = 0; i < size; ++i) {
         // To produce correct FIRRTL/SystemVerilog code
         // multiplexer inputs have to be reversed.
         uint64_t ind = size - 1 - i;
-        if (ind != node.data.muxId) {
-          mux.push_back(map[ins[ind].source]);
+        if (ind != node->data.muxId) {
+          mux.push_back(map[ins[ind]->source]);
         }
       }
 
-      newOp = builder.create<mlir::dfcir::MuxOp>(loc, conv[node.var],
+      newOp = builder.create<mlir::dfcir::MuxOp>(loc, conv[node->var],
                                                  map[ctrl], mux);
       break;
     }
     case ADD: {
-      Node first = ins[0].source;
-      Node second = ins[1].source;
-      newOp = builder.create<mlir::dfcir::AddOp>(loc, conv[node.var],
+      Node *first = ins[0]->source;
+      Node *second = ins[1]->source;
+      newOp = builder.create<mlir::dfcir::AddOp>(loc, conv[node->var],
                                                  map[first], map[second]);
       break;
     }
     case SUB: {
-      Node first = ins[0].source;
-      Node second = ins[1].source;
-      newOp = builder.create<mlir::dfcir::SubOp>(loc, conv[node.var],
+      Node *first = ins[0]->source;
+      Node *second = ins[1]->source;
+      newOp = builder.create<mlir::dfcir::SubOp>(loc, conv[node->var],
                                                  map[first], map[second]);
       break;
     }
     case MUL: {
-      Node first = ins[0].source;
-      Node second = ins[1].source;
-      newOp = builder.create<mlir::dfcir::MulOp>(loc, conv[node.var],
+      Node *first = ins[0]->source;
+      Node *second = ins[1]->source;
+      newOp = builder.create<mlir::dfcir::MulOp>(loc, conv[node->var],
                                                  map[first], map[second]);
       break;
     }
     case DIV: {
-      Node first = ins[0].source;
-      Node second = ins[1].source;
-      newOp = builder.create<mlir::dfcir::DivOp>(loc, conv[node.var],
+      Node *first = ins[0]->source;
+      Node *second = ins[1]->source;
+      newOp = builder.create<mlir::dfcir::DivOp>(loc, conv[node->var],
                                                  map[first], map[second]);
       break;
     }
     case AND: {
-      Node first = ins[0].source;
-      Node second = ins[1].source;
-      newOp = builder.create<mlir::dfcir::AndOp>(loc, conv[node.var],
+      Node *first = ins[0]->source;
+      Node *second = ins[1]->source;
+      newOp = builder.create<mlir::dfcir::AndOp>(loc, conv[node->var],
                                                  map[first], map[second]);
       break;
     }
     case OR: {
-      Node first = ins[0].source;
-      Node second = ins[1].source;
-      newOp = builder.create<mlir::dfcir::OrOp>(loc, conv[node.var],
+      Node *first = ins[0]->source;
+      Node *second = ins[1]->source;
+      newOp = builder.create<mlir::dfcir::OrOp>(loc, conv[node->var],
                                                 map[first], map[second]);
       break;
     }
     case XOR: {
-      Node first = ins[0].source;
-      Node second = ins[1].source;
-      newOp = builder.create<mlir::dfcir::XorOp>(loc, conv[node.var],
+      Node *first = ins[0]->source;
+      Node *second = ins[1]->source;
+      newOp = builder.create<mlir::dfcir::XorOp>(loc, conv[node->var],
                                                  map[first], map[second]);
       break;
     }
     case NOT: {
-      Node first = ins[0].source;
-      newOp = builder.create<mlir::dfcir::NotOp>(loc, conv[node.var],
+      Node *first = ins[0]->source;
+      newOp = builder.create<mlir::dfcir::NotOp>(loc, conv[node->var],
                                                  map[first]);
       break;
     }
     case NEG: {
-      Node first = ins[0].source;
-      newOp = builder.create<mlir::dfcir::NegOp>(loc, conv[node.var],
+      Node *first = ins[0]->source;
+      newOp = builder.create<mlir::dfcir::NegOp>(loc, conv[node->var],
                                                  map[first]);
       break;
     }
     case LESS: {
-      Node first = ins[0].source;
-      Node second = ins[1].source;
-      newOp = builder.create<mlir::dfcir::LessOp>(loc, conv[node.var],
+      Node *first = ins[0]->source;
+      Node *second = ins[1]->source;
+      newOp = builder.create<mlir::dfcir::LessOp>(loc, conv[node->var],
                                                   map[first], map[second]);
       break;
     }
     case LESSEQ: {
-      Node first = ins[0].source;
-      Node second = ins[1].source;
-      newOp = builder.create<mlir::dfcir::LessEqOp>(loc, conv[node.var],
+      Node *first = ins[0]->source;
+      Node *second = ins[1]->source;
+      newOp = builder.create<mlir::dfcir::LessEqOp>(loc, conv[node->var],
                                                     map[first],
                                                     map[second]);
       break;
     }
     case GREATER: {
-      Node first = ins[0].source;
-      Node second = ins[1].source;
-      newOp = builder.create<mlir::dfcir::GreaterOp>(loc, conv[node.var],
+      Node *first = ins[0]->source;
+      Node *second = ins[1]->source;
+      newOp = builder.create<mlir::dfcir::GreaterOp>(loc, conv[node->var],
                                                      map[first],
                                                      map[second]);
       break;
     }
     case GREATEREQ: {
-      Node first = ins[0].source;
-      Node second = ins[1].source;
-      newOp = builder.create<mlir::dfcir::GreaterEqOp>(loc, conv[node.var],
+      Node *first = ins[0]->source;
+      Node *second = ins[1]->source;
+      newOp = builder.create<mlir::dfcir::GreaterEqOp>(loc, conv[node->var],
                                                        map[first],
                                                        map[second]);
       break;
     }
     case EQ: {
-      Node first = ins[0].source;
-      Node second = ins[1].source;
-      newOp = builder.create<mlir::dfcir::EqOp>(loc, conv[node.var],
+      Node *first = ins[0]->source;
+      Node *second = ins[1]->source;
+      newOp = builder.create<mlir::dfcir::EqOp>(loc, conv[node->var],
                                                 map[first],
                                                 map[second]);
       break;
     }
     case NEQ: {
-      Node first = ins[0].source;
-      Node second = ins[1].source;
-      newOp = builder.create<mlir::dfcir::NotEqOp>(loc, conv[node.var],
+      Node *first = ins[0]->source;
+      Node *second = ins[1]->source;
+      newOp = builder.create<mlir::dfcir::NotEqOp>(loc, conv[node->var],
                                                    map[first],
                                                    map[second]);
       break;
     }
     case CAST: {
-      Node first = ins[0].source;
-      newOp = builder.create<mlir::dfcir::CastOp>(loc, conv[node.var],
+      Node *first = ins[0]->source;
+      newOp = builder.create<mlir::dfcir::CastOp>(loc, conv[node->var],
                                                   map[first]);
       break;
     }
     case SHL: {
-      Node first = ins[0].source;
+      Node *first = ins[0]->source;
       auto attrType = mlir::IntegerType::get(builder.getContext(), 32,
                                              mlir::IntegerType::Signless);
-      auto attr = mlir::IntegerAttr::get(attrType, node.data.bitShift);
+      auto attr = mlir::IntegerAttr::get(attrType, node->data.bitShift);
                                   
-      newOp = builder.create<mlir::dfcir::ShiftLeftOp>(loc, conv[node.var],
+      newOp = builder.create<mlir::dfcir::ShiftLeftOp>(loc, conv[node->var],
                                                        map[first], attr);
       break;
     }
     case SHR: {
-      Node first = ins[0].source;
+      Node *first = ins[0]->source;
       auto attrType = mlir::IntegerType::get(builder.getContext(), 32,
                                              mlir::IntegerType::Signless);
-      auto attr = mlir::IntegerAttr::get(attrType, node.data.bitShift);
+      auto attr = mlir::IntegerAttr::get(attrType, node->data.bitShift);
                                   
-      newOp = builder.create<mlir::dfcir::ShiftRightOp>(loc, conv[node.var],
+      newOp = builder.create<mlir::dfcir::ShiftRightOp>(loc, conv[node->var],
                                                         map[first], attr);
       break;
     }
     case BITS: {
-      Node first = ins[0].source;
+      Node *first = ins[0]->source;
       auto attrType = mlir::IntegerType::get(builder.getContext(), 32,
                                              mlir::IntegerType::Signless);
       auto leftAttr = mlir::IntegerAttr::get(attrType,
-                                             node.data.bitsRange.left);
+                                             node->data.bitsRange.left);
       auto rightAttr = mlir::IntegerAttr::get(attrType,
-                                          node.data.bitsRange.right);
+                                          node->data.bitsRange.right);
 
-      newOp = builder.create<mlir::dfcir::BitsOp>(loc, conv[node.var],
+      newOp = builder.create<mlir::dfcir::BitsOp>(loc, conv[node->var],
                                                   map[first],
                                                   leftAttr,
                                                   rightAttr);
       break;
     }
     case CAT: {
-      Node first = ins[0].source;
-      Node second = ins[1].source;
+      Node *first = ins[0]->source;
+      Node *second = ins[1]->source;
 
-      newOp = builder.create<mlir::dfcir::CatOp>(loc, conv[node.var],
+      newOp = builder.create<mlir::dfcir::CatOp>(loc, conv[node->var],
                                                  map[first],
                                                  map[second]);
       break;
     }
     default: {
       // TODO: Add proper logging: https://github.com/ispras/utopia-hls/issues/13
-      std::cout << "[ERROR] Unknown/unsupported node type id: " << node.type << std::endl;
+      std::cout << "[ERROR] Unknown/unsupported node type id: " << node->type << std::endl;
       assert(false);
     };
   }
@@ -315,7 +315,7 @@ void DFCIRBuilder::translate(Node node, const Graph &graph,
   auto &connections = graph.getConnections();
   auto it = connections.find(node);
   if (it != connections.end()) {
-    auto conSrc = it->second.source;
+    auto conSrc = it->second->source;
     builder.create<mlir::dfcir::ConnectOp>(loc, map[node], map[conSrc]);
   }
 }

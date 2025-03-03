@@ -14,6 +14,7 @@
 #include "mlir/IR/Dialect.h"
 #include "mlir/Transforms/DialectConversion.h"
 
+#include <stdlib.h>
 #include <unordered_set>
 #include <unordered_map>
 #include <utility>
@@ -39,16 +40,22 @@ class DFCIRLinearSchedulerPass
 
 private:
   void synchronizeInput(Node *node) {
-    int *var = new int[1]{nodeMap[node]};
-    double *coeff = new double[1]{1.0};
+    int *var = (int *) calloc(1, sizeof(int));
+    var[0] = nodeMap[node];
+    double *coeff = (double *) calloc(1, sizeof(double));
+    coeff[0] = 1.0;
 
     // t_source = 0
     problem.addConstraint(1, var, coeff, OpType::Equal, 0);
   }
 
   void addLatencyConstraint(Channel *chan) {
-    int *vars = new int[2]{nodeMap[chan->target], nodeMap[chan->source]};
-    double *coeffs = new double[2]{1.0, -1.0};
+    int *vars = (int *) calloc(2, sizeof(int));
+    vars[0] = nodeMap[chan->target];
+    vars[1] = nodeMap[chan->source];
+    double *coeffs = (double *) calloc(2, sizeof(double));
+    coeffs[0] = 1.0;
+    coeffs[1] = -1.0;
 
     // t_next >= t_prev + prev_latency + next_prev_offset
     problem.addConstraint(2, vars, coeffs, OpType::GreaterOrEqual,
@@ -57,9 +64,14 @@ private:
 
   int addDeltaConstraint(Channel *chan) {
     int deltaID = problem.addVariable();
-    int *vars = new int[3]{deltaID, nodeMap[chan->target],
-                           nodeMap[chan->source]};
-    double *coeffs = new double[3]{1.0, -1.0, 1.0};
+    int *vars = (int *) calloc(3, sizeof(int));
+    vars[0] = deltaID;
+    vars[1] = nodeMap[chan->target];
+    vars[2] = nodeMap[chan->source];
+    double *coeffs = (double *) calloc(3, sizeof(double));
+    coeffs[0] = 1.0;
+    coeffs[1] = -1.0;
+    coeffs[2] = 1.0;
 
     // delta_t = t_next - t_prev
     problem.addConstraint(3, vars, coeffs, OpType::Equal, 0);
@@ -69,10 +81,14 @@ private:
   void addBufferConstraint(Channel *chan) {
     int bufID = problem.addVariable();
     bufMap[chan] = bufID;
-    int *vars = new int[3]{bufID,
-                           nodeMap[chan->target],
-                           nodeMap[chan->source]};
-    double *coeffs = new double[3]{1.0, -1.0, 1.0};
+    int *vars = (int *) calloc(3, sizeof(int));
+    vars[0] = bufID;
+    vars[1] = nodeMap[chan->target];
+    vars[2] = nodeMap[chan->source];
+    double *coeffs = (double *) calloc(3, sizeof(double));
+    coeffs[0] = 1.0;
+    coeffs[1] = -1.0;
+    coeffs[2] = 1.0;
 
     // buf_next_prev = t_next - (t_prev + prev_latency + next_prev_offset)
     problem.addConstraint(3, vars, coeffs, OpType::Equal,
@@ -87,8 +103,6 @@ private:
   std::unordered_map<Node *, int> nodeMap;
   std::unordered_map<Channel *, int> bufMap;
 
-  Node *prevOutputNode = nullptr;
-
   std::pair<Buffers, int32_t> schedule(Graph &graph) {
     size_t chanCount = 0;
     for (Node *node: graph.nodes) {
@@ -99,8 +113,8 @@ private:
       }
     }
 
-    int *deltaIDs = new int[chanCount];
-    double *deltaCoeffs = new double[chanCount];
+    int *deltaIDs = (int *) calloc(chanCount, sizeof(int));
+    double *deltaCoeffs = (double *) calloc(chanCount, sizeof(double));
     int curr_id = 0;
     for (Node *node: graph.nodes) {
       for (Channel *chan: graph.inputs[node]) {
@@ -131,15 +145,15 @@ private:
           buffers[chan] = latency;
         }
       }
-      delete []result;
+      free(result);
     } else {
       // TODO: Replace with a legit logger?
       // Issue #13 (https://github.com/ispras/utopia-hls/issues/13).
       std::cout << status;
     }
 
-    delete []deltaIDs;
-    delete []deltaCoeffs;
+    free(deltaIDs);
+    free(deltaCoeffs);
 
     int32_t maxOutLatency = calculateOverallLatency(graph, buffers);
 
@@ -152,7 +166,7 @@ public:
 
   void runOnOperation() override {
     // Convert kernel into graph.
-    Graph graph(llvm::dyn_cast<ModuleOp>(getOperation()));
+    Graph graph(llvm::cast<ModuleOp>(getOperation()));
 
     // Apply latency config to the graph.
     graph.applyConfig(*latencyConfig);
@@ -170,7 +184,11 @@ public:
     }
 
     // Insert buffers.
-    mlir::dfcir::utils::insertBuffers(this->getContext(), buffers);
+    mlir::dfcir::utils::insertBuffers(
+        this->getContext(),
+        buffers,
+        graph.connectionMap
+    );
 
     // Erase old "dfcir.offset" operations.
     mlir::dfcir::utils::eraseOffsets(getOperation());

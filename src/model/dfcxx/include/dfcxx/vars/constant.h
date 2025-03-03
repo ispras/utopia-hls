@@ -40,8 +40,6 @@ private:
   DFVariableImpl *clone() const override;
 
 public:
-  static bool constCmp(DFVariableImpl *lhs, DFVariableImpl *rhs);
-
   ~DFConstant() override = default;
   
   int64_t getInt() const;
@@ -49,6 +47,12 @@ public:
   uint64_t getUInt() const;
 
   double getDouble() const;
+
+  static TypeKind kindByType(DFTypeImpl *type);
+
+  static DFVariableImpl *createOrUseConst(KernMeta *meta,
+                                          DFTypeImpl *type,
+                                          Value value);
 
   DFVariableImpl *operator+(DFVariableImpl &rhs) override;
 

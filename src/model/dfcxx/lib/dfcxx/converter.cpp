@@ -42,7 +42,6 @@ std::unique_ptr<mlir::Pass> createDFCIRDumperPass(llvm::raw_fd_ostream *stream) 
 }
 
 DFCIRConverter::DFCIRConverter(const DFLatencyConfig &config) {
-  this->config = LatencyConfig();
   for (auto [op, latency]: config.internalOps) {
     this->config.internalOps[static_cast<mlir::dfcir::Ops>(op)] = latency;
   }

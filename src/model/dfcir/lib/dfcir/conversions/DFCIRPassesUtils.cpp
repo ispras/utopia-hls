@@ -11,51 +11,11 @@
 #include "circt/Dialect/FIRRTL/FIRRTLInstanceGraph.h"
 
 #include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <stack>
 
 namespace mlir::dfcir::utils {
-
-std::pair<Value, int32_t> findNearestNodeValue(Value value) {
-  Value curVal = value;
-  int32_t offsetSum = 0;
-  bool flag;
-  do {
-    flag = false;
-
-    for (const auto &operand: curVal.getUses()) {
-      auto possConnect = llvm::dyn_cast<ConnectOp>(operand.getOwner());
-      if (!possConnect) { continue; }
-      if (possConnect.getDest() == operand.get()) {
-        curVal = possConnect.getSrc();
-        flag = true;
-        break;
-      }
-    }
-    
-    if (!flag) {
-      auto possOffset = llvm::dyn_cast<OffsetOp>(curVal.getDefiningOp());
-      if (possOffset) {
-        offsetSum += static_cast<int32_t>(possOffset.getOffset().getInt());
-        curVal = possOffset.getStream();
-        flag = true;
-      }
-    }
-  
-  } while (flag);
-
-  return std::make_pair(curVal, offsetSum);
-}
-
-ConnectOp getDstValueConnect(Value value) {
-  for (auto &operand: llvm::make_early_inc_range(value.getUses())) {
-    auto castedConnect = llvm::dyn_cast<ConnectOp>(operand.getOwner());
-    if (castedConnect && castedConnect.getDest() == value) {
-      return castedConnect;
-    }
-  }
-  return nullptr;
-}
 
 Node::Node(Operation *op, int32_t latency) : op(op), latency(latency) {}
 
@@ -86,18 +46,14 @@ Graph::~Graph() {
   }
 }
 
-auto Graph::findNode(Operation *op) {
-  return std::find_if(nodes.begin(), nodes.end(),
-      [&](Node *n) {
-        return n->op == op;
-      });
-}
-
-auto Graph::findNode(const Value &val) {
-  return std::find_if(nodes.begin(), nodes.end(),
-      [&](Node *n) {
-        return n->op == val.getDefiningOp();
-      });
+Node *Graph::findNode(Operation *op) {
+  Node *bufNode = new Node(op);
+  auto found = nodes.find(bufNode);
+  delete bufNode;
+  if (found != nodes.end()) {
+    return *found;
+  }
+  return nullptr;
 }
 
 void Graph::applyConfig(const LatencyConfig &cfg) {
@@ -131,6 +87,31 @@ void Graph::applyConfig(const LatencyConfig &cfg) {
   }
 }
 
+std::pair<Value, int32_t> Graph::findNearestNodeValue(Value value) {
+  Value curVal = value;
+  int32_t offsetSum = 0;
+  bool flag;
+  do {
+    flag = false;
+
+    auto possOffset = llvm::dyn_cast<OffsetOp>(curVal.getDefiningOp());
+    if (possOffset) {
+      offsetSum += static_cast<int32_t>(possOffset.getOffset().getInt());
+      curVal = possOffset.getStream();
+      flag = true;
+    }
+
+    auto foundConnect = connectionMap.find(curVal.getImpl());
+    if (foundConnect != connectionMap.end()) {
+      curVal = (*foundConnect).second.getSrc();
+      flag = true;
+    }
+
+  } while (flag);
+
+  return std::make_pair(curVal, offsetSum);
+}
+
 template <>
 Node *Graph::process<InputOutputOpInterface>(InputOutputOpInterface &op) {
   Node *newNode = new Node(op, 0);
@@ -157,19 +138,21 @@ Node *Graph::process<ConstantOp>(ConstantOp &op) {
 
 template <>
 Node *Graph::process<ConnectOp>(ConnectOp &op) {
-  if (!llvm::isa<OutputOpInterface>(op.getDest().getDefiningOp())) { return nullptr; }
+  if (!llvm::isa<OutputOpInterface>(op.getDest().getDefiningOp())) {
+    return nullptr;
+  }
   auto unrolledInfo = findNearestNodeValue(op.getSrc());
-  auto srcNode = findNode(unrolledInfo.first);
-  auto dstNode = findNode(op.getDest());
+  Node *srcNode = findNode(unrolledInfo.first.getDefiningOp());
+  Node *dstNode = findNode(op.getDest().getDefiningOp());
 
   auto dstCasted = llvm::cast<OpResult>(op.getDest());
   int8_t resId = static_cast<int8_t>(dstCasted.getResultNumber());
   int8_t valInd = -resId - 1;
 
-  Channel *newChannel = new Channel(*srcNode, *dstNode, valInd, unrolledInfo.second);
+  Channel *newChannel = new Channel(srcNode, dstNode, valInd, unrolledInfo.second);
   channels.insert(newChannel);
-  outputs[*srcNode].push_back(newChannel);
-  inputs[*dstNode].push_back(newChannel);
+  outputs[srcNode].push_back(newChannel);
+  inputs[dstNode].push_back(newChannel);
 
   return nullptr;
 }
@@ -181,10 +164,10 @@ Node *Graph::processGenericOp(Operation &op, int32_t latency) {
   for (size_t i = 0; i < op.getNumOperands(); ++i) {
     auto operand = op.getOperand(i);
     auto unrolledInfo = findNearestNodeValue(operand);
-    auto srcNode = findNode(unrolledInfo.first);
-    Channel *newChannel = new Channel(*srcNode, newNode, i, unrolledInfo.second);
+    Node *srcNode = findNode(unrolledInfo.first.getDefiningOp());
+    Channel *newChannel = new Channel(srcNode, newNode, i, unrolledInfo.second);
     channels.insert(newChannel);
-    outputs[*srcNode].push_back(newChannel);
+    outputs[srcNode].push_back(newChannel);
     inputs[newNode].push_back(newChannel);
   }
 
@@ -193,8 +176,13 @@ Node *Graph::processGenericOp(Operation &op, int32_t latency) {
 }
 
 Graph::Graph(KernelOp kernel) : Graph() {
+  Block &block = kernel.getBody().front();
 
-  for (Operation &op: kernel.getBody().front().getOperations()) {
+  for (ConnectOp connect: block.getOps<ConnectOp>()) {
+    connectionMap[connect.getDest().getImpl()] = connect;
+  }
+
+  for (Operation &op: block.getOperations()) {
     if (auto casted = llvm::dyn_cast<InputOutputOpInterface>(&op)) {
       process<InputOutputOpInterface>(casted);
     } else if (auto casted = llvm::dyn_cast<ConstantOp>(&op)) {
@@ -213,7 +201,8 @@ Graph::Graph(KernelOp kernel) : Graph() {
 Graph::Graph(ModuleOp module)
     : Graph(mlir::utils::findFirstOccurence<KernelOp>(module)) {}
 
-void insertBuffer(OpBuilder &builder, Channel *channel, int32_t latency) {
+void insertBuffer(OpBuilder &builder, Channel *channel,
+                  int32_t latency,const ConnectionMap &map) {
   if (latency <= 0) {
     std::cout << "Scheduling created a buffer with latency <= 0 (" << latency;
     std::cout << ')' << std::endl << "between";
@@ -235,22 +224,24 @@ void insertBuffer(OpBuilder &builder, Channel *channel, int32_t latency) {
   } else {
     unsigned resId = static_cast<unsigned>(-(channel->valInd + 1));
     auto targetRes = channel->target->op->getResult(resId);
-    auto foundConnect = getDstValueConnect(targetRes);
-    assert(foundConnect);
-    builder.setInsertionPoint(foundConnect);
-    auto foundConnectSrc = foundConnect.getSrc();
+    auto foundConnect = map.find(targetRes.Value::getImpl());;
+    assert(foundConnect != map.end());
+    ConnectOp connect = (*foundConnect).second;
+    builder.setInsertionPoint(connect);
+    auto connectSrc = connect.getSrc();
     auto latencyOp = builder.create<LatencyOp>(builder.getUnknownLoc(),
-                                               foundConnectSrc.getType(),
-                                               foundConnectSrc,
+                                               connectSrc.getType(),
+                                               connectSrc,
                                                latency);
-    foundConnect.getSrcMutable().assign(latencyOp.getRes());
+    connect.getSrcMutable().assign(latencyOp.getRes());
   }
 }
 
-void insertBuffers(mlir::MLIRContext &ctx, const Buffers &buffers) {
+void insertBuffers(mlir::MLIRContext &ctx, const Buffers &buffers,
+                   const ConnectionMap &map) {
   OpBuilder builder(&ctx);
   for (auto &[channel, latency]: buffers) {
-    insertBuffer(builder, channel, latency);
+    insertBuffer(builder, channel, latency, map);
   }
 }
 
@@ -279,15 +270,16 @@ std::vector<Node *> topSortNodes(const Graph &graph) {
     checked[node] = 0;
   }
 
-  size_t i = nodesCount - 1;
-  while (!stack.empty()) {
+  size_t i = nodesCount;
+  while (!stack.empty() && i > 0) {
     Node *node = stack.top();
     size_t count = outs.at(node).size();
     size_t curr;
     bool flag = true;
     for (curr = checked[node]; flag && curr < count; ++curr) {
       Channel *next = outs.at(node)[curr];
-      if (!checked[next->target]) {
+      if (checked.find(next->target) == checked.end()) {
+        checked[next->target] = 0;
         stack.push(next->target);
         flag = false;
       }
@@ -296,9 +288,11 @@ std::vector<Node *> topSortNodes(const Graph &graph) {
 
     if (flag) {
       stack.pop();
-      result[i--] = node;
+      result[--i] = node;
     }
   }
+  assert(stack.empty());
+  assert(i == 0);
   return result;
 }
 

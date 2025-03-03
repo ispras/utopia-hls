@@ -6,23 +6,21 @@
 //
 //===----------------------------------------------------------------------===//
 
-// Addition (integer): 2 stages each.
-// XOR (integer): 2 stages each.
-// Total: 128 stages.
+// Total: 0 stages.
 
 `timescale 1s/1s
 
-module MagmaDecoder_test0();
+module KuznechikDecoder_test0();
 
-  localparam CIRCUIT_LATENCY = 128;
+  localparam CIRCUIT_LATENCY = 0;
 
-  reg [63:0] encoded;
+  reg [127:0] encoded;
   reg [255:0] key;
-  reg [63:0] block;
-  reg [63:0] expected;
+  reg [127:0] block;
+  reg [127:0] expected;
   reg clk;
 
-  MagmaDecoder inst (
+  KuznechikDecoder inst (
     .encoded(encoded),
     .key(key),
     .block(block),
@@ -36,32 +34,32 @@ module MagmaDecoder_test0();
   initial begin
 
     @(negedge clk);
-    $display("[MagmaDecoder: test 0] Input ready.");
+    $display("[KuznechikDecoder: test 0] Input ready.");
     
-    encoded = 64'h4ee901e5c2d8ca3d;
-    key = 256'hffeeddccbbaa99887766554433221100f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff;
-    expected = 64'hfedcba9876543210;
-    $display("Input: [%0x], key: [%0x]", block, key);
+    encoded = 128'h7f679d90bebc24305a468d42b9d4edcd;
+    key = 256'h8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef;
+    expected = 128'h1122334455667700ffeeddccbbaa9988;
+    $display("Input: [%0x], key: [%0x]", encoded, key);
   end
 
   initial begin
     // Wait for the first output.
     #(2*CIRCUIT_LATENCY+3);
 
-    $dumpfile("MagmaDecoder_test0.vcd");
-    $dumpvars(0, MagmaDecoder_test0);
-    $display("[MagmaDecoder: test 0] Started...");
+    $dumpfile("KuznechikDecoder_test0.vcd");
+    $dumpvars(0, KuznechikDecoder_test0);
+    $display("[KuznechikDecoder: test 0] Started...");
 
     $display("Output: %0h", block);
     if (expected == block) begin
       $display("GOOD: %0h == %0h", expected, block);
     end else begin
       $display("BAD: %0h != %0h", expected, block);
-      $display("[MagmaDecoder: test 0] Stopped.");
+      $display("[KuznechikDecoder: test 0] Stopped.");
       $finish;
     end
 
-    $display("[MagmaDecoder: test 0] Stopped.");
+    $display("[KuznechikDecoder: test 0] Stopped.");
     $finish;
   end
 

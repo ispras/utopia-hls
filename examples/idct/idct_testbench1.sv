@@ -1,3 +1,11 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia HLS Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2025 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
 // Addition (integer): 1 stage each.
 // Subtraction (integer): 1 stage each.
 // Multiplication (integer): 3 stages each.

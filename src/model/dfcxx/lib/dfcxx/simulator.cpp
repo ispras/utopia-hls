@@ -45,35 +45,35 @@ uint64_t DFCXXSimulator::readInput(std::ifstream &in,
   return atLeastOne ? (ind + 1) : 0;
 }
 
-static bool processInput(RecordedValues &vals, const Node &node,
+static bool processInput(RecordedValues &vals, Node *node,
                          const Inputs &inputs, const IOVars &inData,
                          uint64_t ind) {
-  auto name = std::string(DFVariable(node.var).getName());
+  auto name = std::string(DFVariable(node->var).getName());
   vals[node] = inData.at(name)[ind];
   return true;
 }
 
-static bool processOutput(RecordedValues &vals, const Node &node,
+static bool processOutput(RecordedValues &vals, Node *node,
                           const Inputs &inputs, const IOVars &inData,
                           uint64_t ind) {
-  auto name = std::string(DFVariable(node.var).getName());
+  auto name = std::string(DFVariable(node->var).getName());
   // Take output's only connection and assign the existing source value.
-  vals[node] = vals[inputs.at(node)[0].source];
+  vals[node] = vals[inputs.at(node)[0]->source];
   return true;
 }
 
-static bool processConst(RecordedValues &vals, const Node &node,
+static bool processConst(RecordedValues &vals, Node *node,
                          const Inputs &inputs, const IOVars &inData,
                          uint64_t ind) {
-  vals[node] = ((DFConstant *) node.var)->getUInt();
+  vals[node] = ((DFConstant *) node->var)->getUInt();
   return true;
 }
 
-static bool processMux(RecordedValues &vals, const Node &node,
+static bool processMux(RecordedValues &vals, Node *node,
                        const Inputs &inputs, const IOVars &inData,
                        uint64_t ind) {
-  auto muxedValue = vals[inputs.at(node)[node.data.muxId].source];
-  vals[node] = vals[inputs.at(node)[muxedValue + 1].source];
+  auto muxedValue = vals[inputs.at(node)[node->data.muxId]->source];
+  vals[node] = vals[inputs.at(node)[muxedValue + 1]->source];
   return true;
 }
 
@@ -85,26 +85,26 @@ static bool processMux(RecordedValues &vals, const Node &node,
 
 // Generic procedure to perform the simulation
 // for the concrete binary op and type of its operands.
-#define GENERIC_BINARY_OP_SIM_WITH_TYPE(TYPE, VALS, INPUTS, NODE, OP)  \
-TYPE left = CAST_SIM_VALUE_TO(TYPE, VALS[INPUTS.at(NODE)[0].source]);  \
-TYPE right = CAST_SIM_VALUE_TO(TYPE, VALS[INPUTS.at(NODE)[1].source]); \
-TYPE result = left OP right;                                           \
+#define GENERIC_BINARY_OP_SIM_WITH_TYPE(TYPE, VALS, INPUTS, NODE, OP)   \
+TYPE left = CAST_SIM_VALUE_TO(TYPE, VALS[INPUTS.at(NODE)[0]->source]);  \
+TYPE right = CAST_SIM_VALUE_TO(TYPE, VALS[INPUTS.at(NODE)[1]->source]); \
+TYPE result = left OP right;                                            \
 VALS[NODE] = CAST_SIM_VALUE_TO(SimValue, result);
 
 // Generic procedure to perform the simulation
 // for the concrete unary op and type of its operand.
-#define GENERIC_UNARY_OP_SIM_WITH_TYPE(TYPE, VALS, INPUTS, NODE, OP)  \
-TYPE left = CAST_SIM_VALUE_TO(TYPE, VALS[INPUTS.at(NODE)[0].source]); \
-TYPE result = OP left;                                                \
+#define GENERIC_UNARY_OP_SIM_WITH_TYPE(TYPE, VALS, INPUTS, NODE, OP)   \
+TYPE left = CAST_SIM_VALUE_TO(TYPE, VALS[INPUTS.at(NODE)[0]->source]); \
+TYPE result = OP left;                                                 \
 VALS[NODE] = CAST_SIM_VALUE_TO(SimValue, result);
 
 #define PROCESS_GENERIC_BINARY_OP_FUNC(OP_NAME, OP)                           \
 static bool GENERIC_FUNC_NAME(OP_NAME)(RecordedValues &vals,                  \
-                                       const Node &node,                      \
+                                       Node *node,                            \
                                        const Inputs &inputs,                  \
                                        const IOVars &inData,                  \
                                        uint64_t ind) {                        \
-  DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();              \
+  DFTypeImpl *type = (DFVariable(node->var).getType()).getImpl();             \
   if (type->isFixed()) {                                                      \
     if (((FixedType*) type)->isSigned()) {                                    \
       GENERIC_BINARY_OP_SIM_WITH_TYPE(int64_t, vals, inputs, node, OP)        \
@@ -139,15 +139,15 @@ PROCESS_GENERIC_BINARY_OP_FUNC(Eq, ==)
 
 PROCESS_GENERIC_BINARY_OP_FUNC(Neq, !=)
 
-#define PROCESS_GENERIC_BITWISE_BINARY_OP_FUNC(OP_NAME, OP)               \
-static bool GENERIC_FUNC_NAME(OP_NAME)(RecordedValues &vals,              \
-                                       const Node &node,                  \
-                                       const Inputs &inputs,              \
-                                       const IOVars &inData,              \
-                                       uint64_t ind) {                    \
-  vals[node] =                                                            \
-      vals[inputs.at(node)[0].source] OP vals[inputs.at(node)[1].source]; \
-  return true;                                                            \
+#define PROCESS_GENERIC_BITWISE_BINARY_OP_FUNC(OP_NAME, OP)                 \
+static bool GENERIC_FUNC_NAME(OP_NAME)(RecordedValues &vals,                \
+                                       Node *node,                          \
+                                       const Inputs &inputs,                \
+                                       const IOVars &inData,                \
+                                       uint64_t ind) {                      \
+  vals[node] =                                                              \
+      vals[inputs.at(node)[0]->source] OP vals[inputs.at(node)[1]->source]; \
+  return true;                                                              \
 }          
 
 PROCESS_GENERIC_BITWISE_BINARY_OP_FUNC(And, &)
@@ -156,17 +156,17 @@ PROCESS_GENERIC_BITWISE_BINARY_OP_FUNC(Or, |)
 
 PROCESS_GENERIC_BITWISE_BINARY_OP_FUNC(Xor, ^)
 
-static bool processNotOp(RecordedValues &vals, const Node &node,
+static bool processNotOp(RecordedValues &vals, Node *node,
                          const Inputs &inputs, const IOVars &inData,
                          uint64_t ind) {
-  vals[node] = ~(vals[inputs.at(node)[0].source]);
+  vals[node] = ~(vals[inputs.at(node)[0]->source]);
   return true;
 }
 
-static bool processNegOp(RecordedValues &vals, const Node &node,
+static bool processNegOp(RecordedValues &vals, Node *node,
                          const Inputs &inputs, const IOVars &inData,
                          uint64_t ind) {
-  DFTypeImpl *type = (DFVariable(node.var).getType()).getImpl();
+  DFTypeImpl *type = (DFVariable(node->var).getType()).getImpl();
   if (type->isFixed()) {
     if (((FixedType*) type)->isSigned()) {
       GENERIC_UNARY_OP_SIM_WITH_TYPE(int64_t, vals, inputs, node, -)
@@ -181,29 +181,29 @@ static bool processNegOp(RecordedValues &vals, const Node &node,
   return true;
 }
 
-static bool processShiftLeftOp(RecordedValues &vals, const Node &node,
+static bool processShiftLeftOp(RecordedValues &vals, Node *node,
                                const Inputs &inputs, const IOVars &inData,
                                uint64_t ind) {
-  vals[node] = vals[inputs.at(node)[0].source] << node.data.bitShift;
+  vals[node] = vals[inputs.at(node)[0]->source] << node->data.bitShift;
   return true;
 }
 
-static bool processShiftRightOp(RecordedValues &vals, const Node &node,
+static bool processShiftRightOp(RecordedValues &vals, Node *node,
                                 const Inputs &inputs, const IOVars &inData,
                                 uint64_t ind) {
-  vals[node] = vals[inputs.at(node)[0].source] >> node.data.bitShift;
+  vals[node] = vals[inputs.at(node)[0]->source] >> node->data.bitShift;
   return true;
 }
 
-bool DFCXXSimulator::processOp(RecordedValues &vals, const Node &node,
+bool DFCXXSimulator::processOp(RecordedValues &vals, Node *node,
                                const IOVars &inData, uint64_t ind) {
-  if (funcs.find(node.type) == funcs.end()) {
+  if (funcs.find(node->type) == funcs.end()) {
     return false;
   }
-  return funcs.at(node.type)(vals, node, inputs, inData, ind);
+  return funcs.at(node->type)(vals, node, inputs, inData, ind);
 }
 
-DFCXXSimulator::DFCXXSimulator(std::vector<Node> &nodes,
+DFCXXSimulator::DFCXXSimulator(std::vector<Node *> &nodes,
                                const Inputs &inputs) :
                                nodes(nodes),
                                inputs(inputs),
@@ -241,7 +241,7 @@ bool DFCXXSimulator::runSim(RecordedValues &vals,
   // to remember the relevant value for the operand node.
   // With every single "clock" input nodes' mapping is updated
   // with the value from the buffer.
-  for (Node &node : nodes) {
+  for (Node *node : nodes) {
     if (!processOp(vals, node, inData, iter)) {
       return false;
     }
@@ -266,7 +266,7 @@ DFCXXSimulator::writeOutput(ctemplate::TemplateDictionary *dict,
                             const RecordedValues &vals,
                             uint64_t startInd,
                             uint64_t iter,
-                            const std::unordered_map<Node, std::string> &idMap) {
+                            const std::unordered_map<Node *, std::string> &idMap) {
   ctemplate::TemplateDictionary *tick =
       dict->AddSectionDictionary("TICKS");
   tick->SetValue("TICK", std::to_string(startInd + iter));
@@ -275,14 +275,14 @@ DFCXXSimulator::writeOutput(ctemplate::TemplateDictionary *dict,
         tick->AddSectionDictionary("VALUES");
     value->SetValue("VALUE",
                     valueToBinary(kv.second, 
-                                  kv.first.var->getType()->getTotalBits()));
+                                  kv.first->var->getType()->getTotalBits()));
     value->SetValue("NAME", idMap.at(kv.first));
   }
 }
 
 void DFCXXSimulator::genHeader(ctemplate::TemplateDictionary *dict,
                                const RecordedValues &vals,
-                               std::unordered_map<Node, std::string> &idMap,
+                               std::unordered_map<Node *, std::string> &idMap,
                                uint64_t &counter) {
   auto time = std::time(nullptr);
   auto *localTime = std::localtime(&time);
@@ -295,9 +295,9 @@ void DFCXXSimulator::genHeader(ctemplate::TemplateDictionary *dict,
                           localTime->tm_min,
                           localTime->tm_sec);
   
-  auto getName = [&idMap, &counter] (const Node &node) -> std::string {
+  auto getName = [&idMap, &counter] (Node *node) -> std::string {
     // If the node is named - just save and return the name.
-    auto name = DFVariable(node.var).getName();
+    auto name = DFVariable(node->var).getName();
     if (!name.empty()) {
       return (idMap[node] = name.data());
     }
@@ -312,7 +312,7 @@ void DFCXXSimulator::genHeader(ctemplate::TemplateDictionary *dict,
   
   for (const auto &kv : vals) {
     std::string name = getName(kv.first);
-    auto width = kv.first.var->getType()->getTotalBits();
+    auto width = kv.first->var->getType()->getTotalBits();
    
     ctemplate::TemplateDictionary *var =
         dict->AddSectionDictionary("VARS");
@@ -334,7 +334,7 @@ bool DFCXXSimulator::simulate(std::ifstream &in,
   bool headerGenerated = false;
   uint64_t startInd = 1;
   uint64_t counter = 0;
-  std::unordered_map<Node, std::string> idMapping;
+  std::unordered_map<Node *, std::string> idMapping;
   ctemplate::TemplateDictionary *dict =
       new ctemplate::TemplateDictionary("vcd");
 

@@ -22,7 +22,7 @@
 namespace mlir::dfcir::utils {
 struct Node;
 struct Channel;
-struct Graph;
+class Graph;
 } // namespace mlir::dfcir::utils
 
 typedef std::unordered_map<mlir::dfcir::utils::Node *, int32_t> Latencies;
@@ -103,24 +103,52 @@ struct std::hash<mlir::dfcir::utils::Channel> {
 };
 
 namespace mlir::dfcir::utils {
+
+struct NodePtrHash {
+  size_t operator()(Node *node) const noexcept {
+    return std::hash<Node>()(*node);
+  }
+};
+
+struct NodePtrEq {
+  size_t operator()(Node *left, Node *right) const noexcept {
+    return *left == *right;
+  }
+};
+
+struct ChannelPtrHash {
+  size_t operator()(Channel *channel) const noexcept {
+    return std::hash<Channel>()(*channel);
+  }
+};
+
+struct ChannelPtrEq {
+  size_t operator()(Channel *left, Channel *right) const noexcept {
+    return *left == *right;
+  }
+};
+
+typedef std::unordered_set<Node *, NodePtrHash, NodePtrEq> Nodes;
+typedef std::unordered_set<Channel *, ChannelPtrHash, ChannelPtrEq> Channels;
+typedef std::unordered_map<std::string_view, Node *> NodeNameMap;
+typedef std::unordered_map<Node *, std::vector<Channel *>> ChannelMap;
+typedef std::unordered_map<mlir::detail::ValueImpl *, ConnectOp> ConnectionMap;
+
 class Graph {
-  using StringRef = llvm::StringRef;
-
 public:
-  std::unordered_set<Node *> nodes;
-  std::unordered_set<Channel *> channels;
+  Nodes nodes;
+  Channels channels;
 
-  std::unordered_set<Node *> startNodes;
-  std::unordered_map<Node *, std::vector<Channel *>> inputs;
-  std::unordered_map<Node* , std::vector<Channel *>> outputs;
+  Nodes startNodes;
+  ChannelMap inputs;
+  ChannelMap outputs;
+  ConnectionMap connectionMap;
 
   explicit Graph() = default;
 
   ~Graph();
 
-  auto findNode(Operation *op);
-
-  auto findNode(const Value &val);
+  Node *findNode(Operation *op);
 
   explicit Graph(KernelOp kernel);
 
@@ -129,19 +157,28 @@ public:
   void applyConfig(const LatencyConfig &cfg);
 
 private:
+  std::pair<Value, int32_t> findNearestNodeValue(Value value);
+
   template <class OpGroup, class Op>
   Node *process(Op &op);
 
   Node *processGenericOp(Operation &op, int32_t latency);
 };
 
-void insertBuffer(OpBuilder &builder, Channel *channel, int32_t latency);
+void insertBuffer(OpBuilder &builder,
+                 Channel *channel,
+                 int32_t latency,
+                 const ConnectionMap &map);
 
-void insertBuffers(mlir::MLIRContext &ctx, const Buffers &buffers);
+void insertBuffers(mlir::MLIRContext &ctx,
+                   const Buffers &buffers,
+                   const ConnectionMap &map);
 
 std::vector<Node *> topSortNodes(const Graph &graph);
 
-int32_t calculateOverallLatency(const Graph &graph, Buffers &buffers, Latencies *map = {});
+int32_t calculateOverallLatency(const Graph &graph,
+                                Buffers &buffers,
+                                Latencies *map = {});
 
 void eraseOffsets(mlir::Operation *op);
 

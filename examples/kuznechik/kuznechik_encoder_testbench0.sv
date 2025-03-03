@@ -6,23 +6,21 @@
 //
 //===----------------------------------------------------------------------===//
 
-// Addition (integer): 2 stages each.
-// XOR (integer): 2 stages each.
-// Total: 128 stages.
+// Total: 0 stages.
 
 `timescale 1s/1s
 
-module MagmaEncoder_test0();
+module KuznechikEncoder_test0();
 
-  localparam CIRCUIT_LATENCY = 128;
+  localparam CIRCUIT_LATENCY = 0;
 
-  reg [63:0] block;
+  reg [127:0] block;
   reg [255:0] key;
-  reg [63:0] encoded;
-  reg [63:0] expected;
+  reg [127:0] encoded;
+  reg [127:0] expected;
   reg clk;
 
-  MagmaEncoder inst (
+  KuznechikEncoder inst (
     .block(block),
     .key(key),
     .encoded(encoded),
@@ -36,11 +34,11 @@ module MagmaEncoder_test0();
   initial begin
 
     @(negedge clk);
-    $display("[MagmaEncoder: test 0] Input ready.");
+    $display("[KuznechikEncoder: test 0] Input ready.");
     
-    block = 64'hfedcba9876543210;
-    key = 256'hffeeddccbbaa99887766554433221100f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff;
-    expected = 64'h4ee901e5c2d8ca3d;
+    block = 128'h1122334455667700ffeeddccbbaa9988;
+    key = 256'h8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef;
+    expected = 128'h7f679d90bebc24305a468d42b9d4edcd;
     $display("Input: [%0x], key: [%0x]", block, key);
   end
 
@@ -48,20 +46,20 @@ module MagmaEncoder_test0();
     // Wait for the first output.
     #(2*CIRCUIT_LATENCY+3);
 
-    $dumpfile("MagmaEncoder_test0.vcd");
-    $dumpvars(0, MagmaEncoder_test0);
-    $display("[MagmaEncoder: test 0] Started...");
+    $dumpfile("KuznechikEncoder_test0.vcd");
+    $dumpvars(0, KuznechikEncoder_test0);
+    $display("[KuznechikEncoder: test 0] Started...");
 
     $display("Output: %0h", encoded);
     if (expected == encoded) begin
       $display("GOOD: %0h == %0h", expected, encoded);
     end else begin
       $display("BAD: %0h != %0h", expected, encoded);
-      $display("[MagmaEncoder: test 0] Stopped.");
+      $display("[KuznechikEncoder: test 0] Stopped.");
       $finish;
     end
 
-    $display("[MagmaEncoder: test 0] Stopped.");
+    $display("[KuznechikEncoder: test 0] Stopped.");
     $finish;
   end
 
