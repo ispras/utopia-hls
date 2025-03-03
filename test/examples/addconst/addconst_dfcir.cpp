@@ -14,10 +14,10 @@
 
 #include <fstream>
 
-#define POLYNOMIAL2_DATA_PATH TEST_MODEL_DFCIR_DATA_PATH "/polynomial2.mlir"
+#define ADDCONST_DATA_PATH TEST_EXAMPLES_PATH "/addconst/addconst.mlir"
 
-TEST(DFCIRParsePrint, Polynomial2) {
-  std::ifstream fStream(POLYNOMIAL2_DATA_PATH);
+TEST(ExamplesAddConst, DFCIRParsePrint) {
+  std::ifstream fStream(ADDCONST_DATA_PATH);
   std::stringstream buf;
   buf << fStream.rdbuf();
   std::string inputDfcir = buf.str();

@@ -13,7 +13,7 @@
 static const DFOutputPaths nullDevicePath =
     {{dfcxx::OutputFormatID::SystemVerilog, NULLDEVICE}};
 
-TEST(DFCxx, IdctAsap) {
+TEST(ExamplesIDCT, DFCXXAsap) {
   IDCT kernel;
   DFLatencyConfig config = DFLatencyConfig(
     {
@@ -30,7 +30,7 @@ TEST(DFCxx, IdctAsap) {
 
 // Issue #7 (https://github.com/ispras/utopia-hls/issues/7).
 
-// TEST(DFCxx, IdctLinear) {
+// TEST(ExamplesIDCT, DFCXXLinear) {
 //   IDCT kernel;
 //   DFLatencyConfig config = DFLatencyConfig(
 //     {

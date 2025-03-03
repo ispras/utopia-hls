@@ -6,15 +6,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "scalar3/scalar3.h"
+#include "polynomial2/polynomial2.h"
 
 #include "gtest/gtest.h"
 
 static const DFOutputPaths nullDevicePath =
     {{dfcxx::OutputFormatID::SystemVerilog, NULLDEVICE}};
 
-TEST(DFCxx, Scalar3AddInt2MulInt3Asap) {
-  Scalar3 kernel;
+TEST(ExamplesPolynomial2, DFCXXAddInt2MulInt3Asap) {
+  Polynomial2 kernel;
   DFLatencyConfig config = DFLatencyConfig(
     {
       {dfcxx::ADD_INT, 2},
@@ -25,12 +25,36 @@ TEST(DFCxx, Scalar3AddInt2MulInt3Asap) {
   EXPECT_EQ(kernel.compile(config, nullDevicePath, dfcxx::ASAP), true);
 }
 
-TEST(DFCxx, Scalar3AddInt2MulInt3Linear) {
-  Scalar3 kernel;
+TEST(ExamplesPolynomial2, DFCXXAddInt2MulInt3Linear) {
+  Polynomial2 kernel;
   DFLatencyConfig config = DFLatencyConfig(
     {
       {dfcxx::ADD_INT, 2},
       {dfcxx::MUL_INT, 3}
+    },
+    {}
+  );
+  EXPECT_EQ(kernel.compile(config, nullDevicePath, dfcxx::Linear), true);
+}
+
+TEST(ExamplesPolynomial2, DFCXXAddInt8MulInt15Asap) {
+  Polynomial2 kernel;
+  DFLatencyConfig config = DFLatencyConfig(
+    {
+      {dfcxx::ADD_INT, 8},
+      {dfcxx::MUL_INT, 15}
+    },
+    {}
+  );
+  EXPECT_EQ(kernel.compile(config, nullDevicePath, dfcxx::ASAP), true);
+}
+
+TEST(ExamplesPolynomial2, DFCXXAddInt8MulInt15Linear) {
+  Polynomial2 kernel;
+  DFLatencyConfig config = DFLatencyConfig(
+    {
+      {dfcxx::ADD_INT, 8},
+      {dfcxx::MUL_INT, 15}
     },
     {}
   );

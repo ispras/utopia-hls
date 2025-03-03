@@ -6,31 +6,31 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "matrixmul2/matrixmul2.h"
+#include "scalar3/scalar3.h"
 
 #include "gtest/gtest.h"
 
 static const DFOutputPaths nullDevicePath =
     {{dfcxx::OutputFormatID::SystemVerilog, NULLDEVICE}};
 
-TEST(DFCxx, MatrixMul2AddInt2MulInt3Asap) {
-  MatrixMul2 kernel;
+TEST(ExamplesScalar3, DFCXXAddInt2MulInt3Asap) {
+  Scalar3 kernel;
   DFLatencyConfig config = DFLatencyConfig(
     {
       {dfcxx::ADD_INT, 2},
-      {dfcxx::MUL_INT, 3},
+      {dfcxx::MUL_INT, 3}
     },
     {}
   );
   EXPECT_EQ(kernel.compile(config, nullDevicePath, dfcxx::ASAP), true);
 }
 
-TEST(DFCxx, MatrixMul2AddInt2MulInt3Linear) {
-  MatrixMul2 kernel;
+TEST(ExamplesScalar3, DFCXXAddInt2MulInt3Linear) {
+  Scalar3 kernel;
   DFLatencyConfig config = DFLatencyConfig(
     {
       {dfcxx::ADD_INT, 2},
-      {dfcxx::MUL_INT, 3},
+      {dfcxx::MUL_INT, 3}
     },
     {}
   );

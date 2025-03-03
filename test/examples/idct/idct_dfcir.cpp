@@ -14,10 +14,10 @@
 
 #include <fstream>
 
-#define ADDCONST_DATA_PATH TEST_MODEL_DFCIR_DATA_PATH "/addconst.mlir"
+#define IDCT_DATA_PATH TEST_EXAMPLES_PATH "/idct/idct.mlir"
 
-TEST(DFCIRParsePrint, AddConst) {
-  std::ifstream fStream(ADDCONST_DATA_PATH);
+TEST(ExamplesIDCT, DFCIRParsePrint) {
+  std::ifstream fStream(IDCT_DATA_PATH);
   std::stringstream buf;
   buf << fStream.rdbuf();
   std::string inputDfcir = buf.str();

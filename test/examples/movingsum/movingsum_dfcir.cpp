@@ -14,10 +14,10 @@
 
 #include <fstream>
 
-#define IDCT_DATA_PATH TEST_MODEL_DFCIR_DATA_PATH "/idct.mlir"
+#define MOVINGSUM_DATA_PATH TEST_EXAMPLES_PATH "/movingsum/movingsum.mlir"
 
-TEST(DFCIRParsePrint, IDCT) {
-  std::ifstream fStream(IDCT_DATA_PATH);
+TEST(ExamplesMovingSum, DFCIRParsePrint) {
+  std::ifstream fStream(MOVINGSUM_DATA_PATH);
   std::stringstream buf;
   buf << fStream.rdbuf();
   std::string inputDfcir = buf.str();

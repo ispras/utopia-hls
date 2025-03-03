@@ -14,10 +14,10 @@
 
 #include <fstream>
 
-#define MATRIXMUL2_DATA_PATH TEST_MODEL_DFCIR_DATA_PATH "/matrixmul2.mlir"
+#define POLYNOMIAL2_DATA_PATH TEST_EXAMPLES_PATH "/polynomial2/polynomial2.mlir"
 
-TEST(DFCIRParsePrint, MatrixMul2) {
-  std::ifstream fStream(MATRIXMUL2_DATA_PATH);
+TEST(ExamplesPolynomial2, DFCIRParsePrint) {
+  std::ifstream fStream(POLYNOMIAL2_DATA_PATH);
   std::stringstream buf;
   buf << fStream.rdbuf();
   std::string inputDfcir = buf.str();

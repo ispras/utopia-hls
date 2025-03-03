@@ -14,10 +14,10 @@
 
 #include <fstream>
 
-#define SCALAR3_DATA_PATH TEST_MODEL_DFCIR_DATA_PATH "/scalar3.mlir"
+#define MATRIXMUL2_DATA_PATH TEST_EXAMPLES_PATH "/matrixmul2/matrixmul2.mlir"
 
-TEST(DFCIRParsePrint, Scalar3) {
-  std::ifstream fStream(SCALAR3_DATA_PATH);
+TEST(ExamplesMatrixMul2, DFCIRParsePrint) {
+  std::ifstream fStream(MATRIXMUL2_DATA_PATH);
   std::stringstream buf;
   buf << fStream.rdbuf();
   std::string inputDfcir = buf.str();

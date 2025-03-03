@@ -1,11 +1,3 @@
 set(DFCIR_TESTS
-  ${CMAKE_CURRENT_SOURCE_DIR}/polynomial2.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/scalar3.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/matrixmul2.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/muxmul.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/addconst.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/movingsum.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/movingaverage.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/idct.cpp
   PARENT_SCOPE
 )

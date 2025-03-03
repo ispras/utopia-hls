@@ -2,7 +2,7 @@
 //
 // Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2025 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -14,10 +14,10 @@
 
 #include <fstream>
 
-#define MOVINGSUM_DATA_PATH TEST_MODEL_DFCIR_DATA_PATH "/movingsum.mlir"
+#define MOVINGAVERAGE_DATA_PATH TEST_EXAMPLES_PATH "/movingaverage/movingaverage.mlir"
 
-TEST(DFCIRParsePrint, MovingSum) {
-  std::ifstream fStream(MOVINGSUM_DATA_PATH);
+TEST(ExamplesMovingAverage, DFCIRParsePrint) {
+  std::ifstream fStream(MOVINGAVERAGE_DATA_PATH);
   std::stringstream buf;
   buf << fStream.rdbuf();
   std::string inputDfcir = buf.str();
