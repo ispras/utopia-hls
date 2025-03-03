@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcxx/IRbuilders/builder.h"
+#include "dfcxx/irbuilder.h"
 #include "dfcxx/utils.h"
 
 #include "mlir/Parser/Parser.h"
@@ -47,6 +47,39 @@ mlir::ModuleOp DFCIRBuilder::buildModule(Kernel *kern) {
   buildKernel(kern, builder);
 
   return module.get();
+}
+
+DFCIRTypeConverter::DFCIRTypeConverter(mlir::MLIRContext *ctx) : ctx(ctx) {}
+
+mlir::Type DFCIRTypeConverter::operator[](dfcxx::DFVariableImpl *var) {
+  auto *type = var->getType();
+  mlir::Type newInnerType;
+
+  if (type->isFixed()) {
+    auto *casted = (FixedType *) type;
+    newInnerType = mlir::dfcir::DFCIRFixedType::get(ctx, casted->isSigned(),
+                                                    casted->getIntBits(),
+                                                    casted->getFracBits());
+  } else if (type->isFloat()) {
+    auto *casted = (FloatType *) type;
+    newInnerType = mlir::dfcir::DFCIRFloatType::get(ctx, casted->getExpBits(),
+                                                    casted->getFracBits());
+  } else if (type->isRawBits()) {
+    auto *casted = (RawBitsType *) type;
+    newInnerType =
+        mlir::dfcir::DFCIRRawBitsType::get(ctx, casted->getTotalBits());
+  } else {
+    return nullptr;
+  }
+
+  if (var->isStream()) {
+    return mlir::dfcir::DFCIRStreamType::get(ctx, newInnerType);
+  } else if (var->isScalar()) {
+    return mlir::dfcir::DFCIRScalarType::get(ctx, newInnerType);
+  } else if (var->isConstant()) {
+    return mlir::dfcir::DFCIRConstantType::get(ctx, newInnerType);
+  }
+  return nullptr;
 }
 
 #define MLIR_INT_ATTR_WIDTH 64

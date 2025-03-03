@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcxx/varbuilders/builder.h"
+#include "dfcxx/varbuilder.h"
 
 namespace dfcxx {
 
