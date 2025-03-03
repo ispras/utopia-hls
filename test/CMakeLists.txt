@@ -26,6 +26,8 @@ set(EXAMPLES_PATH "${CMAKE_SOURCE_DIR}/examples")
 add_subdirectory(examples)
 add_subdirectory(model)
 
+add_definitions("-fno-rtti")
+
 add_executable(utest
   ${EXAMPLES_TESTS}
   ${MODEL_TESTS}
