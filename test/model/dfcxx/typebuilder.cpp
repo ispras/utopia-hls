@@ -15,6 +15,7 @@ using namespace dfcxx; // For testing purposes only.
 TEST(DFCXXTypeBuilder, BuildBool) {
   KernMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildBool();
+  meta.storage.addType(type);
   EXPECT_TRUE(type);
   meta.storage.addType(type);
   EXPECT_TRUE(type->isFixed());
@@ -36,6 +37,7 @@ TEST(DFCXXTypeBuilder, BuildBool) {
 TEST(DFCXXTypeBuilder, BuildUnsignedInt) {
   KernMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED, 32, 0);
+  meta.storage.addType(type);
   EXPECT_TRUE(type);
   meta.storage.addType(type);
   EXPECT_TRUE(type->isFixed());
@@ -57,6 +59,7 @@ TEST(DFCXXTypeBuilder, BuildUnsignedInt) {
 TEST(DFCXXTypeBuilder, BuildSignedInt) {
   KernMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildFixed(FixedType::SignMode::SIGNED, 31, 0);
+  meta.storage.addType(type);
   EXPECT_TRUE(type);
   meta.storage.addType(type);
   EXPECT_TRUE(type->isFixed());
@@ -78,6 +81,7 @@ TEST(DFCXXTypeBuilder, BuildSignedInt) {
 TEST(DFCXXTypeBuilder, BuildFixed) {
   KernMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildFixed(FixedType::SignMode::SIGNED, 31, 32);
+  meta.storage.addType(type);
   EXPECT_TRUE(type);
   meta.storage.addType(type);
   EXPECT_TRUE(type->isFixed());
@@ -99,6 +103,7 @@ TEST(DFCXXTypeBuilder, BuildFixed) {
 TEST(DFCXXTypeBuilder, BuildFloat) {
   KernMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildFloat(8, 23);
+  meta.storage.addType(type);
   EXPECT_TRUE(type);
   meta.storage.addType(type);
   EXPECT_TRUE(!type->isFixed());
@@ -115,6 +120,7 @@ TEST(DFCXXTypeBuilder, BuildFloat) {
 TEST(DFCXXTypeBuilder, BuildRawBits) {
   KernMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildRawBits(20);
+  meta.storage.addType(type);
   EXPECT_TRUE(type);
   meta.storage.addType(type);
   EXPECT_TRUE(!type->isFixed());
