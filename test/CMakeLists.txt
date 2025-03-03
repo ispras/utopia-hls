@@ -39,7 +39,8 @@ endif()
 target_compile_definitions(utest
   PUBLIC
     NULLDEVICE="${NULLDEVICE}"
-    DATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/data"
+    TEST_DATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/data"
+    TEST_MODEL_DFCIR_DATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/model/dfcir/data"
 )
 
 target_include_directories(utest

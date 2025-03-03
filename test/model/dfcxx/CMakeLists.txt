@@ -1,11 +1,11 @@
 set(DFCXX_TESTS
-  model/dfcxx/polynomial2.cpp
-  model/dfcxx/scalar3.cpp
-  model/dfcxx/matrixmul2.cpp
-  model/dfcxx/muxmul.cpp
-  model/dfcxx/addconst.cpp
-  model/dfcxx/movingsum.cpp
-  model/dfcxx/idct.cpp
-  model/dfcxx/output_formats.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/polynomial2.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/scalar3.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/matrixmul2.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/muxmul.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/addconst.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/movingsum.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/idct.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/output_formats.cpp
   PARENT_SCOPE
 )

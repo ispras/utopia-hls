@@ -1,11 +1,11 @@
 set(DFCIR_TESTS
-  model/dfcir/polynomial2.cpp
-  model/dfcir/scalar3.cpp
-  model/dfcir/matrixmul2.cpp
-  model/dfcir/muxmul.cpp
-  model/dfcir/addconst.cpp
-  model/dfcir/movingsum.cpp
-  model/dfcir/movingaverage.cpp
-  model/dfcir/idct.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/polynomial2.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/scalar3.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/matrixmul2.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/muxmul.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/addconst.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/movingsum.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/movingaverage.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/idct.cpp
   PARENT_SCOPE
 )

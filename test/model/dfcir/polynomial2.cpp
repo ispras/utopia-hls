@@ -14,7 +14,7 @@
 
 #include <fstream>
 
-#define POLYNOMIAL2_DATA_PATH DATA_PATH "/polynomial2.mlir"
+#define POLYNOMIAL2_DATA_PATH TEST_MODEL_DFCIR_DATA_PATH "/polynomial2.mlir"
 
 TEST(DFCIRParsePrint, Polynomial2) {
   std::ifstream fStream(POLYNOMIAL2_DATA_PATH);

@@ -14,7 +14,7 @@
 
 #include <fstream>
 
-#define MOVINGSUM_DATA_PATH DATA_PATH "/movingsum.mlir"
+#define MOVINGSUM_DATA_PATH TEST_MODEL_DFCIR_DATA_PATH "/movingsum.mlir"
 
 TEST(DFCIRParsePrint, MovingSum) {
   std::ifstream fStream(MOVINGSUM_DATA_PATH);

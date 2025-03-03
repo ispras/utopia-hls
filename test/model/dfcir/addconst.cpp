@@ -14,7 +14,7 @@
 
 #include <fstream>
 
-#define ADDCONST_DATA_PATH DATA_PATH "/addconst.mlir"
+#define ADDCONST_DATA_PATH TEST_MODEL_DFCIR_DATA_PATH "/addconst.mlir"
 
 TEST(DFCIRParsePrint, AddConst) {
   std::ifstream fStream(ADDCONST_DATA_PATH);

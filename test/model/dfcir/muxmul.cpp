@@ -14,7 +14,7 @@
 
 #include <fstream>
 
-#define MUXMUL_DATA_PATH DATA_PATH "/muxmul.mlir"
+#define MUXMUL_DATA_PATH TEST_MODEL_DFCIR_DATA_PATH "/muxmul.mlir"
 
 TEST(DFCIRParsePrint, MuxMul) {
   std::ifstream fStream(MUXMUL_DATA_PATH);

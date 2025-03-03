@@ -14,7 +14,7 @@
 
 #include <fstream>
 
-#define IDCT_DATA_PATH DATA_PATH "/idct.mlir"
+#define IDCT_DATA_PATH TEST_MODEL_DFCIR_DATA_PATH "/idct.mlir"
 
 TEST(DFCIRParsePrint, IDCT) {
   std::ifstream fStream(IDCT_DATA_PATH);

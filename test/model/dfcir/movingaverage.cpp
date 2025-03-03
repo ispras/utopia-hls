@@ -14,7 +14,7 @@
 
 #include <fstream>
 
-#define MOVINGAVERAGE_DATA_PATH DATA_PATH "/movingaverage.mlir"
+#define MOVINGAVERAGE_DATA_PATH TEST_MODEL_DFCIR_DATA_PATH "/movingaverage.mlir"
 
 TEST(DFCIRParsePrint, MovingAverage) {
   std::ifstream fStream(MOVINGAVERAGE_DATA_PATH);

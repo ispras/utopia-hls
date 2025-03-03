@@ -14,7 +14,7 @@
 
 #include <fstream>
 
-#define SCALAR3_DATA_PATH DATA_PATH "/scalar3.mlir"
+#define SCALAR3_DATA_PATH TEST_MODEL_DFCIR_DATA_PATH "/scalar3.mlir"
 
 TEST(DFCIRParsePrint, Scalar3) {
   std::ifstream fStream(SCALAR3_DATA_PATH);
