@@ -41,6 +41,8 @@ elseif(UNIX)
   set(NULLDEVICE "/dev/null")
 endif()
 
+
+
 target_compile_definitions(utest
   PUBLIC
     NULLDEVICE="${NULLDEVICE}"
