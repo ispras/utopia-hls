@@ -30,9 +30,9 @@ TEST(DFCXXGraph, AddNode) {
   EXPECT_EQ(nodes.size(), 1);
   EXPECT_EQ(startNodes.size(), 0);
   Node *node = *(nodes.begin());
-  EXPECT_TRUE(node->var == var);
-  EXPECT_TRUE(node->type == opType);
-  EXPECT_TRUE(result.first == node);
+  EXPECT_EQ(node->var, var);
+  EXPECT_EQ(node->type, opType);
+  EXPECT_EQ(result.first, node);
   const NodeNameMap &map = meta.graph.getNameMap();
   EXPECT_EQ(map.size(), 0);
 }
@@ -54,10 +54,10 @@ TEST(DFCXXGraph, AddStartNode) {
   EXPECT_EQ(startNodes.size(), 1);
   Node *node = *(nodes.begin());
   Node *startNode = *(startNodes.begin());
-  EXPECT_TRUE(node == startNode);
-  EXPECT_TRUE(node->var == var);
-  EXPECT_TRUE(node->type == opType);
-  EXPECT_TRUE(result.first == node);
+  EXPECT_EQ(node, startNode);
+  EXPECT_EQ(node->var, var);
+  EXPECT_EQ(node->type, opType);
+  EXPECT_EQ(result.first, node);
   const NodeNameMap &map = meta.graph.getNameMap();
   EXPECT_EQ(map.size(), 1);
   EXPECT_EQ(map.at(STUB_NAME), node);
