@@ -87,6 +87,90 @@ TEST(DFCXXGraph, AddAlreadyExistingNode) {
   EXPECT_EQ(map.size(), 0);
 }
 
+TEST(DFCXXGraph, AddChannel) {
+  const auto direction = DFVariableImpl::IODirection::NONE;
+  const auto opType = OpType::ADD;
+  KernMeta meta;
+  DFTypeImpl *type = meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED, 32, 0);
+  meta.storage.addType(type);
+
+  DFVariableImpl *var1 = meta.varBuilder.buildStream("", direction, &meta, type);
+  meta.storage.addVariable(var1);
+  auto result1 = meta.graph.addNode(var1, opType, NodeData {});
+
+  DFVariableImpl *var2 = meta.varBuilder.buildStream("", direction, &meta, type);
+  meta.storage.addVariable(var2);
+  auto result2 = meta.graph.addNode(var2, opType, NodeData {});
+
+  Channel *channel = meta.graph.addChannel(result1.first, result2.first, 0, false);
+  EXPECT_TRUE(channel);
+  EXPECT_EQ(channel->source, result1.first);
+  EXPECT_EQ(channel->target, result2.first);
+  EXPECT_EQ(channel->opInd, 0);
+
+  const Channels &channels = meta.graph.getChannels();
+  EXPECT_EQ(channels.size(), 0);
+
+  const ChannelMap &inputs = meta.graph.getInputs();
+  const ChannelMap &outputs = meta.graph.getOutputs();
+
+  EXPECT_EQ(inputs.size(), 2); // For two nodes.
+  const auto &ins = inputs.at(result2.first);
+  EXPECT_EQ(ins.size(), 1);
+
+  EXPECT_EQ(outputs.size(), 2); // For two nodes.
+  const auto &outs = outputs.at(result1.first);
+  EXPECT_EQ(outs.size(), 1);
+
+  EXPECT_EQ(ins[0], outs[0]);
+
+  const ConnectionMap &connections = meta.graph.getConnections();
+  EXPECT_EQ(connections.size(), 0);
+}
+
+TEST(DFCXXGraph, AddChannelWithConnection) {
+  const auto direction = DFVariableImpl::IODirection::NONE;
+  const auto opType = OpType::ADD;
+  KernMeta meta;
+  DFTypeImpl *type = meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED, 32, 0);
+  meta.storage.addType(type);
+
+  DFVariableImpl *var1 = meta.varBuilder.buildStream("", direction, &meta, type);
+  meta.storage.addVariable(var1);
+  auto result1 = meta.graph.addNode(var1, opType, NodeData {});
+
+  DFVariableImpl *var2 = meta.varBuilder.buildStream("", direction, &meta, type);
+  meta.storage.addVariable(var2);
+  auto result2 = meta.graph.addNode(var2, opType, NodeData {});
+
+  Channel *channel = meta.graph.addChannel(result1.first, result2.first, 0, true);
+  EXPECT_TRUE(channel);
+  EXPECT_EQ(channel->source, result1.first);
+  EXPECT_EQ(channel->target, result2.first);
+  EXPECT_EQ(channel->opInd, 0);
+
+  const Channels &channels = meta.graph.getChannels();
+  EXPECT_EQ(channels.size(), 0);
+
+  const ChannelMap &inputs = meta.graph.getInputs();
+  const ChannelMap &outputs = meta.graph.getOutputs();
+
+  EXPECT_EQ(inputs.size(), 2); // For two nodes.
+  const auto &ins = inputs.at(result2.first);
+  EXPECT_EQ(ins.size(), 1);
+
+  EXPECT_EQ(outputs.size(), 2); // For two nodes.
+  const auto &outs = outputs.at(result1.first);
+  EXPECT_EQ(outs.size(), 1);
+
+  EXPECT_EQ(ins[0], outs[0]);
+
+  const ConnectionMap &connections = meta.graph.getConnections();
+  EXPECT_EQ(connections.size(), 1);
+  Channel *connection = connections.at(result2.first);
+  EXPECT_EQ(connection, channel);
+}
+
 TEST(DFCXXGraph, FindNodeByName) {
   const auto direction = DFVariableImpl::IODirection::INPUT;
   const auto opType = OpType::IN;
