@@ -8,24 +8,24 @@ add_subdirectory(vars)
 add_definitions("-fno-rtti")
 
 set(SOURCES
-  kernel.cpp
-  irbuilder.cpp
-  ${TYPES_SOURCES}
-  ${VARS_SOURCES}
-  varbuilder.cpp
-  typebuilder.cpp
-  converter.cpp
-  kernmeta.cpp
-  kernstorage.cpp
-  io.cpp
-  offset.cpp
+  channel.cpp
   constant.cpp
   control.cpp
+  converter.cpp
   graph.cpp
+  io.cpp
+  irbuilder.cpp
+  kernel.cpp
+  kernmeta.cpp
+  kernstorage.cpp
   node.cpp
-  channel.cpp
-  utils.cpp
+  offset.cpp
   simulator.cpp
+  typebuilder.cpp
+  ${TYPES_SOURCES}
+  utils.cpp
+  varbuilder.cpp
+  ${VARS_SOURCES}
 )
 
 add_library(DFCXX STATIC
