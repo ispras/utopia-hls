@@ -1,8 +1,5 @@
-add_subdirectory(IRbuilders)
 add_subdirectory(types)
-add_subdirectory(typebuilders)
 add_subdirectory(vars)
-add_subdirectory(varbuilders)
 
 ## By default LLVM, MLIR and DFCIR are compiled without RTTI, but not DFCxx.
 ## So using core Pass functionality from MLIR in converter.cpp causes
@@ -11,24 +8,24 @@ add_subdirectory(varbuilders)
 add_definitions("-fno-rtti")
 
 set(SOURCES
-  kernel.cpp
-  ${IR_BUILDERS_SOURCES}
-  ${TYPES_SOURCES}
-  ${VARS_SOURCES}
-  ${VAR_BUILDERS_SOURCES}
-  ${TYPE_BUILDERS_SOURCES}
-  converter.cpp
-  kernmeta.cpp
-  kernstorage.cpp
-  io.cpp
-  offset.cpp
+  channel.cpp
   constant.cpp
   control.cpp
+  converter.cpp
   graph.cpp
+  io.cpp
+  irbuilder.cpp
+  kernel.cpp
+  kernmeta.cpp
+  kernstorage.cpp
   node.cpp
-  channel.cpp
-  utils.cpp
+  offset.cpp
   simulator.cpp
+  typebuilder.cpp
+  ${TYPES_SOURCES}
+  utils.cpp
+  varbuilder.cpp
+  ${VARS_SOURCES}
 )
 
 add_library(DFCXX STATIC

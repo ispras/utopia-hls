@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "dfcxx/converter.h"
-#include "dfcxx/IRbuilders/builder.h"
+#include "dfcxx/irbuilder.h"
 #include "dfcxx/kernel.h"
 #include "dfcxx/simulator.h"
 #include "dfcxx/utils.h"
