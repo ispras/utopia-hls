@@ -77,7 +77,7 @@ enum class OutputFormatID : uint8_t {
 } // namespace dfcxx
 
 struct DFLatencyConfig {
-public:  
+public:
   std::unordered_map<dfcxx::Ops, uint16_t> internalOps;
   std::unordered_map<std::string, uint16_t> externalOps;
 
@@ -89,7 +89,6 @@ public:
       std::initializer_list<std::pair<const dfcxx::Ops, uint16_t>> internals,
       std::initializer_list<std::pair<const std::string, uint16_t>> externals
   ) : internalOps(internals), externalOps(externals) {}
-  
 };
 
 typedef std::unordered_map<dfcxx::OutputFormatID, std::string> DFOutputPaths;

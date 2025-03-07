@@ -13,7 +13,7 @@
 namespace dfcxx {
 
 dfcxx::DFTypeImpl *KernStorage::addType(dfcxx::DFTypeImpl *type) {
-  auto found = std::find_if(types.begin(), types.end(), 
+  auto found = std::find_if(types.begin(), types.end(),
                             [&] (dfcxx::DFTypeImpl *t) {
                               return t->operator==(*type);
                             });

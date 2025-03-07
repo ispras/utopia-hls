@@ -41,7 +41,7 @@ private:
 
 public:
   ~DFConstant() override = default;
-  
+
   int64_t getInt() const;
 
   uint64_t getUInt() const;

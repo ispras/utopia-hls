@@ -56,7 +56,7 @@ struct Node {
   DFVariableImpl *var;
   OpType type;
   NodeData data;
-  
+
   Node() = default;
   explicit Node(DFVariableImpl *var);
   Node(DFVariableImpl *var, OpType type, NodeData data);
