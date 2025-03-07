@@ -88,7 +88,7 @@ void DFCIRBuilder::translate(Node *node, const Graph &graph,
                              mlir::OpBuilder &builder,
                              std::unordered_map<Node *, mlir::Value> &map) {
   auto loc = builder.getUnknownLoc();
-  
+
   const auto &ins = graph.getInputs().at(node);
 
   auto nameAttr = mlir::StringAttr::get(&ctx, node->var->getName());
@@ -297,7 +297,7 @@ void DFCIRBuilder::translate(Node *node, const Graph &graph,
       auto attrType = mlir::IntegerType::get(builder.getContext(), 32,
                                              mlir::IntegerType::Signless);
       auto attr = mlir::IntegerAttr::get(attrType, node->data.bitShift);
-                                  
+
       newOp = builder.create<mlir::dfcir::ShiftLeftOp>(loc, conv[node->var],
                                                        map[first], attr);
       break;
@@ -307,7 +307,7 @@ void DFCIRBuilder::translate(Node *node, const Graph &graph,
       auto attrType = mlir::IntegerType::get(builder.getContext(), 32,
                                              mlir::IntegerType::Signless);
       auto attr = mlir::IntegerAttr::get(attrType, node->data.bitShift);
-                                  
+
       newOp = builder.create<mlir::dfcir::ShiftRightOp>(loc, conv[node->var],
                                                         map[first], attr);
       break;

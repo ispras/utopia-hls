@@ -35,7 +35,7 @@ private:
 
   void translate(Node *node, const Graph &graph, mlir::OpBuilder &builder,
                  std::unordered_map<Node *, mlir::Value> &map);
-  
+
   void buildKernelBody(const Graph &graph, mlir::OpBuilder &builder);
 
   mlir::dfcir::KernelOp buildKernel(Kernel *kern, mlir::OpBuilder &builder);

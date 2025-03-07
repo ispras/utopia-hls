@@ -36,7 +36,7 @@ private:
 
 public:
   DFType(DFTypeImpl *impl);
-  
+
   operator DFTypeImpl*() const;
 
   DFType(const DFType &) = default;

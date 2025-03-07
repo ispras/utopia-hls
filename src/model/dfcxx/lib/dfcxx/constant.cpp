@@ -11,7 +11,7 @@
 
 namespace dfcxx {
 
-Constant::Constant(KernMeta &meta) : meta(meta) {} 
+Constant::Constant(KernMeta &meta) : meta(meta) {}
 
 DFVariable Constant::var(const DFType &type, int64_t value) {
   DFConstant::Value constVal { .int_ = value };
