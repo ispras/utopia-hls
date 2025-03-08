@@ -2,7 +2,7 @@
 //
 // Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2025 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -11,4 +11,4 @@
 #define VERSION_MINOR @Utopia_VERSION_MINOR@
 
 #define YEAR_STARTED 2021
-#define YEAR_CURRENT 2024
+#define YEAR_CURRENT 2025

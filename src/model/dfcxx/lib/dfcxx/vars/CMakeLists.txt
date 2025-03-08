@@ -1,3 +1,5 @@
+## SPDX-License-Identifier: Apache-2.0
+
 set(VARS_SOURCES
   vars/var.cpp
   vars/stream.cpp

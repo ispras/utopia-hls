@@ -1,3 +1,5 @@
+## SPDX-License-Identifier: Apache-2.0
+
 set(LLVM_TARGET_DEFINITIONS DFCIRPasses.td)
 mlir_tablegen(DFCIRPasses.h.inc --gen-pass-decls)
 
