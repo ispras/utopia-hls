@@ -1,3 +1,5 @@
+## SPDX-License-Identifier: Apache-2.0
+
 set(PASSES 
   conversions/DFCIRToFIRRTLPass.cpp
   conversions/DFCIRASAPSchedulerPass.cpp

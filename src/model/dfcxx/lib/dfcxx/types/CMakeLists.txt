@@ -1,3 +1,5 @@
+## SPDX-License-Identifier: Apache-2.0
+
 set(TYPES_SOURCES
   types/type.cpp
   types/fixed.cpp
