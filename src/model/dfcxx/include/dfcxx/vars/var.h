@@ -17,7 +17,7 @@
 namespace dfcxx {
 
 class VarBuilder;
-struct KernMeta; // Forward declaration to omit cyclic dependency.
+struct KernelMeta; // Forward declaration to omit cyclic dependency.
 
 class DFVariableImpl {
   friend VarBuilder;
@@ -33,13 +33,13 @@ protected:
   std::string name;
   IODirection direction;
   DFTypeImpl *type;
-  KernMeta *meta;
+  KernelMeta *meta;
 
   virtual DFVariableImpl *clone() const = 0;
 
 public:
   DFVariableImpl(const std::string &name, IODirection direction,
-                 DFTypeImpl *type, KernMeta *meta);
+                 DFTypeImpl *type, KernelMeta *meta);
 
   virtual ~DFVariableImpl() = default;
 
@@ -55,7 +55,7 @@ public:
 
   IODirection getDirection() const;
 
-  const KernMeta &getMeta() const;
+  const KernelMeta &getMeta() const;
 
   DFTypeImpl *getType();
 
@@ -125,7 +125,7 @@ public:
 
   DFVariableImpl::IODirection getDirection() const;
 
-  const KernMeta &getMeta() const;
+  const KernelMeta &getMeta() const;
 
   DFType getType() const;
 

@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcxx/converter.h"
+#include "dfcxx/dfcir_processor.h"
 
 #include "circt/Conversion/Passes.h"
 #include "circt/Dialect/FIRRTL/FIRRTLDialect.h"
@@ -41,7 +41,7 @@ std::unique_ptr<mlir::Pass> createDFCIRDumperPass(llvm::raw_fd_ostream *stream) 
   return std::make_unique<DFCIRDumperPass>(stream);
 }
 
-DFCIRConverter::DFCIRConverter(const DFLatencyConfig &config) {
+DFCIRProcessor::DFCIRProcessor(const DFLatencyConfig &config) {
   for (auto [op, latency]: config.internalOps) {
     this->config.internalOps[static_cast<mlir::dfcir::Ops>(op)] = latency;
   }
@@ -49,7 +49,7 @@ DFCIRConverter::DFCIRConverter(const DFLatencyConfig &config) {
   this->config.externalOps = config.externalOps;
 }
 
-bool DFCIRConverter::convertAndPrint(mlir::ModuleOp module,
+bool DFCIRProcessor::convertAndPrint(mlir::ModuleOp module,
                                      OutputStreams &outputStreams,
                                      const Scheduler &sched) {
   mlir::MLIRContext *context = module.getContext();

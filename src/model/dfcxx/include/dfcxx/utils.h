@@ -11,9 +11,6 @@
 
 #include "dfcxx/graph.h"
 
-#include <stack>
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 namespace dfcxx {

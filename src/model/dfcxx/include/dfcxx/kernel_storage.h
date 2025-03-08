@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef DFCXX_KERNSTORAGE_H
-#define DFCXX_KERNSTORAGE_H
+#ifndef DFCXX_KERNEL_STORAGE_H
+#define DFCXX_KERNEL_STORAGE_H
 
 #include "dfcxx/types/type.h"
 #include "dfcxx/vars/var.h"
@@ -17,7 +17,7 @@
 
 namespace dfcxx {
 
-class KernStorage {
+class KernelStorage {
 using VarComp = std::function<bool(DFVariableImpl *, DFVariableImpl *)>;
 
 private:
@@ -31,11 +31,11 @@ public:
 
   void deleteVariable(DFVariableImpl *var);
 
-  ~KernStorage();
+  ~KernelStorage();
 
-  void transferFrom(KernStorage &&storage);
+  void transferFrom(KernelStorage &&storage);
 };
 
 } // namespace dfcxx
 
-#endif // DFCXX_KERNSTORAGE_H
+#endif // DFCXX_KERNEL_STORAGE_H

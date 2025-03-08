@@ -9,7 +9,7 @@
 #ifndef DFCXX_CONTROL_H
 #define DFCXX_CONTROL_H
 
-#include "dfcxx/kernmeta.h"
+#include "dfcxx/kernel_meta.h"
 
 #include <initializer_list>
 
@@ -21,9 +21,9 @@ class Control {
   friend Kernel;
 
 private:
-  KernMeta &meta;
+  KernelMeta &meta;
 
-  Control(KernMeta &meta);
+  Control(KernelMeta &meta);
 
 public:
   DFVariable mux(DFVariable ctrl, std::initializer_list<DFVariable> args);

@@ -6,13 +6,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcxx/kernmeta.h"
+#include "dfcxx/kernel_meta.h"
 #include "dfcxx/vars/stream.h"
 
 namespace dfcxx {
 
 DFStream::DFStream(const std::string &name, IODirection direction,
-                   KernMeta *meta, DFTypeImpl *type) :
+                   KernelMeta *meta, DFTypeImpl *type) :
                    DFVariableImpl(name, direction, type, meta) {}
 
 DFVariableImpl *DFStream::clone() const {

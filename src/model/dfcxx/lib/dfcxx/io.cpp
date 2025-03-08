@@ -12,7 +12,7 @@ namespace dfcxx {
 
 using IODirection = dfcxx::DFVariableImpl::IODirection;
 
-IO::IO(KernMeta &meta) : meta(meta) {}
+IO::IO(KernelMeta &meta) : meta(meta) {}
 
 DFVariable IO::input(const std::string &name, const DFType &type) {
   auto *var = meta.varBuilder.buildStream(name,

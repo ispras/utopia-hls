@@ -11,7 +11,7 @@
 
 namespace dfcxx {
 
-Offset::Offset(KernMeta &meta) : meta(meta) {}
+Offset::Offset(KernelMeta &meta) : meta(meta) {}
 
 DFVariable Offset::operator()(DFVariable &stream, int64_t offset) {
   if (!stream.isStream()) { throw std::exception(); }

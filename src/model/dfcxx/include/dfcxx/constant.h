@@ -9,7 +9,7 @@
 #ifndef DFCXX_CONSTANT_H
 #define DFCXX_CONSTANT_H
 
-#include "dfcxx/kernmeta.h"
+#include "dfcxx/kernel_meta.h"
 
 namespace dfcxx {
 
@@ -19,9 +19,9 @@ class Constant {
   friend Kernel;
 
 private:
-  KernMeta &meta;
+  KernelMeta &meta;
 
-  Constant(KernMeta &meta);
+  Constant(KernelMeta &meta);
 
 public:
   DFVariable var(const DFType &type, int64_t value);

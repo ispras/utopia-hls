@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcxx/kernmeta.h"
+#include "dfcxx/kernel_meta.h"
 #include "dfcxx/vars/var.h"
 
 #include <sstream>
@@ -17,7 +17,7 @@ namespace dfcxx {
 DFVariableImpl::DFVariableImpl(const std::string &name,
                                IODirection direction,
                                DFTypeImpl *type,
-                               KernMeta *meta) : name(name),
+                               KernelMeta *meta) : name(name),
                                                  direction(direction),
                                                  type(type),
                                                  meta(meta) {}
@@ -34,7 +34,7 @@ DFVariableImpl::IODirection DFVariableImpl::getDirection() const {
   return direction;
 }
 
-const KernMeta &DFVariableImpl::getMeta() const {
+const KernelMeta &DFVariableImpl::getMeta() const {
   return *meta;
 }
 

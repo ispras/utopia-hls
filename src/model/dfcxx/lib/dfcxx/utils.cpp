@@ -9,6 +9,8 @@
 #include "dfcxx/utils.h"
 
 #include <cassert>
+#include <stack>
+#include <unordered_map>
 
 namespace dfcxx {
 

@@ -13,19 +13,19 @@
 
 namespace dfcxx {
 
-struct KernMeta; // Forward declaration to omit cyclic dependency.
+struct KernelMeta; // Forward declaration to omit cyclic dependency.
 
 class VarBuilder {
 public:
   DFVariableImpl *buildStream(const std::string &name,
                               DFVariableImpl::IODirection direction,
-                              KernMeta *meta, DFTypeImpl *type);
+                              KernelMeta *meta, DFTypeImpl *type);
 
   DFVariableImpl *buildScalar(const std::string &name,
                               DFVariableImpl::IODirection direction,
-                              KernMeta *meta, DFTypeImpl *type);
+                              KernelMeta *meta, DFTypeImpl *type);
 
-  DFVariableImpl *buildConstant(KernMeta *meta,
+  DFVariableImpl *buildConstant(KernelMeta *meta,
                                 DFTypeImpl *type,
                                 DFConstant::Value value);
 

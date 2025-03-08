@@ -9,7 +9,7 @@
 #ifndef DFCXX_OFFSET_H
 #define DFCXX_OFFSET_H
 
-#include "dfcxx/kernmeta.h"
+#include "dfcxx/kernel_meta.h"
 
 namespace dfcxx {
 
@@ -19,9 +19,9 @@ class Offset {
   friend Kernel;
 
 private:
-  KernMeta &meta;
+  KernelMeta &meta;
 
-  Offset(KernMeta &meta);
+  Offset(KernelMeta &meta);
 
 public:
   DFVariable operator()(DFVariable &stream, int64_t offset);

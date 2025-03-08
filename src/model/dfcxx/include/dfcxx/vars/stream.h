@@ -20,7 +20,7 @@ class DFStream : public DFVariableImpl {
 
 private:
   DFStream(const std::string &name, IODirection direction,
-           KernMeta *meta, DFTypeImpl *type);
+           KernelMeta *meta, DFTypeImpl *type);
 
   DFVariableImpl *clone() const override;
 

@@ -9,7 +9,7 @@
 #ifndef DFCXX_IO_H
 #define DFCXX_IO_H
 
-#include "dfcxx/kernmeta.h"
+#include "dfcxx/kernel_meta.h"
 
 namespace dfcxx {
 
@@ -19,9 +19,9 @@ class IO {
   friend Kernel;
 
 private:
-  KernMeta &meta;
+  KernelMeta &meta;
 
-  IO(KernMeta &meta);
+  IO(KernelMeta &meta);
 
 public:
   DFVariable input(const std::string &name, const DFType &type);
