@@ -10,11 +10,11 @@
 
 #include "gtest/gtest.h"
 
-using namespace dfcxx; // For testing purposes only.
-
 #define STUB_NAME "Name"
 
 TEST(DFCXXVarBuilder, BuildStream) {
+  using namespace dfcxx;
+
   KernMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildBool();
   meta.storage.addType(type);
@@ -34,6 +34,8 @@ TEST(DFCXXVarBuilder, BuildStream) {
 }
 
 TEST(DFCXXVarBuilder, BuildScalar) {
+  using namespace dfcxx;
+
   KernMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildBool();
   meta.storage.addType(type);
@@ -53,6 +55,8 @@ TEST(DFCXXVarBuilder, BuildScalar) {
 }
 
 TEST(DFCXXVarBuilder, BuildUnsignedConstant) {
+  using namespace dfcxx;
+
   KernMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED, 64, 0);
   meta.storage.addType(type);
@@ -76,6 +80,8 @@ TEST(DFCXXVarBuilder, BuildUnsignedConstant) {
 }
 
 TEST(DFCXXVarBuilder, BuildSignedConstant) {
+  using namespace dfcxx;
+
   KernMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildFixed(FixedType::SignMode::SIGNED, 63, 0);
   meta.storage.addType(type);
@@ -99,6 +105,8 @@ TEST(DFCXXVarBuilder, BuildSignedConstant) {
 }
 
 TEST(DFCXXVarBuilder, BuildFloatConstant) {
+  using namespace dfcxx;
+
   KernMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildFloat(8, 31);
   meta.storage.addType(type);

@@ -10,11 +10,11 @@
 
 #include "gtest/gtest.h"
 
-using namespace dfcxx; // For testing purposes only.
-
 #define STUB_NAME "Name"
 
 TEST(DFCXXGraph, AddNode) {
+  using namespace dfcxx;
+
   const auto direction = DFVariableImpl::IODirection::NONE;
   const auto opType = OpType::ADD;
   KernMeta meta;
@@ -38,6 +38,8 @@ TEST(DFCXXGraph, AddNode) {
 }
 
 TEST(DFCXXGraph, AddStartNode) {
+  using namespace dfcxx;
+
   const auto direction = DFVariableImpl::IODirection::INPUT;
   const auto opType = OpType::IN;
   KernMeta meta;
@@ -64,6 +66,8 @@ TEST(DFCXXGraph, AddStartNode) {
 }
 
 TEST(DFCXXGraph, AddAlreadyExistingNode) {
+  using namespace dfcxx;
+
   const auto direction = DFVariableImpl::IODirection::NONE;
   const auto opType = OpType::ADD;
   KernMeta meta;
@@ -88,6 +92,8 @@ TEST(DFCXXGraph, AddAlreadyExistingNode) {
 }
 
 TEST(DFCXXGraph, AddChannel) {
+  using namespace dfcxx;
+
   const auto direction = DFVariableImpl::IODirection::NONE;
   const auto opType = OpType::ADD;
   KernMeta meta;
@@ -129,6 +135,8 @@ TEST(DFCXXGraph, AddChannel) {
 }
 
 TEST(DFCXXGraph, AddChannelWithConnection) {
+  using namespace dfcxx;
+
   const auto direction = DFVariableImpl::IODirection::NONE;
   const auto opType = OpType::ADD;
   KernMeta meta;
@@ -172,6 +180,8 @@ TEST(DFCXXGraph, AddChannelWithConnection) {
 }
 
 TEST(DFCXXGraph, FindNodeByName) {
+  using namespace dfcxx;
+
   const auto direction = DFVariableImpl::IODirection::INPUT;
   const auto opType = OpType::IN;
   KernMeta meta;
@@ -201,6 +211,8 @@ TEST(DFCXXGraph, FindNodeByName) {
 }
 
 TEST(DFCXXGraph, FindNode) {
+  using namespace dfcxx;
+
   const auto direction = DFVariableImpl::IODirection::INPUT;
   const auto opType = OpType::IN;
   KernMeta meta;

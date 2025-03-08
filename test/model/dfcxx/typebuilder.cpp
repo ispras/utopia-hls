@@ -10,9 +10,9 @@
 
 #include "gtest/gtest.h"
 
-using namespace dfcxx; // For testing purposes only.
-
 TEST(DFCXXTypeBuilder, BuildBool) {
+  using namespace dfcxx;
+
   KernMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildBool();
   EXPECT_TRUE(type);
@@ -34,6 +34,8 @@ TEST(DFCXXTypeBuilder, BuildBool) {
 }
 
 TEST(DFCXXTypeBuilder, BuildUnsignedInt) {
+  using namespace dfcxx;
+
   KernMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED, 32, 0);
   EXPECT_TRUE(type);
@@ -55,6 +57,8 @@ TEST(DFCXXTypeBuilder, BuildUnsignedInt) {
 }
 
 TEST(DFCXXTypeBuilder, BuildSignedInt) {
+  using namespace dfcxx;
+
   KernMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildFixed(FixedType::SignMode::SIGNED, 31, 0);
   EXPECT_TRUE(type);
@@ -76,6 +80,8 @@ TEST(DFCXXTypeBuilder, BuildSignedInt) {
 }
 
 TEST(DFCXXTypeBuilder, BuildFixed) {
+  using namespace dfcxx;
+
   KernMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildFixed(FixedType::SignMode::SIGNED, 31, 32);
   EXPECT_TRUE(type);
@@ -97,6 +103,8 @@ TEST(DFCXXTypeBuilder, BuildFixed) {
 }
 
 TEST(DFCXXTypeBuilder, BuildFloat) {
+  using namespace dfcxx;
+
   KernMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildFloat(8, 23);
   EXPECT_TRUE(type);
@@ -113,6 +121,8 @@ TEST(DFCXXTypeBuilder, BuildFloat) {
 }
 
 TEST(DFCXXTypeBuilder, BuildRawBits) {
+  using namespace dfcxx;
+
   KernMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildRawBits(20);
   EXPECT_TRUE(type);
