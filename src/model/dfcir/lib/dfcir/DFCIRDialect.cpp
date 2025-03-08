@@ -13,4 +13,3 @@ void mlir::dfcir::DFCIRDialect::initialize() {
   registerOperations();
   registerTypes();
 }
-
