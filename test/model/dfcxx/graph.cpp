@@ -17,7 +17,7 @@ TEST(DFCXXGraph, AddNode) {
 
   const auto direction = DFVariableImpl::IODirection::NONE;
   const auto opType = OpType::ADD;
-  KernMeta meta;
+  KernelMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildBool();
   meta.storage.addType(type);
   DFVariableImpl *var = meta.varBuilder.buildStream("", direction, &meta, type);
@@ -42,7 +42,7 @@ TEST(DFCXXGraph, AddStartNode) {
 
   const auto direction = DFVariableImpl::IODirection::INPUT;
   const auto opType = OpType::IN;
-  KernMeta meta;
+  KernelMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildBool();
   meta.storage.addType(type);
   DFVariableImpl *var = meta.varBuilder.buildStream(STUB_NAME, direction, &meta, type);
@@ -70,7 +70,7 @@ TEST(DFCXXGraph, AddAlreadyExistingNode) {
 
   const auto direction = DFVariableImpl::IODirection::NONE;
   const auto opType = OpType::ADD;
-  KernMeta meta;
+  KernelMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildBool();
   meta.storage.addType(type);
   DFVariableImpl *var = meta.varBuilder.buildStream("", direction, &meta, type);
@@ -96,7 +96,7 @@ TEST(DFCXXGraph, AddChannel) {
 
   const auto direction = DFVariableImpl::IODirection::NONE;
   const auto opType = OpType::ADD;
-  KernMeta meta;
+  KernelMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED, 32, 0);
   meta.storage.addType(type);
 
@@ -139,7 +139,7 @@ TEST(DFCXXGraph, AddChannelWithConnection) {
 
   const auto direction = DFVariableImpl::IODirection::NONE;
   const auto opType = OpType::ADD;
-  KernMeta meta;
+  KernelMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED, 32, 0);
   meta.storage.addType(type);
 
@@ -184,7 +184,7 @@ TEST(DFCXXGraph, FindNodeByName) {
 
   const auto direction = DFVariableImpl::IODirection::INPUT;
   const auto opType = OpType::IN;
-  KernMeta meta;
+  KernelMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildBool();
   meta.storage.addType(type);
 
@@ -215,7 +215,7 @@ TEST(DFCXXGraph, FindNode) {
 
   const auto direction = DFVariableImpl::IODirection::INPUT;
   const auto opType = OpType::IN;
-  KernMeta meta;
+  KernelMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildBool();
   meta.storage.addType(type);
 

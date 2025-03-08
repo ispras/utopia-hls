@@ -15,7 +15,7 @@
 TEST(DFCXXVarBuilder, BuildStream) {
   using namespace dfcxx;
 
-  KernMeta meta;
+  KernelMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildBool();
   meta.storage.addType(type);
   DFVariableImpl *var = meta.varBuilder.buildStream(STUB_NAME, DFVariableImpl::IODirection::NONE, &meta, type);
@@ -36,7 +36,7 @@ TEST(DFCXXVarBuilder, BuildStream) {
 TEST(DFCXXVarBuilder, BuildScalar) {
   using namespace dfcxx;
 
-  KernMeta meta;
+  KernelMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildBool();
   meta.storage.addType(type);
   DFVariableImpl *var = meta.varBuilder.buildScalar(STUB_NAME, DFVariableImpl::IODirection::INPUT, &meta, type);
@@ -57,7 +57,7 @@ TEST(DFCXXVarBuilder, BuildScalar) {
 TEST(DFCXXVarBuilder, BuildUnsignedConstant) {
   using namespace dfcxx;
 
-  KernMeta meta;
+  KernelMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED, 64, 0);
   meta.storage.addType(type);
   DFConstant::Value val { .uint_ = uint64_t(-1) };
@@ -82,7 +82,7 @@ TEST(DFCXXVarBuilder, BuildUnsignedConstant) {
 TEST(DFCXXVarBuilder, BuildSignedConstant) {
   using namespace dfcxx;
 
-  KernMeta meta;
+  KernelMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildFixed(FixedType::SignMode::SIGNED, 63, 0);
   meta.storage.addType(type);
   DFConstant::Value val { .int_ = int64_t(-1) };
@@ -107,7 +107,7 @@ TEST(DFCXXVarBuilder, BuildSignedConstant) {
 TEST(DFCXXVarBuilder, BuildFloatConstant) {
   using namespace dfcxx;
 
-  KernMeta meta;
+  KernelMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildFloat(8, 31);
   meta.storage.addType(type);
   DFConstant::Value val { .double_ = 2.5 };
