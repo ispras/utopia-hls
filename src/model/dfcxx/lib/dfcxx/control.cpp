@@ -13,7 +13,7 @@ using IODirection = dfcxx::DFVariableImpl::IODirection;
 
 namespace dfcxx {
 
-Control::Control(KernMeta &meta) : meta(meta) {}
+Control::Control(KernelMeta &meta) : meta(meta) {}
 
 DFVariable Control::mux(DFVariable ctrl,
                         std::initializer_list<DFVariable> args) {

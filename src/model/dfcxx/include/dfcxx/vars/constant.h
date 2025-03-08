@@ -35,7 +35,7 @@ private:
   TypeKind kind;
   Value value;
 
-  DFConstant(KernMeta *meta, DFTypeImpl *type, Value value);
+  DFConstant(KernelMeta *meta, DFTypeImpl *type, Value value);
 
   DFVariableImpl *clone() const override;
 
@@ -50,7 +50,7 @@ public:
 
   static TypeKind kindByType(DFTypeImpl *type);
 
-  static DFVariableImpl *createOrUseConst(KernMeta *meta,
+  static DFVariableImpl *createOrUseConst(KernelMeta *meta,
                                           DFTypeImpl *type,
                                           Value value);
 

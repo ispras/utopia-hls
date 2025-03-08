@@ -6,13 +6,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcxx/kernstorage.h"
+#include "dfcxx/kernel_storage.h"
 
 #include <algorithm>
 
 namespace dfcxx {
 
-dfcxx::DFTypeImpl *KernStorage::addType(dfcxx::DFTypeImpl *type) {
+dfcxx::DFTypeImpl *KernelStorage::addType(dfcxx::DFTypeImpl *type) {
   auto found = std::find_if(types.begin(), types.end(),
                             [&] (dfcxx::DFTypeImpl *t) {
                               return t->operator==(*type);
@@ -24,7 +24,7 @@ dfcxx::DFTypeImpl *KernStorage::addType(dfcxx::DFTypeImpl *type) {
   return *(types.insert(type).first);
 }
 
-DFVariableImpl *KernStorage::addVariable(DFVariableImpl *var,  VarComp cmp) {
+DFVariableImpl *KernelStorage::addVariable(DFVariableImpl *var,  VarComp cmp) {
   if (cmp) {
     for (DFVariableImpl *iter: variables) {
       if (cmp(var, iter)) {
@@ -36,11 +36,11 @@ DFVariableImpl *KernStorage::addVariable(DFVariableImpl *var,  VarComp cmp) {
   return *(variables.insert(var).first);
 }
 
-void KernStorage::deleteVariable(DFVariableImpl *var) {
+void KernelStorage::deleteVariable(DFVariableImpl *var) {
   variables.erase(var);
 }
 
-KernStorage::~KernStorage() {
+KernelStorage::~KernelStorage() {
   for (DFTypeImpl *type: types) {
     delete type;
   }
@@ -49,7 +49,7 @@ KernStorage::~KernStorage() {
   }
 }
 
-void KernStorage::transferFrom(KernStorage &&storage) {
+void KernelStorage::transferFrom(KernelStorage &&storage) {
   types.merge(std::move(storage.types));
   variables.merge(std::move(storage.variables));
 }

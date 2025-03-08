@@ -6,12 +6,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcxx/kernmeta.h"
+#include "dfcxx/kernel_meta.h"
 #include "dfcxx/vars/constant.h"
 
 namespace dfcxx {
 
-DFConstant::DFConstant(KernMeta *meta, DFTypeImpl *type, Value value) :
+DFConstant::DFConstant(KernelMeta *meta, DFTypeImpl *type, Value value) :
                        DFVariableImpl("", IODirection::NONE, type, meta),
                        kind(kindByType(type)),
                        value(value) { }
@@ -32,7 +32,7 @@ DFConstant::TypeKind DFConstant::kindByType(DFTypeImpl *type) {
   }
 }
 
-DFVariableImpl *DFConstant::createOrUseConst(KernMeta *meta,
+DFVariableImpl *DFConstant::createOrUseConst(KernelMeta *meta,
                                              DFTypeImpl *type,
                                              Value value) {
   TypeKind kind = kindByType(type);

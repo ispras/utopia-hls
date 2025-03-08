@@ -13,20 +13,20 @@ set(SOURCES
   channel.cpp
   constant.cpp
   control.cpp
-  converter.cpp
+  dfcir_builder.cpp
+  dfcir_processor.cpp
   graph.cpp
   io.cpp
-  irbuilder.cpp
   kernel.cpp
-  kernmeta.cpp
-  kernstorage.cpp
+  kernel_meta.cpp
+  kernel_storage.cpp
   node.cpp
   offset.cpp
   simulator.cpp
-  typebuilder.cpp
+  type_builder.cpp
   ${TYPES_SOURCES}
   utils.cpp
-  varbuilder.cpp
+  var_builder.cpp
   ${VARS_SOURCES}
 )
 
@@ -38,8 +38,6 @@ target_include_directories(DFCXX
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-  PRIVATE
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/includeDev>
 )
 
 set(TEMPLATES_PATH "${PROJECT_SOURCE_DIR}/templates")

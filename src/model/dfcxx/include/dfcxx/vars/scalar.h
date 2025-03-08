@@ -20,7 +20,7 @@ class DFScalar : public DFVariableImpl {
 
 private:
   DFScalar(const std::string &name, IODirection direction,
-           KernMeta *meta, DFTypeImpl *type);
+           KernelMeta *meta, DFTypeImpl *type);
 
   DFVariableImpl *clone() const override;
 

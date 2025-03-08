@@ -12,7 +12,7 @@
 #include "dfcxx/constant.h"
 #include "dfcxx/control.h"
 #include "dfcxx/io.h"
-#include "dfcxx/kernmeta.h"
+#include "dfcxx/kernel_meta.h"
 #include "dfcxx/offset.h"
 #include "dfcxx/typedefs.h"
 #include "dfcxx/types/type.h"
@@ -35,7 +35,7 @@ namespace dfcxx {
 
 class Kernel {
 private:
-  KernMeta meta;
+  KernelMeta meta;
 
   bool compileDot(llvm::raw_fd_ostream *stream);
 

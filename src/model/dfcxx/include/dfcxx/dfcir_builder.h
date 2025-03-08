@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef DFCXX_IR_BUILDER_H
-#define DFCXX_IR_BUILDER_H
+#ifndef DFCXX_DFCIR_BUILDER_H
+#define DFCXX_DFCIR_BUILDER_H
 
 #include "dfcir/DFCIROperations.h"
 #include "dfcxx/kernel.h"
@@ -48,4 +48,4 @@ public:
 
 } // namespace dfcxx
 
-#endif // DFCXX_IR_BUILDER_H
+#endif // DFCXX_DFCIR_BUILDER_H

@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcxx/converter.h"
-#include "dfcxx/irbuilder.h"
+#include "dfcxx/dfcir_builder.h"
+#include "dfcxx/dfcir_processor.h"
 #include "dfcxx/kernel.h"
 #include "dfcxx/simulator.h"
 #include "dfcxx/utils.h"
@@ -196,7 +196,7 @@ bool Kernel::compile(const DFLatencyConfig &config,
     result &= compileDot(stream);
   }
   if (result) {
-    result &= DFCIRConverter(config).convertAndPrint(compiled,
+    result &= DFCIRProcessor(config).convertAndPrint(compiled,
                                                      outputStreams,
                                                      sched);
   }

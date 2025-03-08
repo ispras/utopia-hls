@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcxx/typebuilder.h"
+#include "dfcxx/type_builder.h"
 
 namespace dfcxx {
 

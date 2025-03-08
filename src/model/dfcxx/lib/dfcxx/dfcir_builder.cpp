@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcxx/irbuilder.h"
+#include "dfcxx/dfcir_builder.h"
 #include "dfcxx/utils.h"
 
 #include "mlir/Parser/Parser.h"

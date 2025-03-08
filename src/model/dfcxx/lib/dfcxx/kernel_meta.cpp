@@ -6,11 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcxx/kernmeta.h"
+#include "dfcxx/kernel_meta.h"
 
 namespace dfcxx {
 
-void KernMeta::transferFrom(KernMeta &&meta) {
+void KernelMeta::transferFrom(KernelMeta &&meta) {
   graph.transferFrom(std::move(meta.graph));
   storage.transferFrom(std::move(meta.storage));
 }

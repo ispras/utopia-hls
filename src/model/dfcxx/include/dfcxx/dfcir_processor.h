@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef DFCXX_CONVERTER_H
-#define DFCXX_CONVERTER_H
+#ifndef DFCXX_PROCESSOR_H
+#define DFCXX_PROCESSOR_H
 
 #include "dfcxx/typedefs.h"
 
@@ -21,11 +21,11 @@ typedef std::vector<llvm::raw_fd_ostream *> OutputStreams;
 
 namespace dfcxx {
 
-class DFCIRConverter {
+class DFCIRProcessor {
 private:
   LatencyConfig config;
 public:
-  explicit DFCIRConverter(const DFLatencyConfig &config);
+  explicit DFCIRProcessor(const DFLatencyConfig &config);
   bool convertAndPrint(mlir::ModuleOp module,
                        OutputStreams &outputStreams,
                        const Scheduler &sched);
@@ -33,4 +33,4 @@ public:
 
 } // namespace dfcxx
 
-#endif // DFCXX_CONVERTER_H
+#endif // DFCXX_PROCESSOR_H

@@ -6,29 +6,29 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef DFCXX_KERNMETA_H
-#define DFCXX_KERNMETA_H
+#ifndef DFCXX_KERNEL_META_H
+#define DFCXX_KERNEL_META_H
 
 #include "dfcxx/graph.h"
-#include "dfcxx/kernstorage.h"
-#include "dfcxx/typebuilder.h"
-#include "dfcxx/varbuilder.h"
+#include "dfcxx/kernel_storage.h"
+#include "dfcxx/type_builder.h"
+#include "dfcxx/var_builder.h"
 
 namespace dfcxx {
 
-struct KernMeta {
+struct KernelMeta {
   Graph graph;
-  KernStorage storage;
+  KernelStorage storage;
   TypeBuilder typeBuilder;
   VarBuilder varBuilder;
 
-  KernMeta() = default;
-  KernMeta(const KernMeta &) = delete;
-  ~KernMeta() = default;
+  KernelMeta() = default;
+  KernelMeta(const KernelMeta &) = delete;
+  ~KernelMeta() = default;
 
-  void transferFrom(KernMeta &&meta);
+  void transferFrom(KernelMeta &&meta);
 };
 
 } // namespace dfcxx
 
-#endif // DFCXX_KERNMETA_H
+#endif // DFCXX_KERNEL_META_H
