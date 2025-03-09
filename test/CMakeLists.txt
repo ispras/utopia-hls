@@ -31,7 +31,7 @@ add_definitions("-fno-rtti")
 add_executable(utest
   ${EXAMPLES_TESTS}
   ${MODEL_TESTS}
-  test_main.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_main.cpp
 )
 
 ## Sets the OS-specific NULLDEVICE to dump SystemVerilog-output into. 
