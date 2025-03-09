@@ -56,7 +56,9 @@ target_include_directories(utest
 target_link_libraries(utest
   PRIVATE
     GTest::gtest
-    Utopia::MLIRDFCIR
+    MLIRParser
+    Utopia::DFCIR
+    Utopia::DFCIRPasses
     Utopia::DFCXX
     easyloggingpp
 )

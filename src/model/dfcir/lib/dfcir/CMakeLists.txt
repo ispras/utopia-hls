@@ -1,44 +1,25 @@
 ## SPDX-License-Identifier: Apache-2.0
 
-add_subdirectory(passes)
-
-add_mlir_dialect_library(MLIRDFCIR
+add_mlir_dialect_library(UtopiaDFCIR
   ${CMAKE_CURRENT_SOURCE_DIR}/DFCIRDialect.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/DFCIRTypes.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/DFCIROpInterfaces.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/DFCIROperations.cpp
-  ${PASSES_SOURCES}
 
   DEPENDS
     DFCIRPassesIncGen
+
+  LINK_LIBS
+    PUBLIC
+      MLIRIR
 )
 
-target_include_directories(MLIRDFCIR
+target_include_directories(UtopiaDFCIR
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
-    ${CIRCT_INCLUDE_DIRS} ## TODO: Remove when CIRCT targets are fixed.
-                          ## Issue #16 (https://github.com/ispras/utopia-hls/issues/16).
 )
 
-set(TEMPLATES_PATH "${PROJECT_SOURCE_DIR}/templates")
+add_library(Utopia::DFCIR ALIAS UtopiaDFCIR)
 
-add_compile_definitions(
-  TEMPLATES_PATH="${TEMPLATES_PATH}"
-  STUBS_TEMPLATE_PATH="${TEMPLATES_PATH}/stubs.tpl"
-)
-
-target_link_libraries(MLIRDFCIR
-  PUBLIC
-    MLIRIR
-    CIRCTFIRRTL
-    MLIRParser
-    MLIRRewrite
-    MLIRTransformUtils
-        
-  PRIVATE
-    LpSolve::LpSolve
-    CTemplate::nothreads
-)
-
-add_library(Utopia::MLIRDFCIR ALIAS MLIRDFCIR)
+add_subdirectory(passes)
