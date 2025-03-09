@@ -2,7 +2,7 @@
 //
 // Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024-2025 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -22,7 +22,7 @@ uint8_t FloatType::getFracBits() const {
 }
 
 uint16_t FloatType::getTotalBits() const {
-  return uint16_t(expBits) + fracBits;
+  return uint16_t(expBits) + fracBits + 1;
 }
 
 bool FloatType::operator==(const DFTypeImpl &rhs) const {

@@ -1,3 +1,5 @@
+## SPDX-License-Identifier: Apache-2.0
+
 find_path(CTemplate_INCLUDE_DIR "ctemplate/template.h"
   PATH_SUFFIXES include)
 

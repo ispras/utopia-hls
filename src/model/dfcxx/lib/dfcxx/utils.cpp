@@ -2,13 +2,15 @@
 //
 // Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024-2025 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
 #include "dfcxx/utils.h"
 
 #include <cassert>
+#include <stack>
+#include <unordered_map>
 
 namespace dfcxx {
 

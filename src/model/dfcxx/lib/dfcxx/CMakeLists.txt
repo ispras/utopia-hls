@@ -1,8 +1,7 @@
-add_subdirectory(IRbuilders)
+## SPDX-License-Identifier: Apache-2.0
+
 add_subdirectory(types)
-add_subdirectory(typebuilders)
 add_subdirectory(vars)
-add_subdirectory(varbuilders)
 
 ## By default LLVM, MLIR and DFCIR are compiled without RTTI, but not DFCxx.
 ## So using core Pass functionality from MLIR in converter.cpp causes
@@ -11,24 +10,24 @@ add_subdirectory(varbuilders)
 add_definitions("-fno-rtti")
 
 set(SOURCES
-  kernel.cpp
-  ${IR_BUILDERS_SOURCES}
+  ${CMAKE_CURRENT_SOURCE_DIR}/channel.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/constant.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/control.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/dfcir_builder.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/dfcir_processor.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/graph.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/io.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/kernel.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/kernel_meta.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/kernel_storage.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/node.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/offset.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/simulator.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/type_builder.cpp
   ${TYPES_SOURCES}
+  ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/var_builder.cpp
   ${VARS_SOURCES}
-  ${VAR_BUILDERS_SOURCES}
-  ${TYPE_BUILDERS_SOURCES}
-  converter.cpp
-  kernmeta.cpp
-  kernstorage.cpp
-  io.cpp
-  offset.cpp
-  constant.cpp
-  control.cpp
-  graph.cpp
-  node.cpp
-  channel.cpp
-  utils.cpp
-  simulator.cpp
 )
 
 add_library(DFCXX STATIC
@@ -39,11 +38,7 @@ target_include_directories(DFCXX
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-  PRIVATE
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/includeDev>
 )
-
-set(TEMPLATES_PATH "${PROJECT_SOURCE_DIR}/templates")
 
 add_compile_definitions(
   TEMPLATES_PATH="${TEMPLATES_PATH}"
@@ -54,7 +49,8 @@ add_compile_definitions(
 ## MLIRDFCIR is ensured to be compiled beforehand.
 target_link_libraries(DFCXX
   PRIVATE $<LINK_ONLY:MLIRPass>
-  PRIVATE $<LINK_ONLY:Utopia::MLIRDFCIR>
+  PRIVATE $<LINK_ONLY:Utopia::DFCIR>
+  PRIVATE $<LINK_ONLY:Utopia::DFCIRPasses>
   PRIVATE $<LINK_ONLY:CIRCTHW>
   PRIVATE $<LINK_ONLY:CIRCTSV>
   PRIVATE $<LINK_ONLY:CIRCTFIRRTLToHW>

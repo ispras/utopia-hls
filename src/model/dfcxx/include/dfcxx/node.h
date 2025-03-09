@@ -2,7 +2,7 @@
 //
 // Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024-2025 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -56,7 +56,7 @@ struct Node {
   DFVariableImpl *var;
   OpType type;
   NodeData data;
-  
+
   Node() = default;
   explicit Node(DFVariableImpl *var);
   Node(DFVariableImpl *var, OpType type, NodeData data);

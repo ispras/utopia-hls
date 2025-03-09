@@ -2,7 +2,7 @@
 //
 // Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024-2025 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -11,7 +11,7 @@
 
 namespace dfcxx {
 
-Constant::Constant(KernMeta &meta) : meta(meta) {} 
+Constant::Constant(KernelMeta &meta) : meta(meta) {}
 
 DFVariable Constant::var(const DFType &type, int64_t value) {
   DFConstant::Value constVal { .int_ = value };

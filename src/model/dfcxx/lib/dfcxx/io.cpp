@@ -2,7 +2,7 @@
 //
 // Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024-2025 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -12,10 +12,10 @@ namespace dfcxx {
 
 using IODirection = dfcxx::DFVariableImpl::IODirection;
 
-IO::IO(KernMeta &meta) : meta(meta) {}
+IO::IO(KernelMeta &meta) : meta(meta) {}
 
 DFVariable IO::input(const std::string &name, const DFType &type) {
-  auto *var = meta.varBuilder.buildStream(name, 
+  auto *var = meta.varBuilder.buildStream(name,
                                           IODirection::INPUT,
                                           &meta,
                                           type);

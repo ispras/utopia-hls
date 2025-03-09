@@ -2,7 +2,7 @@
 //
 // Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024-2025 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -35,13 +35,13 @@ private:
   TypeKind kind;
   Value value;
 
-  DFConstant(KernMeta *meta, DFTypeImpl *type, Value value);
+  DFConstant(KernelMeta *meta, DFTypeImpl *type, Value value);
 
   DFVariableImpl *clone() const override;
 
 public:
   ~DFConstant() override = default;
-  
+
   int64_t getInt() const;
 
   uint64_t getUInt() const;
@@ -50,7 +50,7 @@ public:
 
   static TypeKind kindByType(DFTypeImpl *type);
 
-  static DFVariableImpl *createOrUseConst(KernMeta *meta,
+  static DFVariableImpl *createOrUseConst(KernelMeta *meta,
                                           DFTypeImpl *type,
                                           Value value);
 

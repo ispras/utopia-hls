@@ -2,7 +2,7 @@
 //
 // Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024-2025 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -20,7 +20,7 @@ class DFScalar : public DFVariableImpl {
 
 private:
   DFScalar(const std::string &name, IODirection direction,
-           KernMeta *meta, DFTypeImpl *type);
+           KernelMeta *meta, DFTypeImpl *type);
 
   DFVariableImpl *clone() const override;
 

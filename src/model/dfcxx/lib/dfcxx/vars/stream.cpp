@@ -2,17 +2,17 @@
 //
 // Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024-2025 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcxx/kernmeta.h"
+#include "dfcxx/kernel_meta.h"
 #include "dfcxx/vars/stream.h"
 
 namespace dfcxx {
 
 DFStream::DFStream(const std::string &name, IODirection direction,
-                   KernMeta *meta, DFTypeImpl *type) :
+                   KernelMeta *meta, DFTypeImpl *type) :
                    DFVariableImpl(name, direction, type, meta) {}
 
 DFVariableImpl *DFStream::clone() const {
