@@ -10,23 +10,23 @@ add_subdirectory(vars)
 add_definitions("-fno-rtti")
 
 set(SOURCES
-  channel.cpp
-  constant.cpp
-  control.cpp
-  dfcir_builder.cpp
-  dfcir_processor.cpp
-  graph.cpp
-  io.cpp
-  kernel.cpp
-  kernel_meta.cpp
-  kernel_storage.cpp
-  node.cpp
-  offset.cpp
-  simulator.cpp
-  type_builder.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/channel.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/constant.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/control.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/dfcir_builder.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/dfcir_processor.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/graph.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/io.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/kernel.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/kernel_meta.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/kernel_storage.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/node.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/offset.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/simulator.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/type_builder.cpp
   ${TYPES_SOURCES}
-  utils.cpp
-  var_builder.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/var_builder.cpp
   ${VARS_SOURCES}
 )
 

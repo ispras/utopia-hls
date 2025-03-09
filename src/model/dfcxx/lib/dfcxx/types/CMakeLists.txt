@@ -1,9 +1,9 @@
 ## SPDX-License-Identifier: Apache-2.0
 
 set(TYPES_SOURCES
-  types/type.cpp
-  types/fixed.cpp
-  types/float.cpp
-  types/raw_bits.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/type.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/fixed.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/float.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/raw_bits.cpp
   PARENT_SCOPE
 )
