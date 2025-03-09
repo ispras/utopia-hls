@@ -1,5 +1,9 @@
 ## SPDX-License-Identifier: Apache-2.0
 
+## Without disabling the "-Woverloaded-virtual" compiler flag
+## warnings for internal CIRCT/MLIR code appear.
+add_compile_options(-Wno-overloaded-virtual)
+
 add_mlir_library(UtopiaDFCIRPasses
   ${CMAKE_CURRENT_SOURCE_DIR}/DFCIRASAPSchedulerPass.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/DFCIRLinearSchedulerPass.cpp
