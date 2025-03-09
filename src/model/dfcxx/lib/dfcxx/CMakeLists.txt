@@ -40,8 +40,6 @@ target_include_directories(DFCXX
     $<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}/include>
 )
 
-set(TEMPLATES_PATH "${PROJECT_SOURCE_DIR}/templates")
-
 add_compile_definitions(
   TEMPLATES_PATH="${TEMPLATES_PATH}"
   DOT_TEMPLATE_PATH="${TEMPLATES_PATH}/dot.tpl"
