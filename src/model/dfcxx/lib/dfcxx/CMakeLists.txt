@@ -51,7 +51,8 @@ add_compile_definitions(
 ## MLIRDFCIR is ensured to be compiled beforehand.
 target_link_libraries(DFCXX
   PRIVATE $<LINK_ONLY:MLIRPass>
-  PRIVATE $<LINK_ONLY:Utopia::MLIRDFCIR>
+  PRIVATE $<LINK_ONLY:Utopia::DFCIR>
+  PRIVATE $<LINK_ONLY:Utopia::DFCIRPasses>
   PRIVATE $<LINK_ONLY:CIRCTHW>
   PRIVATE $<LINK_ONLY:CIRCTSV>
   PRIVATE $<LINK_ONLY:CIRCTFIRRTLToHW>
