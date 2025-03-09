@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcir/conversions/DFCIRLPUtils.h"
+#include "dfcir/passes/DFCIRLPUtils.h"
 
 #include <stdlib.h>
 

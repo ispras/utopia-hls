@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcir/conversions/DFCIRPasses.h"
-#include "dfcir/conversions/DFCIRPassesUtils.h"
+#include "dfcir/passes/DFCIRPasses.h"
+#include "dfcir/passes/DFCIRPassesUtils.h"
 #include "circt/Dialect/FIRRTL/FIRRTLDialect.h"
 #include "circt/Dialect/FIRRTL/FIRRTLOps.h"
 #include "circt/Dialect/FIRRTL/FIRRTLTypes.h"
@@ -16,7 +16,7 @@
 #include "mlir/IR/Dialect.h"
 #include "mlir/Transforms/DialectConversion.h"
 
-#include "dfcir/conversions/ModuleDefines.inc"
+#include "dfcir/passes/ModuleDefines.inc"
 
 namespace circt::firrtl::utils {
 
@@ -56,7 +56,7 @@ namespace mlir::dfcir {
 #define GEN_PASS_DECL_DFCIRTOFIRRTLPASS
 #define GEN_PASS_DEF_DFCIRTOFIRRTLPASS
 
-#include "dfcir/conversions/DFCIRPasses.h.inc"
+#include "dfcir/passes/DFCIRPasses.h.inc"
 
 class FIRRTLTypeConverter : public TypeConverter {
 public:

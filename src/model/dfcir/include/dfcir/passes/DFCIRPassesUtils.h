@@ -9,7 +9,7 @@
 #ifndef DFCIR_PASSES_UTILS_H
 #define DFCIR_PASSES_UTILS_H
 
-#include "dfcir/conversions/DFCIRPasses.h"
+#include "dfcir/passes/DFCIRPasses.h"
 #include "dfcir/DFCIROperations.h"
 #include "mlir/IR/Iterators.h"
 #include "mlir/Transforms/DialectConversion.h"

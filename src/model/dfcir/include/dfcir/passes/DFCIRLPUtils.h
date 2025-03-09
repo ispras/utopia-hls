@@ -9,7 +9,7 @@
 #ifndef DFCIR_LP_UTILS_H
 #define DFCIR_LP_UTILS_H
 
-#include "DFCIRPassesUtils.h"
+#include "dfcir/passes/DFCIRPassesUtils.h"
 
 #include "lpsolve/lp_lib.h"
 

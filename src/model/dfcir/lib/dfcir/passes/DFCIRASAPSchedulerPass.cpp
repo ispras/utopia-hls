@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcir/conversions/DFCIRPasses.h"
-#include "dfcir/conversions/DFCIRPassesUtils.h"
+#include "dfcir/passes/DFCIRPasses.h"
+#include "dfcir/passes/DFCIRPassesUtils.h"
 #include "circt/Dialect/FIRRTL/Passes.h"
 #include "circt/Support/LLVM.h"
 #include "mlir/IR/Dialect.h"
@@ -23,7 +23,7 @@ namespace mlir::dfcir {
 #define GEN_PASS_DECL_DFCIRASAPSCHEDULERPASS
 #define GEN_PASS_DEF_DFCIRASAPSCHEDULERPASS
 
-#include "dfcir/conversions/DFCIRPasses.h.inc"
+#include "dfcir/passes/DFCIRPasses.h.inc"
 
 class DFCIRASAPSchedulerPass
     : public impl::DFCIRASAPSchedulerPassBase<DFCIRASAPSchedulerPass> {

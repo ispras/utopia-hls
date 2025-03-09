@@ -17,4 +17,4 @@ mlir_tablegen(DFCIROperations.cpp.inc -gen-op-defs)
 add_public_tablegen_target(DFCIRIncGen)
 add_dependencies(mlir-headers DFCIRIncGen)
 
-add_subdirectory(conversions)
+add_subdirectory(passes)

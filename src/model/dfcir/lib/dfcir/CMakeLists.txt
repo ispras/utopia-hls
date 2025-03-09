@@ -1,13 +1,13 @@
 ## SPDX-License-Identifier: Apache-2.0
 
-add_subdirectory(conversions)
+add_subdirectory(passes)
 
 add_mlir_dialect_library(MLIRDFCIR
-  DFCIRDialect.cpp
-  DFCIRTypes.cpp
-  DFCIROpInterfaces.cpp
-  DFCIROperations.cpp
-  ${CONV_LIBS}
+  ${CMAKE_CURRENT_SOURCE_DIR}/DFCIRDialect.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/DFCIRTypes.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/DFCIROpInterfaces.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/DFCIROperations.cpp
+  ${PASSES_SOURCES}
 
   DEPENDS
     DFCIRPassesIncGen
