@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcir/conversions/DFCIRPasses.h"
-#include "dfcir/conversions/DFCIRPassesUtils.h"
+#include "dfcir/passes/DFCIRPasses.h"
+#include "dfcir/passes/DFCIRPassesUtils.h"
 
 #include "circt/Dialect/FIRRTL/FIRRTLDialect.h"
 #include "circt/Dialect/FIRRTL/FIRRTLOps.h"
@@ -26,9 +26,9 @@ namespace mlir::dfcir {
 
 #define GEN_PASS_DECL_FIRRTLSTUBGENERATORPASS
 #define GEN_PASS_DEF_FIRRTLSTUBGENERATORPASS
-#include "dfcir/conversions/DFCIRPasses.h.inc"
+#include "dfcir/passes/DFCIRPasses.h.inc"
 
-#include "dfcir/conversions/ModuleDefines.inc"
+#include "dfcir/passes/ModuleDefines.inc"
 
 class FIRRTLStubGeneratorPass
     : public impl::FIRRTLStubGeneratorPassBase<FIRRTLStubGeneratorPass> {

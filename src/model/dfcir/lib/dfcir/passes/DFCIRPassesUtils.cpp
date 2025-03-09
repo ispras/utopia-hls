@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcir/conversions/DFCIRPassesUtils.h"
+#include "dfcir/passes/DFCIRPassesUtils.h"
 
 #include "circt/Dialect/FIRRTL/FIRRTLInstanceGraph.h"
 

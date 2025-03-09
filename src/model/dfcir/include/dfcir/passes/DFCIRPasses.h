@@ -91,6 +91,6 @@ unique_ptr<Pass> createFIRRTLStubGeneratorPass(llvm::raw_ostream *stream);
 
 } // namespace mlir::dfcir
 
-#include "dfcir/conversions/DFCIRPasses.h.inc"
+#include "dfcir/passes/DFCIRPasses.h.inc"
 
 #endif // DFCIR_PASSES_H
