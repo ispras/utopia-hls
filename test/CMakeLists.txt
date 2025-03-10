@@ -22,9 +22,14 @@ endif()
 
 enable_testing()
 
+set(EXAMPLES_PATH "${CMAKE_SOURCE_DIR}/examples")
+add_subdirectory(examples)
 add_subdirectory(model)
 
+add_definitions("-fno-rtti")
+
 add_executable(utest
+  ${EXAMPLES_TESTS}
   ${MODEL_TESTS}
   test_main.cpp
 )
@@ -39,13 +44,13 @@ endif()
 target_compile_definitions(utest
   PUBLIC
     NULLDEVICE="${NULLDEVICE}"
-    DATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/data"
+    TEST_EXAMPLES_PATH="${CMAKE_CURRENT_SOURCE_DIR}/examples"
+    TEST_MODEL_DFCIR_DATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/model/dfcir/data"
 )
 
 target_include_directories(utest
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/examples
+    ${EXAMPLES_PATH}
 )
 
 target_link_libraries(utest

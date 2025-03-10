@@ -11,8 +11,8 @@
 
 #include "dfcxx/graph.h"
 #include "dfcxx/kernstorage.h"
-#include "dfcxx/typebuilders/builder.h"
-#include "dfcxx/varbuilders/builder.h"
+#include "dfcxx/typebuilder.h"
+#include "dfcxx/varbuilder.h"
 
 namespace dfcxx {
 

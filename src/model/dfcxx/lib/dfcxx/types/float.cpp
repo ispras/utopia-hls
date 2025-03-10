@@ -22,7 +22,7 @@ uint8_t FloatType::getFracBits() const {
 }
 
 uint16_t FloatType::getTotalBits() const {
-  return uint16_t(expBits) + fracBits;
+  return uint16_t(expBits) + fracBits + 1;
 }
 
 bool FloatType::operator==(const DFTypeImpl &rhs) const {

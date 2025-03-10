@@ -1,0 +1,4 @@
+set(MOVINGAVERAGE_TESTS
+  ${CMAKE_CURRENT_SOURCE_DIR}/movingaverage_dfcir.cpp
+  PARENT_SCOPE
+)
