@@ -10,14 +10,14 @@
 
 #include "gtest/gtest.h"
 
-using namespace dfcxx; // For testing purposes only.
-
 #define STUB_NAME "Name"
 
 TEST(DFCXXGraph, AddNode) {
+  using namespace dfcxx;
+
   const auto direction = DFVariableImpl::IODirection::NONE;
   const auto opType = OpType::ADD;
-  KernMeta meta;
+  KernelMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildBool();
   meta.storage.addType(type);
   DFVariableImpl *var = meta.varBuilder.buildStream("", direction, &meta, type);
@@ -38,9 +38,11 @@ TEST(DFCXXGraph, AddNode) {
 }
 
 TEST(DFCXXGraph, AddStartNode) {
+  using namespace dfcxx;
+
   const auto direction = DFVariableImpl::IODirection::INPUT;
   const auto opType = OpType::IN;
-  KernMeta meta;
+  KernelMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildBool();
   meta.storage.addType(type);
   DFVariableImpl *var = meta.varBuilder.buildStream(STUB_NAME, direction, &meta, type);
@@ -64,9 +66,11 @@ TEST(DFCXXGraph, AddStartNode) {
 }
 
 TEST(DFCXXGraph, AddAlreadyExistingNode) {
+  using namespace dfcxx;
+
   const auto direction = DFVariableImpl::IODirection::NONE;
   const auto opType = OpType::ADD;
-  KernMeta meta;
+  KernelMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildBool();
   meta.storage.addType(type);
   DFVariableImpl *var = meta.varBuilder.buildStream("", direction, &meta, type);
@@ -88,9 +92,11 @@ TEST(DFCXXGraph, AddAlreadyExistingNode) {
 }
 
 TEST(DFCXXGraph, AddChannel) {
+  using namespace dfcxx;
+
   const auto direction = DFVariableImpl::IODirection::NONE;
   const auto opType = OpType::ADD;
-  KernMeta meta;
+  KernelMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED, 32, 0);
   meta.storage.addType(type);
 
@@ -129,9 +135,11 @@ TEST(DFCXXGraph, AddChannel) {
 }
 
 TEST(DFCXXGraph, AddChannelWithConnection) {
+  using namespace dfcxx;
+
   const auto direction = DFVariableImpl::IODirection::NONE;
   const auto opType = OpType::ADD;
-  KernMeta meta;
+  KernelMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED, 32, 0);
   meta.storage.addType(type);
 
@@ -172,9 +180,11 @@ TEST(DFCXXGraph, AddChannelWithConnection) {
 }
 
 TEST(DFCXXGraph, FindNodeByName) {
+  using namespace dfcxx;
+
   const auto direction = DFVariableImpl::IODirection::INPUT;
   const auto opType = OpType::IN;
-  KernMeta meta;
+  KernelMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildBool();
   meta.storage.addType(type);
 
@@ -201,9 +211,11 @@ TEST(DFCXXGraph, FindNodeByName) {
 }
 
 TEST(DFCXXGraph, FindNode) {
+  using namespace dfcxx;
+
   const auto direction = DFVariableImpl::IODirection::INPUT;
   const auto opType = OpType::IN;
-  KernMeta meta;
+  KernelMeta meta;
   DFTypeImpl *type = meta.typeBuilder.buildBool();
   meta.storage.addType(type);
 

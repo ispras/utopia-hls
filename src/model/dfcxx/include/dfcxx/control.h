@@ -2,14 +2,14 @@
 //
 // Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
 #ifndef DFCXX_CONTROL_H
 #define DFCXX_CONTROL_H
 
-#include "dfcxx/kernmeta.h"
+#include "dfcxx/kernel_meta.h"
 
 #include <initializer_list>
 
@@ -21,9 +21,9 @@ class Control {
   friend Kernel;
 
 private:
-  KernMeta &meta;
+  KernelMeta &meta;
 
-  Control(KernMeta &meta);
+  Control(KernelMeta &meta);
 
 public:
   DFVariable mux(DFVariable ctrl, std::initializer_list<DFVariable> args);

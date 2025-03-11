@@ -31,7 +31,7 @@ add_definitions("-fno-rtti")
 add_executable(utest
   ${EXAMPLES_TESTS}
   ${MODEL_TESTS}
-  test_main.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_main.cpp
 )
 
 ## Sets the OS-specific NULLDEVICE to dump SystemVerilog-output into. 
@@ -56,7 +56,9 @@ target_include_directories(utest
 target_link_libraries(utest
   PRIVATE
     GTest::gtest
-    Utopia::MLIRDFCIR
+    MLIRParser
+    Utopia::DFCIR
+    Utopia::DFCIRPasses
     Utopia::DFCXX
     easyloggingpp
 )

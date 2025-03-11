@@ -23,7 +23,7 @@ add_library(Utopia::Kernel ALIAS ukernel)
 
 ##===----------------------------------------------------------------------===//
 
-add_executable(umain main.cpp)
+add_executable(umain ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
 target_compile_definitions(umain
   PUBLIC

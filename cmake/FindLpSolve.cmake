@@ -1,3 +1,5 @@
+## SPDX-License-Identifier: Apache-2.0
+
 ##############################################################################
 ## From the Ball Project http://www.ball-project.org/                       ##
 ## https://bitbucket.org/ball/ball/src/b4bdcec12ee5/cmake/FindLPSolve.cmake ##

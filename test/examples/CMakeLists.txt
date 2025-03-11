@@ -1,3 +1,5 @@
+## SPDX-License-Identifier: Apache-2.0
+
 add_subdirectory(addconst)
 add_subdirectory(idct)
 add_subdirectory(matrixmul2)

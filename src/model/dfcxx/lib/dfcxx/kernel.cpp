@@ -2,12 +2,12 @@
 //
 // Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024-2025 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcxx/converter.h"
-#include "dfcxx/irbuilder.h"
+#include "dfcxx/dfcir_builder.h"
+#include "dfcxx/dfcir_processor.h"
 #include "dfcxx/kernel.h"
 #include "dfcxx/simulator.h"
 #include "dfcxx/utils.h"
@@ -58,7 +58,7 @@ const Graph &Kernel::getGraph() const {
 
 bool Kernel::compileDot(llvm::raw_fd_ostream *stream) {
   using ctemplate::TemplateDictionary;
-  
+
   uint64_t counter = 0;
   std::unordered_map<const Node *, std::string> idMapping;
   auto getName = [&idMapping, &counter] (const Node *node) -> std::string {
@@ -72,7 +72,7 @@ bool Kernel::compileDot(llvm::raw_fd_ostream *stream) {
     if (it != idMapping.end()) {
       return it->second;
     }
-    // Otherwise create and return the new node name mapping. 
+    // Otherwise create and return the new node name mapping.
     return (idMapping[node] = "node" + std::to_string(counter++));
   };
 
@@ -89,7 +89,7 @@ bool Kernel::compileDot(llvm::raw_fd_ostream *stream) {
                           localTime->tm_hour,
                           localTime->tm_min,
                           localTime->tm_sec);
-  
+
   const auto &nodes = meta.graph.getNodes();
   const auto &inputs = meta.graph.getInputs();
 
@@ -196,7 +196,7 @@ bool Kernel::compile(const DFLatencyConfig &config,
     result &= compileDot(stream);
   }
   if (result) {
-    result &= DFCIRConverter(config).convertAndPrint(compiled,
+    result &= DFCIRProcessor(config).convertAndPrint(compiled,
                                                      outputStreams,
                                                      sched);
   }
@@ -247,7 +247,7 @@ bool Kernel::check() const {
 
 bool Kernel::checkValidNodes() const {
   std::cout << "[UTOPIA] Checking whether constructed nodes are valid: ";
-  
+
   const auto &nodes = meta.graph.getNodes();
   for (const Node *node: nodes) {
     if (node->type == OpType::NONE) {

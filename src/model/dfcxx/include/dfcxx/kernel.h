@@ -2,7 +2,7 @@
 //
 // Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024-2025 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -12,7 +12,7 @@
 #include "dfcxx/constant.h"
 #include "dfcxx/control.h"
 #include "dfcxx/io.h"
-#include "dfcxx/kernmeta.h"
+#include "dfcxx/kernel_meta.h"
 #include "dfcxx/offset.h"
 #include "dfcxx/typedefs.h"
 #include "dfcxx/types/type.h"
@@ -35,8 +35,8 @@ namespace dfcxx {
 
 class Kernel {
 private:
-  KernMeta meta;
-  
+  KernelMeta meta;
+
   bool compileDot(llvm::raw_fd_ostream *stream);
 
   void rebindInput(DFVariable source, Node *input, Kernel &kern);
@@ -72,7 +72,7 @@ protected:
         rebindInput(binding.first, node, kern);
       } else {
         binding.first = rebindOutput(node, binding.first, kern);
-      } 
+      }
     }
 
     meta.transferFrom(std::move(kern.meta));
@@ -84,13 +84,13 @@ public:
   virtual ~Kernel() = default;
 
   virtual std::string_view getName() const = 0;
-  
+
   const Graph &getGraph() const;
 
   bool compile(const DFLatencyConfig &config,
                const std::vector<std::string> &outputPaths,
                const Scheduler &sched);
-  
+
   bool compile(const DFLatencyConfig &config,
                const DFOutputPaths &outputPaths,
                const Scheduler &sched);

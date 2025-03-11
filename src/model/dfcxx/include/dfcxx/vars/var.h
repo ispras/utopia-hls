@@ -2,7 +2,7 @@
 //
 // Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024-2025 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -17,7 +17,7 @@
 namespace dfcxx {
 
 class VarBuilder;
-struct KernMeta; // Forward declaration to omit cyclic dependency.
+struct KernelMeta; // Forward declaration to omit cyclic dependency.
 
 class DFVariableImpl {
   friend VarBuilder;
@@ -33,13 +33,13 @@ protected:
   std::string name;
   IODirection direction;
   DFTypeImpl *type;
-  KernMeta *meta;
+  KernelMeta *meta;
 
   virtual DFVariableImpl *clone() const = 0;
 
 public:
   DFVariableImpl(const std::string &name, IODirection direction,
-                 DFTypeImpl *type, KernMeta *meta);
+                 DFTypeImpl *type, KernelMeta *meta);
 
   virtual ~DFVariableImpl() = default;
 
@@ -55,7 +55,7 @@ public:
 
   IODirection getDirection() const;
 
-  const KernMeta &getMeta() const;
+  const KernelMeta &getMeta() const;
 
   DFTypeImpl *getType();
 
@@ -125,7 +125,7 @@ public:
 
   DFVariableImpl::IODirection getDirection() const;
 
-  const KernMeta &getMeta() const;
+  const KernelMeta &getMeta() const;
 
   DFType getType() const;
 

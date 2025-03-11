@@ -2,16 +2,16 @@
 //
 // Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024-2025 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcxx/kernmeta.h"
+#include "dfcxx/kernel_meta.h"
 #include "dfcxx/vars/constant.h"
 
 namespace dfcxx {
 
-DFConstant::DFConstant(KernMeta *meta, DFTypeImpl *type, Value value) :
+DFConstant::DFConstant(KernelMeta *meta, DFTypeImpl *type, Value value) :
                        DFVariableImpl("", IODirection::NONE, type, meta),
                        kind(kindByType(type)),
                        value(value) { }
@@ -32,7 +32,7 @@ DFConstant::TypeKind DFConstant::kindByType(DFTypeImpl *type) {
   }
 }
 
-DFVariableImpl *DFConstant::createOrUseConst(KernMeta *meta,
+DFVariableImpl *DFConstant::createOrUseConst(KernelMeta *meta,
                                              DFTypeImpl *type,
                                              Value value) {
   TypeKind kind = kindByType(type);

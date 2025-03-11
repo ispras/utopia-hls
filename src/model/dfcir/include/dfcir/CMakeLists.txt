@@ -1,3 +1,5 @@
+## SPDX-License-Identifier: Apache-2.0
+
 set(LLVM_TARGET_DEFINITIONS DFCIROpInterfaces.td)
 mlir_tablegen(DFCIROpInterfaces.h.inc -gen-op-interface-decls)
 mlir_tablegen(DFCIROpInterfaces.cpp.inc -gen-op-interface-defs)
@@ -15,4 +17,4 @@ mlir_tablegen(DFCIROperations.cpp.inc -gen-op-defs)
 add_public_tablegen_target(DFCIRIncGen)
 add_dependencies(mlir-headers DFCIRIncGen)
 
-add_subdirectory(conversions)
+add_subdirectory(passes)

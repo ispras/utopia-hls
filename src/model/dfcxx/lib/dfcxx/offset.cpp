@@ -2,7 +2,7 @@
 //
 // Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024-2025 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -11,7 +11,7 @@
 
 namespace dfcxx {
 
-Offset::Offset(KernMeta &meta) : meta(meta) {}
+Offset::Offset(KernelMeta &meta) : meta(meta) {}
 
 DFVariable Offset::operator()(DFVariable &stream, int64_t offset) {
   if (!stream.isStream()) { throw std::exception(); }

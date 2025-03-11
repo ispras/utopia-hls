@@ -2,14 +2,14 @@
 //
 // Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
 #ifndef DFCXX_IO_H
 #define DFCXX_IO_H
 
-#include "dfcxx/kernmeta.h"
+#include "dfcxx/kernel_meta.h"
 
 namespace dfcxx {
 
@@ -19,9 +19,9 @@ class IO {
   friend Kernel;
 
 private:
-  KernMeta &meta;
+  KernelMeta &meta;
 
-  IO(KernMeta &meta);
+  IO(KernelMeta &meta);
 
 public:
   DFVariable input(const std::string &name, const DFType &type);

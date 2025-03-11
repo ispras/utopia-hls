@@ -2,14 +2,14 @@
 //
 // Part of the Utopia HLS Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
 #ifndef DFCXX_CONSTANT_H
 #define DFCXX_CONSTANT_H
 
-#include "dfcxx/kernmeta.h"
+#include "dfcxx/kernel_meta.h"
 
 namespace dfcxx {
 
@@ -19,9 +19,9 @@ class Constant {
   friend Kernel;
 
 private:
-  KernMeta &meta;
+  KernelMeta &meta;
 
-  Constant(KernMeta &meta);
+  Constant(KernelMeta &meta);
 
 public:
   DFVariable var(const DFType &type, int64_t value);
