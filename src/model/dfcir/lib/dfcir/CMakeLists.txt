@@ -2,9 +2,9 @@
 
 add_mlir_dialect_library(UtopiaDFCIR
   ${CMAKE_CURRENT_SOURCE_DIR}/DFCIRDialect.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/DFCIRTypes.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/DFCIROpInterfaces.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/DFCIROperations.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/DFCIROpInterfaces.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/DFCIRTypes.cpp
 
   DEPENDS
     DFCIRPassesIncGen
