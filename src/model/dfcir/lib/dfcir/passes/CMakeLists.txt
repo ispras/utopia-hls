@@ -6,6 +6,7 @@ add_compile_options(-Wno-overloaded-virtual)
 
 add_mlir_library(UtopiaDFCIRPasses
   ${CMAKE_CURRENT_SOURCE_DIR}/DFCIRASAPSchedulerPass.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/DFCIRCombPipelinePass.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/DFCIRLinearSchedulerPass.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/DFCIRLPUtils.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/DFCIRPassesUtils.cpp
