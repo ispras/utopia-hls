@@ -9,6 +9,7 @@ add_mlir_library(UtopiaDFCIRPasses
   ${CMAKE_CURRENT_SOURCE_DIR}/DFCIRLinearSchedulerPass.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/DFCIRLPUtils.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/DFCIRPassesUtils.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/DFCIRSchedulingUtils.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/DFCIRToFIRRTLPass.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/FIRRTLStubsGeneratorPass.cpp
 
