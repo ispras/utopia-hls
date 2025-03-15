@@ -167,7 +167,7 @@ void CombGraph::divideIntoCascades(const uint64_t cascadesCount,
   CombLayerID i = 0;
   CombLayerID layerCount = layerLatencies.size();
 
-  for (; i < layerCount; ++i) {
+  for (; i < layerCount && leftCascades > 1; ++i) {
     CombLatency oldSum = currSum;
     currSum += layerLatencies[i];
 
