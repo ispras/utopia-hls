@@ -17,6 +17,20 @@ def DFCIRToFIRRTLPass: Pass<"dfcir-to-firrtl-pass", "mlir::ModuleOp"> {
   let constructor = "mlir::dfcir::createDFCIRToFIRRTLPass()";
 }
 
+def DFCIRCombPipelinePass: Pass<"dfcir-comb-pipeline-pass", "mlir::ModuleOp"> {
+  let summary = "Divides a combinational design into K pipeline stages.";
+
+  let constructor = "mlir::dfcir::createDFCIRCombPipelinePass()";
+
+  let options = [
+    Option<"stages",
+           "stages",
+           "uint64_t",
+           "1",
+           "The number of pipeline stages to divide the design into.">
+  ];
+}
+
 class DFCIRSchedulerPass<string name, string op>: Pass<name, op> {
 
   let options = [

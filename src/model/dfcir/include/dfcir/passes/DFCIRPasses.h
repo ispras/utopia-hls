@@ -81,6 +81,8 @@ namespace mlir::dfcir {
 using std::unique_ptr;
 using mlir::Pass;
 
+unique_ptr<Pass> createDFCIRCombPipelinePassPass(uint64_t stages);
+
 unique_ptr<Pass> createDFCIRToFIRRTLPass();
 
 unique_ptr<Pass> createDFCIRASAPSchedulerPass(LatencyConfig *config);
