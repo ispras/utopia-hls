@@ -35,14 +35,19 @@ class DFCIRASAPSchedulerPass
 private:
   std::pair<SchedGraph::Buffers, int32_t> schedule(SchedGraph &graph) {
     SchedGraph::Latencies map;
-    std::vector<SchedNode *> sorted = topSortNodes(graph);
 
-    for (SchedNode *node : sorted) {
-      for (SchedChannel *channel : graph.outputs.at(node)) {
+    int32_t maxLatency = 0;
+
+    for (SchedNode *node : graph.nodes) {
+      for (SchedChannel *channel : node->outputs) {
         int32_t latency = map[node] + node->latency + channel->offset;
 
         if (latency > map[channel->target]) {
           map[channel->target] = latency;
+        }
+
+        if (graph.isOutput(channel->target) && latency > maxLatency) {
+          maxLatency = latency;
         }
       }
     }
@@ -50,22 +55,19 @@ private:
     SchedGraph::Buffers buffers;
 
     for (SchedNode *node: graph.nodes) {
-      for (SchedChannel *channel: graph.inputs[node]) {
+      for (SchedChannel *channel: node->inputs) {
         int32_t delta = map[channel->target] -
                        (map[channel->source] +
                         channel->source->latency +
                         channel->offset);
 
-        using mlir::dfcir::utils::hasConstantInput;
-        if (delta && !hasConstantInput(channel->source->op)) {
+        if (delta && !graph.isConstantInput(channel->source)) {
           buffers[channel] = delta;
         }
       }
     }
 
-    int32_t maxOutLatency = calculateOverallLatency(graph, buffers, &map);
-
-    return std::make_pair(buffers, maxOutLatency);
+    return std::make_pair(buffers, maxLatency);
   }
 
 public:

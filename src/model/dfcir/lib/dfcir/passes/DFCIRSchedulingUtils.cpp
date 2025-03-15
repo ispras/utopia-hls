@@ -66,21 +66,21 @@ std::pair<Value, int32_t> SchedGraph::findNearestNodeValue(Value value) {
   return std::make_pair(curVal, offsetSum);
 }
 
-SchedNode *SchedGraph::process(Operation *op) {
+SchedNode *SchedGraph::process(Operation *op, OpNodeMap &map) {
   // InputOutputOpInterface processing.
   // -------------------------------------------------------
   if (llvm::isa<InputOutputOpInterface>(op)) {
     SchedNode *newNode = new SchedNode(op, 0);
-    nodes.insert(newNode);
+    nodes.push_back(newNode);
+    map[op] = newNode;
+
     if (llvm::isa<InputOpInterface>(op)) {
-      inputNodes.insert(newNode);
+      inputNodes.push_back(newNode);
     }
     if (llvm::isa<OutputOpInterface>(op)) {
-      outputNodes.insert(newNode);
+      outputNodes.push_back(newNode);
     }
 
-    (void)inputs[newNode];
-    (void)outputs[newNode];
     return newNode;
   }
   // -------------------------------------------------------
@@ -88,11 +88,10 @@ SchedNode *SchedGraph::process(Operation *op) {
   // -------------------------------------------------------
   if (llvm::isa<ConstantOp>(op)) {
     SchedNode *newNode = new SchedNode(op, 0);
-    nodes.insert(newNode);
-    inputNodes.insert(newNode);
+    nodes.push_back(newNode);
+    inputNodes.push_back(newNode);
+    map[op] = newNode;
 
-    (void)inputs[newNode];
-    (void)outputs[newNode];
     return newNode;
   }
   // -------------------------------------------------------
@@ -103,17 +102,17 @@ SchedNode *SchedGraph::process(Operation *op) {
       return nullptr;
     }
     auto unrolledInfo = findNearestNodeValue(casted.getSrc());
-    SchedNode *srcNode = findNode(unrolledInfo.first.getDefiningOp());
-    SchedNode *dstNode = findNode(casted.getDest().getDefiningOp());
+    SchedNode *srcNode = findNode(unrolledInfo.first.getDefiningOp(), map);
+    SchedNode *dstNode = findNode(casted.getDest().getDefiningOp(), map);
   
     auto dstCasted = llvm::cast<OpResult>(casted.getDest());
     int8_t resId = static_cast<int8_t>(dstCasted.getResultNumber());
     int8_t valInd = -resId - 1;
   
     SchedChannel *newChannel = new SchedChannel(srcNode, dstNode, valInd, unrolledInfo.second);
-    channels.insert(newChannel);
-    outputs[srcNode].push_back(newChannel);
-    inputs[dstNode].push_back(newChannel);
+    channels.push_back(newChannel);
+    srcNode->outputs.push_back(newChannel);
+    dstNode->inputs.push_back(newChannel);
   
     return nullptr;
   }
@@ -124,89 +123,24 @@ SchedNode *SchedGraph::process(Operation *op) {
                        ShiftOpInterface, BitsOp, CatOp>(op)) {
     int32_t latency = llvm::isa<NaryOpInterface>(op) ? -1 : 0;
     SchedNode *newNode = new SchedNode(op, latency);
-    nodes.insert(newNode);
+    nodes.push_back(newNode);
+    map[op] = newNode;
 
     for (size_t i = 0; i < op->getNumOperands(); ++i) {
       auto operand = op->getOperand(i);
       auto unrolledInfo = findNearestNodeValue(operand);
-      SchedNode *srcNode = findNode(unrolledInfo.first.getDefiningOp());
+      SchedNode *srcNode = findNode(unrolledInfo.first.getDefiningOp(), map);
       SchedChannel *newChannel = new SchedChannel(srcNode, newNode, i, unrolledInfo.second);
-      channels.insert(newChannel);
-      outputs[srcNode].push_back(newChannel);
-      inputs[newNode].push_back(newChannel);
+      channels.push_back(newChannel);
+      srcNode->outputs.push_back(newChannel);
+      newNode->inputs.push_back(newChannel);
     }
 
-    (void)outputs[newNode];
     return newNode;
   }
   // -------------------------------------------------------
 
   return nullptr;
-}
-
-int32_t calculateOverallLatency(const SchedGraph &graph,
-                                SchedGraph::Buffers &buffers,
-                                SchedGraph::Latencies *map) {
-  bool deleteMap = false;
-  int32_t maxLatency = 0;
-  
-  if (!map) {
-    deleteMap = true;
-    const std::vector<SchedNode *> sorted = topSortNodes(graph);
-    map = new SchedGraph::Latencies();
-  
-    for (SchedNode *node : sorted) {
-      for (SchedChannel *channel : graph.outputs.at(node)) {
-        int32_t latency = (*map)[node] + node->latency + channel->offset;
-        auto foundBuf = buffers.find(channel);
-        if (foundBuf != buffers.end()) {
-          latency += foundBuf->second;
-        }
-
-        if (latency > (*map)[channel->target]) {
-          (*map)[channel->target] = latency;
-        }
-  
-        if (llvm::isa<OutputOpInterface>(channel->target->op) &&
-            latency > maxLatency) {
-          maxLatency = latency;
-        }
-      }
-    }
-  } else {
-    for (const auto &[node, latency] : *map) {
-      if (llvm::isa<OutputOpInterface>(node->op) &&
-          latency > maxLatency) {
-        maxLatency = latency;
-      }
-    }
-  }
-  
-  for (auto &[node, latency] : *map) {
-    if (llvm::isa<OutputOpInterface>(node->op)) {
-      const auto &ins = graph.inputs.at(node);
-      SchedChannel *channel = *(std::find_if(ins.begin(),
-                                             ins.end(), [] (SchedChannel *ch) {
-        return ch->valInd == -1;
-      }));
-  
-      int32_t delta = latency - (*map)[channel->source];
-      auto foundBuf = buffers.find(channel);
-      if (foundBuf != buffers.end()) {
-        delta -= foundBuf->second;
-      }
-
-      if (delta > 0) {
-        buffers[channel] = delta;
-      }
-    }
-  }
-  
-  if (deleteMap) {
-    delete map;
-  }
-  
-  return maxLatency;
 }
 
 } // namespace mlir::dfcir::utils

@@ -31,55 +31,68 @@ inline OpTy findFirstOccurence(Operation *op);
 
 namespace mlir::dfcir::utils {
 
-template <class NodeClass>
-struct NodePtrHash {
-  size_t operator()(NodeClass *node) const noexcept {
-    return std::hash<NodeClass>()(*node);
-  }
-};
-
-template <class NodeClass>
-struct NodePtrEq {
-  size_t operator()(NodeClass *left, NodeClass *right) const noexcept {
-    return *left == *right;
-  }
-};
-
 template <class ChannelClass>
-struct ChannelPtrHash {
-  size_t operator()(ChannelClass *channel) const noexcept {
-    return std::hash<ChannelClass>()(*channel);
+struct GraphNode {
+  Operation *op;
+  std::vector<ChannelClass *> inputs;
+  std::vector<ChannelClass *> outputs;
+
+  GraphNode() = default;
+
+  GraphNode(const GraphNode &) = default;
+
+  GraphNode(Operation *op) : inputs(), outputs() {
+    this->op = op;
+  }
+
+  ~GraphNode() = default;
+
+  bool operator==(const GraphNode &node) const {
+    return this->op == node.op;
   }
 };
 
-template <class ChannelClass>
-struct ChannelPtrEq {
-  size_t operator()(ChannelClass *left, ChannelClass *right) const noexcept {
-    return *left == *right;
+template <class NodeClass>
+struct GraphChannel {
+  NodeClass *source;
+  NodeClass *target;
+  int8_t valInd;
+
+  GraphChannel() = default;
+
+  GraphChannel(const GraphChannel &) = default;
+
+  GraphChannel(NodeClass *source, NodeClass *target, int8_t valInd) {
+    this->source = source;
+    this->target = target;
+    this->valInd = valInd;
+  }
+
+  ~GraphChannel() = default;
+
+  bool operator==(const GraphChannel &channel) const {
+    return this->source == channel.source &&
+           this->target == channel.target &&
+           this->valInd == channel.valInd;
   }
 };
 
 template <class NodeClass, class ChannelClass>
 class Graph {
-  typedef std::unordered_set<NodeClass *,
-                             NodePtrHash<NodeClass>,
-                             NodePtrEq<NodeClass>> Nodes;
-  typedef std::unordered_set<ChannelClass *,
-                             ChannelPtrHash<ChannelClass>,
-                             ChannelPtrEq<ChannelClass>> Channels;
-  typedef std::unordered_map<NodeClass *,
-                             std::vector<ChannelClass *>> ChannelMap;
-  typedef std::unordered_map<mlir::detail::ValueImpl *, ConnectOp> ConnectionMap;
+public:
+  typedef std::vector<NodeClass *> Nodes;
+  typedef std::vector<ChannelClass *> Channels;
+  typedef std::unordered_set<NodeClass *> NodesSet;
+  typedef std::unordered_map<mlir::detail::ValueImpl *,
+                             ConnectOp> ConnectionMap;
+  typedef std::unordered_map<Operation *, NodeClass *> OpNodeMap;
   typedef std::unordered_map<ChannelClass *, int32_t> Buffers;
 
-public:
   Nodes nodes;
   Channels channels;
 
   Nodes inputNodes;
   Nodes outputNodes;
-  ChannelMap inputs;
-  ChannelMap outputs;
   ConnectionMap connectionMap;
 
   Graph() = default;
@@ -94,11 +107,22 @@ public:
     }
   }
 
-  NodeClass *findNode(Operation *op) {
-    NodeClass bufNode(op);
-    auto found = nodes.find(&bufNode);
-    if (found != nodes.end()) {
-      return *found;
+  inline bool isConstantInput(NodeClass *node) const {
+    return llvm::isa<ConstantInputInterface>(node->op);
+  }
+
+  inline bool isInput(NodeClass *node) const {
+    return llvm::isa<InputOpInterface>(node->op);
+  }
+
+  inline bool isOutput(NodeClass *node) const {
+    return llvm::isa<OutputOpInterface>(node->op);
+  }
+
+  NodeClass *findNode(Operation *op, const OpNodeMap &map) {
+    auto found = map.find(op);
+    if (found != map.end()) {
+      return found->second;
     }
     return nullptr;
   }
@@ -110,8 +134,10 @@ public:
       connectionMap[connect.getDest().getImpl()] = connect;
     }
 
+    OpNodeMap map;
+
     for (Operation &op: block.getOperations()) {
-      process(&op);
+      process(&op, map);
     }
   }
 
@@ -162,7 +188,7 @@ public:
   }
 
 protected:
-  virtual NodeClass *process(Operation *op) = 0;
+  virtual NodeClass *process(Operation *op, OpNodeMap &map) = 0;
 };
 
 template <class NodeClass, class ChannelClass>

@@ -41,8 +41,6 @@ namespace mlir::dfcir::utils {
 
 void eraseOffsets(mlir::Operation *op);
 
-bool hasConstantInput(mlir::Operation *op);
-
 Ops resolveInternalOpType(mlir::Operation *op);
 
 std::string opTypeToString(const Ops &opType);

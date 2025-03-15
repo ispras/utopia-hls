@@ -107,9 +107,9 @@ private:
   std::pair<SchedGraph::Buffers, int32_t> schedule(SchedGraph &graph) {
     size_t chanCount = 0;
     for (SchedNode *node: graph.nodes) {
-      chanCount += graph.inputs[node].size();
+      chanCount += node->inputs.size();
       nodeMap[node] = problem.addVariable();
-      if (graph.inputNodes.find(node) != graph.inputNodes.end()) {
+      if (graph.isInput(node)) {
         synchronizeInput(node);
       }
     }
@@ -118,7 +118,7 @@ private:
     double *deltaCoeffs = (double *) calloc(chanCount, sizeof(double));
     int curr_id = 0;
     for (SchedNode *node: graph.nodes) {
-      for (SchedChannel *chan: graph.inputs[node]) {
+      for (SchedChannel *chan: node->inputs) {
         addLatencyConstraint(chan);
         deltaCoeffs[curr_id] = 1.0;
         deltaIDs[curr_id++] = addDeltaConstraint(chan);
@@ -137,13 +137,12 @@ private:
     if (status == Status::Optimal || status == Status::Suboptimal) {
       double *result;
       problem.getResults(&result);
-      for (const auto &[chan, id]: bufMap) {
+      for (const auto &[channel, id]: bufMap) {
         // lp_solve positions start with 1.
         int32_t latency = result[id - 1];
 
-        using mlir::dfcir::utils::hasConstantInput;
-        if (latency && !hasConstantInput(chan->source->op)) {
-          buffers[chan] = latency;
+        if (latency && !graph.isConstantInput(channel->source)) {
+          buffers[channel] = latency;
         }
       }
       free(result);
@@ -156,7 +155,8 @@ private:
     free(deltaIDs);
     free(deltaCoeffs);
 
-    int32_t maxOutLatency = calculateOverallLatency(graph, buffers);
+    // TODO: Fix later.
+    int32_t maxOutLatency = 0;
 
     return std::make_pair(buffers, maxOutLatency);
   }
