@@ -8,6 +8,7 @@
 
 #include "dfcir/passes/DFCIRPasses.h"
 #include "dfcir/passes/DFCIRPassesUtils.h"
+#include "dfcir/passes/DFCIRPipeliningUtils.h"
 #include "circt/Support/LLVM.h"
 #include "mlir/IR/Dialect.h"
 
@@ -23,44 +24,34 @@ class DFCIRCombPipelinePass
 public:
   explicit DFCIRCombPipelinePass(const DFCIRCombPipelinePassOptions &options)
       : impl::DFCIRCombPipelinePassBase<DFCIRCombPipelinePass>(options) {}
+  using CombGraph = utils::CombGraph;
+  using NodeLayers = utils::CombGraph::NodeLayers;
+  using LayerLatencies = utils::CombGraph::LayerLatencies;
+  using LayerCascades = utils::CombGraph::LayerCascades;
+  using CascadeBoundaries = utils::CombGraph::CascadeBoundaries;
 
   void runOnOperation() override {
-    // 1. Graph construction:
-    // Needs: DFCIR module
-    // Produces: CombGraph
-    //   I. Node(operation, latency, layerId, layerIt)
-    //      If operation == nullptr, then it is a fake node (for path lengths equalization only).
-    //   II. Channel(source, target, valInd)
-    //   III. CombGraph:
-    //        * std::unordered_set<Node *> nodes;
-    //        * std::unordered_set<Node *> startNodes;
-    //        * std::unordered_set<Node *> endNodes;
-    //        * std::unordered_map<Node *, std::vector<Channel *>> inputs;
-    //        * std::unordered_map<Node *, std::vector<Channel *>> outputs;
-    //        * std::unordered_map<mlir::detail::ValueImpl *, ConnectOp> connectionMap;
+    // Convert kernel into graph.
+    CombGraph graph;
+    graph.constructFrom(llvm::cast<ModuleOp>(getOperation()));
 
-    // 2. Layer partitioning:
-    // Needs: CombGraph
-    // Produces: Updated CombGraph (with layer specs),
-    //           std::vector<std::forward_list<Node *>> layers
-    //           std::vector<uint64_t> layerWeights
-    //
+    // Assign nodes to layers and calculate each layer's weight.
+    NodeLayers nodeLayers;
+    LayerLatencies layerLatencies;
+    graph.divideIntoLayers(nodeLayers, layerLatencies);
 
-    // 3. Path equalizaition:
-    // Needs: CombGraph,
-    //        std::vector<std::forward_list<Node *>> layers
-    // Produces: Updated CombGraph (with fake nodes and equal paths)
+    // Assign layers to cascades.
+    LayerCascades layerCascades;
+    CascadeBoundaries cascadeBoundaries;
+    graph.divideIntoCascades(stages, layerLatencies,
+                             layerCascades, cascadeBoundaries);
 
-    // 4. Cascade partitioning:
-    // Needs: std::vector<std::forward_list<Node *>> layers,
-    //        std::vector<uint64_t> layerWeights
-    // Produces: std::vector<uint64_t> cascades; // Every cascade has a corresponding idx of its rightmost layer
+    // Calculate what FIFOs need to be inserted.
+    CombGraph::Buffers buffers =
+        graph.calculateFIFOs(nodeLayers, layerCascades, cascadeBoundaries);
 
-    // 5. FIFO insertion:
-    // Needs: CombGraph,
-    //        std::vector<std::forward_list<Node *>> layers,
-    //        std::vector<uint64_t> cascades;
-    // Produces: 1-stage FIFO's on cascades boundaries
+    // Insert buffers.
+    graph.insertBuffers(this->getContext(), buffers);
   }
 };
 

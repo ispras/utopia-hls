@@ -23,7 +23,7 @@ struct SchedChannel;
 struct SchedNode : public GraphNode<SchedChannel> {
   int32_t latency;
 
-  SchedNode(Operation *op, int32_t latency) : GraphNode(op) {
+  SchedNode(NodeID id, Operation *op, int32_t latency) : GraphNode(id, op) {
     this->latency = latency;
   }
 

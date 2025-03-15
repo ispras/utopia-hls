@@ -31,8 +31,11 @@ inline OpTy findFirstOccurence(Operation *op);
 
 namespace mlir::dfcir::utils {
 
+typedef uint64_t NodeID;
+
 template <class ChannelClass>
 struct GraphNode {
+  NodeID id;
   Operation *op;
   std::vector<ChannelClass *> inputs;
   std::vector<ChannelClass *> outputs;
@@ -41,7 +44,8 @@ struct GraphNode {
 
   GraphNode(const GraphNode &) = default;
 
-  GraphNode(Operation *op) : inputs(), outputs() {
+  GraphNode(NodeID id, Operation *op) : inputs(), outputs() {
+    this->id = id;
     this->op = op;
   }
 

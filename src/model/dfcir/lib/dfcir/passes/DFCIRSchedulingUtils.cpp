@@ -67,10 +67,12 @@ std::pair<Value, int32_t> SchedGraph::findNearestNodeValue(Value value) {
 }
 
 SchedNode *SchedGraph::process(Operation *op, OpNodeMap &map) {
+  NodeID newId = nodes.size();
+
   // InputOutputOpInterface processing.
   // -------------------------------------------------------
   if (llvm::isa<InputOutputOpInterface>(op)) {
-    SchedNode *newNode = new SchedNode(op, 0);
+    SchedNode *newNode = new SchedNode(newId, op, 0);
     nodes.push_back(newNode);
     map[op] = newNode;
 
@@ -87,7 +89,7 @@ SchedNode *SchedGraph::process(Operation *op, OpNodeMap &map) {
   // ConstantOp processing.
   // -------------------------------------------------------
   if (llvm::isa<ConstantOp>(op)) {
-    SchedNode *newNode = new SchedNode(op, 0);
+    SchedNode *newNode = new SchedNode(newId, op, 0);
     nodes.push_back(newNode);
     inputNodes.push_back(newNode);
     map[op] = newNode;
@@ -122,7 +124,7 @@ SchedNode *SchedGraph::process(Operation *op, OpNodeMap &map) {
   if (llvm::isa<NaryOpInterface, MuxOp, CastOp,
                        ShiftOpInterface, BitsOp, CatOp>(op)) {
     int32_t latency = llvm::isa<NaryOpInterface>(op) ? -1 : 0;
-    SchedNode *newNode = new SchedNode(op, latency);
+    SchedNode *newNode = new SchedNode(newId, op, latency);
     nodes.push_back(newNode);
     map[op] = newNode;
 
