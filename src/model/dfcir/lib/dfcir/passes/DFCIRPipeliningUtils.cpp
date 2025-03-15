@@ -145,6 +145,7 @@ void CombGraph::divideIntoCascades(const uint64_t cascadesCount,
                                    const LayerLatencies &layerLatencies,
                                    LayerCascades &layerCascades,
                                    CascadeBoundaries &cascadeBoundaries) {
+  assert(cascadesCount > 0);
   // There needs to be a cascade for each layer.
   // Explicitly assign the first cascade (0) to every layer.
   layerCascades.resize(layerLatencies.size(), 0);
@@ -152,6 +153,61 @@ void CombGraph::divideIntoCascades(const uint64_t cascadesCount,
   // In case there are less layers than cascades,
   // the last layer is added to the rest of the cascades.
   cascadeBoundaries.resize(cascadesCount, 0);
+
+  CombLatency latSum = 0;
+
+  for (CombLatency latency: layerLatencies) {
+    latSum += latency;
+  }
+
+  uint64_t leftCascades = cascadesCount;
+  CombLatency latAvg = latSum / static_cast<CombLatency>(leftCascades);
+  CombCascadeID currCascade = 0;
+  CombLatency currSum = 0.f;
+  CombLayerID i = 0;
+  CombLayerID layerCount = layerLatencies.size();
+
+  for (; i < layerCount; ++i) {
+    CombLatency oldSum = currSum;
+    currSum += layerLatencies[i];
+
+    if (latAvg - currSum > floatEps) {
+      layerCascades[i] = currCascade;
+      continue;
+    }
+
+    if (currSum - latAvg - latAvg + oldSum > floatEps) {
+      assert(i > 0); // TODO: Check for possible cases.
+      cascadeBoundaries[currCascade] = i - 1;
+      currSum = layerLatencies[i];
+      ++currCascade;
+      layerCascades[i] = currCascade;
+    } else {
+      cascadeBoundaries[currCascade] = i;
+      oldSum = currSum;
+      currSum = 0.f;
+      layerCascades[i] = currCascade;
+      ++currCascade;
+    }
+
+    --leftCascades;
+    latSum -= oldSum;
+    latAvg = latSum / static_cast<CombLatency>(leftCascades);
+  }
+
+  // If there are unassigned layers left - put them into the last cascade.
+  if (i < layerCount) {
+    for (; i < layerCount; ++i) {
+      layerCascades[i] = cascadesCount - 1;
+    }
+    cascadeBoundaries[cascadesCount - 1] = layerCount - 1;
+  }
+  // If there are unassigned cascades left - explicitly put the last layer
+  // in the last cascade.
+  if (i == layerCount && leftCascades > 0) {
+    layerCascades[layerCount - 1] = cascadesCount - 1;
+    cascadeBoundaries[cascadesCount - 1] = layerCount - 1;
+  }
 }
 
 CombGraph::Buffers CombGraph::calculateFIFOs(const NodeLayers &nodeLayers,
