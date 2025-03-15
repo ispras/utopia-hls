@@ -61,9 +61,7 @@ public:
   // The weight for each layer.
   typedef std::vector<CombLatency> LayerLatencies;
   // The cascade index for each layer.
-  typedef std::vector<uint64_t> LayerCascades;
-  // The rightmost layer index present in the cascade.
-  typedef std::vector<CombLayerID> CascadeBoundaries;
+  typedef std::vector<CombCascadeID> LayerCascades;
 
   static constexpr CombLatency floatEps = 1e-6;
 
@@ -75,12 +73,11 @@ public:
 
   void divideIntoCascades(const uint64_t cascadesCount,
                           const LayerLatencies &layerLatencies,
-                          LayerCascades &layerCascades,
-                          CascadeBoundaries &cascadeBoundaries);
+                          LayerCascades &layerCascades);
 
-  Buffers calculateFIFOs(const NodeLayers &nodeLayers,
-                         const LayerCascades &layersCascades,
-                         const CascadeBoundaries &cascadeBoundaries);
+  Buffers calculateFIFOs(const uint64_t cascadesCount,
+                         const NodeLayers &nodeLayers,
+                         const LayerCascades &layersCascades);
 
 private:
   Value findNearestNodeValue(Value value);

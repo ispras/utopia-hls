@@ -105,14 +105,14 @@ void CombGraph::divideIntoLayers(NodeLayers &nodeLayers,
   // Explicitly assign the first layer (0) to every node.
   nodeLayers.resize(nodes.size(), 0);
 
-  uint64_t nodesCount = nodes.size();
-  uint64_t maxLayerId = 0;
+  NodeID nodesCount = nodes.size();
+  CombLayerID maxLayerId = 0;
 
   // Visit every node in topological order and update
   // each output's assigned layer.
-  for (uint64_t i = 0; i < nodesCount; ++i) {
+  for (NodeID i = 0; i < nodesCount; ++i) {
     CombNode *node = nodes[i];
-    uint64_t newLayerId = nodeLayers[i] + 1;
+    CombLayerID newLayerId = nodeLayers[i] + 1;
 
     // Update the maximum layer ID on demand.
     if (!node->outputs.empty() && maxLayerId < newLayerId) {
@@ -132,9 +132,9 @@ void CombGraph::divideIntoLayers(NodeLayers &nodeLayers,
   layerLatencies.resize(maxLayerId + 1, 0);
 
   // Compute the weight for each layer.
-  for (uint64_t i = 0; i < nodesCount; ++i) {
+  for (NodeID i = 0; i < nodesCount; ++i) {
     CombNode *node = nodes[i];
-    uint64_t layerId = nodeLayers[i];
+    CombLayerID layerId = nodeLayers[i];
     if (layerLatencies[layerId] < node->latency) {
       layerLatencies[layerId] = node->latency;
     }
@@ -143,16 +143,11 @@ void CombGraph::divideIntoLayers(NodeLayers &nodeLayers,
   
 void CombGraph::divideIntoCascades(const uint64_t cascadesCount,
                                    const LayerLatencies &layerLatencies,
-                                   LayerCascades &layerCascades,
-                                   CascadeBoundaries &cascadeBoundaries) {
+                                   LayerCascades &layerCascades) {
   assert(cascadesCount > 0);
   // There needs to be a cascade for each layer.
   // Explicitly assign the first cascade (0) to every layer.
   layerCascades.resize(layerLatencies.size(), 0);
-  // There needs to be a rightmost element for every cascade.
-  // In case there are less layers than cascades,
-  // the last layer is added to the rest of the cascades.
-  cascadeBoundaries.resize(cascadesCount, 0);
 
   CombLatency latSum = 0;
 
@@ -178,12 +173,10 @@ void CombGraph::divideIntoCascades(const uint64_t cascadesCount,
 
     if (currSum - latAvg - latAvg + oldSum > floatEps) {
       assert(i > 0); // TODO: Check for possible cases.
-      cascadeBoundaries[currCascade] = i - 1;
       currSum = layerLatencies[i];
       ++currCascade;
       layerCascades[i] = currCascade;
     } else {
-      cascadeBoundaries[currCascade] = i;
       oldSum = currSum;
       currSum = 0.f;
       layerCascades[i] = currCascade;
@@ -200,20 +193,51 @@ void CombGraph::divideIntoCascades(const uint64_t cascadesCount,
     for (; i < layerCount; ++i) {
       layerCascades[i] = cascadesCount - 1;
     }
-    cascadeBoundaries[cascadesCount - 1] = layerCount - 1;
   }
   // If there are unassigned cascades left - explicitly put the last layer
   // in the last cascade.
   if (i == layerCount && leftCascades > 0) {
     layerCascades[layerCount - 1] = cascadesCount - 1;
-    cascadeBoundaries[cascadesCount - 1] = layerCount - 1;
   }
 }
 
-CombGraph::Buffers CombGraph::calculateFIFOs(const NodeLayers &nodeLayers,
-                                             const LayerCascades &layersCascades,
-                                             const CascadeBoundaries &cascadeBoundaries) {
-  return {};
+CombGraph::Buffers CombGraph::calculateFIFOs(const uint64_t cascadesCount,
+                                             const NodeLayers &nodeLayers,
+                                             const LayerCascades &layersCascades) {
+  assert(cascadesCount > 0);
+
+  CombGraph::Buffers buffers;
+  NodeID nodesCount = nodes.size();
+  assert(nodeLayers.size() == nodesCount);
+
+  for (NodeID i = 0; i < nodesCount; ++i) {
+    CombNode *srcNode = nodes[i];
+    CombLayerID srcLayerId = nodeLayers[i];
+    CombCascadeID srcCascadeId = layersCascades[srcLayerId];
+
+    if (srcCascadeId == cascadesCount - 1) {
+      continue;
+    }
+
+    bool isConstInput = isConstantInput(srcNode);
+
+    for (CombChannel *channel: srcNode->outputs) {
+      CombNode *tgtNode = channel->target;
+      CombLayerID tgtLayerId = nodeLayers[tgtNode->id];
+      CombCascadeID tgtCascadeId = layersCascades[tgtLayerId];
+      int32_t delta = tgtCascadeId - srcCascadeId;
+
+      if (tgtCascadeId == cascadesCount - 1) {
+        ++delta;
+      }
+
+      if (delta && !isConstInput) {
+        buffers[channel] = delta;
+      }
+    }
+  }
+
+  return buffers;
 }
 
 } // namespace mlir::dfcir::utils

@@ -28,7 +28,6 @@ public:
   using NodeLayers = utils::CombGraph::NodeLayers;
   using LayerLatencies = utils::CombGraph::LayerLatencies;
   using LayerCascades = utils::CombGraph::LayerCascades;
-  using CascadeBoundaries = utils::CombGraph::CascadeBoundaries;
 
   void runOnOperation() override {
     // Convert kernel into graph.
@@ -42,13 +41,11 @@ public:
 
     // Assign layers to cascades.
     LayerCascades layerCascades;
-    CascadeBoundaries cascadeBoundaries;
-    graph.divideIntoCascades(stages, layerLatencies,
-                             layerCascades, cascadeBoundaries);
+    graph.divideIntoCascades(stages, layerLatencies, layerCascades);
 
     // Calculate what FIFOs need to be inserted.
     CombGraph::Buffers buffers =
-        graph.calculateFIFOs(nodeLayers, layerCascades, cascadeBoundaries);
+        graph.calculateFIFOs(stages, nodeLayers, layerCascades);
 
     // Insert buffers.
     graph.insertBuffers(this->getContext(), buffers);
