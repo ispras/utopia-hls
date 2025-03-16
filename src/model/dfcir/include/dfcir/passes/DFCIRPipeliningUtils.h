@@ -75,8 +75,7 @@ public:
                           const LayerLatencies &layerLatencies,
                           LayerCascades &layerCascades);
 
-  Buffers calculateFIFOs(const uint64_t cascadesCount,
-                         const NodeLayers &nodeLayers,
+  Buffers calculateFIFOs(const NodeLayers &nodeLayers,
                          const LayerCascades &layersCascades);
 
 private:

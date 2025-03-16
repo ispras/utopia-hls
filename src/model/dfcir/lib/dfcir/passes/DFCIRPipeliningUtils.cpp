@@ -207,25 +207,33 @@ void CombGraph::divideIntoCascades(const uint64_t cascadesCount,
   }
 }
 
-CombGraph::Buffers CombGraph::calculateFIFOs(const uint64_t cascadesCount,
-                                             const NodeLayers &nodeLayers,
+CombGraph::Buffers CombGraph::calculateFIFOs(const NodeLayers &nodeLayers,
                                              const LayerCascades &layersCascades) {
-  assert(cascadesCount > 0);
-
   CombGraph::Buffers buffers;
+  CombLayerID layersCount = layersCascades.size();
   NodeID nodesCount = nodes.size();
   assert(nodeLayers.size() == nodesCount);
 
+  // Visit every connection in the graph.
+  // For source and target nodes in the connection
+  // get their respective layers and their respective cascades.
+  // The cascades are different, calculate the difference in their IDs -
+  // this will be the latency (in terms of pipeline stages) of the FIFO
+  // to be created.
+
+  // Connections with a constant input source node are skipped.
+
+  // For the last layer an additional FIFO is created, because the last layer
+  // ALWAYS contains output nodes, after which there can be no FIFOs, so
+  // FIFOs are placed right before it.
   for (NodeID i = 0; i < nodesCount; ++i) {
     CombNode *srcNode = nodes[i];
     CombLayerID srcLayerId = nodeLayers[i];
     CombCascadeID srcCascadeId = layersCascades[srcLayerId];
 
-    if (srcCascadeId == cascadesCount - 1) {
+    if (isConstantInput(srcNode)) {
       continue;
     }
-
-    bool isConstInput = isConstantInput(srcNode);
 
     for (CombChannel *channel: srcNode->outputs) {
       CombNode *tgtNode = channel->target;
@@ -233,11 +241,11 @@ CombGraph::Buffers CombGraph::calculateFIFOs(const uint64_t cascadesCount,
       CombCascadeID tgtCascadeId = layersCascades[tgtLayerId];
       int32_t delta = tgtCascadeId - srcCascadeId;
 
-      if (tgtCascadeId == cascadesCount - 1) {
+      if (tgtLayerId == layersCount - 1) {
         ++delta;
       }
 
-      if (delta && !isConstInput) {
+      if (delta) {
         buffers[channel] = delta;
       }
     }

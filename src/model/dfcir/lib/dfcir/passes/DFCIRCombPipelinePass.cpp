@@ -44,8 +44,7 @@ public:
     graph.divideIntoCascades(stages, layerLatencies, layerCascades);
 
     // Calculate what FIFOs need to be inserted.
-    CombGraph::Buffers buffers =
-        graph.calculateFIFOs(stages, nodeLayers, layerCascades);
+    CombGraph::Buffers buffers = graph.calculateFIFOs(nodeLayers, layerCascades);
 
     // Insert buffers.
     graph.insertBuffers(this->getContext(), buffers);
