@@ -3,6 +3,7 @@
     "config"             : "",
     "asap_scheduler"     : false,
     "lp_scheduler"       : false,
+    "pipeline_scheduler" : 0,
     "out_sv"             : "",
     "out_sv_lib"         : "",
     "out_dfcir"          : "",

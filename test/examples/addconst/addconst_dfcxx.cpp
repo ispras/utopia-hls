@@ -10,12 +10,12 @@
 
 #include "gtest/gtest.h"
 
-static const DFOutputPaths nullDevicePath =
+static const dfcxx::DFOutputPaths nullDevicePath =
     {{dfcxx::OutputFormatID::SystemVerilog, NULLDEVICE}};
 
 TEST(ExamplesAddConst, DFCXXAddInt2Asap) {
   AddConst kernel;
-  DFLatencyConfig config = DFLatencyConfig(
+  dfcxx::DFLatencyConfig config = dfcxx::DFLatencyConfig(
     {
       {dfcxx::ADD_INT, 2}
     },
@@ -26,7 +26,7 @@ TEST(ExamplesAddConst, DFCXXAddInt2Asap) {
 
 TEST(ExamplesAddConst, DFCXXAddInt2Linear) {
   AddConst kernel;
-  DFLatencyConfig config = DFLatencyConfig(
+  dfcxx::DFLatencyConfig config = dfcxx::DFLatencyConfig(
     {
       {dfcxx::ADD_INT, 2}
     },

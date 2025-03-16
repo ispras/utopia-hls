@@ -57,7 +57,8 @@ enum Ops {
 
 enum Scheduler {
   Linear = 0,
-  ASAP
+  ASAP,
+  CombPipelining
 };
 
 // Used for accessing specified output format paths.
@@ -74,11 +75,9 @@ enum class OutputFormatID : uint8_t {
 
 #define OUT_FORMAT_ID_INT(id) static_cast<uint8_t>(dfcxx::OutputFormatID::id)
 
-} // namespace dfcxx
-
 struct DFLatencyConfig {
 public:
-  std::unordered_map<dfcxx::Ops, uint16_t> internalOps;
+  std::unordered_map<Ops, uint16_t> internalOps;
   std::unordered_map<std::string, uint16_t> externalOps;
 
   DFLatencyConfig() = default;
@@ -86,11 +85,38 @@ public:
   DFLatencyConfig(const DFLatencyConfig &) = default;
 
   DFLatencyConfig(
-      std::initializer_list<std::pair<const dfcxx::Ops, uint16_t>> internals,
+      std::initializer_list<std::pair<const Ops, uint16_t>> internals,
       std::initializer_list<std::pair<const std::string, uint16_t>> externals
   ) : internalOps(internals), externalOps(externals) {}
 };
 
 typedef std::unordered_map<dfcxx::OutputFormatID, std::string> DFOutputPaths;
+
+struct DFOptionsConfig {
+public:
+  Scheduler scheduler;
+  uint64_t stages;
+
+  DFOptionsConfig() {
+    scheduler = Scheduler::ASAP;
+    stages = 0;
+  }
+
+  DFOptionsConfig(const DFOptionsConfig &) = default;
+
+  std::string validate() const {
+    if (scheduler != Scheduler::CombPipelining && stages > 0) {
+      return "Pipeline stages cannot be specified without pipelining scheduler.";
+    }
+
+    if (scheduler == Scheduler::CombPipelining && stages == 0) {
+      return "Pipeline stages were not specified along with pipelining sheduler.";
+    }
+
+    return "";
+  }
+};
+
+} // namespace dfcxx
 
 #endif // DFCXX_TYPEDEFS_H

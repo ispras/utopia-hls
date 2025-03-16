@@ -23,6 +23,12 @@ Value CombGraph::findNearestNodeValue(Value value) {
 CombNode *CombGraph::process(Operation *op, OpNodeMap &map) {
   NodeID newId = nodes.size();
 
+  // Explicitly set 0 pipeline stages for scheduled combinational operations.
+  auto casted = llvm::dyn_cast<Scheduled>(op);
+  if (casted) {
+    casted.setLatency(0);
+  }
+
   // InputOutputOpInterface processing.
   // -------------------------------------------------------
   if (llvm::isa<InputOutputOpInterface>(op)) {

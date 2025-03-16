@@ -10,11 +10,14 @@
 #define DFCXX_UTILS_H
 
 #include "dfcxx/graph.h"
+#include "dfcxx/typedefs.h"
 
+#include <string>
 #include <vector>
 
 namespace dfcxx {
 
+std::vector<std::string> outputPathsToVector(const DFOutputPaths &outputPaths);
 std::vector<Node *> topSort(const Graph &graph);
 
 } // namespace dfcxx

@@ -10,12 +10,12 @@
 
 #include "gtest/gtest.h"
 
-static const DFOutputPaths nullDevicePath =
+static const dfcxx::DFOutputPaths nullDevicePath =
     {{dfcxx::OutputFormatID::SystemVerilog, NULLDEVICE}};
 
 TEST(ExamplesMuxMul, DFCXXAddInt2MulInt3Asap) {
   MuxMul kernel;
-  DFLatencyConfig config = DFLatencyConfig(
+  dfcxx::DFLatencyConfig config = dfcxx::DFLatencyConfig(
     {
       {dfcxx::ADD_INT, 2},
       {dfcxx::MUL_INT, 3}
@@ -27,7 +27,7 @@ TEST(ExamplesMuxMul, DFCXXAddInt2MulInt3Asap) {
 
 TEST(ExamplesMuxMul, DFCXXAddInt2MulInt3Linear) {
   MuxMul kernel;
-  DFLatencyConfig config = DFLatencyConfig(
+  dfcxx::DFLatencyConfig config = dfcxx::DFLatencyConfig(
     {
       {dfcxx::ADD_INT, 2},
       {dfcxx::MUL_INT, 3}

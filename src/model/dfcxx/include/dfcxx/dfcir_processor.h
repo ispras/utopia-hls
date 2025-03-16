@@ -28,7 +28,7 @@ public:
   explicit DFCIRProcessor(const DFLatencyConfig &config);
   bool convertAndPrint(mlir::ModuleOp module,
                        OutputStreams &outputStreams,
-                       const Scheduler &sched);
+                       const DFOptionsConfig &options);
 };
 
 } // namespace dfcxx
