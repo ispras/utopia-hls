@@ -178,7 +178,11 @@ void CombGraph::divideIntoCascades(const uint64_t cascadesCount,
     }
 
     if (currSum - latAvg - latAvg + oldSum > floatEps) {
-      assert(i > 0); // TODO: Check for possible cases.
+      // It is assumed that the first layer should be comprised
+      // only out of input nodes and constants,
+      // all of which latency 0. This means that this branch
+      // will never execute on the first layer.
+      assert(i > 0 && "First layer has latency greater than double average latency.");
       currSum = layerLatencies[i];
       ++currCascade;
       layerCascades[i] = currCascade;
