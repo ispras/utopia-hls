@@ -156,6 +156,7 @@ private:
     free(deltaCoeffs);
 
     // TODO: Fix later.
+    // Issue #64 (https://github.com/ispras/utopia-hls/issues/64).
     int32_t maxOutLatency = 0;
 
     return std::make_pair(buffers, maxOutLatency);

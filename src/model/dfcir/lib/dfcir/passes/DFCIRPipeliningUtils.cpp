@@ -46,6 +46,7 @@ CombNode *CombGraph::process(Operation *op, OpNodeMap &map) {
     return newNode;
   }
   // -------------------------------------------------------
+
   // ConstantOp processing.
   // -------------------------------------------------------
   if (llvm::isa<ConstantOp>(op)) {
@@ -57,6 +58,7 @@ CombNode *CombGraph::process(Operation *op, OpNodeMap &map) {
     return newNode;
   }
   // -------------------------------------------------------
+
   // ConnectOp processing.
   // -------------------------------------------------------
   if (auto casted = llvm::dyn_cast<ConnectOp>(op)) {
@@ -79,10 +81,11 @@ CombNode *CombGraph::process(Operation *op, OpNodeMap &map) {
     return nullptr;
   }
   // -------------------------------------------------------
+
   // All other operations processing.
   // -------------------------------------------------------
   if (llvm::isa<NaryOpInterface, MuxOp, CastOp,
-                       ShiftOpInterface, BitsOp, CatOp>(op)) {
+                ShiftOpInterface, BitsOp, CatOp>(op)) {
     CombLatency latency = 1.f;
     CombNode *newNode = new CombNode(newId, op, latency);
     nodes.push_back(newNode);
