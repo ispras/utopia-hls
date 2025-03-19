@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcir/passes/DFCIRSchedulingUtils.h"
+#include "dfcir/passes/DFCIRScheduleUtils.h"
 
 namespace mlir::dfcir::utils {
 

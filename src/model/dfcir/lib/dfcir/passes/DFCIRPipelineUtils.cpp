@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "dfcir/passes/DFCIRPipeliningUtils.h"
+#include "dfcir/passes/DFCIRPipelineUtils.h"
 
 namespace mlir::dfcir::utils {
 

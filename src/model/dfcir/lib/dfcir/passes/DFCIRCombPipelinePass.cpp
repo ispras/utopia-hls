@@ -8,7 +8,7 @@
 
 #include "dfcir/passes/DFCIRPasses.h"
 #include "dfcir/passes/DFCIRPassesUtils.h"
-#include "dfcir/passes/DFCIRPipeliningUtils.h"
+#include "dfcir/passes/DFCIRPipelineUtils.h"
 #include "circt/Support/LLVM.h"
 #include "mlir/IR/Dialect.h"
 
