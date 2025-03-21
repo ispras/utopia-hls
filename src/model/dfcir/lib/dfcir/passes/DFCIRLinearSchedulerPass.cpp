@@ -8,6 +8,7 @@
 
 #include "dfcir/passes/DFCIRPasses.h"
 #include "dfcir/passes/DFCIRPassesUtils.h"
+#include "dfcir/passes/DFCIRScheduleUtils.h"
 #include "dfcir/passes/DFCIRLPUtils.h"
 #include "circt/Dialect/FIRRTL/Passes.h"
 #include "circt/Support/LLVM.h"
@@ -31,15 +32,15 @@ namespace mlir::dfcir {
 
 class DFCIRLinearSchedulerPass
     : public impl::DFCIRLinearSchedulerPassBase<DFCIRLinearSchedulerPass> {
-  using Node = utils::Node;
-  using Channel = utils::Channel;
-  using Graph = utils::Graph;
+  using SchedNode = utils::SchedNode;
+  using SchedChannel = utils::SchedChannel;
+  using SchedGraph = utils::SchedGraph;
   using LPProblem = utils::lp::LPProblem;
   using OpType = utils::lp::OpType;
   using Status = utils::lp::Status;
 
 private:
-  void synchronizeInput(Node *node) {
+  void synchronizeInput(SchedNode *node) {
     int *var = (int *) calloc(1, sizeof(int));
     var[0] = nodeMap[node];
     double *coeff = (double *) calloc(1, sizeof(double));
@@ -49,7 +50,7 @@ private:
     problem.addConstraint(1, var, coeff, OpType::Equal, 0);
   }
 
-  void addLatencyConstraint(Channel *chan) {
+  void addLatencyConstraint(SchedChannel *chan) {
     int *vars = (int *) calloc(2, sizeof(int));
     vars[0] = nodeMap[chan->target];
     vars[1] = nodeMap[chan->source];
@@ -62,7 +63,7 @@ private:
                           int(chan->source->latency) + chan->offset);
   }
 
-  int addDeltaConstraint(Channel *chan) {
+  int addDeltaConstraint(SchedChannel *chan) {
     int deltaID = problem.addVariable();
     int *vars = (int *) calloc(3, sizeof(int));
     vars[0] = deltaID;
@@ -78,7 +79,7 @@ private:
     return deltaID;
   }
 
-  void addBufferConstraint(Channel *chan) {
+  void addBufferConstraint(SchedChannel *chan) {
     int bufID = problem.addVariable();
     bufMap[chan] = bufID;
     int *vars = (int *) calloc(3, sizeof(int));
@@ -100,15 +101,15 @@ private:
   }
 
   LPProblem problem;
-  std::unordered_map<Node *, int> nodeMap;
-  std::unordered_map<Channel *, int> bufMap;
+  std::unordered_map<SchedNode *, int> nodeMap;
+  std::unordered_map<SchedChannel *, int> bufMap;
 
-  std::pair<Buffers, int32_t> schedule(Graph &graph) {
+  std::pair<SchedGraph::Buffers, int32_t> schedule(SchedGraph &graph) {
     size_t chanCount = 0;
-    for (Node *node: graph.nodes) {
-      chanCount += graph.inputs[node].size();
+    for (SchedNode *node: graph.nodes) {
+      chanCount += node->inputs.size();
       nodeMap[node] = problem.addVariable();
-      if (graph.startNodes.find(node) != graph.startNodes.end()) {
+      if (graph.isInput(node)) {
         synchronizeInput(node);
       }
     }
@@ -116,8 +117,8 @@ private:
     int *deltaIDs = (int *) calloc(chanCount, sizeof(int));
     double *deltaCoeffs = (double *) calloc(chanCount, sizeof(double));
     int curr_id = 0;
-    for (Node *node: graph.nodes) {
-      for (Channel *chan: graph.inputs[node]) {
+    for (SchedNode *node: graph.nodes) {
+      for (SchedChannel *chan: node->inputs) {
         addLatencyConstraint(chan);
         deltaCoeffs[curr_id] = 1.0;
         deltaIDs[curr_id++] = addDeltaConstraint(chan);
@@ -131,18 +132,17 @@ private:
     problem.lessMessages();
     int status = problem.solve();
 
-    Buffers buffers;
+    SchedGraph::Buffers buffers;
 
     if (status == Status::Optimal || status == Status::Suboptimal) {
       double *result;
       problem.getResults(&result);
-      for (const auto &[chan, id]: bufMap) {
+      for (const auto &[channel, id]: bufMap) {
         // lp_solve positions start with 1.
         int32_t latency = result[id - 1];
 
-        using mlir::dfcir::utils::hasConstantInput;
-        if (latency && !hasConstantInput(chan->source->op)) {
-          buffers[chan] = latency;
+        if (latency && !graph.isConstantInput(channel->source)) {
+          buffers[channel] = latency;
         }
       }
       free(result);
@@ -155,7 +155,9 @@ private:
     free(deltaIDs);
     free(deltaCoeffs);
 
-    int32_t maxOutLatency = calculateOverallLatency(graph, buffers);
+    // TODO: Fix later.
+    // Issue #64 (https://github.com/ispras/utopia-hls/issues/64).
+    int32_t maxOutLatency = 0;
 
     return std::make_pair(buffers, maxOutLatency);
   }
@@ -166,7 +168,8 @@ public:
 
   void runOnOperation() override {
     // Convert kernel into graph.
-    Graph graph(llvm::cast<ModuleOp>(getOperation()));
+    SchedGraph graph;
+    graph.constructFrom(llvm::cast<ModuleOp>(getOperation()));
 
     // Apply latency config to the graph.
     graph.applyConfig(*latencyConfig);
@@ -184,11 +187,7 @@ public:
     }
 
     // Insert buffers.
-    mlir::dfcir::utils::insertBuffers(
-        this->getContext(),
-        buffers,
-        graph.connectionMap
-    );
+    graph.insertBuffers(this->getContext(), buffers);
 
     // Erase old "dfcir.offset" operations.
     mlir::dfcir::utils::eraseOffsets(getOperation());

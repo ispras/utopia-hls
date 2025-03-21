@@ -10,12 +10,12 @@
 
 #include "gtest/gtest.h"
 
-static const DFOutputPaths nullDevicePath =
+static const dfcxx::DFOutputPaths nullDevicePath =
     {{dfcxx::OutputFormatID::SystemVerilog, NULLDEVICE}};
 
 TEST(ExamplesIDCT, DFCXXAsap) {
   IDCT kernel;
-  DFLatencyConfig config = DFLatencyConfig(
+  dfcxx::DFLatencyConfig config = dfcxx::DFLatencyConfig(
     {
       {dfcxx::ADD_INT, 1},
       {dfcxx::SUB_INT, 1},
@@ -32,7 +32,7 @@ TEST(ExamplesIDCT, DFCXXAsap) {
 
 // TEST(ExamplesIDCT, DFCXXLinear) {
 //   IDCT kernel;
-//   DFLatencyConfig config = DFLatencyConfig(
+//   dfcxx::DFLatencyConfig config = dfcxx::DFLatencyConfig(
 //     {
 //       {dfcxx::ADD_INT, 1},
 //       {dfcxx::SUB_INT, 1},

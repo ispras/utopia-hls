@@ -35,6 +35,7 @@
 #define CONFIG_JSON "config"
 #define ASAP_SCHEDULER_JSON "asap_scheduler"
 #define LP_SCHEDULER_JSON "lp_scheduler"
+#define PIPELINE_SCHEDULER_JSON "pipeline_scheduler"
 #define OUT_SV_JSON "out_sv"
 #define OUT_SV_LIB_JSON "out_sv_lib"
 #define OUT_UNSCHEDULED_DFCIR_JSON "out_dfcir"
@@ -58,6 +59,7 @@
 #define SCHEDULER_GROUP "scheduler"
 #define ASAP_SCHEDULER_FLAG CLI_FLAG("a")
 #define LP_SCHEDULER_FLAG CLI_FLAG("l")
+#define PIPELINE_SCHEDULER_ARG CLI_ARG("pipeline")
 #define OUTPUT_GROUP "output"
 #define OUT_SV_ARG CLI_ARG("out-sv")
 #define OUT_SV_LIB_ARG CLI_ARG("out-sv-lib")
@@ -200,6 +202,9 @@ struct HlsOptions final : public AppOptions {
     schedGroup->add_flag(LP_SCHEDULER_FLAG,
                          lpScheduler,
                          "Use Linear Programming scheduler");
+    schedGroup->add_option(PIPELINE_SCHEDULER_ARG,
+                           optionsCfg.stages,
+                          "Use Combinational Pipelining scheduler with the specified pipeline stages");
     schedGroup->require_option(1); 
     auto outputGroup = options->add_option_group(OUTPUT_GROUP);
     outputGroup->add_option(OUT_SV_ARG,
@@ -227,6 +232,7 @@ struct HlsOptions final : public AppOptions {
     get(json, CONFIG_JSON,                latencyCfgFile);
     get(json, ASAP_SCHEDULER_JSON,        asapScheduler);
     get(json, LP_SCHEDULER_JSON,          lpScheduler);
+    get(json, PIPELINE_SCHEDULER_JSON,    optionsCfg.stages);
     get(json, OUT_SV_JSON,                outNames[OUT_FORMAT_ID_INT(SystemVerilog)]);
     get(json, OUT_SV_LIB_JSON,            outNames[OUT_FORMAT_ID_INT(SVLibrary)]);
     get(json, OUT_UNSCHEDULED_DFCIR_JSON, outNames[OUT_FORMAT_ID_INT(UnscheduledDFCIR)]);
@@ -292,10 +298,11 @@ struct HlsOptions final : public AppOptions {
   }
 
   std::string latencyCfgFile;
-  DFLatencyConfig latencyCfg;
+  dfcxx::DFLatencyConfig latencyCfg;
   std::vector<std::string> outNames;
   bool asapScheduler;
   bool lpScheduler;
+  dfcxx::DFOptionsConfig optionsCfg;
 };
 
 struct SimOptions final : public AppOptions {

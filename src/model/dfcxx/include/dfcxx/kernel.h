@@ -89,7 +89,11 @@ public:
 
   bool compile(const DFLatencyConfig &config,
                const std::vector<std::string> &outputPaths,
-               const Scheduler &sched);
+               const DFOptionsConfig &options);
+
+  bool compile(const DFLatencyConfig &config,
+               const DFOutputPaths &outputPaths,
+               const DFOptionsConfig &options);
 
   bool compile(const DFLatencyConfig &config,
                const DFOutputPaths &outputPaths,

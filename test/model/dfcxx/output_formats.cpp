@@ -12,12 +12,12 @@
 
 static const Polynomial2 kernel;
 
-static const DFLatencyConfig config =
-    DFLatencyConfig({{dfcxx::ADD_INT, 2}, {dfcxx::MUL_INT, 3}}, {});
+static const dfcxx::DFLatencyConfig config =
+    dfcxx::DFLatencyConfig({{dfcxx::ADD_INT, 2}, {dfcxx::MUL_INT, 3}}, {});
 
 TEST(DFCXXOutputFormats, SystemVerilog) {
   Polynomial2 kernel;
-  DFOutputPaths paths = {
+  dfcxx::DFOutputPaths paths = {
     {dfcxx::OutputFormatID::SystemVerilog, NULLDEVICE}
   };
   EXPECT_EQ(kernel.compile(config, paths, dfcxx::ASAP), true);
@@ -25,7 +25,7 @@ TEST(DFCXXOutputFormats, SystemVerilog) {
 
 TEST(DFCXXOutputFormats, SystemVerilogLibrary) {
   Polynomial2 kernel;
-  DFOutputPaths paths = {
+  dfcxx::DFOutputPaths paths = {
     {dfcxx::OutputFormatID::SVLibrary, NULLDEVICE}
   };
   EXPECT_EQ(kernel.compile(config, paths, dfcxx::ASAP), true);
@@ -33,7 +33,7 @@ TEST(DFCXXOutputFormats, SystemVerilogLibrary) {
 
 TEST(DFCXXOutputFormats, UnscheduledDFCIR) {
   Polynomial2 kernel;
-  DFOutputPaths paths = {
+  dfcxx::DFOutputPaths paths = {
     {dfcxx::OutputFormatID::UnscheduledDFCIR, NULLDEVICE}
   };
   EXPECT_EQ(kernel.compile(config, paths, dfcxx::ASAP), true);
@@ -41,7 +41,7 @@ TEST(DFCXXOutputFormats, UnscheduledDFCIR) {
 
 TEST(DFCXXOutputFormats, FIRRTL) {
   Polynomial2 kernel;
-  DFOutputPaths paths = {
+  dfcxx::DFOutputPaths paths = {
     {dfcxx::OutputFormatID::FIRRTL, NULLDEVICE}
   };
   EXPECT_EQ(kernel.compile(config, paths, dfcxx::ASAP), true);
@@ -49,7 +49,7 @@ TEST(DFCXXOutputFormats, FIRRTL) {
 
 TEST(DFCXXOutputFormats, DOT) {
   Polynomial2 kernel;
-  DFOutputPaths paths = {
+  dfcxx::DFOutputPaths paths = {
     {dfcxx::OutputFormatID::DOT, NULLDEVICE}
   };
   EXPECT_EQ(kernel.compile(config, paths, dfcxx::ASAP), true);
@@ -57,7 +57,7 @@ TEST(DFCXXOutputFormats, DOT) {
 
 TEST(DFCXXOutputFormats, All) {
   Polynomial2 kernel;
-  DFOutputPaths paths = {
+  dfcxx::DFOutputPaths paths = {
     {dfcxx::OutputFormatID::SystemVerilog, NULLDEVICE},
     {dfcxx::OutputFormatID::SVLibrary, NULLDEVICE},
     {dfcxx::OutputFormatID::UnscheduledDFCIR, NULLDEVICE},

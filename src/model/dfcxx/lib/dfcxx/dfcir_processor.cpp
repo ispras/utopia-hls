@@ -51,7 +51,7 @@ DFCIRProcessor::DFCIRProcessor(const DFLatencyConfig &config) {
 
 bool DFCIRProcessor::convertAndPrint(mlir::ModuleOp module,
                                      OutputStreams &outputStreams,
-                                     const Scheduler &sched) {
+                                     const DFOptionsConfig &options) {
   mlir::MLIRContext *context = module.getContext();
   context->getOrLoadDialect<circt::firrtl::FIRRTLDialect>();
   context->getOrLoadDialect<circt::sv::SVDialect>();
@@ -62,12 +62,15 @@ bool DFCIRProcessor::convertAndPrint(mlir::ModuleOp module,
     module.print(*stream);
   }
 
-  switch (sched) {
+  switch (options.scheduler) {
     case Linear:
       pm.addPass(mlir::dfcir::createDFCIRLinearSchedulerPass(&config));
       break;
     case ASAP:
       pm.addPass(mlir::dfcir::createDFCIRASAPSchedulerPass(&config));
+      break;
+    case CombPipelining:
+      pm.addPass(mlir::dfcir::createDFCIRCombPipelinePassPass(options.stages));
       break;
   }
 

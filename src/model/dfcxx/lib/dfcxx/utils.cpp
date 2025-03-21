@@ -14,6 +14,14 @@
 
 namespace dfcxx {
 
+std::vector<std::string> outputPathsToVector(const DFOutputPaths &outputPaths) {
+  std::vector<std::string> result(OUT_FORMAT_ID_INT(COUNT), "");
+  for (const auto &[id, path] : outputPaths) {
+    result[static_cast<uint8_t>(id)] = path;
+  }
+  return result;
+}
+
 std::vector<Node *> topSort(const Graph &graph) {
   size_t nodesCount = graph.getNodes().size();
   auto &outs = graph.getOutputs();

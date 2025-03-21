@@ -10,12 +10,12 @@
 
 #include "gtest/gtest.h"
 
-static const DFOutputPaths nullDevicePath =
+static const dfcxx::DFOutputPaths nullDevicePath =
     {{dfcxx::OutputFormatID::SystemVerilog, NULLDEVICE}};
 
 TEST(ExamplesMovingSum, DFCXXAddInt2Asap) {
   MovingSum kernel;
-  DFLatencyConfig config = DFLatencyConfig(
+  dfcxx::DFLatencyConfig config = dfcxx::DFLatencyConfig(
     {
       {dfcxx::ADD_INT, 2},
     },
@@ -26,7 +26,7 @@ TEST(ExamplesMovingSum, DFCXXAddInt2Asap) {
 
 TEST(ExamplesMovingSum, DFCXXAddInt2Linear) {
   MovingSum kernel;
-  DFLatencyConfig config = DFLatencyConfig(
+  dfcxx::DFLatencyConfig config = dfcxx::DFLatencyConfig(
     {
       {dfcxx::ADD_INT, 2},
     },
@@ -37,7 +37,7 @@ TEST(ExamplesMovingSum, DFCXXAddInt2Linear) {
 
 TEST(ExamplesMovingSum, DFCXXAddInt8Asap) {
   MovingSum kernel;
-  DFLatencyConfig config = DFLatencyConfig(
+  dfcxx::DFLatencyConfig config = dfcxx::DFLatencyConfig(
     {
       {dfcxx::ADD_INT, 8},
     },
@@ -48,7 +48,7 @@ TEST(ExamplesMovingSum, DFCXXAddInt8Asap) {
 
 TEST(ExamplesMovingSum, DFCXXAddInt8Linear) {
   MovingSum kernel;
-  DFLatencyConfig config = DFLatencyConfig(
+  dfcxx::DFLatencyConfig config = dfcxx::DFLatencyConfig(
     {
       {dfcxx::ADD_INT, 8},
     },

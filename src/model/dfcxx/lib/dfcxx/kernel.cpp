@@ -178,7 +178,13 @@ void Kernel::deleteNode(Node *node) {
 
 bool Kernel::compile(const DFLatencyConfig &config,
                      const std::vector<std::string> &outputPaths,
-                     const Scheduler &sched) {
+                     const DFOptionsConfig &options) {
+  std::string errString = options.validate();
+  if (!errString.empty()) {
+    std::cout << "Options: " << errString << std::endl;
+    return false;
+  }
+
   DFCIRBuilder builder;
   auto compiled = builder.buildModule(this);
   size_t count = outputPaths.size();
@@ -198,7 +204,7 @@ bool Kernel::compile(const DFLatencyConfig &config,
   if (result) {
     result &= DFCIRProcessor(config).convertAndPrint(compiled,
                                                      outputStreams,
-                                                     sched);
+                                                     options);
   }
   // Every created output stream has to be closed explicitly.
   for (llvm::raw_fd_ostream *stream : outputStreams) {
@@ -212,12 +218,16 @@ bool Kernel::compile(const DFLatencyConfig &config,
 
 bool Kernel::compile(const DFLatencyConfig &config,
                      const DFOutputPaths &outputPaths,
+                     const DFOptionsConfig &options) {
+  return compile(config, outputPathsToVector(outputPaths), options);
+}
+
+bool Kernel::compile(const DFLatencyConfig &config,
+                     const DFOutputPaths &outputPaths,
                      const Scheduler &sched) {
-  std::vector<std::string> outPathsStrings(OUT_FORMAT_ID_INT(COUNT), "");
-  for (const auto &[id, path] : outputPaths) {
-    outPathsStrings[static_cast<uint8_t>(id)] = path;
-  }
-  return compile(config, outPathsStrings, sched);
+  DFOptionsConfig options;
+  options.scheduler = sched;
+  return compile(config, outputPaths, options);
 }
 
 

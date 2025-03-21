@@ -8,6 +8,7 @@
 
 #include "dfcir/passes/DFCIRPasses.h"
 #include "dfcir/passes/DFCIRPassesUtils.h"
+#include "dfcir/passes/DFCIRScheduleUtils.h"
 #include "circt/Dialect/FIRRTL/Passes.h"
 #include "circt/Support/LLVM.h"
 #include "mlir/IR/Dialect.h"
@@ -27,44 +28,46 @@ namespace mlir::dfcir {
 
 class DFCIRASAPSchedulerPass
     : public impl::DFCIRASAPSchedulerPassBase<DFCIRASAPSchedulerPass> {
-  using Node = utils::Node;
-  using Channel = utils::Channel;
-  using Graph = utils::Graph;
+  using SchedNode = utils::SchedNode;
+  using SchedChannel = utils::SchedChannel;
+  using SchedGraph = utils::SchedGraph;
 
 private:
-  std::pair<Buffers, int32_t> schedule(Graph &graph) {
-    Latencies map;
-    std::vector<Node *> sorted = topSortNodes(graph);
+  std::pair<SchedGraph::Buffers, int32_t> schedule(SchedGraph &graph) {
+    SchedGraph::Latencies map;
 
-    for (Node *node : sorted) {
-      for (Channel *channel : graph.outputs.at(node)) {
+    int32_t maxLatency = 0;
+
+    for (SchedNode *node : graph.nodes) {
+      for (SchedChannel *channel : node->outputs) {
         int32_t latency = map[node] + node->latency + channel->offset;
 
         if (latency > map[channel->target]) {
           map[channel->target] = latency;
         }
+
+        if (graph.isOutput(channel->target) && latency > maxLatency) {
+          maxLatency = latency;
+        }
       }
     }
 
-    Buffers buffers;
+    SchedGraph::Buffers buffers;
 
-    for (Node *node: graph.nodes) {
-      for (Channel *channel: graph.inputs[node]) {
+    for (SchedNode *node: graph.nodes) {
+      for (SchedChannel *channel: node->inputs) {
         int32_t delta = map[channel->target] -
                        (map[channel->source] +
                         channel->source->latency +
                         channel->offset);
 
-        using mlir::dfcir::utils::hasConstantInput;
-        if (delta && !hasConstantInput(channel->source->op)) {
+        if (delta && !graph.isConstantInput(channel->source)) {
           buffers[channel] = delta;
         }
       }
     }
 
-    int32_t maxOutLatency = calculateOverallLatency(graph, buffers, &map);
-
-    return std::make_pair(buffers, maxOutLatency);
+    return std::make_pair(buffers, maxLatency);
   }
 
 public:
@@ -73,7 +76,8 @@ public:
 
   void runOnOperation() override {
     // Convert kernel into graph.
-    Graph graph(llvm::cast<ModuleOp>(getOperation()));
+    SchedGraph graph;
+    graph.constructFrom(llvm::cast<ModuleOp>(getOperation()));
 
     // Apply latency config to the graph.
     graph.applyConfig(*latencyConfig);
@@ -91,11 +95,7 @@ public:
     }
 
     // Insert buffers.
-    mlir::dfcir::utils::insertBuffers(
-        this->getContext(),
-        buffers,
-        graph.connectionMap
-    );
+    graph.insertBuffers(this->getContext(), buffers);
 
     // Erase old "dfcir.offset" operations.
     mlir::dfcir::utils::eraseOffsets(getOperation());

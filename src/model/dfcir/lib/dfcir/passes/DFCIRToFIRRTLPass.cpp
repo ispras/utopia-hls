@@ -91,6 +91,8 @@ public:
   }
 };
 
+typedef std::unordered_map<mlir::Operation *, unsigned> ModuleArgMap;
+
 template <typename OperationType>
 class FIRRTLOpConversionPattern : public OpConversionPattern<OperationType> {
 public:

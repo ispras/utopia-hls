@@ -10,12 +10,12 @@
 
 #include "gtest/gtest.h"
 
-static const DFOutputPaths nullDevicePath =
+static const dfcxx::DFOutputPaths nullDevicePath =
     {{dfcxx::OutputFormatID::SystemVerilog, NULLDEVICE}};
 
 TEST(ExamplesPolynomial2, DFCXXAddInt2MulInt3Asap) {
   Polynomial2 kernel;
-  DFLatencyConfig config = DFLatencyConfig(
+  dfcxx::DFLatencyConfig config = dfcxx::DFLatencyConfig(
     {
       {dfcxx::ADD_INT, 2},
       {dfcxx::MUL_INT, 3}
@@ -27,7 +27,7 @@ TEST(ExamplesPolynomial2, DFCXXAddInt2MulInt3Asap) {
 
 TEST(ExamplesPolynomial2, DFCXXAddInt2MulInt3Linear) {
   Polynomial2 kernel;
-  DFLatencyConfig config = DFLatencyConfig(
+  dfcxx::DFLatencyConfig config = dfcxx::DFLatencyConfig(
     {
       {dfcxx::ADD_INT, 2},
       {dfcxx::MUL_INT, 3}
@@ -39,7 +39,7 @@ TEST(ExamplesPolynomial2, DFCXXAddInt2MulInt3Linear) {
 
 TEST(ExamplesPolynomial2, DFCXXAddInt8MulInt15Asap) {
   Polynomial2 kernel;
-  DFLatencyConfig config = DFLatencyConfig(
+  dfcxx::DFLatencyConfig config = dfcxx::DFLatencyConfig(
     {
       {dfcxx::ADD_INT, 8},
       {dfcxx::MUL_INT, 15}
@@ -51,7 +51,7 @@ TEST(ExamplesPolynomial2, DFCXXAddInt8MulInt15Asap) {
 
 TEST(ExamplesPolynomial2, DFCXXAddInt8MulInt15Linear) {
   Polynomial2 kernel;
-  DFLatencyConfig config = DFLatencyConfig(
+  dfcxx::DFLatencyConfig config = dfcxx::DFLatencyConfig(
     {
       {dfcxx::ADD_INT, 8},
       {dfcxx::MUL_INT, 15}
