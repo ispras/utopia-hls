@@ -101,7 +101,7 @@ public:
 
   DFVariableImpl *cast(DFTypeImpl *type);
 
-  virtual DFVariableImpl *operator()(uint8_t first, uint8_t second);
+  virtual DFVariableImpl *operator()(uint16_t first, uint16_t second);
 
   virtual DFVariableImpl *cat(DFVariableImpl &rhs);
 };
@@ -175,7 +175,7 @@ public:
 
   DFVariable cast(const DFType &type);
 
-  DFVariable operator()(uint8_t first, uint8_t second);
+  DFVariable operator()(uint16_t first, uint16_t second);
 
   DFVariable cat(const DFVariable &rhs);
 };
