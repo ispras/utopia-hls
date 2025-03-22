@@ -250,14 +250,6 @@ struct HlsOptions final : public AppOptions {
     if (field == "MUL_FLOAT")       { return dfcxx::MUL_FLOAT; }        else
     if (field == "DIV_INT")         { return dfcxx::DIV_INT; }          else
     if (field == "DIV_FLOAT")       { return dfcxx::DIV_FLOAT; }        else
-    if (field == "AND_INT")         { return dfcxx::AND_INT; }          else
-    if (field == "AND_FLOAT")       { return dfcxx::AND_FLOAT; }        else
-    if (field == "OR_INT")          { return dfcxx::OR_INT; }           else
-    if (field == "OR_FLOAT")        { return dfcxx::OR_FLOAT; }         else
-    if (field == "XOR_INT")         { return dfcxx::XOR_INT; }          else
-    if (field == "XOR_FLOAT")       { return dfcxx::XOR_FLOAT; }        else
-    if (field == "NOT_INT")         { return dfcxx::NOT_INT; }          else
-    if (field == "NOT_FLOAT")       { return dfcxx::NOT_FLOAT; }        else
     if (field == "NEG_INT")         { return dfcxx::NEG_INT; }          else
     if (field == "NEG_FLOAT")       { return dfcxx::NEG_FLOAT; }        else
     if (field == "LESS_INT")        { return dfcxx::LESS_INT; }         else

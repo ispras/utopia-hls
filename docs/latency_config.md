@@ -10,10 +10,6 @@ All the supported computational operations are listed below:
 * `SUB` - Subtraction
 * `MUL` - Multiplication
 * `DIV` - Division
-* `AND` - Logical conjunction
-* `OR` - Logical disjunction
-* `XOR` - Exclusive logical disjunction
-* `NOT` - Logical inversion
 * `NEG` - Negation
 * `LESS` - "less" comparison
 * `LESSEQ` - "less or equal" comparison
