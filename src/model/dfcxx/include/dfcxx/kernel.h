@@ -57,6 +57,8 @@ protected:
 
   DFType dfFloat(uint16_t expBits, uint16_t fracBits);
 
+  DFType dfRawBits(uint16_t bits);
+
   DFType dfBool();
 
   using IOBinding = std::pair<DFVariable&, std::string>;

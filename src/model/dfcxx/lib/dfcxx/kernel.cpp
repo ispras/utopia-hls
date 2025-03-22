@@ -47,6 +47,11 @@ DFType Kernel::dfFloat(uint16_t expBits, uint16_t fracBits) {
   return meta.storage.addType(type);
 }
 
+DFType Kernel::dfRawBits(uint16_t bits) {
+  auto *type = meta.typeBuilder.buildRawBits(bits);
+  return meta.storage.addType(type);
+}
+
 DFType Kernel::dfBool() {
   auto *type = meta.typeBuilder.buildBool();
   return meta.storage.addType(type);
