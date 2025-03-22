@@ -9,55 +9,56 @@
 // Addition (integer): 1 stage each.
 // Subtraction (integer): 1 stage each.
 // Multiplication (integer): 3 stages each.
-// "Greater" comparison (integer): 3 stages each.
-// "Greater or equal" comparison (integer): 3 stages each.
-// Total: 29 stages.
+// Total: 26 stages.
 
 `timescale 1s/1s
 
+`define WIN 12
+`define WOUT 9
+
 `define INPUT_INIT(arr)\
-  arr[00]=16'd23; arr[01]=-16'd1; arr[02]=-16'd2; arr[03]=16'd0; arr[04]=16'd0; arr[05]=16'd0; arr[06]=16'd0; arr[07]=16'd0;\
-  arr[08]=16'd0; arr[09]=16'd0; arr[10]=16'd0; arr[11]=16'd0; arr[12]=16'd0; arr[13]=16'd0; arr[14]=16'd0; arr[15]=16'd0;\
-  arr[16]=16'd0; arr[17]=16'd0; arr[18]=16'd0; arr[19]=16'd0; arr[20]=16'd0; arr[21]=16'd0; arr[22]=16'd0; arr[23]=16'd0;\
-  arr[24]=16'd0; arr[25]=16'd0; arr[26]=16'd0; arr[27]=16'd0; arr[28]=16'd0; arr[29]=16'd0; arr[30]=16'd0; arr[31]=16'd0;\
-  arr[32]=16'd0; arr[33]=16'd0; arr[34]=16'd0; arr[35]=16'd0; arr[36]=16'd0; arr[37]=16'd0; arr[38]=16'd0; arr[39]=16'd0;\
-  arr[40]=16'd0; arr[41]=16'd0; arr[42]=16'd0; arr[43]=16'd0; arr[44]=16'd0; arr[45]=16'd0; arr[46]=16'd0; arr[47]=16'd0;\
-  arr[48]=16'd0; arr[49]=16'd0; arr[50]=16'd0; arr[51]=16'd0; arr[52]=16'd0; arr[53]=16'd0; arr[54]=16'd0; arr[55]=16'd0;\
-  arr[56]=16'd0; arr[57]=16'd0; arr[58]=16'd0; arr[59]=16'd0; arr[60]=16'd0; arr[61]=16'd0; arr[62]=16'd0; arr[63]=16'd0
+  arr[00]=`WIN'd23; arr[01]=-`WIN'd1; arr[02]=-`WIN'd2; arr[03]=`WIN'd0; arr[04]=`WIN'd0; arr[05]=`WIN'd0; arr[06]=`WIN'd0; arr[07]=`WIN'd0;\
+  arr[08]=`WIN'd0; arr[09]=`WIN'd0; arr[10]=`WIN'd0; arr[11]=`WIN'd0; arr[12]=`WIN'd0; arr[13]=`WIN'd0; arr[14]=`WIN'd0; arr[15]=`WIN'd0;\
+  arr[16]=`WIN'd0; arr[17]=`WIN'd0; arr[18]=`WIN'd0; arr[19]=`WIN'd0; arr[20]=`WIN'd0; arr[21]=`WIN'd0; arr[22]=`WIN'd0; arr[23]=`WIN'd0;\
+  arr[24]=`WIN'd0; arr[25]=`WIN'd0; arr[26]=`WIN'd0; arr[27]=`WIN'd0; arr[28]=`WIN'd0; arr[29]=`WIN'd0; arr[30]=`WIN'd0; arr[31]=`WIN'd0;\
+  arr[32]=`WIN'd0; arr[33]=`WIN'd0; arr[34]=`WIN'd0; arr[35]=`WIN'd0; arr[36]=`WIN'd0; arr[37]=`WIN'd0; arr[38]=`WIN'd0; arr[39]=`WIN'd0;\
+  arr[40]=`WIN'd0; arr[41]=`WIN'd0; arr[42]=`WIN'd0; arr[43]=`WIN'd0; arr[44]=`WIN'd0; arr[45]=`WIN'd0; arr[46]=`WIN'd0; arr[47]=`WIN'd0;\
+  arr[48]=`WIN'd0; arr[49]=`WIN'd0; arr[50]=`WIN'd0; arr[51]=`WIN'd0; arr[52]=`WIN'd0; arr[53]=`WIN'd0; arr[54]=`WIN'd0; arr[55]=`WIN'd0;\
+  arr[56]=`WIN'd0; arr[57]=`WIN'd0; arr[58]=`WIN'd0; arr[59]=`WIN'd0; arr[60]=`WIN'd0; arr[61]=`WIN'd0; arr[62]=`WIN'd0; arr[63]=`WIN'd0
 
 `define REF_INIT(arr)\
-  arr[00]=16'd2; arr[01]=16'd3; arr[02]=16'd3; arr[03]=16'd3; arr[04]=16'd3; arr[05]=16'd3; arr[06]=16'd3; arr[07]=16'd3;\
-  arr[08]=16'd2; arr[09]=16'd3; arr[10]=16'd3; arr[11]=16'd3; arr[12]=16'd3; arr[13]=16'd3; arr[14]=16'd3; arr[15]=16'd3;\
-  arr[16]=16'd2; arr[17]=16'd3; arr[18]=16'd3; arr[19]=16'd3; arr[20]=16'd3; arr[21]=16'd3; arr[22]=16'd3; arr[23]=16'd3;\
-  arr[24]=16'd2; arr[25]=16'd3; arr[26]=16'd3; arr[27]=16'd3; arr[28]=16'd3; arr[29]=16'd3; arr[30]=16'd3; arr[31]=16'd3;\
-  arr[32]=16'd2; arr[33]=16'd3; arr[34]=16'd3; arr[35]=16'd3; arr[36]=16'd3; arr[37]=16'd3; arr[38]=16'd3; arr[39]=16'd3;\
-  arr[40]=16'd2; arr[41]=16'd3; arr[42]=16'd3; arr[43]=16'd3; arr[44]=16'd3; arr[45]=16'd3; arr[46]=16'd3; arr[47]=16'd3;\
-  arr[48]=16'd2; arr[49]=16'd3; arr[50]=16'd3; arr[51]=16'd3; arr[52]=16'd3; arr[53]=16'd3; arr[54]=16'd3; arr[55]=16'd3;\
-  arr[56]=16'd2; arr[57]=16'd3; arr[58]=16'd3; arr[59]=16'd3; arr[60]=16'd3; arr[61]=16'd3; arr[62]=16'd3; arr[63]=16'd3
+  arr[00]=`WOUT'd2; arr[01]=`WOUT'd3; arr[02]=`WOUT'd3; arr[03]=`WOUT'd3; arr[04]=`WOUT'd3; arr[05]=`WOUT'd3; arr[06]=`WOUT'd3; arr[07]=`WOUT'd3;\
+  arr[08]=`WOUT'd2; arr[09]=`WOUT'd3; arr[10]=`WOUT'd3; arr[11]=`WOUT'd3; arr[12]=`WOUT'd3; arr[13]=`WOUT'd3; arr[14]=`WOUT'd3; arr[15]=`WOUT'd3;\
+  arr[16]=`WOUT'd2; arr[17]=`WOUT'd3; arr[18]=`WOUT'd3; arr[19]=`WOUT'd3; arr[20]=`WOUT'd3; arr[21]=`WOUT'd3; arr[22]=`WOUT'd3; arr[23]=`WOUT'd3;\
+  arr[24]=`WOUT'd2; arr[25]=`WOUT'd3; arr[26]=`WOUT'd3; arr[27]=`WOUT'd3; arr[28]=`WOUT'd3; arr[29]=`WOUT'd3; arr[30]=`WOUT'd3; arr[31]=`WOUT'd3;\
+  arr[32]=`WOUT'd2; arr[33]=`WOUT'd3; arr[34]=`WOUT'd3; arr[35]=`WOUT'd3; arr[36]=`WOUT'd3; arr[37]=`WOUT'd3; arr[38]=`WOUT'd3; arr[39]=`WOUT'd3;\
+  arr[40]=`WOUT'd2; arr[41]=`WOUT'd3; arr[42]=`WOUT'd3; arr[43]=`WOUT'd3; arr[44]=`WOUT'd3; arr[45]=`WOUT'd3; arr[46]=`WOUT'd3; arr[47]=`WOUT'd3;\
+  arr[48]=`WOUT'd2; arr[49]=`WOUT'd3; arr[50]=`WOUT'd3; arr[51]=`WOUT'd3; arr[52]=`WOUT'd3; arr[53]=`WOUT'd3; arr[54]=`WOUT'd3; arr[55]=`WOUT'd3;\
+  arr[56]=`WOUT'd2; arr[57]=`WOUT'd3; arr[58]=`WOUT'd3; arr[59]=`WOUT'd3; arr[60]=`WOUT'd3; arr[61]=`WOUT'd3; arr[62]=`WOUT'd3; arr[63]=`WOUT'd3
 
-`define ARRAY_BINDING(port, arr)\
-  .``port``0(``arr``[00]), .``port``1(``arr``[01]), .``port``2(``arr``[02]), .``port``3(``arr``[03]), .``port``4(``arr``[04]), .``port``5(``arr``[05]), .``port``6(``arr``[06]), .``port``7(``arr``[07]),\
-  .``port``8(``arr``[08]), .``port``9(``arr``[09]), .``port``10(``arr``[10]), .``port``11(``arr``[11]), .``port``12(``arr``[12]), .``port``13(``arr``[13]), .``port``14(``arr``[14]), .``port``15(``arr``[15]),\
-  .``port``16(``arr``[16]), .``port``17(``arr``[17]), .``port``18(``arr``[18]), .``port``19(``arr``[19]), .``port``20(``arr``[20]), .``port``21(``arr``[21]), .``port``22(``arr``[22]), .``port``23(``arr``[23]),\
-  .``port``24(``arr``[24]), .``port``25(``arr``[25]), .``port``26(``arr``[26]), .``port``27(``arr``[27]), .``port``28(``arr``[28]), .``port``29(``arr``[29]), .``port``30(``arr``[30]), .``port``31(``arr``[31]),\
-  .``port``32(``arr``[32]), .``port``33(``arr``[33]), .``port``34(``arr``[34]), .``port``35(``arr``[35]), .``port``36(``arr``[36]), .``port``37(``arr``[37]), .``port``38(``arr``[38]), .``port``39(``arr``[39]),\
-  .``port``40(``arr``[40]), .``port``41(``arr``[41]), .``port``42(``arr``[42]), .``port``43(``arr``[43]), .``port``44(``arr``[44]), .``port``45(``arr``[45]), .``port``46(``arr``[46]), .``port``47(``arr``[47]),\
-  .``port``48(``arr``[48]), .``port``49(``arr``[49]), .``port``50(``arr``[50]), .``port``51(``arr``[51]), .``port``52(``arr``[52]), .``port``53(``arr``[53]), .``port``54(``arr``[54]), .``port``55(``arr``[55]),\
-  .``port``56(``arr``[56]), .``port``57(``arr``[57]), .``port``58(``arr``[58]), .``port``59(``arr``[59]), .``port``60(``arr``[60]), .``port``61(``arr``[61]), .``port``62(``arr``[62]), .``port``63(``arr``[63])
+`define ARRAY_TO_BITVECTOR(arr) \
+  {arr[63], arr[62], arr[61], arr[60], arr[59], arr[58], arr[57], arr[56],\
+  arr[55], arr[54], arr[53], arr[52], arr[51], arr[50], arr[49], arr[48],\
+  arr[47], arr[46], arr[45], arr[44], arr[43], arr[42], arr[41], arr[40],\
+  arr[39], arr[38], arr[37], arr[36], arr[35], arr[34], arr[33], arr[32],\
+  arr[31], arr[30], arr[29], arr[28], arr[27], arr[26], arr[25], arr[24],\
+  arr[23], arr[22], arr[21], arr[20], arr[19], arr[18], arr[17], arr[16],\
+  arr[15], arr[14], arr[13], arr[12], arr[11], arr[10], arr[09], arr[08],\
+  arr[07], arr[06], arr[05], arr[04], arr[03], arr[02], arr[01], arr[00]}
 
 module IDCT_test0();
 
-  localparam CIRCUIT_LATENCY = 29;
+  localparam CIRCUIT_LATENCY = 26;
 
-  reg signed [15:0] x [63:0];
-  reg signed [15:0] out [63:0];
-  reg signed [15:0] x_buffer [63:0];
-  reg signed [15:0] expected [63:0];
+  reg signed [`WIN-1:0] x [63:0];
+  reg signed [`WOUT-1:0] out [63:0];
+  reg signed [`WIN-1:0] x_buffer [63:0];
+  reg signed [`WOUT-1:0] expected [63:0];
   reg clk;
 
   IDCT inst (
-    `ARRAY_BINDING(x, x),
-    `ARRAY_BINDING(out, out),
+    .x(`ARRAY_TO_BITVECTOR(x)),
+    .out(`ARRAY_TO_BITVECTOR(out)),
     .clk (clk)
   );
 

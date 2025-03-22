@@ -9,11 +9,12 @@
 // Addition (integer): 1 stage each.
 // Subtraction (integer): 1 stage each.
 // Multiplication (integer): 3 stages each.
-// "Greater" comparison (integer): 3 stages each.
-// "Greater or equal" comparison (integer): 3 stages each.
-// Total: 29 stages.
+// Total: 26 stages.
 
 `timescale 1s/1s
+
+`define WIN 12
+`define WOUT 9
 
 `define INPUT_INIT(arr)\
   arr[00]=-16'd166; arr[01]=-16'd7; arr[02]=-16'd4; arr[03]=-16'd4; arr[04]=16'd0; arr[05]=16'd0; arr[06]=16'd0; arr[07]=16'd0;\
@@ -35,29 +36,29 @@
   arr[48]=-16'd23; arr[49]=-16'd22; arr[50]=-16'd20; arr[51]=-16'd20; arr[52]=-16'd20; arr[53]=-16'd20; arr[54]=-16'd20; arr[55]=-16'd19;\
   arr[56]=-16'd23; arr[57]=-16'd22; arr[58]=-16'd20; arr[59]=-16'd20; arr[60]=-16'd20; arr[61]=-16'd20; arr[62]=-16'd20; arr[63]=-16'd20
 
-`define ARRAY_BINDING(port, arr)\
-  .``port``0(``arr``[00]), .``port``1(``arr``[01]), .``port``2(``arr``[02]), .``port``3(``arr``[03]), .``port``4(``arr``[04]), .``port``5(``arr``[05]), .``port``6(``arr``[06]), .``port``7(``arr``[07]),\
-  .``port``8(``arr``[08]), .``port``9(``arr``[09]), .``port``10(``arr``[10]), .``port``11(``arr``[11]), .``port``12(``arr``[12]), .``port``13(``arr``[13]), .``port``14(``arr``[14]), .``port``15(``arr``[15]),\
-  .``port``16(``arr``[16]), .``port``17(``arr``[17]), .``port``18(``arr``[18]), .``port``19(``arr``[19]), .``port``20(``arr``[20]), .``port``21(``arr``[21]), .``port``22(``arr``[22]), .``port``23(``arr``[23]),\
-  .``port``24(``arr``[24]), .``port``25(``arr``[25]), .``port``26(``arr``[26]), .``port``27(``arr``[27]), .``port``28(``arr``[28]), .``port``29(``arr``[29]), .``port``30(``arr``[30]), .``port``31(``arr``[31]),\
-  .``port``32(``arr``[32]), .``port``33(``arr``[33]), .``port``34(``arr``[34]), .``port``35(``arr``[35]), .``port``36(``arr``[36]), .``port``37(``arr``[37]), .``port``38(``arr``[38]), .``port``39(``arr``[39]),\
-  .``port``40(``arr``[40]), .``port``41(``arr``[41]), .``port``42(``arr``[42]), .``port``43(``arr``[43]), .``port``44(``arr``[44]), .``port``45(``arr``[45]), .``port``46(``arr``[46]), .``port``47(``arr``[47]),\
-  .``port``48(``arr``[48]), .``port``49(``arr``[49]), .``port``50(``arr``[50]), .``port``51(``arr``[51]), .``port``52(``arr``[52]), .``port``53(``arr``[53]), .``port``54(``arr``[54]), .``port``55(``arr``[55]),\
-  .``port``56(``arr``[56]), .``port``57(``arr``[57]), .``port``58(``arr``[58]), .``port``59(``arr``[59]), .``port``60(``arr``[60]), .``port``61(``arr``[61]), .``port``62(``arr``[62]), .``port``63(``arr``[63])
+`define ARRAY_TO_BITVECTOR(arr) \
+  {arr[63], arr[62], arr[61], arr[60], arr[59], arr[58], arr[57], arr[56],\
+  arr[55], arr[54], arr[53], arr[52], arr[51], arr[50], arr[49], arr[48],\
+  arr[47], arr[46], arr[45], arr[44], arr[43], arr[42], arr[41], arr[40],\
+  arr[39], arr[38], arr[37], arr[36], arr[35], arr[34], arr[33], arr[32],\
+  arr[31], arr[30], arr[29], arr[28], arr[27], arr[26], arr[25], arr[24],\
+  arr[23], arr[22], arr[21], arr[20], arr[19], arr[18], arr[17], arr[16],\
+  arr[15], arr[14], arr[13], arr[12], arr[11], arr[10], arr[09], arr[08],\
+  arr[07], arr[06], arr[05], arr[04], arr[03], arr[02], arr[01], arr[00]}
 
 module IDCT_test2();
 
-  localparam CIRCUIT_LATENCY = 29;
+  localparam CIRCUIT_LATENCY = 26;
 
-  reg signed [15:0] x [63:0];
-  reg signed [15:0] out [63:0];
-  reg signed [15:0] x_buffer [63:0];
-  reg signed [15:0] expected [63:0];
+  reg signed [`WIN-1:0] x [63:0];
+  reg signed [`WOUT-1:0] out [63:0];
+  reg signed [`WIN-1:0] x_buffer [63:0];
+  reg signed [`WOUT-1:0] expected [63:0];
   reg clk;
 
   IDCT inst (
-    `ARRAY_BINDING(x, x),
-    `ARRAY_BINDING(out, out),
+    .x(`ARRAY_TO_BITVECTOR(x)),
+    .out(`ARRAY_TO_BITVECTOR(out)),
     .clk (clk)
   );
 
