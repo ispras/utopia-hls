@@ -17,24 +17,24 @@
 `define WOUT 9
 
 `define INPUT_INIT(arr)\
-  arr[00]=-16'd166; arr[01]=-16'd7; arr[02]=-16'd4; arr[03]=-16'd4; arr[04]=16'd0; arr[05]=16'd0; arr[06]=16'd0; arr[07]=16'd0;\
-  arr[08]=-16'd2; arr[09]=16'd0; arr[10]=16'd0; arr[11]=16'd0; arr[12]=16'd0; arr[13]=16'd0; arr[14]=16'd0; arr[15]=16'd0;\
-  arr[16]=-16'd2; arr[17]=16'd0; arr[18]=16'd0; arr[19]=16'd0; arr[20]=16'd0; arr[21]=16'd0; arr[22]=16'd0; arr[23]=16'd0;\
-  arr[24]=16'd0; arr[25]=16'd0; arr[26]=16'd0; arr[27]=16'd0; arr[28]=16'd0; arr[29]=16'd0; arr[30]=16'd0; arr[31]=16'd0;\
-  arr[32]=16'd0; arr[33]=16'd0; arr[34]=16'd0; arr[35]=16'd0; arr[36]=16'd0; arr[37]=16'd0; arr[38]=16'd0; arr[39]=16'd0;\
-  arr[40]=16'd0; arr[41]=16'd0; arr[42]=16'd0; arr[43]=16'd0; arr[44]=16'd0; arr[45]=16'd0; arr[46]=16'd0; arr[47]=16'd0;\
-  arr[48]=16'd0; arr[49]=16'd0; arr[50]=16'd0; arr[51]=16'd0; arr[52]=16'd0; arr[53]=16'd0; arr[54]=16'd0; arr[55]=16'd0;\
-  arr[56]=16'd0; arr[57]=16'd0; arr[58]=16'd0; arr[59]=16'd0; arr[60]=16'd0; arr[61]=16'd0; arr[62]=16'd0; arr[63]=16'd0
+  arr[00]=-`WIN'd166; arr[01]=-`WIN'd7; arr[02]=-`WIN'd4; arr[03]=-`WIN'd4; arr[04]=`WIN'd0; arr[05]=`WIN'd0; arr[06]=`WIN'd0; arr[07]=`WIN'd0;\
+  arr[08]=-`WIN'd2; arr[09]=`WIN'd0; arr[10]=`WIN'd0; arr[11]=`WIN'd0; arr[12]=`WIN'd0; arr[13]=`WIN'd0; arr[14]=`WIN'd0; arr[15]=`WIN'd0;\
+  arr[16]=-`WIN'd2; arr[17]=`WIN'd0; arr[18]=`WIN'd0; arr[19]=`WIN'd0; arr[20]=`WIN'd0; arr[21]=`WIN'd0; arr[22]=`WIN'd0; arr[23]=`WIN'd0;\
+  arr[24]=`WIN'd0; arr[25]=`WIN'd0; arr[26]=`WIN'd0; arr[27]=`WIN'd0; arr[28]=`WIN'd0; arr[29]=`WIN'd0; arr[30]=`WIN'd0; arr[31]=`WIN'd0;\
+  arr[32]=`WIN'd0; arr[33]=`WIN'd0; arr[34]=`WIN'd0; arr[35]=`WIN'd0; arr[36]=`WIN'd0; arr[37]=`WIN'd0; arr[38]=`WIN'd0; arr[39]=`WIN'd0;\
+  arr[40]=`WIN'd0; arr[41]=`WIN'd0; arr[42]=`WIN'd0; arr[43]=`WIN'd0; arr[44]=`WIN'd0; arr[45]=`WIN'd0; arr[46]=`WIN'd0; arr[47]=`WIN'd0;\
+  arr[48]=`WIN'd0; arr[49]=`WIN'd0; arr[50]=`WIN'd0; arr[51]=`WIN'd0; arr[52]=`WIN'd0; arr[53]=`WIN'd0; arr[54]=`WIN'd0; arr[55]=`WIN'd0;\
+  arr[56]=`WIN'd0; arr[57]=`WIN'd0; arr[58]=`WIN'd0; arr[59]=`WIN'd0; arr[60]=`WIN'd0; arr[61]=`WIN'd0; arr[62]=`WIN'd0; arr[63]=`WIN'd0
 
 `define REF_INIT(arr)\
-  arr[00]=-16'd24; arr[01]=-16'd23; arr[02]=-16'd21; arr[03]=-16'd21; arr[04]=-16'd21; arr[05]=-16'd21; arr[06]=-16'd21; arr[07]=-16'd20;\
-  arr[08]=-16'd24; arr[09]=-16'd22; arr[10]=-16'd21; arr[11]=-16'd20; arr[12]=-16'd21; arr[13]=-16'd21; arr[14]=-16'd21; arr[15]=-16'd20;\
-  arr[16]=-16'd23; arr[17]=-16'd22; arr[18]=-16'd21; arr[19]=-16'd20; arr[20]=-16'd20; arr[21]=-16'd21; arr[22]=-16'd20; arr[23]=-16'd20;\
-  arr[24]=-16'd23; arr[25]=-16'd22; arr[26]=-16'd20; arr[27]=-16'd20; arr[28]=-16'd20; arr[29]=-16'd20; arr[30]=-16'd20; arr[31]=-16'd19;\
-  arr[32]=-16'd23; arr[33]=-16'd22; arr[34]=-16'd20; arr[35]=-16'd20; arr[36]=-16'd20; arr[37]=-16'd20; arr[38]=-16'd20; arr[39]=-16'd19;\
-  arr[40]=-16'd23; arr[41]=-16'd22; arr[42]=-16'd20; arr[43]=-16'd20; arr[44]=-16'd20; arr[45]=-16'd20; arr[46]=-16'd20; arr[47]=-16'd19;\
-  arr[48]=-16'd23; arr[49]=-16'd22; arr[50]=-16'd20; arr[51]=-16'd20; arr[52]=-16'd20; arr[53]=-16'd20; arr[54]=-16'd20; arr[55]=-16'd19;\
-  arr[56]=-16'd23; arr[57]=-16'd22; arr[58]=-16'd20; arr[59]=-16'd20; arr[60]=-16'd20; arr[61]=-16'd20; arr[62]=-16'd20; arr[63]=-16'd20
+  arr[00]=-`WOUT'd24; arr[01]=-`WOUT'd23; arr[02]=-`WOUT'd21; arr[03]=-`WOUT'd21; arr[04]=-`WOUT'd21; arr[05]=-`WOUT'd21; arr[06]=-`WOUT'd21; arr[07]=-`WOUT'd20;\
+  arr[08]=-`WOUT'd24; arr[09]=-`WOUT'd22; arr[10]=-`WOUT'd21; arr[11]=-`WOUT'd20; arr[12]=-`WOUT'd21; arr[13]=-`WOUT'd21; arr[14]=-`WOUT'd21; arr[15]=-`WOUT'd20;\
+  arr[16]=-`WOUT'd23; arr[17]=-`WOUT'd22; arr[18]=-`WOUT'd21; arr[19]=-`WOUT'd20; arr[20]=-`WOUT'd20; arr[21]=-`WOUT'd21; arr[22]=-`WOUT'd20; arr[23]=-`WOUT'd20;\
+  arr[24]=-`WOUT'd23; arr[25]=-`WOUT'd22; arr[26]=-`WOUT'd20; arr[27]=-`WOUT'd20; arr[28]=-`WOUT'd20; arr[29]=-`WOUT'd20; arr[30]=-`WOUT'd20; arr[31]=-`WOUT'd19;\
+  arr[32]=-`WOUT'd23; arr[33]=-`WOUT'd22; arr[34]=-`WOUT'd20; arr[35]=-`WOUT'd20; arr[36]=-`WOUT'd20; arr[37]=-`WOUT'd20; arr[38]=-`WOUT'd20; arr[39]=-`WOUT'd19;\
+  arr[40]=-`WOUT'd23; arr[41]=-`WOUT'd22; arr[42]=-`WOUT'd20; arr[43]=-`WOUT'd20; arr[44]=-`WOUT'd20; arr[45]=-`WOUT'd20; arr[46]=-`WOUT'd20; arr[47]=-`WOUT'd19;\
+  arr[48]=-`WOUT'd23; arr[49]=-`WOUT'd22; arr[50]=-`WOUT'd20; arr[51]=-`WOUT'd20; arr[52]=-`WOUT'd20; arr[53]=-`WOUT'd20; arr[54]=-`WOUT'd20; arr[55]=-`WOUT'd19;\
+  arr[56]=-`WOUT'd23; arr[57]=-`WOUT'd22; arr[58]=-`WOUT'd20; arr[59]=-`WOUT'd20; arr[60]=-`WOUT'd20; arr[61]=-`WOUT'd20; arr[62]=-`WOUT'd20; arr[63]=-`WOUT'd20
 
 `define ARRAY_TO_BITVECTOR(arr) \
   {arr[63], arr[62], arr[61], arr[60], arr[59], arr[58], arr[57], arr[56],\
