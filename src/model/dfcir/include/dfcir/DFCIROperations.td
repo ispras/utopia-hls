@@ -242,8 +242,6 @@ class DFCIR_UnaryOp<string name, Constraint firstType,
   }];
 }
 
-def NotOp : DFCIR_UnaryOp<"not", Variable, Variable, [SameOperandsAndResultType]>;
-
 def NegOp : DFCIR_UnaryOp<"neg", Variable, Variable, [SameOperandsAndResultType]>;
 
 class DFCIR_BinaryOp<string name, Constraint firstType, Constraint secondType,
@@ -404,12 +402,6 @@ def EqOp : DFCIR_BinaryOp<"eq", Variable, Variable, Variable, []>;
 
 def NotEqOp : DFCIR_BinaryOp<"notEq", Variable, Variable, Variable, []>;
 
-def AndOp : DFCIR_BinaryOp<"and", Variable, Variable, Variable, []>;
-
-def OrOp : DFCIR_BinaryOp<"or", Variable, Variable, Variable, []>;
-
-def XorOp : DFCIR_BinaryOp<"xor", Variable, Variable, Variable, []>;
-
 def AddOp : DFCIR_BinaryOp<"add", Variable, Variable, Variable, []>;
 
 def SubOp : DFCIR_BinaryOp<"sub", Variable, Variable, Variable, []>;
@@ -421,6 +413,50 @@ def RemOp : DFCIR_BinaryOp<"red", Variable, Variable, Variable, []>;
 def ModOp : DFCIR_BinaryOp<"mod", Variable, Variable, Variable, []>;
 
 def DivOp : DFCIR_BinaryOp<"div", Variable, Variable, Variable, []>;
+
+def AndOp : DFCIR_Op<"and", [DeclareOpInterfaceMethods<BinaryOpInterface>, DeclareOpInterfaceMethods<CombOpInterface>]> {
+  let arguments = (ins
+    Variable:$first,
+    Variable:$second
+  );
+
+  let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second) `)` `:` type($res) attr-dict";
+
+  let results = (outs Variable:$res);
+}
+
+def OrOp : DFCIR_Op<"or", [DeclareOpInterfaceMethods<BinaryOpInterface>, DeclareOpInterfaceMethods<CombOpInterface>]> {
+  let arguments = (ins
+    Variable:$first,
+    Variable:$second
+  );
+
+  let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second) `)` `:` type($res) attr-dict";
+
+  let results = (outs Variable:$res);
+}
+
+def XorOp : DFCIR_Op<"xor", [DeclareOpInterfaceMethods<BinaryOpInterface>, DeclareOpInterfaceMethods<CombOpInterface>]> {
+  let arguments = (ins
+    Variable:$first,
+    Variable:$second
+  );
+
+  let assemblyFormat = "`(` $first `:` type($first) `,` $second `:` type($second) `)` `:` type($res) attr-dict";
+
+  let results = (outs Variable:$res);
+}
+
+def NotOp : DFCIR_Op<"not", [SameOperandsAndResultType, DeclareOpInterfaceMethods<UnaryOpInterface>,
+                             DeclareOpInterfaceMethods<CombOpInterface>]> {
+  let arguments = (ins
+    Variable:$first
+  );
+
+  let assemblyFormat = "`(` $first `:` type($first) `)` `:` type($res) attr-dict";
+
+  let results = (outs Variable:$res);
+}
 
 def CastOp : DFCIR_UnaryOp<"cast", Variable, Variable, []>;
 

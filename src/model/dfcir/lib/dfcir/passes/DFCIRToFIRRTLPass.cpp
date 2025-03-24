@@ -531,13 +531,127 @@ DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(Mul, MUL)
 DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(Div, DIV)
 
 // AndOpConversionPattern.
-DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(And, AND)
+class AndOpConversionPattern
+    : public FIRRTLOpConversionPattern<AndOp> {
+public:
+  using FIRRTLOpConversionPattern<AndOp>::FIRRTLOpConversionPattern;
+  using OpAdaptor = typename AndOp::Adaptor;
+  using Rewriter = ConversionPatternRewriter;
+
+  LogicalResult matchAndRewrite(AndOp andOp, OpAdaptor adaptor,
+                                Rewriter &rewriter) const override {
+    using circt::firrtl::SIntType;
+    using circt::firrtl::AsSIntPrimOp;
+
+    auto newType = getTypeConverter()->convertType(andOp->getResult(0).getType());
+    Operation *newOp = rewriter.create<circt::firrtl::AndPrimOp>(
+        rewriter.getUnknownLoc(),
+        newType,
+        adaptor.getFirst(),
+        adaptor.getSecond()
+    );
+
+    if (llvm::isa<SIntType>(newType)) {
+      newOp = rewriter.create<AsSIntPrimOp>(
+        rewriter.getUnknownLoc(),
+        newOp->getResult(0)
+      );
+    }
+
+    for (auto &operand:
+      llvm::make_early_inc_range(andOp.getRes().getUses())) {
+    (*oldTypeMap)[std::make_pair(operand.getOwner(),
+                                 operand.getOperandNumber())] =
+                                     operand.get().getType();
+    operand.set(newOp->getResult(0));
+  }
+
+  rewriter.eraseOp(andOp);
+  return mlir::success();
+  }
+};
 
 // OrOpConversionPattern.
-DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(Or, OR)
+class OrOpConversionPattern
+    : public FIRRTLOpConversionPattern<OrOp> {
+public:
+  using FIRRTLOpConversionPattern<OrOp>::FIRRTLOpConversionPattern;
+  using OpAdaptor = typename OrOp::Adaptor;
+  using Rewriter = ConversionPatternRewriter;
+
+  LogicalResult matchAndRewrite(OrOp orOp, OpAdaptor adaptor,
+                                Rewriter &rewriter) const override {
+    using circt::firrtl::SIntType;
+    using circt::firrtl::AsSIntPrimOp;
+
+    auto newType = getTypeConverter()->convertType(orOp->getResult(0).getType());
+    Operation *newOp = rewriter.create<circt::firrtl::OrPrimOp>(
+        rewriter.getUnknownLoc(),
+        newType,
+        adaptor.getFirst(),
+        adaptor.getSecond()
+    );
+
+    if (llvm::isa<SIntType>(newType)) {
+      newOp = rewriter.create<AsSIntPrimOp>(
+        rewriter.getUnknownLoc(),
+        newOp->getResult(0)
+      );
+    }
+
+    for (auto &operand:
+      llvm::make_early_inc_range(orOp.getRes().getUses())) {
+    (*oldTypeMap)[std::make_pair(operand.getOwner(),
+                                 operand.getOperandNumber())] =
+                                     operand.get().getType();
+    operand.set(newOp->getResult(0));
+  }
+
+  rewriter.eraseOp(orOp);
+  return mlir::success();
+  }
+};
 
 // XorOpConversionPattern.
-DECL_SCHED_BINARY_ARITH_OP_CONV_PATTERN(Xor, XOR)
+class XorOpConversionPattern
+    : public FIRRTLOpConversionPattern<XorOp> {
+public:
+  using FIRRTLOpConversionPattern<XorOp>::FIRRTLOpConversionPattern;
+  using OpAdaptor = typename XorOp::Adaptor;
+  using Rewriter = ConversionPatternRewriter;
+
+  LogicalResult matchAndRewrite(XorOp xorOp, OpAdaptor adaptor,
+                                Rewriter &rewriter) const override {
+    using circt::firrtl::SIntType;
+    using circt::firrtl::AsSIntPrimOp;
+
+    auto newType = getTypeConverter()->convertType(xorOp->getResult(0).getType());
+    Operation *newOp = rewriter.create<circt::firrtl::XorPrimOp>(
+        rewriter.getUnknownLoc(),
+        newType,
+        adaptor.getFirst(),
+        adaptor.getSecond()
+    );
+
+    if (llvm::isa<SIntType>(newType)) {
+      newOp = rewriter.create<AsSIntPrimOp>(
+        rewriter.getUnknownLoc(),
+        newOp->getResult(0)
+      );
+    }
+
+    for (auto &operand:
+      llvm::make_early_inc_range(xorOp.getRes().getUses())) {
+    (*oldTypeMap)[std::make_pair(operand.getOwner(),
+                                 operand.getOperandNumber())] =
+                                     operand.get().getType();
+    operand.set(newOp->getResult(0));
+  }
+
+  rewriter.eraseOp(xorOp);
+  return mlir::success();
+  }
+};
 
 #define DECL_SCHED_UNARY_ARITH_OP_CONV_PATTERN(CLASS_PREF, OP_NAME)                                                \
 class OP_CLASS_CONV_PATTERN(CLASS_PREF)                                                                            \
@@ -552,7 +666,44 @@ public:                                                                         
 };
 
 // NotOpConversionPattern.
-DECL_SCHED_UNARY_ARITH_OP_CONV_PATTERN(Not, NOT)
+class NotOpConversionPattern
+    : public FIRRTLOpConversionPattern<NotOp> {
+public:
+  using FIRRTLOpConversionPattern<NotOp>::FIRRTLOpConversionPattern;
+  using OpAdaptor = typename NotOp::Adaptor;
+  using Rewriter = ConversionPatternRewriter;
+
+  LogicalResult matchAndRewrite(NotOp notOp, OpAdaptor adaptor,
+                                Rewriter &rewriter) const override {
+    using circt::firrtl::SIntType;
+    using circt::firrtl::AsSIntPrimOp;
+
+    auto newType = getTypeConverter()->convertType(notOp->getResult(0).getType());
+    Operation *newOp = rewriter.create<circt::firrtl::NotPrimOp>(
+        rewriter.getUnknownLoc(),
+        newType,
+        adaptor.getFirst()
+    );
+
+    if (llvm::isa<SIntType>(newType)) {
+      newOp = rewriter.create<AsSIntPrimOp>(
+        rewriter.getUnknownLoc(),
+        newOp->getResult(0)
+      );
+    }
+
+    for (auto &operand:
+      llvm::make_early_inc_range(notOp.getRes().getUses())) {
+    (*oldTypeMap)[std::make_pair(operand.getOwner(),
+                                 operand.getOperandNumber())] =
+                                     operand.get().getType();
+    operand.set(newOp->getResult(0));
+  }
+
+  rewriter.eraseOp(notOp);
+  return mlir::success();
+  }
+};
 
 // NegOpConversionPattern.
 DECL_SCHED_UNARY_ARITH_OP_CONV_PATTERN(Neg, NEG)

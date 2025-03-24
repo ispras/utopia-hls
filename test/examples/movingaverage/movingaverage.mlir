@@ -12,7 +12,7 @@ dfcir.kernel "MovingAverage" {
   %10 = dfcir.greater[?] (%9 : !dfcir.stream<!dfcir.fixed<false, 32, 0>>, %0 : !dfcir.const<!dfcir.fixed<false, 32, 0>>) : !dfcir.stream<!dfcir.fixed<false, 1, 0>> {latency = -1 : i32}
   %11 = dfcir.sub[?] (%6 : !dfcir.scalar<!dfcir.fixed<false, 32, 0>>, %2 : !dfcir.const<!dfcir.fixed<false, 32, 0>>) : !dfcir.stream<!dfcir.fixed<false, 32, 0>> {latency = -1 : i32}
   %12 = dfcir.less[?] (%9 : !dfcir.stream<!dfcir.fixed<false, 32, 0>>, %11 : !dfcir.stream<!dfcir.fixed<false, 32, 0>>) : !dfcir.stream<!dfcir.fixed<false, 1, 0>> {latency = -1 : i32}
-  %13 = dfcir.and[?] (%10 : !dfcir.stream<!dfcir.fixed<false, 1, 0>>, %12 : !dfcir.stream<!dfcir.fixed<false, 1, 0>>) : !dfcir.stream<!dfcir.fixed<false, 1, 0>> {latency = -1 : i32}
+  %13 = dfcir.and(%10 : !dfcir.stream<!dfcir.fixed<false, 1, 0>>, %12 : !dfcir.stream<!dfcir.fixed<false, 1, 0>>) : !dfcir.stream<!dfcir.fixed<false, 1, 0>> {latency = -1 : i32}
   %14 = dfcir.mux(%10: !dfcir.stream<!dfcir.fixed<false, 1, 0>>, %1: !dfcir.const<!dfcir.float<8, 24>>, %7) : !dfcir.stream<!dfcir.float<8, 24>>
   %15 = dfcir.mux(%12: !dfcir.stream<!dfcir.fixed<false, 1, 0>>, %1: !dfcir.const<!dfcir.float<8, 24>>, %8) : !dfcir.stream<!dfcir.float<8, 24>>
   %16 = dfcir.mux(%13: !dfcir.stream<!dfcir.fixed<false, 1, 0>>, %3: !dfcir.const<!dfcir.fixed<false, 32, 0>>, %4: !dfcir.const<!dfcir.fixed<false, 32, 0>>) : !dfcir.stream<!dfcir.fixed<false, 32, 0>>

@@ -67,7 +67,7 @@ jobs:
           ## "Magma" encoder tests.
           - kernel: magma
             cpp   : magma_encoder
-            config: add_int_2_xor_int_2
+            config: add_int_2
             test  : 0
             top   : MagmaEncoder_test0
           ## "Magma" decoder tests.

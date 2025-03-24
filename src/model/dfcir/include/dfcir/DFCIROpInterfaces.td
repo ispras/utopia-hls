@@ -50,6 +50,10 @@ def BinaryOpInterface : OpInterface<"BinaryOpInterface", [NaryOpInterface]> {
   let cppNamespace = "mlir::dfcir";
 }
 
+def CombOpInterface : OpInterface<"CombOpInterface"> {
+  let cppNamespace = "mlir::dfcir";
+}
+
 def ShiftOpInterface : OpInterface<"ShiftOpInterface"> {
   let cppNamespace = "mlir::dfcir";
 }

@@ -33,15 +33,6 @@ enum Ops {
   DIV_FLOAT,
   NEG_INT,
   NEG_FLOAT,
-  // Bitwise operations.
-  AND_INT,
-  AND_FLOAT,
-  OR_INT,
-  OR_FLOAT,
-  XOR_INT,
-  XOR_FLOAT,
-  NOT_INT,
-  NOT_FLOAT,
   // Comparison operations.
   LESS_INT,
   LESS_FLOAT,

@@ -40,14 +40,6 @@ Ops resolveInternalOpType(mlir::Operation *op) {
     return (isFloat) ? Ops::DIV_FLOAT : Ops::DIV_INT;
   } else if (llvm::isa<NegOp>(op)) {
     return (isFloat) ? Ops::NEG_FLOAT : Ops::NEG_INT;
-  } else if (llvm::isa<AndOp>(op)) {
-    return (isFloat) ? Ops::AND_FLOAT : Ops::AND_INT;
-  } else if (llvm::isa<OrOp>(op)) {
-    return (isFloat) ? Ops::OR_FLOAT : Ops::OR_INT;
-  } else if (llvm::isa<XorOp>(op)) {
-    return (isFloat) ? Ops::XOR_FLOAT : Ops::XOR_INT;
-  } else if (llvm::isa<NotOp>(op)) {
-    return (isFloat) ? Ops::NOT_FLOAT : Ops::NOT_INT;
   } else if (llvm::isa<LessOp>(op)) {
     return (isFloat) ? Ops::LESS_FLOAT : Ops::LESS_INT;
   } else if (llvm::isa<LessEqOp>(op)) {
@@ -77,14 +69,6 @@ std::string opTypeToString(const Ops &opType) {
   case DIV_FLOAT: return "DIV_FLOAT";
   case NEG_INT: return "NEG_INT";
   case NEG_FLOAT: return "NEG_FLOAT";
-  case AND_INT: return "AND_INT";
-  case AND_FLOAT: return "AND_FLOAT";
-  case OR_INT: return "OR_INT";
-  case OR_FLOAT: return "OR_FLOAT";
-  case XOR_INT: return "XOR_INT";
-  case XOR_FLOAT: return "XOR_FLOAT";
-  case NOT_INT: return "NOT_INT";
-  case NOT_FLOAT: return "NOT_FLOAT";
   case LESS_INT: return "LESS_INT";
   case LESS_FLOAT: return "LESS_FLOAT";
   case LESSEQ_INT: return "LESSEQ_INT";
