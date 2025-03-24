@@ -66,9 +66,9 @@ void DFVariableImpl::connect(DFVariableImpl *connectee) {
   meta->graph.addChannel(connectee, this, 0, true);
 }
 
-DFVariableImpl *DFVariableImpl::operator()(uint8_t first, uint8_t second) {
-  uint8_t left = (first > second) ? first : second;
-  uint8_t right = (first > second) ? second : first;
+DFVariableImpl *DFVariableImpl::operator()(uint16_t first, uint16_t second) {
+  uint16_t left = (first > second) ? first : second;
+  uint16_t right = (first > second) ? second : first;
   uint16_t total = getTotalBits();
   if (total <= left) {
     std::stringstream ss;
@@ -227,7 +227,7 @@ void DFVariable::connect(const DFVariable &connectee) {
   impl->connect(connectee.impl);
 }
 
-DFVariable DFVariable::operator()(uint8_t first, uint8_t second) {
+DFVariable DFVariable::operator()(uint16_t first, uint16_t second) {
   return DFVariable(impl->operator()(first, second));
 }
 
