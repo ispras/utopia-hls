@@ -676,19 +676,11 @@ public:
   LogicalResult matchAndRewrite(ShiftRightOp shRightOp, OpAdaptor adaptor,
                                 Rewriter &rewriter) const override {
     using circt::firrtl::getBitWidth;
-    using circt::firrtl::SIntType;
     using circt::firrtl::FIRRTLBaseType;
-    using circt::firrtl::BitsPrimOp;
-    using circt::firrtl::UIntType;
-    using circt::firrtl::ConstantOp;
-    using circt::firrtl::CatPrimOp;
-    using circt::firrtl::AsSIntPrimOp;
+    using circt::firrtl::PadPrimOp;
 
     auto oldType = getTypeConverter()->convertType(shRightOp->getResult(0).getType());
     uint32_t oldWidth = *getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(oldType));
-    bool isSInt = llvm::isa<SIntType>(oldType);
-
-    Operation *newOp = nullptr;
 
     auto newShr = rewriter.create<ShrPrimOp>(
       shRightOp.getLoc(),
@@ -696,72 +688,25 @@ public:
       adaptor.getBits()
     );
 
-    auto newType = newShr->getResult(0).getType();
-    uint32_t newWidth = *getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(newType));
-    uint32_t widthDelta = oldWidth - newWidth;
+    auto oldWidthAttrType = IntegerType::get(
+      rewriter.getContext(),
+      32, // width
+      IntegerType::SignednessSemantics::Signless
+    );
 
-    if (isSInt) {
-      auto getSignOp = rewriter.create<BitsPrimOp>(
-        rewriter.getUnknownLoc(),
-        adaptor.getFirst(),
-        oldWidth - 1,
-        oldWidth - 1
-      );
+    auto oldWidthAttr = IntegerAttr::get(
+      oldWidthAttrType,
+      oldWidth // value
+    );
 
-      Operation *currSignConcatOp = getSignOp;
-      for (uint32_t i = 1; i < widthDelta; ++i) {
-        currSignConcatOp = rewriter.create<CatPrimOp>(
-          rewriter.getUnknownLoc(),
-          getSignOp->getResult(0),
-          currSignConcatOp->getResult(0)
-        );
-      }
-
-      auto castedSignConcatOp = rewriter.create<AsSIntPrimOp>(
-        rewriter.getUnknownLoc(),
-        currSignConcatOp->getResult(0)
-      );
-
-      auto catOp = rewriter.create<CatPrimOp>(
-        rewriter.getUnknownLoc(),
-        castedSignConcatOp->getResult(0),
-        newShr->getResult(0)
-      );
-
-      newOp = rewriter.create<AsSIntPrimOp>(
-        rewriter.getUnknownLoc(),
-        catOp->getResult(0)
-      );
-    } else {
-      auto newConstType = UIntType::get(
-        rewriter.getContext(),
-        widthDelta, // width
-        true // isConst
-      );
-
-      auto newConstAttrType = IntegerType::get(
-        rewriter.getContext(),
-        widthDelta, // width
-        IntegerType::SignednessSemantics::Unsigned
-      );
-
-      auto newConstAttr = IntegerAttr::get(
-        newConstAttrType,
-        0 // value
-      );
-
-      auto newConst = rewriter.create<ConstantOp>(
-        rewriter.getUnknownLoc(),
-        newConstType,
-        newConstAttr
-      );
-
-      newOp = rewriter.create<CatPrimOp>(
-        rewriter.getUnknownLoc(),
-        newConst->getResult(0),
-        newShr->getResult(0)
-      );
-    }
+    // Sign- or zero-extend the previously
+    // shifted value to restore the original bit width.
+    auto newOp = rewriter.create<PadPrimOp>(
+      rewriter.getUnknownLoc(),
+      oldType,
+      newShr->getResult(0),
+      oldWidthAttr
+    );
 
     for (auto &operand:
         llvm::make_early_inc_range(shRightOp.getRes().getUses())) {
