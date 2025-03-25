@@ -107,6 +107,7 @@ private:
   std::pair<SchedGraph::Buffers, int32_t> schedule(SchedGraph &graph) {
     size_t chanCount = 0;
     for (SchedNode *node: graph.nodes) {
+      assert(node->latency >= 0 && "Encountered a node with unspecified latency!");
       chanCount += node->inputs.size();
       nodeMap[node] = problem.addVariable();
       if (graph.isInput(node)) {

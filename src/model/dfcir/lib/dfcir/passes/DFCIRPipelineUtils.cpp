@@ -84,7 +84,7 @@ CombNode *CombGraph::process(Operation *op, OpNodeMap &map) {
 
   // All other operations processing.
   // -------------------------------------------------------
-  if (llvm::isa<NaryOpInterface, MuxOp, CastOp,
+  if (llvm::isa<Scheduled, NaryOpInterface, MuxOp, CastOp,
                 ShiftOpInterface, BitsOp, CatOp>(op)) {
     CombLatency latency = 1.f;
     CombNode *newNode = new CombNode(newId, op, latency);
