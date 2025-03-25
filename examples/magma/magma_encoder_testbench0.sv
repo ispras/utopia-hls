@@ -7,14 +7,13 @@
 //===----------------------------------------------------------------------===//
 
 // Addition (integer): 2 stages each.
-// XOR (integer): 2 stages each.
-// Total: 128 stages.
+// Total: 64 stages.
 
 `timescale 1s/1s
 
 module MagmaEncoder_test0();
 
-  localparam CIRCUIT_LATENCY = 128;
+  localparam CIRCUIT_LATENCY = 64;
 
   reg [63:0] block;
   reg [255:0] key;

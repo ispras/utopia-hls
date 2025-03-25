@@ -39,6 +39,7 @@ private:
     int32_t maxLatency = 0;
 
     for (SchedNode *node : graph.nodes) {
+      assert(node->latency >= 0 && "Encountered a node with unspecified latency!");
       for (SchedChannel *channel : node->outputs) {
         int32_t latency = map[node] + node->latency + channel->offset;
 

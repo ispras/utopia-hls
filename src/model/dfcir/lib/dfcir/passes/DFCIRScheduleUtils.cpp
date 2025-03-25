@@ -124,9 +124,9 @@ SchedNode *SchedGraph::process(Operation *op, OpNodeMap &map) {
 
   // All other operations processing.
   // -------------------------------------------------------
-  if (llvm::isa<NaryOpInterface, MuxOp, CastOp,
+  if (llvm::isa<Scheduled, NaryOpInterface, MuxOp, CastOp,
                 ShiftOpInterface, BitsOp, CatOp>(op)) {
-    int32_t latency = llvm::isa<NaryOpInterface>(op) ? -1 : 0;
+    int32_t latency = llvm::isa<Scheduled>(op) ? -1 : 0;
     SchedNode *newNode = new SchedNode(newId, op, latency);
     nodes.push_back(newNode);
     map[op] = newNode;
