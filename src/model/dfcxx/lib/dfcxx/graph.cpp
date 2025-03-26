@@ -105,6 +105,11 @@ Channel *Graph::addChannel(DFVariableImpl *source, DFVariableImpl *target,
 
 void Graph::transferFrom(Graph &&graph) {
   nodes.merge(std::move(graph.nodes));
+  for (Node *node: graph.startNodes) {
+    if (node->type == OpType::CONST) {
+      startNodes.insert(node);
+    }
+  }
 }
 
 void Graph::resetNodeName(const std::string &name) {

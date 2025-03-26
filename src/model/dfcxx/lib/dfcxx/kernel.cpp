@@ -172,8 +172,8 @@ DFVariable Kernel::rebindOutput(Node *output, DFVariable target, Kernel &kern) {
 }
 
 void Kernel::deleteNode(Node *node) {
-  meta.graph.deleteNode(node);
   meta.storage.deleteVariable(node->var);
+  meta.graph.deleteNode(node);
 }
 
 bool Kernel::compile(const DFLatencyConfig &config,
@@ -248,7 +248,7 @@ bool Kernel::check() const {
   const auto &startNodes = meta.graph.getStartNodes();
   std::cout << "[UTOPIA] Kernel: " << getName() << std::endl;
   std::cout << "[UTOPIA] Nodes: " << nodes.size() << std::endl;
-  std::cout << "[UTOPIA] Start nodes: " << startNodes.size() << std::endl;
+  std::cout << "[UTOPIA] Start/constant nodes: " << startNodes.size() << std::endl;
 
   return checkValidNodes();
 }
