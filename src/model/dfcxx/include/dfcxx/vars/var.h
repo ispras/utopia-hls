@@ -55,7 +55,9 @@ public:
 
   IODirection getDirection() const;
 
-  const KernelMeta &getMeta() const;
+  KernelMeta *getMeta() const;
+
+  void setMeta(KernelMeta *meta);
 
   DFTypeImpl *getType();
 
@@ -124,8 +126,6 @@ public:
   std::string_view getName() const;
 
   DFVariableImpl::IODirection getDirection() const;
-
-  const KernelMeta &getMeta() const;
 
   DFType getType() const;
 

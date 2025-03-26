@@ -15,12 +15,13 @@
 namespace dfcxx {
 
 Graph::~Graph() {
+  // By convention to delete a Channel object
+  // each input of each node is deleted.
   for (Node *node: nodes) {
+    for (Channel *channel: node->outputs) {
+      delete channel;
+    }
     delete node;
-  }
-
-  for (Channel *channel: channels) {
-    delete channel;
   }
 }
 
@@ -82,24 +83,16 @@ std::pair<Node *, bool> Graph::addNode(DFVariableImpl *var,
     nameMap[name] = *(insertRes.first);
   }
 
-  // The following lines create empty channel vectors
-  // for new nodes. This allows to use .at() on unconnected
-  // nodes without getting an exception.
-  (void)inputs[*(insertRes.first)];
-  (void)outputs[*(insertRes.first)];
   return std::make_pair(*(insertRes.first), insertRes.second);
 }
 
 Channel *Graph::addChannel(Node *source, Node *target,
                            unsigned opInd, bool connect) {
   assert(source && target);
-  Channel *newChannel = new Channel(source, target, opInd);
+  Channel *newChannel = new Channel(source, target, opInd, connect);
 
-  outputs[source].push_back(newChannel);
-  inputs[target].push_back(newChannel);
-  if (connect) {
-    connections[target] = newChannel;
-  }
+  source->outputs.push_back(newChannel);
+  target->inputs.push_back(newChannel);
   return newChannel;
 }
 
@@ -112,9 +105,6 @@ Channel *Graph::addChannel(DFVariableImpl *source, DFVariableImpl *target,
 
 void Graph::transferFrom(Graph &&graph) {
   nodes.merge(std::move(graph.nodes));
-  inputs.merge(std::move(graph.inputs));
-  outputs.merge(std::move(graph.outputs));
-  connections.merge(std::move(graph.connections));
 }
 
 void Graph::resetNodeName(const std::string &name) {
@@ -127,59 +117,59 @@ void Graph::resetNodeName(const std::string &name) {
 }
 
 void Graph::deleteNode(Node *node) {
-  connections.erase(node);
-  inputs.erase(node);
-  outputs.erase(node);
   startNodes.erase(node);
   nodes.erase(node);
+  delete node;
 }
 
-void Graph::rebindInput(Node *source, Node *input, Graph &graph) {
-  auto &conns = graph.connections;
-  for (auto out: graph.outputs[input]) {
-    for (auto in: graph.inputs[out->target]) {
-      if (in->source == input && out == in) {
-        in->source = source;
-        outputs[source].push_back(in);
-        break;
-      }
-    }
-    auto it = conns.find(out->target);
-    if (it != conns.end() && it->second->source == input) {
-      it->second->source = source;
-    }
+void Graph::rebindInput(Node *source, Node *input) {
+  for (Channel *channel: input->outputs) {
+    channel->source = source;
+    source->outputs.push_back(channel);
   }
 }
 
-Node *Graph::rebindOutput(Node *output, Node *target, Graph &graph) {
-  Node *inSrc = graph.inputs[output].front()->source;
-  auto &outs = graph.outputs[inSrc];
-  for (auto it = outs.begin(); it != outs.end(); ++it) {
-    if ((*it)->target != output) { continue; }
-    if (target->type == OpType::NONE) {
-      outs.erase(it);
-      for (auto out: outputs[target]) {
-        for (auto in: inputs[out->target]) {
-          if (in->source == target && out == in) {
-            in->source = (*it)->source;
-            outs.push_back(in);
-          }
-        }
-        auto conIt = connections.find(out->target);
-        if (conIt != connections.end() && conIt->second->source == target) {
-          conIt->second->source = (*it)->source;
-        }
-      }
-      target = (*it)->source;
-    } else {
-      (*it)->target = target;
-      inputs[target].clear();
-      inputs[target].push_back(*it);
-      connections[target] = *it;
+Node *Graph::rebindOutput(Node *output, Node *target) {
+  assert(target->inputs.empty() && "Cannot connect to DFVariable with existing inputs!");
+
+  assert(output->inputs.size() == 1 && "Instance's output must be connected!");
+
+  Channel *connect = output->inputs.front();
+  Node *newSrc = connect->source;
+
+  if (target->type == OpType::NONE) {
+    // Find the ID of "connect" in "newSrcOutputs".
+    // It is assumed the required connect exists in "newSrcOutputs".
+    uint64_t connectId = 0;
+    std::vector<Channel *> &newSrcOutputs = newSrc->outputs;
+    for (; newSrcOutputs[connectId] != connect; ++connectId) {}
+
+    // Remove existing (newSrc, output) connection.
+    newSrcOutputs.erase(newSrcOutputs.begin() + connectId);
+
+    // For each "target" node's output reconnect it to "newSrc".
+    for (Channel *channel: target->outputs) {
+      channel->source = newSrc;
+      newSrcOutputs.push_back(channel);
     }
-    break;
+
+    // Old "target" is about to be deleted - change it for "newSrc".
+    target = newSrc;
+  } else if (target->type == OpType::OUT) {
+    // Reconnect existing "newSrc" connection to "target".
+    connect->target = target;
+    target->inputs.push_back(connect);
+  } else {
+    assert(false && "DFVariables other than outputs and shallow are unsupported!");
   }
+
   return target;
+}
+
+void Graph::resetMeta(KernelMeta *meta) {
+  for (Node *node: nodes) {
+    node->var->setMeta(meta);
+  }
 }
 
 } // namespace dfcxx

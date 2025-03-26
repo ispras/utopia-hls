@@ -10,9 +10,11 @@
 
 namespace dfcxx {
 
-Channel::Channel(Node *source, Node* target, unsigned opInd) : source(source),
-                                                               target(target),
-                                                               opInd(opInd) {}
+Channel::Channel(Node *source, Node* target,
+                 unsigned opInd, bool connect) : source(source),
+                                                 target(target),
+                                                 opInd(opInd),
+                                                 connect(connect) {}
 
 bool Channel::operator==(const Channel &channel) const {
   return source == channel.source &&

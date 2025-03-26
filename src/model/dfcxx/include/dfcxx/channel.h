@@ -17,9 +17,10 @@ struct Channel {
   Node *source;
   Node *target;
   unsigned opInd;
+  bool connect : 1;
 
   Channel() = default;
-  Channel(Node *source, Node *target, unsigned opInd);
+  Channel(Node *source, Node *target, unsigned opInd, bool connect);
 
   bool operator==(const Channel &channel) const;
 };

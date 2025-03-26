@@ -96,7 +96,6 @@ bool Kernel::compileDot(llvm::raw_fd_ostream *stream) {
                           localTime->tm_sec);
 
   const auto &nodes = meta.graph.getNodes();
-  const auto &inputs = meta.graph.getInputs();
 
   for (Node *node : nodes) {
     TemplateDictionary *elem = dict->AddSectionDictionary("ELEMENTS");
@@ -137,7 +136,7 @@ bool Kernel::compileDot(llvm::raw_fd_ostream *stream) {
     elem->SetValue("LABEL", label);
 
     unsigned i = 0;
-    for (Channel *chan : inputs.at(node)) {
+    for (Channel *chan : node->inputs) {
       TemplateDictionary *conn = elem->AddSectionDictionary("CONNECTIONS");
       conn->SetValue("SRC_NAME", getName(chan->source));
       conn->SetValue("TRG_NAME", name);
@@ -155,18 +154,14 @@ bool Kernel::compileDot(llvm::raw_fd_ostream *stream) {
 
 void Kernel::rebindInput(DFVariable source, Node *input, Kernel &kern) {
   Node *sourceNode = meta.graph.findNode(source);
-  meta.graph.rebindInput(sourceNode,
-                         input,
-                         kern.meta.graph);
+  meta.graph.rebindInput(sourceNode, input);
 
   kern.deleteNode(input);
 }
 
 DFVariable Kernel::rebindOutput(Node *output, DFVariable target, Kernel &kern) {
   Node *targetNode = meta.graph.findNode(target);
-  Node *node = meta.graph.rebindOutput(output,
-                                       targetNode,
-                                       kern.meta.graph);
+  Node *node = meta.graph.rebindOutput(output, targetNode);
 
   if (targetNode != node) {
     deleteNode(targetNode);
@@ -239,7 +234,7 @@ bool Kernel::compile(const DFLatencyConfig &config,
 bool Kernel::simulate(const std::string &inDataPath,
                       const std::string &outFilePath) {
   std::vector<Node *> sorted = topSort(meta.graph);
-  DFCXXSimulator sim(sorted, meta.graph.getInputs());
+  DFCXXSimulator sim(sorted);
   std::ifstream input(inDataPath, std::ios::in);
   if (!input || input.bad() || input.eof() || input.fail() || !input.is_open()) {
     return false;
@@ -251,11 +246,9 @@ bool Kernel::simulate(const std::string &inDataPath,
 bool Kernel::check() const {
   const auto &nodes = meta.graph.getNodes();
   const auto &startNodes = meta.graph.getStartNodes();
-  const auto &connections = meta.graph.getConnections();
   std::cout << "[UTOPIA] Kernel: " << getName() << std::endl;
   std::cout << "[UTOPIA] Nodes: " << nodes.size() << std::endl;
   std::cout << "[UTOPIA] Start nodes: " << startNodes.size() << std::endl;
-  std::cout << "[UTOPIA] Connections: " << connections.size() << std::endl;
 
   return checkValidNodes();
 }

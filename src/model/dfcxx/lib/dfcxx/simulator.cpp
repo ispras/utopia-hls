@@ -46,34 +46,30 @@ uint64_t DFCXXSimulator::readInput(std::ifstream &in,
 }
 
 static bool processInput(RecordedValues &vals, Node *node,
-                         const Inputs &inputs, const IOVars &inData,
-                         uint64_t ind) {
+                         const IOVars &inData, uint64_t ind) {
   auto name = std::string(DFVariable(node->var).getName());
   vals[node] = inData.at(name)[ind];
   return true;
 }
 
 static bool processOutput(RecordedValues &vals, Node *node,
-                          const Inputs &inputs, const IOVars &inData,
-                          uint64_t ind) {
+                          const IOVars &inData, uint64_t ind) {
   auto name = std::string(DFVariable(node->var).getName());
   // Take output's only connection and assign the existing source value.
-  vals[node] = vals[inputs.at(node)[0]->source];
+  vals[node] = vals[node->inputs[0]->source];
   return true;
 }
 
 static bool processConst(RecordedValues &vals, Node *node,
-                         const Inputs &inputs, const IOVars &inData,
-                         uint64_t ind) {
+                         const IOVars &inData, uint64_t ind) {
   vals[node] = ((DFConstant *) node->var)->getUInt();
   return true;
 }
 
 static bool processMux(RecordedValues &vals, Node *node,
-                       const Inputs &inputs, const IOVars &inData,
-                       uint64_t ind) {
-  auto muxedValue = vals[inputs.at(node)[node->data.muxId]->source];
-  vals[node] = vals[inputs.at(node)[muxedValue + 1]->source];
+                       const IOVars &inData, uint64_t ind) {
+  auto muxedValue = vals[node->inputs[node->data.muxId]->source];
+  vals[node] = vals[node->inputs[muxedValue + 1]->source];
   return true;
 }
 
@@ -85,38 +81,37 @@ static bool processMux(RecordedValues &vals, Node *node,
 
 // Generic procedure to perform the simulation
 // for the concrete binary op and type of its operands.
-#define GENERIC_BINARY_OP_SIM_WITH_TYPE(TYPE, VALS, INPUTS, NODE, OP)   \
-TYPE left = CAST_SIM_VALUE_TO(TYPE, VALS[INPUTS.at(NODE)[0]->source]);  \
-TYPE right = CAST_SIM_VALUE_TO(TYPE, VALS[INPUTS.at(NODE)[1]->source]); \
-TYPE result = left OP right;                                            \
+#define GENERIC_BINARY_OP_SIM_WITH_TYPE(TYPE, VALS, NODE, OP)        \
+TYPE left = CAST_SIM_VALUE_TO(TYPE, VALS[NODE->inputs[0]->source]);  \
+TYPE right = CAST_SIM_VALUE_TO(TYPE, VALS[NODE->inputs[1]->source]); \
+TYPE result = left OP right;                                         \
 VALS[NODE] = CAST_SIM_VALUE_TO(SimValue, result);
 
 // Generic procedure to perform the simulation
 // for the concrete unary op and type of its operand.
-#define GENERIC_UNARY_OP_SIM_WITH_TYPE(TYPE, VALS, INPUTS, NODE, OP)   \
-TYPE left = CAST_SIM_VALUE_TO(TYPE, VALS[INPUTS.at(NODE)[0]->source]); \
-TYPE result = OP left;                                                 \
+#define GENERIC_UNARY_OP_SIM_WITH_TYPE(TYPE, VALS, NODE, OP)        \
+TYPE left = CAST_SIM_VALUE_TO(TYPE, VALS[NODE->inputs[0]->source]); \
+TYPE result = OP left;                                              \
 VALS[NODE] = CAST_SIM_VALUE_TO(SimValue, result);
 
-#define PROCESS_GENERIC_BINARY_OP_FUNC(OP_NAME, OP)                           \
-static bool GENERIC_FUNC_NAME(OP_NAME)(RecordedValues &vals,                  \
-                                       Node *node,                            \
-                                       const Inputs &inputs,                  \
-                                       const IOVars &inData,                  \
-                                       uint64_t ind) {                        \
-  DFTypeImpl *type = (DFVariable(node->var).getType()).getImpl();             \
-  if (type->isFixed()) {                                                      \
-    if (((FixedType*) type)->isSigned()) {                                    \
-      GENERIC_BINARY_OP_SIM_WITH_TYPE(int64_t, vals, inputs, node, OP)        \
-    } else {                                                                  \
-      GENERIC_BINARY_OP_SIM_WITH_TYPE(uint64_t, vals, inputs, node, OP)       \
-    }                                                                         \
-  } else if (type->isFloat()) {                                               \
-      GENERIC_BINARY_OP_SIM_WITH_TYPE(double, vals, inputs, node, OP)         \
-  } else {                                                                    \
-    return false;                                                             \
-  }                                                                           \
-  return true;                                                                \
+#define PROCESS_GENERIC_BINARY_OP_FUNC(OP_NAME, OP)               \
+static bool GENERIC_FUNC_NAME(OP_NAME)(RecordedValues &vals,      \
+                                       Node *node,                \
+                                       const IOVars &inData,      \
+                                       uint64_t ind) {            \
+  DFTypeImpl *type = (DFVariable(node->var).getType()).getImpl(); \
+  if (type->isFixed()) {                                          \
+    if (((FixedType*) type)->isSigned()) {                        \
+      GENERIC_BINARY_OP_SIM_WITH_TYPE(int64_t, vals, node, OP)    \
+    } else {                                                      \
+      GENERIC_BINARY_OP_SIM_WITH_TYPE(uint64_t, vals, node, OP)   \
+    }                                                             \
+  } else if (type->isFloat()) {                                   \
+      GENERIC_BINARY_OP_SIM_WITH_TYPE(double, vals, node, OP)     \
+  } else {                                                        \
+    return false;                                                 \
+  }                                                               \
+  return true;                                                    \
 }
 
 PROCESS_GENERIC_BINARY_OP_FUNC(Add, +)
@@ -139,15 +134,14 @@ PROCESS_GENERIC_BINARY_OP_FUNC(Eq, ==)
 
 PROCESS_GENERIC_BINARY_OP_FUNC(Neq, !=)
 
-#define PROCESS_GENERIC_BITWISE_BINARY_OP_FUNC(OP_NAME, OP)                 \
-static bool GENERIC_FUNC_NAME(OP_NAME)(RecordedValues &vals,                \
-                                       Node *node,                          \
-                                       const Inputs &inputs,                \
-                                       const IOVars &inData,                \
-                                       uint64_t ind) {                      \
-  vals[node] =                                                              \
-      vals[inputs.at(node)[0]->source] OP vals[inputs.at(node)[1]->source]; \
-  return true;                                                              \
+#define PROCESS_GENERIC_BITWISE_BINARY_OP_FUNC(OP_NAME, OP)           \
+static bool GENERIC_FUNC_NAME(OP_NAME)(RecordedValues &vals,          \
+                                       Node *node,                    \
+                                       const IOVars &inData,          \
+                                       uint64_t ind) {                \
+  vals[node] =                                                        \
+      vals[node->inputs[0]->source] OP vals[node->inputs[1]->source]; \
+  return true;                                                        \
 }          
 
 PROCESS_GENERIC_BITWISE_BINARY_OP_FUNC(And, &)
@@ -157,24 +151,22 @@ PROCESS_GENERIC_BITWISE_BINARY_OP_FUNC(Or, |)
 PROCESS_GENERIC_BITWISE_BINARY_OP_FUNC(Xor, ^)
 
 static bool processNotOp(RecordedValues &vals, Node *node,
-                         const Inputs &inputs, const IOVars &inData,
-                         uint64_t ind) {
-  vals[node] = ~(vals[inputs.at(node)[0]->source]);
+                         const IOVars &inData, uint64_t ind) {
+  vals[node] = ~(vals[node->inputs[0]->source]);
   return true;
 }
 
 static bool processNegOp(RecordedValues &vals, Node *node,
-                         const Inputs &inputs, const IOVars &inData,
-                         uint64_t ind) {
+                         const IOVars &inData, uint64_t ind) {
   DFTypeImpl *type = (DFVariable(node->var).getType()).getImpl();
   if (type->isFixed()) {
     if (((FixedType*) type)->isSigned()) {
-      GENERIC_UNARY_OP_SIM_WITH_TYPE(int64_t, vals, inputs, node, -)
+      GENERIC_UNARY_OP_SIM_WITH_TYPE(int64_t, vals, node, -)
     } else {
-      GENERIC_UNARY_OP_SIM_WITH_TYPE(uint64_t, vals, inputs, node, -)
+      GENERIC_UNARY_OP_SIM_WITH_TYPE(uint64_t, vals, node, -)
     }
   } else if (type->isFloat()) {
-      GENERIC_UNARY_OP_SIM_WITH_TYPE(double, vals, inputs, node, -)
+      GENERIC_UNARY_OP_SIM_WITH_TYPE(double, vals, node, -)
   } else {
     return false;
   }
@@ -182,16 +174,14 @@ static bool processNegOp(RecordedValues &vals, Node *node,
 }
 
 static bool processShiftLeftOp(RecordedValues &vals, Node *node,
-                               const Inputs &inputs, const IOVars &inData,
-                               uint64_t ind) {
-  vals[node] = vals[inputs.at(node)[0]->source] << node->data.bitShift;
+                               const IOVars &inData, uint64_t ind) {
+  vals[node] = vals[node->inputs[0]->source] << node->data.bitShift;
   return true;
 }
 
 static bool processShiftRightOp(RecordedValues &vals, Node *node,
-                                const Inputs &inputs, const IOVars &inData,
-                                uint64_t ind) {
-  vals[node] = vals[inputs.at(node)[0]->source] >> node->data.bitShift;
+                                const IOVars &inData, uint64_t ind) {
+  vals[node] = vals[node->inputs[0]->source] >> node->data.bitShift;
   return true;
 }
 
@@ -200,13 +190,11 @@ bool DFCXXSimulator::processOp(RecordedValues &vals, Node *node,
   if (funcs.find(node->type) == funcs.end()) {
     return false;
   }
-  return funcs.at(node->type)(vals, node, inputs, inData, ind);
+  return funcs.at(node->type)(vals, node, inData, ind);
 }
 
-DFCXXSimulator::DFCXXSimulator(std::vector<Node *> &nodes,
-                               const Inputs &inputs) :
+DFCXXSimulator::DFCXXSimulator(std::vector<Node *> &nodes) :
                                nodes(nodes),
-                               inputs(inputs),
                                funcs({
                                  {OpType::IN, processInput},
                                  {OpType::OUT, processOutput},
