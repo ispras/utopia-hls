@@ -54,13 +54,13 @@ public:
   }
 };
 
-class KuznechikEncoderInstInst : public dfcxx::Kernel {
+class KuznechikEncoderInst : public dfcxx::Kernel {
 public:
   std::string_view getName() const override {
-    return "KuznechikEncoderInstInst";
+    return "KuznechikEncoderInst";
   }
 
-  ~KuznechikEncoderInstInst() override = default;
+  ~KuznechikEncoderInst() override = default;
 
   using DFType = dfcxx::DFType;
   using DFVariable = dfcxx::DFVariable;
@@ -248,7 +248,7 @@ public:
     return kuznechikLinearPermut(permut);
   }
 
-  KuznechikEncoderInstInst() : dfcxx::Kernel() {
+  KuznechikEncoderInst() : dfcxx::Kernel() {
     const DFType ioType = dfUInt(128);
 
     DFVariable block = io.input("block", ioType);
