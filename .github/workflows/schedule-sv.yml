@@ -76,7 +76,30 @@ jobs:
             config: add_int_2_xor_int_2
             test  : 0
             top   : MagmaDecoder_test0
-        
+          ## "Kuznechik" encoder tests.
+          - kernel: kuznechik
+            cpp   : kuznechik_encoder
+            config: xor_int_0
+            test  : 0
+            top   : KuznechikEncoder_test0
+          ## "Kuznechik" decoder tests.
+          - kernel: kuznechik
+            cpp   : kuznechik_decoder
+            config: xor_int_0
+            test  : 0
+            top   : KuznechikDecoder_test0
+          ## Instantiated "Kuznechik" encoder tests.
+          - kernel: kuznechik_inst
+            cpp   : kuznechik_enc_inst
+            config: xor_int_0
+            test  : 0
+            top   : KuznechikEncoderInst_test0
+          ## Instantiated "Kuznechik" decoder tests.
+          - kernel: kuznechik_inst
+            cpp   : kuznechik_dec_inst
+            config: xor_int_0
+            test  : 0
+            top   : KuznechikDecoderInst_test0
     runs-on: ubuntu-20.04
     env:
       MODULE_OUTPUT_PATH : "output.sv"
