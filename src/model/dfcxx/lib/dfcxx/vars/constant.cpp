@@ -35,13 +35,13 @@ DFConstant::TypeKind DFConstant::kindByType(DFTypeImpl *type) {
 DFVariableImpl *DFConstant::createOrUseConst(KernelMeta *meta,
                                              DFTypeImpl *type,
                                              Value value) {
-  TypeKind kind = kindByType(type);
-  Node *found = meta->graph.findStartNodeIf([kind, value] (Node *node) {
+  Node *found = meta->graph.findStartNodeIf([type, value] (Node *node) {
     if (node->type != OpType::CONST || !node->var->isConstant()) {
       return false;
     }
     DFConstant *casted = (DFConstant *)node->var;
-    return casted->getKind() == kind && casted->getUInt() == value.uint_;
+    return casted->getType()->operator==(*type) &&
+           casted->getUInt() == value.uint_;
   });
 
   if (found) { return found->var; }
