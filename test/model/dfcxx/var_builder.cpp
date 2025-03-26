@@ -26,7 +26,7 @@ TEST(DFCXXVarBuilder, BuildStream) {
   EXPECT_TRUE(!var->isConstant());
   EXPECT_EQ(var->getName(), STUB_NAME);
   EXPECT_EQ(var->getDirection(), DFVariableImpl::IODirection::NONE);
-  EXPECT_EQ(&var->getMeta(), &meta);
+  EXPECT_EQ(var->getMeta(), &meta);
   EXPECT_EQ(var->getType(), type);
 
   DFStream *casted = (DFStream *) var;
@@ -47,7 +47,7 @@ TEST(DFCXXVarBuilder, BuildScalar) {
   EXPECT_TRUE(!var->isConstant());
   EXPECT_EQ(var->getName(), STUB_NAME);
   EXPECT_EQ(var->getDirection(), DFVariableImpl::IODirection::INPUT);
-  EXPECT_EQ(&var->getMeta(), &meta);
+  EXPECT_EQ(var->getMeta(), &meta);
   EXPECT_EQ(var->getType(), type);
 
   DFScalar *casted = (DFScalar *) var;
@@ -69,7 +69,7 @@ TEST(DFCXXVarBuilder, BuildUnsignedConstant) {
   EXPECT_TRUE(var->isConstant());
   EXPECT_EQ(var->getName(), "");
   EXPECT_EQ(var->getDirection(), DFVariableImpl::IODirection::NONE);
-  EXPECT_EQ(&var->getMeta(), &meta);
+  EXPECT_EQ(var->getMeta(), &meta);
   EXPECT_EQ(var->getType(), type);
 
   DFConstant *casted = (DFConstant *) var;
@@ -94,7 +94,7 @@ TEST(DFCXXVarBuilder, BuildSignedConstant) {
   EXPECT_TRUE(var->isConstant());
   EXPECT_EQ(var->getName(), "");
   EXPECT_EQ(var->getDirection(), DFVariableImpl::IODirection::NONE);
-  EXPECT_EQ(&var->getMeta(), &meta);
+  EXPECT_EQ(var->getMeta(), &meta);
   EXPECT_EQ(var->getType(), type);
 
   DFConstant *casted = (DFConstant *) var;
@@ -119,7 +119,7 @@ TEST(DFCXXVarBuilder, BuildFloatConstant) {
   EXPECT_TRUE(var->isConstant());
   EXPECT_EQ(var->getName(), "");
   EXPECT_EQ(var->getDirection(), DFVariableImpl::IODirection::NONE);
-  EXPECT_EQ(&var->getMeta(), &meta);
+  EXPECT_EQ(var->getMeta(), &meta);
   EXPECT_EQ(var->getType(), type);
 
   DFConstant *casted = (DFConstant *) var;
