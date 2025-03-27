@@ -104,23 +104,25 @@ public:
 
   DFVariable kuznechikLinearMapping(DFVariable val) {
     const DFType type = dfUInt(8);
-    DFVariable result =
-        kuznechikMulGf(constant.var(type, uint64_t(148)),val(127, 120));
-    result ^= kuznechikMulGf(constant.var(type, uint64_t(32)), val(119, 112));
-    result ^= kuznechikMulGf(constant.var(type, uint64_t(133)), val(111, 104));
-    result ^= kuznechikMulGf(constant.var(type, uint64_t(16)), val(103, 96));
-    result ^= kuznechikMulGf(constant.var(type, uint64_t(194)), val(95, 88));
-    result ^= kuznechikMulGf(constant.var(type, uint64_t(192)), val(87, 80));
-    result ^= kuznechikMulGf(constant.var(type, uint64_t(1)), val(79, 72));
-    result ^= kuznechikMulGf(constant.var(type, uint64_t(251)), val(71, 64));
-    result ^= kuznechikMulGf(constant.var(type, uint64_t(1)), val(63, 56));
-    result ^= kuznechikMulGf(constant.var(type, uint64_t(192)), val(55, 48));
-    result ^= kuznechikMulGf(constant.var(type, uint64_t(194)), val(47, 40));
-    result ^= kuznechikMulGf(constant.var(type, uint64_t(16)), val(39, 32));
-    result ^= kuznechikMulGf(constant.var(type, uint64_t(133)), val(31, 24));
-    result ^= kuznechikMulGf(constant.var(type, uint64_t(32)), val(23, 16));
-    result ^= kuznechikMulGf(constant.var(type, uint64_t(148)), val(15, 8));
-    result ^= kuznechikMulGf(constant.var(type, uint64_t(1)), val(7, 0));
+
+    std::vector<DFVariable> consts = {
+        constant.var(type, uint64_t(148)), constant.var(type, uint64_t(32)),
+	      constant.var(type, uint64_t(133)), constant.var(type, uint64_t(16)),
+	      constant.var(type, uint64_t(194)), constant.var(type, uint64_t(192)),
+	      constant.var(type, uint64_t(1)),   constant.var(type, uint64_t(251)),
+	      constant.var(type, uint64_t(1)),   constant.var(type, uint64_t(192)),
+	      constant.var(type, uint64_t(194)), constant.var(type, uint64_t(16)),
+	      constant.var(type, uint64_t(133)), constant.var(type, uint64_t(32)),
+	      constant.var(type, uint64_t(148)), constant.var(type, uint64_t(1))
+    };
+
+    DFVariable result = kuznechikMulGf(consts[0], val(127, 120));
+
+    for (uint8_t i = 1; i < 16; ++i) {
+      uint8_t ind = 127 - 8 * i;
+      result = result ^ kuznechikMulGf(consts[i], val(ind, ind - 7));
+    }
+
     return result;
   }
 
