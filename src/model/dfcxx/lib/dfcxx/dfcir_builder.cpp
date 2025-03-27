@@ -89,7 +89,7 @@ void DFCIRBuilder::translate(Node *node, const Graph &graph,
                              std::unordered_map<Node *, mlir::Value> &map) {
   auto loc = builder.getUnknownLoc();
 
-  const auto &ins = graph.getInputs().at(node);
+  const auto &ins = node->inputs;
 
   auto nameAttr = mlir::StringAttr::get(&ctx, node->var->getName());
 
@@ -345,10 +345,8 @@ void DFCIRBuilder::translate(Node *node, const Graph &graph,
 
   map[node] = newOp->getResult(0);
 
-  auto &connections = graph.getConnections();
-  auto it = connections.find(node);
-  if (it != connections.end()) {
-    auto conSrc = it->second->source;
+  if (Channel *connect = node->getConnection()) {
+    auto conSrc = connect->source;
     builder.create<mlir::dfcir::ConnectOp>(loc, map[node], map[conSrc]);
   }
 }

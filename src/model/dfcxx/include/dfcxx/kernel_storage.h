@@ -20,8 +20,12 @@ namespace dfcxx {
 class KernelStorage {
 using VarComp = std::function<bool(DFVariableImpl *, DFVariableImpl *)>;
 
-private:
-  std::unordered_set<DFTypeImpl *> types;
+public:
+  // Types exist "outside" the scope of a singular kernel, so that
+  // any kernel instance creates its variables with the same types as
+  // the "parent" kernel.
+  static std::unordered_set<DFTypeImpl *> types;
+
   std::unordered_set<DFVariableImpl *> variables;
 
 public:

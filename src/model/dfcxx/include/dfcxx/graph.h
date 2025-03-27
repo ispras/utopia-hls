@@ -47,23 +47,18 @@ struct ChannelPtrEq {
 };
 
 typedef std::unordered_set<Node *, NodePtrHash, NodePtrEq> Nodes;
-typedef std::unordered_set<Channel *, ChannelPtrHash, ChannelPtrEq> Channels;
 typedef std::unordered_map<std::string_view, Node *> NodeNameMap;
-typedef std::unordered_map<Node *, std::vector<Channel *>> ChannelMap;
-typedef std::unordered_map<Node *, Channel *> ConnectionMap;
+
+struct KernelMeta;
 
 class Graph {
   using NodePtrPred = std::function<bool(Node *)>;
 
 private:
   Nodes nodes;
-  Channels channels;
 
   NodeNameMap nameMap;
   Nodes startNodes;
-  ChannelMap inputs;
-  ChannelMap outputs;
-  ConnectionMap connections;
 
 public:
   Graph() = default;
@@ -74,17 +69,9 @@ public:
 
   const Nodes &getNodes() const { return nodes; }
 
-  const Channels &getChannels() const { return channels; }
-
   const NodeNameMap &getNameMap() const  { return nameMap; }
 
   const Nodes &getStartNodes() const { return startNodes; }
-
-  const ChannelMap &getInputs() const { return inputs;}
-
-  const ChannelMap &getOutputs() const { return outputs; }
-
-  const ConnectionMap &getConnections() const { return connections; }
 
   std::pair<Node *, bool> addNode(DFVariableImpl *var, OpType type, NodeData data);
 
@@ -100,9 +87,9 @@ public:
 
   void deleteNode(Node *node);
 
-  void rebindInput(Node *source, Node *input, Graph &graph);
+  void rebindInput(Node *source, Node *input);
 
-  Node *rebindOutput(Node *output, Node *target, Graph &graph);
+  Node *rebindOutput(Node *output, Node *target);
 
   Node *findNode(const std::string &name);
 
@@ -113,6 +100,8 @@ public:
   Node *findStartNode(DFVariableImpl *var);
 
   Node *findStartNodeIf(NodePtrPred pred);
+
+  void resetMeta(KernelMeta *meta);
 };
 
 } // namespace dfcxx

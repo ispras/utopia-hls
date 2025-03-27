@@ -11,6 +11,7 @@
 namespace dfcxx {
 
 void KernelMeta::transferFrom(KernelMeta &&meta) {
+  meta.graph.resetMeta(this);
   graph.transferFrom(std::move(meta.graph));
   storage.transferFrom(std::move(meta.storage));
 }

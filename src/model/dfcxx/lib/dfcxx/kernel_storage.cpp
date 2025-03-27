@@ -13,6 +13,8 @@
 namespace dfcxx {
 
 dfcxx::DFTypeImpl *KernelStorage::addType(dfcxx::DFTypeImpl *type) {
+  std::unordered_set<DFTypeImpl *> types;
+
   auto found = std::find_if(types.begin(), types.end(),
                             [&] (dfcxx::DFTypeImpl *t) {
                               return t->operator==(*type);
@@ -41,16 +43,14 @@ void KernelStorage::deleteVariable(DFVariableImpl *var) {
 }
 
 KernelStorage::~KernelStorage() {
-  for (DFTypeImpl *type: types) {
-    delete type;
-  }
+  // Types are not deleted - they are static.
   for (DFVariableImpl *var: variables) {
     delete var;
   }
 }
 
 void KernelStorage::transferFrom(KernelStorage &&storage) {
-  types.merge(std::move(storage.types));
+  // Types are not transfered - they are static.
   variables.merge(std::move(storage.variables));
 }
 

@@ -24,7 +24,6 @@ std::vector<std::string> outputPathsToVector(const DFOutputPaths &outputPaths) {
 
 std::vector<Node *> topSort(const Graph &graph) {
   size_t nodesCount = graph.getNodes().size();
-  auto &outs = graph.getOutputs();
 
   std::vector<Node *> result(nodesCount);
 
@@ -39,11 +38,11 @@ std::vector<Node *> topSort(const Graph &graph) {
   size_t i = nodesCount;
   while (!stack.empty() && i > 0) {
     Node *node = stack.top();
-    size_t count = outs.at(node).size();
+    size_t count = node->outputs.size();
     size_t curr;
     bool flag = true;
     for (curr = checked[node]; flag && curr < count; ++curr) {
-      Channel *next = outs.at(node)[curr];
+      Channel *next = node->outputs[curr];
       if (checked.find(next->target) == checked.end()) {
         checked[next->target] = 0;
         stack.push(next->target);

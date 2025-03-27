@@ -114,24 +114,17 @@ TEST(DFCXXGraph, AddChannel) {
   EXPECT_EQ(channel->target, result2.first);
   EXPECT_EQ(channel->opInd, 0);
 
-  const Channels &channels = meta.graph.getChannels();
-  EXPECT_EQ(channels.size(), 0);
-
-  const ChannelMap &inputs = meta.graph.getInputs();
-  const ChannelMap &outputs = meta.graph.getOutputs();
-
-  EXPECT_EQ(inputs.size(), 2); // For two nodes.
-  const auto &ins = inputs.at(result2.first);
+  const auto &ins = result2.first->inputs;
   EXPECT_EQ(ins.size(), 1);
+  EXPECT_EQ(result2.first->outputs.size(), 0);
 
-  EXPECT_EQ(outputs.size(), 2); // For two nodes.
-  const auto &outs = outputs.at(result1.first);
+  const auto &outs = result1.first->outputs;
   EXPECT_EQ(outs.size(), 1);
+  EXPECT_EQ(result1.first->inputs.size(), 0);
 
   EXPECT_EQ(ins[0], outs[0]);
 
-  const ConnectionMap &connections = meta.graph.getConnections();
-  EXPECT_EQ(connections.size(), 0);
+  EXPECT_EQ(result2.first->getConnection(), nullptr);
 }
 
 TEST(DFCXXGraph, AddChannelWithConnection) {
@@ -157,26 +150,17 @@ TEST(DFCXXGraph, AddChannelWithConnection) {
   EXPECT_EQ(channel->target, result2.first);
   EXPECT_EQ(channel->opInd, 0);
 
-  const Channels &channels = meta.graph.getChannels();
-  EXPECT_EQ(channels.size(), 0);
-
-  const ChannelMap &inputs = meta.graph.getInputs();
-  const ChannelMap &outputs = meta.graph.getOutputs();
-
-  EXPECT_EQ(inputs.size(), 2); // For two nodes.
-  const auto &ins = inputs.at(result2.first);
+  const auto &ins = result2.first->inputs;
   EXPECT_EQ(ins.size(), 1);
+  EXPECT_EQ(result2.first->outputs.size(), 0);
 
-  EXPECT_EQ(outputs.size(), 2); // For two nodes.
-  const auto &outs = outputs.at(result1.first);
+  const auto &outs = result1.first->outputs;
   EXPECT_EQ(outs.size(), 1);
+  EXPECT_EQ(result1.first->inputs.size(), 0);
 
   EXPECT_EQ(ins[0], outs[0]);
 
-  const ConnectionMap &connections = meta.graph.getConnections();
-  EXPECT_EQ(connections.size(), 1);
-  Channel *connection = connections.at(result2.first);
-  EXPECT_EQ(connection, channel);
+  EXPECT_EQ(result2.first->getConnection(), channel);
 }
 
 TEST(DFCXXGraph, FindNodeByName) {

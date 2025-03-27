@@ -34,20 +34,16 @@ typedef uint64_t SimValue;
 
 typedef std::map<std::string, std::array<SimValue, SIM_DATA_BUF_SIZE>> IOVars;
 
-typedef std::unordered_map<Node *, std::vector<Channel *>> Inputs;
-
 typedef std::unordered_map<Node *, SimValue> RecordedValues;
 
 typedef bool (*OpSimulationFunc)(RecordedValues &vals, Node *node,
-                                 const Inputs &inputs, const IOVars &inData,
-                                 uint64_t ind);
+                                 const IOVars &inData, uint64_t ind);
 
 typedef std::unordered_map<OpType, OpSimulationFunc> OpSimulationFuncs;
 
 class DFCXXSimulator {
 public:
-  DFCXXSimulator(std::vector<Node *> &nodes,
-                 const Inputs &inputs);
+  DFCXXSimulator(std::vector<Node *> &nodes);
   bool simulate(std::ifstream &in, std::ofstream &out);
 
 private:
@@ -69,7 +65,6 @@ private:
                    const std::unordered_map<Node *, std::string> &idMap);
 
   std::vector<Node *> &nodes;
-  const Inputs &inputs;
   const OpSimulationFuncs funcs;
 };
 

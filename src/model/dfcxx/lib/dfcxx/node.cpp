@@ -6,17 +6,29 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "dfcxx/channel.h"
 #include "dfcxx/node.h"
 
 namespace dfcxx {
 
 Node::Node(DFVariableImpl *var) : var(var),
                                   type(OpType::NONE),
-                                  data(NodeData {}) {}
+                                  data(NodeData {}),
+                                  inputs(),
+                                  outputs() {}
 
 Node::Node(DFVariableImpl *var, OpType type, NodeData data) : var(var),
                                                               type(type),
-                                                              data(data) {}
+                                                              data(data),
+                                                              inputs(),
+                                                              outputs() {}
+
+Channel *Node::getConnection() {
+  if (inputs.size() == 1 && inputs.front()->connect) {
+    return inputs.front();
+  }
+  return nullptr;
+}
 
 bool Node::operator==(const dfcxx::Node &node) const {
   return var == node.var;

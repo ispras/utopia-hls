@@ -34,8 +34,12 @@ DFVariableImpl::IODirection DFVariableImpl::getDirection() const {
   return direction;
 }
 
-const KernelMeta &DFVariableImpl::getMeta() const {
-  return *meta;
+KernelMeta *DFVariableImpl::getMeta() const {
+  return meta;
+}
+
+void DFVariableImpl::setMeta(KernelMeta *meta) {
+  this->meta = meta;
 }
 
 DFTypeImpl *DFVariableImpl::getType() {

@@ -11,6 +11,8 @@
 
 #include "dfcxx/vars/var.h"
 
+#include <vector>
+
 namespace dfcxx {
 
 enum OpType : uint8_t {
@@ -52,14 +54,19 @@ union NodeData {
   } bitsRange;
 };
 
+struct Channel;
+
 struct Node {
   DFVariableImpl *var;
   OpType type;
   NodeData data;
+  std::vector<Channel *> inputs;
+  std::vector<Channel *> outputs;
 
   Node() = default;
   explicit Node(DFVariableImpl *var);
   Node(DFVariableImpl *var, OpType type, NodeData data);
+  Channel *getConnection();
 
   bool operator==(const Node &node) const;
   bool operator!=(const Node &node) const { return !(*this == node); }
