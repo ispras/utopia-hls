@@ -30,7 +30,7 @@ Value getBlockArgumentFromOpBlock(Operation *op, unsigned ind) {
 
 Value getClockVar(Block *block) {
   Value arg = getBlockArgument(block, block->getNumArguments() - 1);
-  if (arg.getType().isa<ClockType>()) {
+  if (mlir::isa<ClockType>(arg.getType())) {
     return arg;
   }
   return nullptr;
