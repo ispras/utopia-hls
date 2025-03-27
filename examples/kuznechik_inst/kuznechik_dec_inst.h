@@ -16,13 +16,51 @@
 using dfcxx::DFType;
 using dfcxx::DFVariable;
 
-class KuznechikEncoder : public dfcxx::Kernel {
+class Galois8Mul : public dfcxx::Kernel {
 public:
   std::string_view getName() const override {
-    return "KuznechikEncoder";
+    return "Galois8Mul";
   }
 
-  ~KuznechikEncoder() override = default;
+  ~Galois8Mul() override = default;
+
+  using DFType = dfcxx::DFType;
+  using DFVariable = dfcxx::DFVariable;
+
+  Galois8Mul() : dfcxx::Kernel() {
+    const DFType ioType = dfUInt(8);
+
+    DFVariable left = io.input("left", ioType);
+    DFVariable right = io.input("right", ioType);
+
+    DFVariable c0 = constant.var(ioType, uint64_t(0));
+    DFVariable c195 = constant.var(ioType, uint64_t(195));
+    DFVariable currValue = c0;
+
+    for (int i = 0; i < 7; ++i) {
+      DFVariable isBitSet = right(0, 0);
+      currValue = currValue ^ control.mux(isBitSet, {c0, left});
+      DFVariable aboutToOverflow = left(7, 7);
+      DFVariable muxed = control.mux(aboutToOverflow, {c0, c195});
+      left = (left << 1) ^ muxed;
+      right = right >> 1;
+    }
+
+    DFVariable isBitSet = right(0, 0);
+    currValue = currValue ^ control.mux(isBitSet, {c0, left});
+
+    DFVariable result = io.output("result", ioType);
+    result.connect(currValue);
+  }
+};
+
+class KuznechikDecoderInst : public dfcxx::Kernel {
+public:
+  std::string_view getName() const override {
+    return "KuznechikDecoderInst";
+  }
+
+  ~KuznechikDecoderInst() override = default;
 
   using DFType = dfcxx::DFType;
   using DFVariable = dfcxx::DFVariable;
@@ -65,41 +103,60 @@ public:
     });
   }
 
-  DFVariable kuznechikSPermut(DFVariable value) {
+  DFVariable kuznechikInvTablePermut(DFVariable val) {
+    const DFType type = dfUInt(8);
+    return control.mux(val, {
+      C(165), C(45), C(50), C(143), C(14), C(48), C(56), C(192),
+      C(84), C(230), C(158), C(57), C(85), C(126), C(82), C(145),
+      C(100), C(3), C(87), C(90), C(28), C(96), C(7), C(24),
+      C(33), C(114), C(168), C(209), C(41), C(198), C(164), C(63),
+      C(224), C(39), C(141), C(12), C(130), C(234), C(174), C(180),
+      C(154), C(99), C(73), C(229), C(66), C(228), C(21), C(183),
+      C(200), C(6), C(112), C(157), C(65), C(117), C(25), C(201),
+      C(170), C(252), C(77), C(191), C(42), C(115), C(132), C(213),
+      C(195), C(175), C(43), C(134), C(167), C(177), C(178), C(91),
+      C(70), C(211), C(159), C(253), C(212), C(15), C(156), C(47),
+      C(155), C(67), C(239), C(217), C(121), C(182), C(83), C(127),
+      C(193), C(240), C(35), C(231), C(37), C(94), C(181), C(30),
+      C(162), C(223), C(166), C(254), C(172), C(34), C(249), C(226),
+      C(74), C(188), C(53), C(202), C(238), C(120), C(5), C(107),
+      C(81), C(225), C(89), C(163), C(242), C(113), C(86), C(17),
+      C(106), C(137), C(148), C(101), C(140), C(187), C(119), C(60),
+      C(123), C(40), C(171), C(210), C(49), C(222), C(196), C(95),
+      C(204), C(207), C(118), C(44), C(184), C(216), C(46), C(54),
+      C(219), C(105), C(179), C(20), C(149), C(190), C(98), C(161),
+      C(59), C(22), C(102), C(233), C(92), C(108), C(109), C(173),
+      C(55), C(97), C(75), C(185), C(227), C(186), C(241), C(160),
+      C(133), C(131), C(218), C(71), C(197), C(176), C(51), C(250),
+      C(150), C(111), C(110), C(194), C(246), C(80), C(255), C(93),
+      C(169), C(142), C(23), C(27), C(151), C(125), C(236), C(88),
+      C(247), C(31), C(251), C(124), C(9), C(13), C(122), C(103),
+      C(69), C(135), C(220), C(232), C(79), C(29), C(78), C(4),
+      C(235), C(248), C(243), C(62), C(61), C(189), C(138), C(136),
+      C(221), C(205), C(11), C(19), C(152), C(2), C(147), C(128),
+      C(144), C(208), C(36), C(52), C(203), C(237), C(244), C(206),
+      C(153), C(16), C(68), C(64), C(146), C(58), C(1), C(38),
+      C(18), C(26), C(72), C(104), C(245), C(129), C(139), C(199),
+      C(214), C(32), C(10), C(8), C(0), C(76), C(215), C(116)
+    });
+  }
+
+  DFVariable kuznechikSPermut(DFVariable value, bool inv=false) {
     assert(value.getTotalBits() == 128);
     
-    DFVariable substituted = kuznechikTablePermut(value(127, 120));
+    DFVariable extracted = value(127, 120);
+    DFVariable substituted = (inv) ? kuznechikInvTablePermut(extracted)
+                                   : kuznechikTablePermut(extracted);
     for (int i = 1; i < 16; ++i) {
       int currSInd = 127 - i*8;
-      substituted =
-          substituted.cat(kuznechikTablePermut(value(currSInd, currSInd - 7)));
+      extracted = value(currSInd, currSInd - 7);
+      substituted = substituted.cat((inv) ? kuznechikInvTablePermut(extracted)
+                                          : kuznechikTablePermut(extracted));
     }
 
     assert(substituted.getTotalBits() == 128);
 
     return substituted;
-  }
-
-  DFVariable kuznechikMulGf(DFVariable left, DFVariable right) {
-    const DFType type = left.getType();
-    assert(type.getTotalBits() == 8);
-    DFVariable c0 = constant.var(type, uint64_t(0));
-    DFVariable c195 = constant.var(type, uint64_t(195));
-    DFVariable currValue = c0;
-
-    for (int i = 0; i < 7; ++i) {
-      DFVariable isBitSet = right(0, 0);
-      currValue = currValue ^ control.mux(isBitSet, {c0, left});
-      DFVariable aboutToOverflow = left(7, 7);
-      DFVariable muxed = control.mux(aboutToOverflow, {c0, c195});
-      left = (left << 1) ^ muxed;
-      right = right >> 1;
-    }
-
-    DFVariable isBitSet = right(0, 0);
-    currValue = currValue ^ control.mux(isBitSet, {c0, left});
-
-    return currValue;
   }
 
   DFVariable kuznechikLinearMapping(DFVariable val) {
@@ -116,11 +173,23 @@ public:
 	      constant.var(type, uint64_t(148)), constant.var(type, uint64_t(1))
     };
 
-    DFVariable result = kuznechikMulGf(consts[0], val(127, 120));
+    DFVariable currSlice = val(127, 120);
+    DFVariable result = io.newStream(type);
+    instance<Galois8Mul>({
+        {consts[0], "left"},
+        {currSlice, "right"},
+        {result, "result"}
+    });
 
     for (uint8_t i = 1; i < 16; ++i) {
+      DFVariable buf = io.newStream(type);
       uint8_t ind = 127 - 8 * i;
-      result = result ^ kuznechikMulGf(consts[i], val(ind, ind - 7));
+      DFVariable currSlice = val(ind, ind - 7);
+      instance<Galois8Mul>({
+          {consts[i], "left"},
+          {currSlice, "right"},
+          {buf, "result"}});
+      result = result ^ buf;
     }
 
     return result;
@@ -130,10 +199,16 @@ public:
     return kuznechikLinearMapping(val).cat(val(127, 8));
   }
 
-  DFVariable kuznechikLinearPermut(DFVariable val) {
+  DFVariable kuznechikInvRPermut(DFVariable val) {
+    DFVariable extracted = val(119, 0);
+    return extracted.cat(kuznechikLinearMapping(extracted.cat(val(127, 120))));
+  }
+
+  DFVariable kuznechikLinearPermut(DFVariable val, bool inv = false) {
     DFVariable currVal = val;
     for (int i = 0; i < 16; ++i) {
-      currVal = kuznechikRPermut(currVal);
+      currVal =
+          (inv) ? kuznechikInvRPermut(currVal) : kuznechikRPermut(currVal);
     }
     return currVal;
   }
@@ -209,23 +284,27 @@ public:
     return kuznechikLinearPermut(permut);
   }
 
-  KuznechikEncoder() : dfcxx::Kernel() {
+  DFVariable kuznechikLSXPermut(DFVariable key, DFVariable value) {
+    DFVariable linearPermuted = kuznechikLinearPermut(value, true);
+    DFVariable permut = kuznechikSPermut(linearPermuted, true);    
+    return key ^ permut;
+  }
+
+  KuznechikDecoderInst() : dfcxx::Kernel() {
     const DFType ioType = dfUInt(128);
 
-    DFVariable block = io.input("block", ioType);
+    DFVariable encoded = io.input("encoded", ioType);
     DFVariable key = io.input("key", dfUInt(256));
 
     std::vector<DFVariable> gKeys =
         kuznechikGenKeys(key(255, 128), key(127, 0));
 
-    DFVariable currValue = block;
-    for (int i = 0; i < 9; ++i) {
-      currValue = kuznechikXSLPermut(gKeys[i], currValue);
+    DFVariable currValue = encoded ^ gKeys[9];
+    for (int i = 8; i >= 0; --i) {
+      currValue = kuznechikLSXPermut(gKeys[i], currValue);
     }
 
-    currValue = currValue ^ gKeys[9];
-
-    DFVariable encoded = io.output("encoded", ioType);
-    encoded.connect(currValue);
+    DFVariable block = io.output("block", ioType);
+    block.connect(currValue);
   }
 };

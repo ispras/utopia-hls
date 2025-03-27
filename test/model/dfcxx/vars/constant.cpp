@@ -18,7 +18,8 @@ TEST(DFCXXVarsConstant, AddSameConstant) {
   KernelMeta meta;
   DFConstant::Value val { .uint_ = 2 };
 
-  DFTypeImpl *type = meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED, 32, 0);
+  DFTypeImpl *type =
+      meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED, 32, 0);
   meta.storage.addType(type);
   DFVariableImpl *const1 = DFConstant::createOrUseConst(&meta, type, val);
 
@@ -33,11 +34,13 @@ TEST(DFCXXVarsConstant, AddSameConstantDifferentWidth) {
   KernelMeta meta;
   DFConstant::Value val { .uint_ = 2 };
 
-  DFTypeImpl *type1 = meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED, 32, 0);
+  DFTypeImpl *type1 =
+      meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED, 32, 0);
   meta.storage.addType(type1);
   DFVariableImpl *const1 = DFConstant::createOrUseConst(&meta, type1, val);
 
-  DFTypeImpl *type2 = meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED, 20, 0);
+  DFTypeImpl *type2 =
+      meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED, 20, 0);
   meta.storage.addType(type2);
   DFVariableImpl *const2 = DFConstant::createOrUseConst(&meta, type2, val);
 

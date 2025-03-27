@@ -16,13 +16,51 @@
 using dfcxx::DFType;
 using dfcxx::DFVariable;
 
-class KuznechikEncoder : public dfcxx::Kernel {
+class Galois8Mul : public dfcxx::Kernel {
 public:
   std::string_view getName() const override {
-    return "KuznechikEncoder";
+    return "Galois8Mul";
   }
 
-  ~KuznechikEncoder() override = default;
+  ~Galois8Mul() override = default;
+
+  using DFType = dfcxx::DFType;
+  using DFVariable = dfcxx::DFVariable;
+
+  Galois8Mul() : dfcxx::Kernel() {
+    const DFType ioType = dfUInt(8);
+
+    DFVariable left = io.input("left", ioType);
+    DFVariable right = io.input("right", ioType);
+
+    DFVariable c0 = constant.var(ioType, uint64_t(0));
+    DFVariable c195 = constant.var(ioType, uint64_t(195));
+    DFVariable currValue = c0;
+
+    for (int i = 0; i < 7; ++i) {
+      DFVariable isBitSet = right(0, 0);
+      currValue = currValue ^ control.mux(isBitSet, {c0, left});
+      DFVariable aboutToOverflow = left(7, 7);
+      DFVariable muxed = control.mux(aboutToOverflow, {c0, c195});
+      left = (left << 1) ^ muxed;
+      right = right >> 1;
+    }
+
+    DFVariable isBitSet = right(0, 0);
+    currValue = currValue ^ control.mux(isBitSet, {c0, left});
+
+    DFVariable result = io.output("result", ioType);
+    result.connect(currValue);
+  }
+};
+
+class KuznechikEncoderInst : public dfcxx::Kernel {
+public:
+  std::string_view getName() const override {
+    return "KuznechikEncoderInst";
+  }
+
+  ~KuznechikEncoderInst() override = default;
 
   using DFType = dfcxx::DFType;
   using DFVariable = dfcxx::DFVariable;
@@ -116,11 +154,24 @@ public:
 	      constant.var(type, uint64_t(148)), constant.var(type, uint64_t(1))
     };
 
-    DFVariable result = kuznechikMulGf(consts[0], val(127, 120));
+    DFVariable currSlice = val(127, 120);
+    DFVariable result = io.newStream(type);
+    instance<Galois8Mul>({
+        {consts[0], "left"},
+        {currSlice, "right"},
+        {result, "result"}
+    });
 
     for (uint8_t i = 1; i < 16; ++i) {
+      DFVariable buf = io.newStream(type);
       uint8_t ind = 127 - 8 * i;
-      result = result ^ kuznechikMulGf(consts[i], val(ind, ind - 7));
+      DFVariable currSlice = val(ind, ind - 7);
+      instance<Galois8Mul>({
+          {consts[i], "left"},
+          {currSlice, "right"},
+          {buf, "result"}
+      });
+      result = result ^ buf;
     }
 
     return result;
@@ -209,7 +260,7 @@ public:
     return kuznechikLinearPermut(permut);
   }
 
-  KuznechikEncoder() : dfcxx::Kernel() {
+  KuznechikEncoderInst() : dfcxx::Kernel() {
     const DFType ioType = dfUInt(128);
 
     DFVariable block = io.input("block", ioType);

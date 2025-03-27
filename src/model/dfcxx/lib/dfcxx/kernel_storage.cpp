@@ -50,7 +50,7 @@ KernelStorage::~KernelStorage() {
 }
 
 void KernelStorage::transferFrom(KernelStorage &&storage) {
-  // Types are not transfered - they are static.
+  // Types are not transferred - they are static.
   variables.merge(std::move(storage.variables));
 }
 
