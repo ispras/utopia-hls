@@ -145,11 +145,13 @@ public:
     assert(value.getTotalBits() == 128);
     
     DFVariable extracted = value(127, 120);
-    DFVariable substituted = (inv) ? kuznechikInvTablePermut(extracted) : kuznechikTablePermut(extracted);
+    DFVariable substituted = (inv) ? kuznechikInvTablePermut(extracted)
+                                   : kuznechikTablePermut(extracted);
     for (int i = 1; i < 16; ++i) {
       int currSInd = 127 - i*8;
       extracted = value(currSInd, currSInd - 7);
-      substituted = substituted.cat((inv) ? kuznechikInvTablePermut(extracted) : kuznechikTablePermut(extracted));
+      substituted = substituted.cat((inv) ? kuznechikInvTablePermut(extracted)
+                                          : kuznechikTablePermut(extracted));
     }
 
     assert(substituted.getTotalBits() == 128);
@@ -173,13 +175,20 @@ public:
 
     DFVariable currSlice = val(127, 120);
     DFVariable result = io.newStream(type);
-    instance<Galois8Mul>({{consts[0], "left"}, {currSlice, "right"}, {result, "result"}});
+    instance<Galois8Mul>({
+        {consts[0], "left"},
+        {currSlice, "right"},
+        {result, "result"}
+    });
 
     for (uint8_t i = 1; i < 16; ++i) {
       DFVariable buf = io.newStream(type);
       uint8_t ind = 127 - 8 * i;
       DFVariable currSlice = val(ind, ind - 7);
-      instance<Galois8Mul>({{consts[i], "left"}, {currSlice, "right"}, {buf, "result"}});
+      instance<Galois8Mul>({
+          {consts[i], "left"},
+          {currSlice, "right"},
+          {buf, "result"}});
       result = result ^ buf;
     }
 
@@ -198,7 +207,8 @@ public:
   DFVariable kuznechikLinearPermut(DFVariable val, bool inv = false) {
     DFVariable currVal = val;
     for (int i = 0; i < 16; ++i) {
-      currVal = (inv) ? kuznechikInvRPermut(currVal) : kuznechikRPermut(currVal);
+      currVal =
+          (inv) ? kuznechikInvRPermut(currVal) : kuznechikRPermut(currVal);
     }
     return currVal;
   }
@@ -241,7 +251,9 @@ public:
     };
   }
 
-  std::pair<DFVariable, DFVariable> kuznechikFMapping(DFVariable constVal, DFVariable a1, DFVariable a0) {
+  std::pair<DFVariable, DFVariable> kuznechikFMapping(DFVariable constVal,
+                                                      DFVariable a1,
+                                                      DFVariable a0) {
     return std::make_pair(kuznechikXSLPermut(constVal, a1) ^ a0, a1);
   }
 
@@ -255,7 +267,8 @@ public:
       DFVariable currLeft =  keys[2 * i];
       DFVariable currRight = keys[2 * i + 1];
       for (int arrOffset = 0; arrOffset < 8; ++arrOffset) {
-        auto leftAndRight = kuznechikFMapping(consts[8 * i + arrOffset], currLeft, currRight);
+        auto leftAndRight =
+            kuznechikFMapping(consts[8 * i + arrOffset], currLeft, currRight);
         currLeft = leftAndRight.first;
         currRight = leftAndRight.second;
       }
