@@ -71,7 +71,8 @@ public:
     DFVariable substituted = kuznechikTablePermut(value(127, 120));
     for (int i = 1; i < 16; ++i) {
       int currSInd = 127 - i*8;
-      substituted = substituted.cat(kuznechikTablePermut(value(currSInd, currSInd - 7)));
+      substituted =
+          substituted.cat(kuznechikTablePermut(value(currSInd, currSInd - 7)));
     }
 
     assert(substituted.getTotalBits() == 128);
@@ -103,22 +104,25 @@ public:
 
   DFVariable kuznechikLinearMapping(DFVariable val) {
     const DFType type = dfUInt(8);
-    DFVariable result = kuznechikMulGf(constant.var(type, uint64_t(148)), val(127, 120));
-    result = result ^ kuznechikMulGf(constant.var(type, uint64_t(32)), val(119, 112));
-    result = result ^ kuznechikMulGf(constant.var(type, uint64_t(133)), val(111, 104));
-    result = result ^ kuznechikMulGf(constant.var(type, uint64_t(16)), val(103, 96));
-    result = result ^ kuznechikMulGf(constant.var(type, uint64_t(194)), val(95, 88));
-    result = result ^ kuznechikMulGf(constant.var(type, uint64_t(192)), val(87, 80));
-    result = result ^ kuznechikMulGf(constant.var(type, uint64_t(1)), val(79, 72));
-    result = result ^ kuznechikMulGf(constant.var(type, uint64_t(251)), val(71, 64));
-    result = result ^ kuznechikMulGf(constant.var(type, uint64_t(1)), val(63, 56));
-    result = result ^ kuznechikMulGf(constant.var(type, uint64_t(192)), val(55, 48));
-    result = result ^ kuznechikMulGf(constant.var(type, uint64_t(194)), val(47, 40));
-    result = result ^ kuznechikMulGf(constant.var(type, uint64_t(16)), val(39, 32));
-    result = result ^ kuznechikMulGf(constant.var(type, uint64_t(133)), val(31, 24));
-    result = result ^ kuznechikMulGf(constant.var(type, uint64_t(32)), val(23, 16));
-    result = result ^ kuznechikMulGf(constant.var(type, uint64_t(148)), val(15, 8));
-    result = result ^ kuznechikMulGf(constant.var(type, uint64_t(1)), val(7, 0));
+
+    std::vector<DFVariable> consts = {
+        constant.var(type, uint64_t(148)), constant.var(type, uint64_t(32)),
+	      constant.var(type, uint64_t(133)), constant.var(type, uint64_t(16)),
+	      constant.var(type, uint64_t(194)), constant.var(type, uint64_t(192)),
+	      constant.var(type, uint64_t(1)),   constant.var(type, uint64_t(251)),
+	      constant.var(type, uint64_t(1)),   constant.var(type, uint64_t(192)),
+	      constant.var(type, uint64_t(194)), constant.var(type, uint64_t(16)),
+	      constant.var(type, uint64_t(133)), constant.var(type, uint64_t(32)),
+	      constant.var(type, uint64_t(148)), constant.var(type, uint64_t(1))
+    };
+
+    DFVariable result = kuznechikMulGf(consts[0], val(127, 120));
+
+    for (uint8_t i = 1; i < 16; ++i) {
+      uint8_t ind = 127 - 8 * i;
+      result = result ^ kuznechikMulGf(consts[i], val(ind, ind - 7));
+    }
+
     return result;
   }
 
@@ -172,7 +176,9 @@ public:
     };
   }
 
-  std::pair<DFVariable, DFVariable> kuznechikFMapping(DFVariable constVal, DFVariable a1, DFVariable a0) {
+  std::pair<DFVariable, DFVariable> kuznechikFMapping(DFVariable constVal,
+                                                      DFVariable a1,
+                                                      DFVariable a0) {
     return std::make_pair(kuznechikXSLPermut(constVal, a1) ^ a0, a1);
   }
 
@@ -186,7 +192,8 @@ public:
       DFVariable currLeft =  keys[2 * i];
       DFVariable currRight = keys[2 * i + 1];
       for (int arrOffset = 0; arrOffset < 8; ++arrOffset) {
-        auto leftAndRight = kuznechikFMapping(consts[8 * i + arrOffset], currLeft, currRight);
+        auto leftAndRight =
+            kuznechikFMapping(consts[8 * i + arrOffset], currLeft, currRight);
         currLeft = leftAndRight.first;
         currRight = leftAndRight.second;
       }

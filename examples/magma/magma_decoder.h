@@ -118,7 +118,8 @@ public:
     DFVariable substituted = magmaPermut(7, sum(31, 28));
     for (int i = 1; i < 8; ++i) {
       int currSInd = 31 - i*4;
-      substituted = substituted.cat(magmaPermut(7 - i, sum(currSInd, currSInd - 3)));
+      substituted =
+          substituted.cat(magmaPermut(7 - i, sum(currSInd, currSInd - 3)));
     }
     DFVariable shifted = substituted(20, 0).cat(substituted(31, 21));
     return right ^ shifted;

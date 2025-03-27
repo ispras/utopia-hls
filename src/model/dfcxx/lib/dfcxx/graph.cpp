@@ -135,7 +135,8 @@ void Graph::rebindInput(Node *source, Node *input) {
 }
 
 Node *Graph::rebindOutput(Node *output, Node *target) {
-  assert(target->inputs.empty() && "Cannot connect to DFVariable with existing inputs!");
+  assert(target->inputs.empty() &&
+         "Cannot connect to DFVariable with existing inputs!");
 
   assert(output->inputs.size() == 1 && "Instance's output must be connected!");
 
