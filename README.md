@@ -77,7 +77,7 @@ sudo apt install build-essential clang cmake g++ gcc liblpsolve55-dev lld make n
 
 Utopia HLS utilizes SystemVerilog-generation capabilities from CIRCT project, which itself is based on LLVM Multi-Level Intermediate Representation (MLIR) project.
 
-**Currently supported CIRCT release: 1.72.0, Apr 5 2024 ([link](https://github.com/llvm/circt/releases/tag/firtool-1.72.0))**
+**Currently supported CIRCT release: 1.110.0, Mar 22 2025 ([link](https://github.com/llvm/circt/releases/tag/firtool-1.110.0))**
 
 For both CIRCT and MLIR projects it is possible to download precompiled libraries (this approach is more convenient and saves time), but both projects can also be compiled from sources.
 
@@ -87,49 +87,13 @@ Note that <ins>it's the libraries that are required</ins>, not the binary execut
 Look for the archives which have the following names:
 `circt-full-static-<ARCH>` or `circt-full-shared-<ARCH>` for static and dynamic libraries respectively.
 
-<ins>Current releases have an inconsistency in their configuration files</ins>, requiring manual editing of configuration files - this process is described below:
-
-1. Downloading the chosen release archive and extract the files.
-2. Find the file `lib/cmake/mlir/MLIRTargets.mlir`and open it with a text editor of your choice.
-3. Look for the `_NOT_FOUND_MESSAGE_targets` near the end of the file:<br>
-for 1.72.0, it's line **3012** for `circt-full-static-linux-x64`-archive and line **3008** for `circt-full-shared-linux-x64.tar`-archive.
-4. Remove all the `"CIRCT*"`-entries from the corresponding `foreach`-statement and save the file.
-
-The `foreach`-statement before editing the file:
-
-```
-# Make sure the targets which have been exported in some other
-# export set exist.
-unset(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE_targets)
-foreach(_target "LLVMSupport" "LLVMCore" "LLVMMC" "LLVMTarget" "LLVMAsmParser" "LLVMBinaryFormat" "LLVMBitReader" "LLVMBitWriter" "LLVMFrontendOpenMP" "LLVMTransformUtils" "LLVMTargetParser" "LLVMIRReader" "LLVMipo" "LLVMLinker" "LLVMPasses" "LLVMMCParser" "LLVMLineEditor" "LLVMTableGen" "LLVMAnalysis" "LLVMCoroutines" "LLVMAggressiveInstCombine" "LLVMInstCombine" "LLVMScalarOpts" "LLVMVectorize" "LLVMExecutionEngine" "LLVMObject" "LLVMOrcJIT" "LLVMJITLink" "LLVMX86CodeGen" "LLVMX86Desc" "LLVMX86Info" "LLVMX86AsmParser" "LLVMX86Disassembler" "CIRCTAffineToLoopSchedule" "CIRCTArcToLLVM" "CIRCTCalyxToFSM" "CIRCTCalyxToHW" "CIRCTCalyxNative" "CIRCTCombToArith" "CIRCTCombToLLVM" "CIRCTCombToSMT" "CIRCTConvertToArcs" "CIRCTDCToHW" "CIRCTExportChiselInterface" "CIRCTExportVerilog" "CIRCTFIRRTLToHW" "CIRCTFSMToSV" "CIRCTHandshakeToDC" "CIRCTHandshakeToHW" "CIRCTHWArithToHW" "CIRCTHWToLLHD" "CIRCTHWToLLVM" "CIRCTHWToBTOR2" "CIRCTHWToSMT" "CIRCTHWToSV" "CIRCTHWToSystemC" "CIRCTLLHDToLLVM" "CIRCTLoopScheduleToCalyx" "CIRCTMooreToCore" "CIRCTPipelineToHW" "CIRCTSCFToCalyx" "CIRCTSeqToSV" "CIRCTSimToSV" "CIRCTCFToHandshake" "CIRCTVerifToSMT" "CIRCTVerifToSV" "CIRCTExportFIRRTL" "CIRCTComb" "CIRCTCombTransforms" "CIRCTDebug" "CIRCTESI" "CIRCTFIRRTL" "CIRCTImportFIRFile" "CIRCTMSFT" "CIRCTMSFTTransforms" "CIRCTHW" "CIRCTLLHD" "CIRCTMoore" "CIRCTOM" "CIRCTOMEvaluator" "CIRCTSeq" "CIRCTSeqTransforms" "CIRCTSV" "CIRCTSVTransforms" "CIRCTFSM" "CIRCTFSMTransforms" "CIRCTHandshake" "CIRCTHandshakeTransforms" "CIRCTHWArith" "CIRCTVerif" "CIRCTLTL" "CIRCTEmit" "CIRCTFirtool" )
-  if(NOT TARGET "${_target}" )
-    set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE_targets "${${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE_targets} ${_target}")
-  endif()
-endforeach()
-```
-
-The `foreach`-statement after editing the file:
-
-```
-# Make sure the targets which have been exported in some other
-# export set exist.
-unset(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE_targets)
-foreach(_target "LLVMSupport" "LLVMCore" "LLVMMC" "LLVMTarget" "LLVMAsmParser" "LLVMBinaryFormat" "LLVMBitReader" "LLVMBitWriter" "LLVMFrontendOpenMP" "LLVMTransformUtils" "LLVMTargetParser" "LLVMIRReader" "LLVMipo" "LLVMLinker" "LLVMPasses" "LLVMMCParser" "LLVMLineEditor" "LLVMTableGen" "LLVMAnalysis" "LLVMCoroutines" "LLVMAggressiveInstCombine" "LLVMInstCombine" "LLVMScalarOpts" "LLVMVectorize" "LLVMExecutionEngine" "LLVMObject" "LLVMOrcJIT" "LLVMJITLink" "LLVMX86CodeGen" "LLVMX86Desc" "LLVMX86Info" "LLVMX86AsmParser" "LLVMX86Disassembler"  )
-  if(NOT TARGET "${_target}" )
-    set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE_targets "${${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE_targets} ${_target}")
-  endif()
-endforeach()
-```
-
-That's it: both CIRCT and LLVM can be used now.
-
 ### Compiling CIRCT & LLVM from Scratch
 
 MLIR is included in CIRCT in the form of a Git submodule, so the compilation process starts with cloning the CIRCT repository into some directory `CIRCT_DIR`.
 
 ```bash
 cd <WORKDIR>
-git clone --depth 1 --branch firtool-1.72.0 https://github.com/llvm/circt/ <CIRCT_DIR>
+git clone --depth 1 --branch firtool-1.110.0 https://github.com/llvm/circt/ <CIRCT_DIR>
 cd <CIRCT_DIR>
 git submodule init
 git submodule update
@@ -163,7 +127,7 @@ Utopia HLS is a CMake-based project, so the compilation can be set via as much a
 CMake buildsystem-generation script accepts a number of required and optional arguments (prefixed with `-D`), which are presented below:
 
 * `SRC_FILES`: (quoted) *required* semicolon-separated list of filesystem paths; is used to specify source files for user-defined kernels to be added to the Utopia HLS compilation.
-* `CMAKE_PREFIX_PATH`: standard CMake variable; *optional* (quoted) semicolon-separated list of <ins>full</ins> filesystem paths; is used to locate installed CIRCT and MLIR packages. In case a precompiled CIRCT release is used, specifying a path to its unarchived top-level directory is enough (e.g. `-DCMAKE_PREFIX_PATH=~/firtool-1.72.0`). In case CIRCT and MLIR are compiled manually, **paths to each independent build (not source) directory have to be specified** (e.g. `-DCMAKE_PREFIX_PATH-"~/circt/build;~/circt/llvm/build"`). This variable may be omitted if CIRCT and MLIR are installed in default system paths.
+* `CMAKE_PREFIX_PATH`: standard CMake variable; *optional* (quoted) semicolon-separated list of <ins>full</ins> filesystem paths; is used to locate installed CIRCT and MLIR packages. In case a precompiled CIRCT release is used, specifying a path to its unarchived top-level directory is enough (e.g. `-DCMAKE_PREFIX_PATH=~/firtool-1.110.0`). In case CIRCT and MLIR are compiled manually, **paths to each independent build (not source) directory have to be specified** (e.g. `-DCMAKE_PREFIX_PATH-"~/circt/build;~/circt/llvm/build"`). This variable may be omitted if CIRCT and MLIR are installed in default system paths.
 * `INCLUDE_DIRS`: (quoted) *optional* semicolon-separated list of filesystem paths; is used to specify include directories for user-defined kernels to be added to the Utopia HLS compilation.
 * `OUT`: *optional* string; used to specify a custom name for the final Utopia HLS executable. Unless it is explicitly provided, the final executable will be named `umain`.
 * `BUILD_TESTS`: *optional* binary (`ON`/`OFF`) variable; switched to `OFF` by default; is used to enable tests compilation (target `test/utest`). Values other than `ON` are interpreted as `OFF`.
@@ -173,7 +137,7 @@ Other standard CMake variables/options may also be specified to affect the final
 Here is an example of a fully-formed CMake buildsystem-generation script (directory `build` may be changed for any other directory):
 
 ```bash
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=~/firtool-1.72.0 -DINCLUDE_DIRS=~ -DSRC_FILES="~/utopia-user/simple.cpp;~/utopia-user/buf.cpp" -DOUT=executable -DBUILD_TESTS=ON
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=~/firtool-1.110.0 -DINCLUDE_DIRS=~ -DSRC_FILES="~/utopia-user/simple.cpp;~/utopia-user/buf.cpp" -DOUT=executable -DBUILD_TESTS=ON
 ```
 
 To start the compilation process, a simple `cmake --build`-command is used.
@@ -246,7 +210,7 @@ Root subdirectory `examples` contains different examples of DFCxx kernels, `star
 For example, given subdirectory `polynomial2`, the compilation and execution commands might look the following (setting `INCLUDE_DIRS` is not necessary, as the required headers reside right next to their executable):
 
 ```bash
-cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH=~/firtool-1.72.0 -DSRC_FILES="~/utopia-hls/examples/polynomial2/polynomial2.cpp"
+cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH=~/firtool-1.110.0 -DSRC_FILES="~/utopia-hls/examples/polynomial2/polynomial2.cpp"
 cmake --build build
 build/src/umain hls --config examples/polynomial2/add_int_2_mul_int3.json -a --out-sv output
 ```

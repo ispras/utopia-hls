@@ -197,9 +197,8 @@ private:
     auto end = block->op_end<FExtModuleOp>();
     for (auto op = begin; op != end; ++op) {
       auto moduleName = (*op).getModuleName();
-      uint32_t latency =
-          (*op)->getAttr(INSTANCE_LATENCY_ATTR)
-              .cast<IntegerAttr>().getUInt();
+      auto latencyAttr = (*op)->getAttr(INSTANCE_LATENCY_ATTR);
+      uint32_t latency = mlir::cast<IntegerAttr>(latencyAttr).getUInt();
       TemplateDictionary *moduleDict;
       if (moduleName.contains(BUF_MODULE)) {
         moduleDict = processFIFOModule(dict, *op, latency);
