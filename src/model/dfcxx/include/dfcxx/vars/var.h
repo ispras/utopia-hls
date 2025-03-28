@@ -113,6 +113,8 @@ private:
   DFVariableImpl *impl;
 
 public:
+  DFVariable() = default;
+
   DFVariable(DFVariableImpl *impl);
 
   DFVariable(const DFVariable &) = default;

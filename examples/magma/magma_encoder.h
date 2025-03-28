@@ -8,8 +8,8 @@
 
 #include "dfcxx/DFCXX.h"
 
-using dfcxx::DFType;
-using dfcxx::DFVariable;
+#include <utility>
+#include <vector>
 
 class MagmaEncoder : public dfcxx::Kernel {
 public:
@@ -22,7 +22,7 @@ public:
   using DFType = dfcxx::DFType;
   using DFVariable = dfcxx::DFVariable;
 
-  DFVariable magmaPermut(int tableId, DFVariable val) {
+  DFVariable permut(int tableId, DFVariable val) {
     const DFType type = dfUInt(4);
 
     DFVariable c0 = constant.var(type, uint64_t(0));
@@ -45,64 +45,64 @@ public:
     switch (tableId) {
       case 0: {
         return control.mux(val, {
-            c12, c4, c6, c2,
+            c12, c4, c6,  c2,
             c10, c5, c11, c9,
             c14, c8, c13, c7,
-            c0, c3, c15, c1
+            c0,  c3, c15, c1
         });
       }
       case 1: {
         return control.mux(val, {
-            c6, c8, c2, c3,
-            c9, c10, c5, c12,
-            c1, c14, c4, c7,
+            c6,  c8,  c2, c3,
+            c9,  c10, c5, c12,
+            c1,  c14, c4, c7,
             c11, c13, c0, c15
         });
       }
       case 2: {
         return control.mux(val, {
-            c11, c3, c5, c8,
-            c2, c15, c10, c13,
-            c14, c1, c7, c4,
-            c12, c9, c6, c0
+            c11, c3,  c5,  c8,
+            c2,  c15, c10, c13,
+            c14, c1,  c7,  c4,
+            c12, c9,  c6,  c0
         });
       }
       case 3: {
         return control.mux(val, {
-            c12, c8, c2, c1,
-            c13, c4, c15, c6,
-            c7, c0, c10, c5,
-            c3, c14, c9, c11
+            c12, c8,  c2,  c1,
+            c13, c4,  c15, c6,
+            c7,  c0,  c10, c5,
+            c3,  c14, c9,  c11
         });
       }
       case 4: {
         return control.mux(val, {
-            c7, c15, c5, c10,
-            c8, c1, c6, c13,
-            c0, c9, c3, c14,
-            c11, c4, c2, c12
+            c7,  c15, c5, c10,
+            c8,  c1,  c6, c13,
+            c0,  c9,  c3, c14,
+            c11, c4,  c2, c12
         });
       }
       case 5: {
         return control.mux(val, {
-            c5, c13, c15, c6,
-            c9, c2, c12, c10,
-            c11, c7, c8, c1,
-            c4, c3, c14, c0
+            c5,  c13, c15, c6,
+            c9,  c2,  c12, c10,
+            c11, c7,  c8,  c1,
+            c4,  c3,  c14, c0
         });
       }
       case 6: {
         return control.mux(val, {
-            c8, c14, c2, c5,
-            c6, c9, c1, c12,
-            c15, c4, c11, c0,
-            c13, c10, c3, c7
+            c8,  c14, c2,  c5,
+            c6,  c9,  c1,  c12,
+            c15, c4,  c11, c0,
+            c13, c10, c3,  c7
         });
       }
       case 7: {
         return control.mux(val, {
-            c1, c7, c14, c13,
-            c0, c5, c8, c3,
+            c1, c7,  c14, c13,
+            c0, c5,  c8,  c3,
             c4, c15, c10, c6,
             c9, c12, c11, c2
         });
@@ -111,47 +111,43 @@ public:
     }
   }
   
-  DFVariable magmaIter(DFVariable left, DFVariable right, DFVariable key) {
+  std::pair<DFVariable, DFVariable>
+  round(DFVariable left, DFVariable right, DFVariable key) {
     const DFType type = dfUInt(32);
-    
+
     DFVariable sum = right.cast(type) + key.cast(type);
-    DFVariable substituted = magmaPermut(7, sum(31, 28));
-    for (int i = 1; i < 8; ++i) {
-      int currSInd = 31 - i*4;
-      substituted =
-          substituted.cat(magmaPermut(7 - i, sum(currSInd, currSInd - 3)));
+    std::vector<DFVariable> parts;
+    for (int i = 0; i < 31; i += 4) { parts.push_back(sum(i + 3, i)); }
+
+    DFVariable subst = permut(7, parts[7]);
+    for (int i = 6; i >= 0; --i) {
+      subst = subst.cat(permut(i, parts[i]));
     }
-    DFVariable shifted = substituted(20, 0).cat(substituted(31, 21));
-    return left ^ shifted;
+
+    DFVariable shifted = subst(20, 0).cat(subst(31, 21));
+    return std::make_pair(right, left ^ shifted);
   }
 
   MagmaEncoder() : dfcxx::Kernel() {
     const DFType ioType = dfUInt(64);
-
     DFVariable block = io.input("block", ioType);
     DFVariable key = io.input("key", dfUInt(256));
+    auto curr = std::make_pair(block(63, 32), block(31, 0));
 
-    DFVariable currLeft = block(63, 32);
-    DFVariable currRight = block(31, 0);
+    std::vector<DFVariable> keys;
+    for (int i = 255; i >= 0; i -= 32) { keys.push_back(key(i, i - 31)); }
 
     for (int i = 0; i < 3; ++i) {
       for (int kInd = 0; kInd < 8; ++kInd) {
-        int currKInd = 255 - 32*kInd;
-        DFVariable buf = currRight;
-        currRight =
-            magmaIter(currLeft, currRight, key(currKInd, currKInd - 31));
-        currLeft = buf;
+        curr = round(curr.first, curr.second, keys[kInd]);
       }
     }
 
     for (int kInd = 7; kInd >= 0; --kInd) {
-      int currKInd = 255 - 32*kInd;
-      DFVariable buf = currRight;
-      currRight = magmaIter(currLeft, currRight, key(currKInd, currKInd - 31));
-      currLeft = buf;
+      curr = round(curr.first, curr.second, keys[kInd]);
     }
 
     DFVariable encoded = io.output("encoded", ioType);
-    encoded.connect(currRight.cat(currLeft));
+    encoded.connect(curr.second.cat(curr.first));
   }
 };
