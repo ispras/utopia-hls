@@ -50,7 +50,7 @@ jobs:
           - kernel: scalar3
             config: add_int_2_mul_int_3
         
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       MODULE_OUTPUT_PATH: "output.sv"
       LIBRARY_OUTPUT_PATH: "lib.sv"
