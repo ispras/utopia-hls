@@ -13,8 +13,10 @@
 #include "circt/Dialect/FIRRTL/FIRRTLOps.h"
 #include "circt/Dialect/FIRRTL/Passes.h"
 #include "circt/Dialect/SV/SVDialect.h"
+#include "circt/Dialect/SV/SVPasses.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
+#include "mlir/Transforms/Passes.h"
 
 #include <memory>
 
@@ -97,14 +99,24 @@ bool DFCIRProcessor::convertAndPrint(mlir::ModuleOp module,
   // Add FIRRTL->SystemVerilog passes if SystemVerilog output
   // option is specified.
   if (auto *stream = outputStreams[OUT_FORMAT_ID_INT(SystemVerilog)]) {
+    pm.addPass(circt::firrtl::createInnerSymbolDCEPass());
+
     mlir::OpPassManager &nestedCirct = pm.nest<circt::firrtl::CircuitOp>();
     nestedCirct.addPass(circt::firrtl::createIMConstPropPass());
 
     mlir::OpPassManager &nestedFirrtl = pm.nest<circt::firrtl::FModuleOp>();
     nestedFirrtl.addPass(circt::firrtl::createEliminateWiresPass());
 
+    pm.addPass(circt::firrtl::createIMDeadCodeElimPass());
     pm.addPass(circt::createLowerFIRRTLToHWPass());
+
+    mlir::OpPassManager &nestedHw = pm.nest<circt::hw::HWModuleOp>();
+    nestedHw.addPass(circt::sv::createHWCleanupPass());
+    nestedHw.addPass(mlir::createCSEPass());
+    nestedHw.addPass(circt::sv::createPrettifyVerilogPass());
+
     pm.addPass(circt::createLowerSeqToSVPass());
+
     pm.addPass(circt::createExportVerilogPass(*stream));
   }
 
