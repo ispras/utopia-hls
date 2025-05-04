@@ -17,8 +17,10 @@
 namespace dfcxx {
 
 enum Ops {
+  // Empty op. Its latency is always 0.
+  UNDEFINED,
   // Arithmetic operations.
-  ADD_INT = 1,
+  ADD_INT,
   ADD_FLOAT,
   SUB_INT,
   SUB_FLOAT,
@@ -89,23 +91,11 @@ public:
   uint64_t stages;
 
   DFOptionsConfig() {
-    scheduler = Scheduler::ASAP;
+    scheduler = Scheduler::CombPipelining;
     stages = 0;
   }
 
   DFOptionsConfig(const DFOptionsConfig &) = default;
-
-  std::string validate() const {
-    if (scheduler != Scheduler::CombPipelining && stages > 0) {
-      return "Pipeline stages cannot be specified without pipelining scheduler.";
-    }
-
-    if (scheduler == Scheduler::CombPipelining && stages == 0) {
-      return "Pipeline stages were not specified along with pipelining sheduler.";
-    }
-
-    return "";
-  }
 };
 
 } // namespace dfcxx

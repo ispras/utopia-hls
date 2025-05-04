@@ -33,9 +33,6 @@
 
 #define HLS_ID_JSON "hls"
 #define CONFIG_JSON "config"
-#define ASAP_SCHEDULER_JSON "asap_scheduler"
-#define LP_SCHEDULER_JSON "lp_scheduler"
-#define PIPELINE_SCHEDULER_JSON "pipeline_scheduler"
 #define OUT_SV_JSON "out_sv"
 #define OUT_SV_LIB_JSON "out_sv_lib"
 #define OUT_UNSCHEDULED_DFCIR_JSON "out_dfcir"
@@ -55,21 +52,39 @@
 
 #define HLS_CMD "hls"
 #define SIM_CMD "sim"
+
 #define CONFIG_ARG CLI_ARG("config")
+#define CONFIG_ARG_DEFAULT "latency.json"
+
 #define SCHEDULER_GROUP "scheduler"
 #define ASAP_SCHEDULER_FLAG CLI_FLAG("a")
 #define LP_SCHEDULER_FLAG CLI_FLAG("l")
 #define PIPELINE_SCHEDULER_ARG CLI_ARG("pipeline")
 #define OUTPUT_GROUP "output"
+
 #define OUT_SV_ARG CLI_ARG("out-sv")
+#define OUT_SV_ARG_DEFAULT "output.sv"
+
 #define OUT_SV_LIB_ARG CLI_ARG("out-sv-lib")
+#define OUT_SV_LIB_ARG_DEFAULT "output-lib.sv"
+
 #define OUT_UNSCHEDULED_DFCIR_ARG CLI_ARG("out-dfcir")
+#define OUT_UNSCHEDULED_DFCIR_ARG_DEFAULT "dfcir.mlir"
+
 #define OUT_SCHEDULED_DFCIR_ARG CLI_ARG("out-scheduled-dfcir")
+#define OUT_SCHEDULED_DFCIR_ARG_DEFAULT "scheduled-dfcir.mlir"
+
 #define OUT_FIRRTL_ARG CLI_ARG("out-firrtl")
+#define OUT_FIRRTL_ARG_DEFAULT "firrtl.mlir"
+
 #define OUT_DOT_ARG CLI_ARG("out-dot")
+#define OUT_DOT_ARG_DEFAULT "output.dot"
 
 #define SIM_IN_ARG CLI_ARG("in")
+#define SIM_IN_ARG_DEFAULT "sim.txt"
+
 #define SIM_OUT_ARG CLI_ARG("out")
+#define SIM_OUT_ARG_DEFAULT "sim_out.vcd"
 
 //===----------------------------------------------------------------------===//
 
@@ -193,53 +208,76 @@ struct HlsOptions final : public AppOptions {
     options->add_option(CONFIG_ARG,
                         latencyCfgFile,
                         "JSON latency configuration path")
-        ->expected(1);
+           ->default_str(CONFIG_ARG_DEFAULT)
+           ->expected(0, 1);
     
     auto schedGroup = options->add_option_group(SCHEDULER_GROUP);
     schedGroup->add_flag(ASAP_SCHEDULER_FLAG,
-                         asapScheduler,
-                        "Use greedy as-soon-as-possible scheduler");
+                         "Use greedy as-soon-as-possible scheduler");
     schedGroup->add_flag(LP_SCHEDULER_FLAG,
-                         lpScheduler,
                          "Use Linear Programming scheduler");
     schedGroup->add_option(PIPELINE_SCHEDULER_ARG,
                            optionsCfg.stages,
-                          "Use Combinational Pipelining scheduler with the specified pipeline stages");
-    schedGroup->require_option(1); 
+                           "Use Combinational Pipelining scheduler with the specified pipeline stages")
+              ->capture_default_str()
+              ->expected(0, 1);
+    schedGroup->require_option(0, 1);
+
+    // The callback below is used to set correct optionsCfg.scheduler enum value.
+    schedGroup->callback([this, schedGroup] () {
+      // Options are mutually exclusive (enforced by require_option(0, 1)),
+      // so 3 consecutive if-s should suffice.
+      if (!schedGroup->get_option(ASAP_SCHEDULER_FLAG)->empty()) {
+        this->optionsCfg.scheduler = dfcxx::Scheduler::ASAP;
+      }
+
+      if (!schedGroup->get_option(LP_SCHEDULER_FLAG)->empty()) {
+        this->optionsCfg.scheduler = dfcxx::Scheduler::Linear;
+      }
+
+      if (!schedGroup->get_option(PIPELINE_SCHEDULER_ARG)->empty()) {
+        this->optionsCfg.scheduler = dfcxx::Scheduler::CombPipelining;
+	// If this option is used, the parsed number of pipeline stages has
+	// already been set to "optionsCfg.stages",
+	// so there's no need to do it now.
+      }
+    });
+
     auto outputGroup = options->add_option_group(OUTPUT_GROUP);
     outputGroup->add_option(OUT_SV_ARG,
                             outNames[OUT_FORMAT_ID_INT(SystemVerilog)],
-                            "Path to output the SystemVerilog module");
+                            "Path to output the SystemVerilog module")
+               ->default_str(OUT_SV_ARG_DEFAULT)
+               ->expected(0, 1);
     outputGroup->add_option(OUT_SV_LIB_ARG,
                             outNames[OUT_FORMAT_ID_INT(SVLibrary)],
-                            "Path to output SystemVerilog modules for generated operations");
+                            "Path to output SystemVerilog modules for generated operations")
+               ->default_str(OUT_SV_LIB_ARG_DEFAULT)
+               ->expected(0, 1);
     outputGroup->add_option(OUT_UNSCHEDULED_DFCIR_ARG,
                             outNames[OUT_FORMAT_ID_INT(UnscheduledDFCIR)],
-                            "Path to output unscheduled DFCIR");
+                            "Path to output unscheduled DFCIR")
+               ->default_str(OUT_UNSCHEDULED_DFCIR_ARG_DEFAULT)
+               ->expected(0, 1);
     outputGroup->add_option(OUT_SCHEDULED_DFCIR_ARG,
                             outNames[OUT_FORMAT_ID_INT(ScheduledDFCIR)],
-                            "Path to output scheduled DFCIR");
+                            "Path to output scheduled DFCIR")
+               ->default_str(OUT_SCHEDULED_DFCIR_ARG_DEFAULT)
+               ->expected(0, 1);
     outputGroup->add_option(OUT_FIRRTL_ARG,
                             outNames[OUT_FORMAT_ID_INT(FIRRTL)],
-                            "Path to output scheduled FIRRTL");
+                            "Path to output scheduled FIRRTL")
+               ->default_str(OUT_FIRRTL_ARG_DEFAULT)
+               ->expected(0, 1);
     outputGroup->add_option(OUT_DOT_ARG,
                             outNames[OUT_FORMAT_ID_INT(DOT)],
-                            "Path to output a DFCxx kernel in DOT format.");
+                            "Path to output a DFCxx kernel in DOT format.")
+               ->default_str(OUT_DOT_ARG_DEFAULT)
+               ->expected(0, 1);
     outputGroup->require_option();
   }
 
-  void fromJson(Json json) override {
-    get(json, CONFIG_JSON,                latencyCfgFile);
-    get(json, ASAP_SCHEDULER_JSON,        asapScheduler);
-    get(json, LP_SCHEDULER_JSON,          lpScheduler);
-    get(json, PIPELINE_SCHEDULER_JSON,    optionsCfg.stages);
-    get(json, OUT_SV_JSON,                outNames[OUT_FORMAT_ID_INT(SystemVerilog)]);
-    get(json, OUT_SV_LIB_JSON,            outNames[OUT_FORMAT_ID_INT(SVLibrary)]);
-    get(json, OUT_UNSCHEDULED_DFCIR_JSON, outNames[OUT_FORMAT_ID_INT(UnscheduledDFCIR)]);
-    get(json, OUT_SCHEDULED_DFCIR_JSON,   outNames[OUT_FORMAT_ID_INT(ScheduledDFCIR)]);
-    get(json, OUT_FIRRTL_JSON,            outNames[OUT_FORMAT_ID_INT(FIRRTL)]);
-    get(json, OUT_DOT_JSON,               outNames[OUT_FORMAT_ID_INT(DOT)]);
-  }
+  void fromJson(Json json) override { }
   
   dfcxx::Ops convertFieldToEnum(const std::string field) {
     if (field == "ADD_INT")         { return dfcxx::ADD_INT; }          else
@@ -264,7 +302,7 @@ struct HlsOptions final : public AppOptions {
     if (field == "EQ_FLOAT")        { return dfcxx::EQ_FLOAT; }         else
     if (field == "NEQ_INT")         { return dfcxx::NEQ_INT; }          else
     if (field == "NEQ_FLOAT")       { return dfcxx::NEQ_FLOAT; }        else
-    return dfcxx::ADD_INT;
+    return dfcxx::UNDEFINED;
   }
 
   void parseInternalOpsConfig(Json json) {
@@ -282,6 +320,7 @@ struct HlsOptions final : public AppOptions {
   }
 
   void parseLatencyConfig() {
+    if (latencyCfgFile.empty()) { return; }
     std::ifstream in(latencyCfgFile);
     if (!in.good()) { return; }
     Json json = Json::parse(in);
@@ -305,10 +344,14 @@ struct SimOptions final : public AppOptions {
     // Named options.
     options->add_option(SIM_IN_ARG,
                         inFilePath,
-                        "Simulation input data path")->capture_default_str();
+                        "Simulation input data path")
+           ->default_str(SIM_IN_ARG_DEFAULT)
+           ->expected(0, 1);
     options->add_option(SIM_OUT_ARG,
                         outFilePath,
-                        "Simulation results output path")->capture_default_str();
+                        "Simulation results output path")
+           ->default_str(SIM_OUT_ARG_DEFAULT)
+           ->expected(0, 1);
   }
 
   void fromJson(Json json) override {
@@ -339,7 +382,7 @@ struct Options final : public AppOptions {
 
     // Subcommand-specific initialization actions.
     if (hls) {
-      // Parse latency configuration.
+      // Parse latency configuration in case it was supplied.
       hls.parseLatencyConfig();
     }
   }

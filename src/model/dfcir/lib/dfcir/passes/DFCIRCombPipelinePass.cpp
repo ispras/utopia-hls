@@ -30,6 +30,9 @@ public:
   using LayerCascades = utils::CombGraph::LayerCascades;
 
   void runOnOperation() override {
+    // No need to do any pipelining for 0 stages.
+    if (!stages) { return; }
+
     // Convert kernel into graph.
     CombGraph graph;
     graph.constructFrom(llvm::cast<ModuleOp>(getOperation()));

@@ -395,7 +395,8 @@ class SchedulableOpConversionPattern
       llvm::cast<SVSynthesizable>(innerType).printSVSignature(nameStream);
     }
 
-    nameStream << "_" << llvm::cast<Scheduled>(op.getOperation()).getLatency();
+    nameStream << "_"
+               << llvm::cast<Scheduled>(op.getOperation()).getPosLatency();
 
     return name;
   }
@@ -422,7 +423,7 @@ class SchedulableOpConversionPattern
     IntegerType attrType = mlir::IntegerType::get(rewriter.getContext(), 32,
                                                   mlir::IntegerType::Unsigned);
 
-    int32_t latency = llvm::cast<Scheduled>(op.getOperation()).getLatency();
+    int32_t latency = llvm::cast<Scheduled>(op.getOperation()).getPosLatency();
     auto module = rewriter.create<FExtModuleOp>(
         rewriter.getUnknownLoc(),
         mlir::StringAttr::get(rewriter.getContext(), name),
@@ -1019,7 +1020,7 @@ public:
 
     auto convertedType = getTypeConverter()->convertType(op->getResult(0).getType());
     auto width = getBitWidth(llvm::dyn_cast<FIRRTLBaseType>(convertedType));
-    int32_t latency = llvm::cast<Scheduled>(op.getOperation()).getLatency();
+    int32_t latency = llvm::cast<Scheduled>(op.getOperation()).getPosLatency();
     nameStream << "_IN_" << *width << "_OUT_" << *width << "_" << latency;
 
     return name;
