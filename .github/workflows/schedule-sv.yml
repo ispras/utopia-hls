@@ -100,7 +100,7 @@ jobs:
             config: xor_int_0
             test  : 0
             top   : KuznechikDecoderInst_test0
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       MODULE_OUTPUT_PATH : "output.sv"
       LIBRARY_OUTPUT_PATH: "lib.sv"
