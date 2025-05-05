@@ -205,22 +205,24 @@ struct HlsOptions final : public AppOptions {
       outNames(OUT_FORMAT_ID_INT(COUNT)) {
 
     // Named options.
-    options->add_option(CONFIG_ARG,
-                        latencyCfgFile,
-                        "JSON latency configuration path")
-           ->default_str(CONFIG_ARG_DEFAULT)
-           ->expected(0, 1);
+    options
+        ->add_option(CONFIG_ARG,
+                     latencyCfgFile,
+                     "JSON latency configuration path")
+        ->default_str(CONFIG_ARG_DEFAULT)
+        ->expected(0, 1);
     
     auto schedGroup = options->add_option_group(SCHEDULER_GROUP);
     schedGroup->add_flag(ASAP_SCHEDULER_FLAG,
                          "Use greedy as-soon-as-possible scheduler");
     schedGroup->add_flag(LP_SCHEDULER_FLAG,
                          "Use Linear Programming scheduler");
-    schedGroup->add_option(PIPELINE_SCHEDULER_ARG,
-                           optionsCfg.stages,
-                           "Use Combinational Pipelining scheduler with the specified pipeline stages")
-              ->capture_default_str()
-              ->expected(0, 1);
+    schedGroup
+        ->add_option(PIPELINE_SCHEDULER_ARG,
+                     optionsCfg.stages,
+                     "Use Combinational Pipelining scheduler with the specified pipeline stages")
+        ->capture_default_str()
+        ->expected(0, 1);
     schedGroup->require_option(0, 1);
 
     // The callback below is used to set correct optionsCfg.scheduler enum value.
@@ -244,36 +246,42 @@ struct HlsOptions final : public AppOptions {
     });
 
     auto outputGroup = options->add_option_group(OUTPUT_GROUP);
-    outputGroup->add_option(OUT_SV_ARG,
-                            outNames[OUT_FORMAT_ID_INT(SystemVerilog)],
-                            "Path to output the SystemVerilog module")
-               ->default_str(OUT_SV_ARG_DEFAULT)
-               ->expected(0, 1);
-    outputGroup->add_option(OUT_SV_LIB_ARG,
-                            outNames[OUT_FORMAT_ID_INT(SVLibrary)],
-                            "Path to output SystemVerilog modules for generated operations")
-               ->default_str(OUT_SV_LIB_ARG_DEFAULT)
-               ->expected(0, 1);
-    outputGroup->add_option(OUT_UNSCHEDULED_DFCIR_ARG,
-                            outNames[OUT_FORMAT_ID_INT(UnscheduledDFCIR)],
-                            "Path to output unscheduled DFCIR")
-               ->default_str(OUT_UNSCHEDULED_DFCIR_ARG_DEFAULT)
-               ->expected(0, 1);
-    outputGroup->add_option(OUT_SCHEDULED_DFCIR_ARG,
-                            outNames[OUT_FORMAT_ID_INT(ScheduledDFCIR)],
-                            "Path to output scheduled DFCIR")
-               ->default_str(OUT_SCHEDULED_DFCIR_ARG_DEFAULT)
-               ->expected(0, 1);
-    outputGroup->add_option(OUT_FIRRTL_ARG,
-                            outNames[OUT_FORMAT_ID_INT(FIRRTL)],
-                            "Path to output scheduled FIRRTL")
-               ->default_str(OUT_FIRRTL_ARG_DEFAULT)
-               ->expected(0, 1);
-    outputGroup->add_option(OUT_DOT_ARG,
-                            outNames[OUT_FORMAT_ID_INT(DOT)],
-                            "Path to output a DFCxx kernel in DOT format.")
-               ->default_str(OUT_DOT_ARG_DEFAULT)
-               ->expected(0, 1);
+    outputGroup
+        ->add_option(OUT_SV_ARG,
+                     outNames[OUT_FORMAT_ID_INT(SystemVerilog)],
+                     "Path to output the SystemVerilog module")
+        ->default_str(OUT_SV_ARG_DEFAULT)
+        ->expected(0, 1);
+    outputGroup
+         ->add_option(OUT_SV_LIB_ARG,
+                      outNames[OUT_FORMAT_ID_INT(SVLibrary)],
+                      "Path to output SystemVerilog modules for generated operations")
+         ->default_str(OUT_SV_LIB_ARG_DEFAULT)
+         ->expected(0, 1);
+    outputGroup
+         ->add_option(OUT_UNSCHEDULED_DFCIR_ARG,
+                      outNames[OUT_FORMAT_ID_INT(UnscheduledDFCIR)],
+                      "Path to output unscheduled DFCIR")
+         ->default_str(OUT_UNSCHEDULED_DFCIR_ARG_DEFAULT)
+         ->expected(0, 1);
+    outputGroup
+        ->add_option(OUT_SCHEDULED_DFCIR_ARG,
+                     outNames[OUT_FORMAT_ID_INT(ScheduledDFCIR)],
+                     "Path to output scheduled DFCIR")
+        ->default_str(OUT_SCHEDULED_DFCIR_ARG_DEFAULT)
+        ->expected(0, 1);
+    outputGroup
+        ->add_option(OUT_FIRRTL_ARG,
+                     outNames[OUT_FORMAT_ID_INT(FIRRTL)],
+                     "Path to output scheduled FIRRTL")
+        ->default_str(OUT_FIRRTL_ARG_DEFAULT)
+        ->expected(0, 1);
+    outputGroup
+        ->add_option(OUT_DOT_ARG,
+                     outNames[OUT_FORMAT_ID_INT(DOT)],
+                     "Path to output a DFCxx kernel in DOT format.")
+        ->default_str(OUT_DOT_ARG_DEFAULT)
+        ->expected(0, 1);
     outputGroup->require_option();
   }
 
@@ -342,16 +350,18 @@ struct SimOptions final : public AppOptions {
       AppOptions(parent, SIM_CMD, "DFCxx simulation") {
     
     // Named options.
-    options->add_option(SIM_IN_ARG,
-                        inFilePath,
-                        "Simulation input data path")
-           ->default_str(SIM_IN_ARG_DEFAULT)
-           ->expected(0, 1);
-    options->add_option(SIM_OUT_ARG,
-                        outFilePath,
-                        "Simulation results output path")
-           ->default_str(SIM_OUT_ARG_DEFAULT)
-           ->expected(0, 1);
+    options
+        ->add_option(SIM_IN_ARG,
+                     inFilePath,
+                     "Simulation input data path")
+        ->default_str(SIM_IN_ARG_DEFAULT)
+        ->expected(0, 1);
+    options
+        ->add_option(SIM_OUT_ARG,
+                     outFilePath,
+                     "Simulation results output path")
+        ->default_str(SIM_OUT_ARG_DEFAULT)
+        ->expected(0, 1);
   }
 
   void fromJson(Json json) override {
