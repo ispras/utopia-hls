@@ -184,7 +184,7 @@ Unless neither of the three arguments is used, first argument is the mode which 
 * `--out-sv <PATH>`: *optional* filesystem-path option; used to specify the output SystemVerilog file (default if option specified with no `<PATH>`: `output.sv`).
 * `--out-sv-lib <PATH>`: *optional* filesystem-path option; used to specify the output SystemVerilog file for generated operations library (default if option specified with no `<PATH>`: `output-lib.sv`).
 * `--out-dfcir <PATH>`: *optional* filesystem-path option; used to specify the output unscheduled DFCIR file (default if option specified with no `<PATH>`: `dfcir.mlir`).
-* `--out-scheduled-dfcir <PATH>`: *optional* filesystem-path option; used to specify the output scheduled DFCIR file (default if option specified with no `<PATH>`: `scheduler-dfcir.mlir`).
+* `--out-scheduled-dfcir <PATH>`: *optional* filesystem-path option; used to specify the output scheduled DFCIR file (default if option specified with no `<PATH>`: `scheduled-dfcir.mlir`).
 * `--out-firrtl <PATH>`: *optional* filesystem-path option; used to specify the output FIRRTL file (default if option specified with no `<PATH>`: `firrtl.mlir`).
 * `--out-dot <PATH>`: *optional* filesystem-path option; used to specify the output DOT file (default if option specified with no `<PATH>`: `output.dot`).
 * `-a` or `-l` or `--pipeline <STAGES>`: *optional* flag/option; used to specify the chosen scheduling strategy - either as-soon-as-possible or linear programming or combinational pipelining for the provided number of stages (default: `--pipeline 0`). **Exactly one or zero of these flags has to be specified**.
