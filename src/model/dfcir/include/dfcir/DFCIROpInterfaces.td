@@ -77,11 +77,33 @@ def Scheduled : OpInterface<"Scheduled"> {
       /*defaultImplementation=*/[{}]
     >,
     InterfaceMethod<
+      "Get positive clock latency (or 0 if not set).",
+      "int32_t",
+      "getPosLatency",
+      (ins),
+      /*methodBody=*/[{
+        int32_t latency = getLatency(impl, $_op);
+        return (latency >= 0) ? latency : 0;
+      }],
+      /*defaultImplementation=*/[{}]
+    >,
+    InterfaceMethod<
       "Get clock latency as an attribute.",
       "mlir::IntegerAttr",
       "getLatencyAttr",
       (ins),
       /*methodBody=*/[{ return $_op.getLatencyAttr(); }],
+      /*defaultImplementation=*/[{}]
+    >,
+    InterfaceMethod<
+      "Get positive clock latency as an attribute.",
+      "mlir::IntegerAttr",
+      "getPosLatencyAttr",
+      (ins),
+      /*methodBody=*/[{
+        return mlir::IntegerAttr::get(IntegerType::get($_op.getContext(), 32),
+                                      getPosLatency(impl, $_op));
+      }],
       /*defaultImplementation=*/[{}]
     >,
     InterfaceMethod<

@@ -46,19 +46,9 @@ int hlsMain(const HlsContext &context) {
   auto kernel = start();
   if (!kernel->check()) { return 1; }
 
-  dfcxx::DFOptionsConfig optionsCfg = context.options.optionsCfg;
-
-  if (context.options.asapScheduler) {
-    optionsCfg.scheduler = dfcxx::Scheduler::ASAP;
-  } else if (context.options.lpScheduler) {
-    optionsCfg.scheduler = dfcxx::Scheduler::Linear;
-  } else {
-    optionsCfg.scheduler = dfcxx::Scheduler::CombPipelining;
-  }
-
   return !kernel->compile(context.options.latencyCfg,
                           context.options.outNames,
-                          optionsCfg);
+                          context.options.optionsCfg);
 }
 
 int simMain(const SimContext &context) {

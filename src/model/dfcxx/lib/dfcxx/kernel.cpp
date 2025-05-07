@@ -179,12 +179,6 @@ void Kernel::deleteNode(Node *node) {
 bool Kernel::compile(const DFLatencyConfig &config,
                      const std::vector<std::string> &outputPaths,
                      const DFOptionsConfig &options) {
-  std::string errString = options.validate();
-  if (!errString.empty()) {
-    std::cout << "Options: " << errString << std::endl;
-    return false;
-  }
-
   DFCIRBuilder builder;
   auto compiled = builder.buildModule(this);
   size_t count = outputPaths.size();

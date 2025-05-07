@@ -180,14 +180,14 @@ Unless neither of the three arguments is used, first argument is the mode which 
 `hls` mode is used to perform the high-level synthesis of digital hardware description from the input DFCxx kernel. The list of arguments for `hls`-mode is presented below:
 
 * `-h,--help`: *optional* flag; used to print the help-message about other arguments.
-* `--config <PATH>`: *required* filesystem-path option; used to specify the file for a JSON latency configuration file. Its format is presented in `docs/latency_config.md`.
-* `--out-sv <PATH>`: *optional* filesystem-path option; used to specify the output SystemVerilog file.
-* `--out-sv-lib <PATH>`: *optional* filesystem-path option; used to specify the output SystemVerilog file for generated operations library.
-* `--out-dfcir <PATH>`: *optional* filesystem-path option; used to specify the output unscheduled DFCIR file.
-* `--out-scheduled-dfcir <PATH>`: *optional* filesystem-path option; used to specify the output scheduled DFCIR file.
-* `--out-firrtl <PATH>`: *optional* filesystem-path option; used to specify the output FIRRTL file.
-* `--out-dot <PATH>`: *optional* filesystem-path option; used to specify the output DOT file.
-* `-a` or `-l`: *required* flag; used to specify the chosen scheduling strategy - either as-soon-as-possible or linear programming. **Exactly one of these flags has to be specified**.
+* `--config <PATH>`: *optional* filesystem-path option; used to specify the file for a JSON latency configuration file (default if option specified with no `<PATH>`: `latency.json`). Its format is presented in `docs/latency_config.md`.
+* `--out-sv <PATH>`: *optional* filesystem-path option; used to specify the output SystemVerilog file (default if option specified with no `<PATH>`: `output.sv`).
+* `--out-sv-lib <PATH>`: *optional* filesystem-path option; used to specify the output SystemVerilog file for generated operations library (default if option specified with no `<PATH>`: `output-lib.sv`).
+* `--out-dfcir <PATH>`: *optional* filesystem-path option; used to specify the output unscheduled DFCIR file (default if option specified with no `<PATH>`: `dfcir.mlir`).
+* `--out-scheduled-dfcir <PATH>`: *optional* filesystem-path option; used to specify the output scheduled DFCIR file (default if option specified with no `<PATH>`: `scheduled-dfcir.mlir`).
+* `--out-firrtl <PATH>`: *optional* filesystem-path option; used to specify the output FIRRTL file (default if option specified with no `<PATH>`: `firrtl.mlir`).
+* `--out-dot <PATH>`: *optional* filesystem-path option; used to specify the output DOT file (default if option specified with no `<PATH>`: `output.dot`).
+* `-a` or `-l` or `--pipeline <STAGES>`: *optional* flag/option; used to specify the chosen scheduling strategy - either as-soon-as-possible or linear programming or combinational pipelining for the provided number of stages (default: `--pipeline 0`). **Exactly one or zero of these flags has to be specified**.
 
 **At least one of the `out-*` options has to be specified.**
 
