@@ -12,6 +12,8 @@
 #include "circt/Dialect/FIRRTL/FIRRTLDialect.h"
 #include "circt/Dialect/FIRRTL/FIRRTLOps.h"
 #include "circt/Dialect/FIRRTL/Passes.h"
+#include "circt/Dialect/HW/HWDialect.h"
+#include "circt/Dialect/HW/HWPasses.h"
 #include "circt/Dialect/SV/SVDialect.h"
 #include "circt/Dialect/SV/SVPasses.h"
 #include "mlir/Pass/Pass.h"
@@ -60,6 +62,7 @@ bool DFCIRProcessor::convertAndPrint(mlir::ModuleOp module,
   context->getOrLoadDialect<circt::firrtl::FIRRTLDialect>();
   context->getOrLoadDialect<circt::sv::SVDialect>();
   mlir::PassManager pm(context);
+  pm.enableStatistics();
 
   // Dump unscheduled DFCIR if the corresponding option is specified.
   if (auto *stream = outputStreams[OUT_FORMAT_ID_INT(UnscheduledDFCIR)]) {
@@ -111,6 +114,7 @@ bool DFCIRProcessor::convertAndPrint(mlir::ModuleOp module,
     pm.addPass(circt::createLowerFIRRTLToHWPass());
 
     mlir::OpPassManager &nestedHw = pm.nest<circt::hw::HWModuleOp>();
+    nestedHw.addPass(circt::hw::createHWAggregateToCombPass());
     nestedHw.addPass(circt::sv::createHWCleanupPass());
     nestedHw.addPass(mlir::createCSEPass());
     nestedHw.addPass(circt::sv::createPrettifyVerilogPass());
