@@ -100,6 +100,18 @@ jobs:
             config: xor_int_0
             test  : 0
             top   : KuznechikDecoderInst_test0
+          ## Optimized "Kuznechik" encoder tests.
+          - kernel: opt_kuznechik
+            cpp   : opt_kuznechik_encoder
+            config: ""
+            test  : 0
+            top   : OptKuznechikEncoder_test0
+          ## Optimized "Kuznechik" decoder tests.
+          - kernel: opt_kuznechik
+            cpp   : opt_kuznechik_decoder
+            config: ""
+            test  : 0
+            top   : OptKuznechikDecoder_test0
     runs-on: ubuntu-22.04
     env:
       MODULE_OUTPUT_PATH : "output.sv"
