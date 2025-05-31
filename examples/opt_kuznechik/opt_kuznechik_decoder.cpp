@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "opt_decoder.h"
+#include "opt_kuznechik_decoder.h"
 
 #include <memory>
 
