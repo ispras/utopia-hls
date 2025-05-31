@@ -10,7 +10,7 @@
 
 `timescale 1s/1s
 
-module KuznechikDecoderOpt_test0();
+module OptKuznechikDecoder_test0();
 
   localparam CIRCUIT_LATENCY = 0;
 
@@ -20,7 +20,7 @@ module KuznechikDecoderOpt_test0();
   reg [127:0] expected;
   reg clk;
 
-  KuznechikDecoderOpt inst (
+  OptKuznechikDecoder inst (
     .encoded(encoded),
     .key(key),
     .block(block),
@@ -34,7 +34,7 @@ module KuznechikDecoderOpt_test0();
   initial begin
 
     @(negedge clk);
-    $display("[KuznechikDecoderOpt: test 0] Input ready.");
+    $display("[OptKuznechikDecoder: test 0] Input ready.");
     
     encoded = 128'h7f679d90bebc24305a468d42b9d4edcd;
     key = 256'h8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef;
@@ -46,20 +46,20 @@ module KuznechikDecoderOpt_test0();
     // Wait for the first output.
     #(2*CIRCUIT_LATENCY+3);
 
-    $dumpfile("KuznechikDecoderOpt_test0.vcd");
-    $dumpvars(0, KuznechikDecoderOpt_test0);
-    $display("[KuznechikDecoderOpt: test 0] Started...");
+    $dumpfile("OptKuznechikDecoder_test0.vcd");
+    $dumpvars(0, OptKuznechikDecoder_test0);
+    $display("[OptKuznechikDecoder: test 0] Started...");
 
     $display("Output: %0h", block);
     if (expected == block) begin
       $display("GOOD: %0h == %0h", expected, block);
     end else begin
       $display("BAD: %0h != %0h", expected, block);
-      $display("[KuznechikDecoderOpt: test 0] Stopped.");
+      $display("[OptKuznechikDecoder: test 0] Stopped.");
       $finish;
     end
 
-    $display("[KuznechikDecoderOpt: test 0] Stopped.");
+    $display("[OptKuznechikDecoder: test 0] Stopped.");
     $finish;
   end
 

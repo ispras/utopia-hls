@@ -6,11 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "kuznechik_decoder_opt.h"
+#include "opt_decoder.h"
 
 #include <memory>
 
 std::unique_ptr<dfcxx::Kernel> start() {
-  KuznechikDecoderOpt *kernel = new KuznechikDecoderOpt();
+  OptKuznechikDecoder *kernel = new OptKuznechikDecoder();
   return std::unique_ptr<dfcxx::Kernel>(kernel);
 }

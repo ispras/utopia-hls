@@ -14,13 +14,13 @@
 
 #define C(NUM) constant.var(type, uint64_t(NUM))
 
-class KuznechikDecoderOpt : public dfcxx::Kernel {
+class OptKuznechikDecoder : public dfcxx::Kernel {
 public:
   std::string_view getName() const override {
-    return "KuznechikDecoderOpt";
+    return "OptKuznechikDecoder";
   }
 
-  ~KuznechikDecoderOpt() override = default;
+  ~OptKuznechikDecoder() override = default;
 
   using DFType = dfcxx::DFType;
   using DFVariable = dfcxx::DFVariable;
@@ -248,7 +248,7 @@ public:
     return key ^ permut;
   }
 
-  KuznechikDecoderOpt() : dfcxx::Kernel() {
+  OptKuznechikDecoder() : dfcxx::Kernel() {
     const DFType ioType = dfUInt(128);
 
     DFVariable encoded = io.input("encoded", ioType);
