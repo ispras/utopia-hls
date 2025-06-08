@@ -60,6 +60,7 @@ target_link_libraries(utest
     Utopia::DFCIR
     Utopia::DFCIRPasses
     Utopia::DFCXX
+    Utopia::DFCXXSTD
     easyloggingpp
 )
 
