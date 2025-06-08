@@ -20,11 +20,11 @@ namespace dfcxx::std {
 #define C(NUM) constant.var(type, uint64_t(NUM))
 
 class KuznechikBase : public dfcxx::Kernel {
-private:
+protected:
   bool opt_mul;
 	
 public:
-  std::string_view getName() const override {
+  ::std::string_view getName() const override {
     return "KuznechikBase";
   }
 
@@ -122,7 +122,7 @@ public:
 
     // Use optimized multiplication if needed, ...
     if (opt_mul) {
-      static std::vector<uint8_t> int_consts = {
+      static ::std::vector<uint8_t> int_consts = {
         148, 32, 133, 16, 194, 192, 1, 251,
 	1, 192, 194, 16, 133, 32, 148, 1
       };
@@ -138,7 +138,7 @@ public:
         DFVariable buf = io.newStream(type);
         uint8_t ind = 127 - 8 * i;
         DFVariable currSlice = val(ind, ind - 7);
-        instance<Galois8MulOpt>({
+        instance<KuznechikGalois8Mul>({
             {currSlice, "in"},
             {buf, "out"}
         }, int_consts[i]);
@@ -149,7 +149,7 @@ public:
     }
 
     // ... otherwise use classic multiplication.
-    std::vector<DFVariable> consts = {
+    ::std::vector<DFVariable> consts = {
         constant.var(type, uint64_t(148)), constant.var(type, uint64_t(32)),
         constant.var(type, uint64_t(133)), constant.var(type, uint64_t(16)),
         constant.var(type, uint64_t(194)), constant.var(type, uint64_t(192)),
@@ -199,7 +199,7 @@ public:
     return currVal;
   }
 
-  std::vector<DFVariable> getConsts() {
+  ::std::vector<DFVariable> getConsts() {
     const DFType type = dfUInt(64);
     return {
       C(0x6ea276726c487ab8).cat(C(0x5d27bd10dd849401)),
@@ -237,19 +237,19 @@ public:
     };
   }
 
-  std::pair<DFVariable, DFVariable>
+  ::std::pair<DFVariable, DFVariable>
   F(DFVariable constVal, DFVariable a1, DFVariable a0) {
-    return std::make_pair(XSL(constVal, a1) ^ a0, a1);
+    return ::std::make_pair(XSL(constVal, a1) ^ a0, a1);
   }
 
-  std::vector<DFVariable> genKeys(DFVariable k0, DFVariable k1) {
-    std::vector<DFVariable> consts = getConsts();
-    std::vector<DFVariable> keys;
+  ::std::vector<DFVariable> genKeys(DFVariable k0, DFVariable k1) {
+    ::std::vector<DFVariable> consts = getConsts();
+    ::std::vector<DFVariable> keys;
     keys.push_back(k0);
     keys.push_back(k1);
 
     for (int i = 0; i < 4; ++i) {
-      auto curr =  std::make_pair(keys[2 * i], keys[2 * i + 1]);
+      auto curr = ::std::make_pair(keys[2 * i], keys[2 * i + 1]);
       for (int j = 0; j < 8; ++j) {
         curr = F(consts[8 * i + j], curr.first, curr.second);
       }
@@ -273,32 +273,22 @@ public:
 
   KuznechikBase(bool opt_mul) : dfcxx::Kernel() {
     this->opt_mul = opt_mul;
-    const DFType ioType = dfUInt(128);
-
-    DFVariable encoded = io.input("encoded", ioType);
-    DFVariable key = io.input("key", dfUInt(256));
-
-    std::vector<DFVariable> gKeys = genKeys(key(255, 128), key(127, 0));
-
-    DFVariable currValue = encoded ^ gKeys[9];
-    for (int i = 8; i >= 0; --i) {
-      currValue = LSX(gKeys[i], currValue);
-    }
-
-    DFVariable block = io.output("block", ioType);
-    block.connect(currValue);
   }
 };
 
 class KuznechikEncoder: public KuznechikBase {
 public:
+  ::std::string_view getName() const override {
+    return "KuznechikEncoder";
+  }
+
   KuznechikEncoder(bool opt_mul = false) : KuznechikBase(opt_mul) {
     const DFType ioType = dfUInt(128);
 
     DFVariable block = io.input("block", ioType);
     DFVariable key = io.input("key", dfUInt(256));
 
-    std::vector<DFVariable> gKeys = genKeys(key(255, 128), key(127, 0));
+    ::std::vector<DFVariable> gKeys = genKeys(key(255, 128), key(127, 0));
 
     DFVariable currValue = block;
     for (int i = 0; i < 9; ++i) {
@@ -314,13 +304,17 @@ public:
 
 class KuznechikDecoder: public KuznechikBase {
 public:
+  ::std::string_view getName() const override {
+    return "KuznechikDecoder";
+  }
+
   KuznechikDecoder(bool opt_mul = false) : KuznechikBase(opt_mul) {
     const DFType ioType = dfUInt(128);
 
     DFVariable encoded = io.input("encoded", ioType);
     DFVariable key = io.input("key", dfUInt(256));
 
-    std::vector<DFVariable> gKeys = genKeys(key(255, 128), key(127, 0));
+    ::std::vector<DFVariable> gKeys = genKeys(key(255, 128), key(127, 0));
 
     DFVariable currValue = encoded ^ gKeys[9];
     for (int i = 8; i >= 0; --i) {

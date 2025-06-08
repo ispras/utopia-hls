@@ -8,6 +8,8 @@
 
 #include "dfcxx/io.h"
 
+#include <iostream>
+
 namespace dfcxx {
 
 using IODirection = dfcxx::DFVariableImpl::IODirection;

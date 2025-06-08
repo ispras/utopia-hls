@@ -14,7 +14,7 @@ namespace dfcxx::std {
 
 class Galois8Mul : public dfcxx::Kernel {
 public:
-  std::string_view getName() const override {
+  ::std::string_view getName() const override {
     return "Galois8Mul";
   }
 
