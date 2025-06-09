@@ -24,14 +24,21 @@
 
 namespace dfcxx {
 
+std::vector<Kernel *> Kernel::kernelStack;
+
 Kernel::Kernel() : meta(), io(meta), offset(meta),
-                   constant(meta), control(meta) {}
+                   constant(meta), control(meta) {
+  Kernel::kernelStack.push_back(this);
+  if (Kernel::kernelStack.size() == 1) {
+    KernelMeta::top = &meta;
+  }
+}
 
 DFType Kernel::dfUInt(uint16_t bits) {
   auto *type = meta.typeBuilder.buildFixed(FixedType::SignMode::UNSIGNED,
                                            bits,
                                            0);
-  return meta.storage.addType(type);
+  return Kernel::getTopMeta()->storage.addType(type);
 }
 
 DFType Kernel::dfInt(uint16_t bits) {
@@ -39,22 +46,22 @@ DFType Kernel::dfInt(uint16_t bits) {
   auto *type = meta.typeBuilder.buildFixed(FixedType::SignMode::SIGNED,
                                            bits - 1,
                                            0);
-  return meta.storage.addType(type);
+  return Kernel::getTopMeta()->storage.addType(type);
 }
 
 DFType Kernel::dfFloat(uint16_t expBits, uint16_t fracBits) {
   auto *type = meta.typeBuilder.buildFloat(expBits, fracBits);
-  return meta.storage.addType(type);
+  return Kernel::getTopMeta()->storage.addType(type);
 }
 
 DFType Kernel::dfRawBits(uint16_t bits) {
   auto *type = meta.typeBuilder.buildRawBits(bits);
-  return meta.storage.addType(type);
+  return Kernel::getTopMeta()->storage.addType(type);
 }
 
 DFType Kernel::dfBool() {
   auto *type = meta.typeBuilder.buildBool();
-  return meta.storage.addType(type);
+  return Kernel::getTopMeta()->storage.addType(type);
 }
 
 const Graph &Kernel::getGraph() const {

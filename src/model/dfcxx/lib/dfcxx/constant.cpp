@@ -15,17 +15,17 @@ Constant::Constant(KernelMeta &meta) : meta(meta) {}
 
 DFVariable Constant::var(const DFType &type, int64_t value) {
   DFConstant::Value constVal { .int_ = value };
-  return DFConstant::createOrUseConst(&meta, type, constVal);
+  return DFConstant::createOrUseConst(type, constVal);
 }
 
 DFVariable Constant::var(const DFType &type, uint64_t value) {
   DFConstant::Value constVal { .uint_ = value };
-  return DFConstant::createOrUseConst(&meta, type, constVal);
+  return DFConstant::createOrUseConst(type, constVal);
 }
 
 DFVariable Constant::var(const DFType &type, double value) {
   DFConstant::Value constVal { .double_ = value };
-  return DFConstant::createOrUseConst(&meta, type, constVal);
+  return DFConstant::createOrUseConst(type, constVal);
 }
 
 } // namespace dfcxx

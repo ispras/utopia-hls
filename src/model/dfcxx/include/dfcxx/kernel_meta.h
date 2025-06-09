@@ -17,6 +17,8 @@
 namespace dfcxx {
 
 struct KernelMeta {
+  static KernelMeta *top;
+
   Graph graph;
   KernelStorage storage;
   TypeBuilder typeBuilder;

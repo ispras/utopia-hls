@@ -7,12 +7,17 @@
 //===----------------------------------------------------------------------===//
 
 #include "dfcxx/graph.h"
+#include "dfcxx/kernel_meta.h"
 
 #include <algorithm>
 #include <cassert>
 #include <stdexcept>
 
 namespace dfcxx {
+
+class Kernel {
+  static inline KernelMeta* getTopMeta();
+};
 
 Graph::~Graph() {
   // By convention to delete a Channel object
@@ -98,7 +103,10 @@ Channel *Graph::addChannel(Node *source, Node *target,
 
 Channel *Graph::addChannel(DFVariableImpl *source, DFVariableImpl *target,
                            unsigned opInd, bool connect) {
-  Node *foundSource = findNode(source);
+  // Constants are saved in top-level graph.
+  Node *foundSource = (source->isConstant() ?
+		      &(KernelMeta::top->graph) :
+		      this)->findNode(source);
   Node *foundTarget = findNode(target);
   return addChannel(foundSource, foundTarget, opInd, connect);
 }
