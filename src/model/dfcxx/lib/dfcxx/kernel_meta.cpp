@@ -12,6 +12,18 @@ namespace dfcxx {
 
 KernelMeta *KernelMeta::top = nullptr;
 
+KernelMeta::KernelMeta() {
+  if (KernelMeta::top == nullptr) {
+    KernelMeta::top = this;
+  }
+}
+
+KernelMeta::~KernelMeta() {
+  if (KernelMeta::top == this) {
+    KernelMeta::top = nullptr;
+  }
+}
+
 void KernelMeta::transferFrom(KernelMeta &&meta) {
   meta.graph.resetMeta(this);
   graph.transferFrom(std::move(meta.graph));
