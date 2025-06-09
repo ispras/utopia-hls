@@ -15,10 +15,6 @@
 
 namespace dfcxx {
 
-class Kernel {
-  static inline KernelMeta* getTopMeta();
-};
-
 Graph::~Graph() {
   // By convention to delete a Channel object
   // each input of each node is deleted.
