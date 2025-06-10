@@ -97,7 +97,7 @@ protected:
 public:
   virtual ~Kernel() {
     Kernel::kernelStack.pop_back();
-    if (Kernel::kernelStack.size() == 0) {
+    if (Kernel::kernelStack.empty()) {
       KernelMeta::top = nullptr;
     }
   }
