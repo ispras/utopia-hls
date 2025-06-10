@@ -18,7 +18,9 @@ target_include_directories(ukernel
 
 target_link_libraries(ukernel
   PUBLIC
-    Utopia::DFCXX)
+    Utopia::DFCXX
+    Utopia::DFCXXSTD
+)
 add_library(Utopia::Kernel ALIAS ukernel)
 
 ##===----------------------------------------------------------------------===//
@@ -41,6 +43,7 @@ target_link_libraries(umain
   PRIVATE
     Utopia::Kernel
     Utopia::DFCXX
+    Utopia::DFCXXSTD
     easyloggingpp
     CLI
     Json

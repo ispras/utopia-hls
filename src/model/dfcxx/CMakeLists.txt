@@ -7,3 +7,5 @@ find_package(CTemplate REQUIRED COMPONENTS nothreads)
 set(TEMPLATES_PATH "${PROJECT_SOURCE_DIR}/templates")
 add_subdirectory(include)
 add_subdirectory(lib)
+
+add_subdirectory(std)
