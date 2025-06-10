@@ -17,14 +17,16 @@
 namespace dfcxx {
 
 struct KernelMeta {
+  static KernelMeta *top;
+
   Graph graph;
   KernelStorage storage;
   TypeBuilder typeBuilder;
   VarBuilder varBuilder;
 
-  KernelMeta() = default;
+  KernelMeta();
   KernelMeta(const KernelMeta &) = delete;
-  ~KernelMeta() = default;
+  ~KernelMeta();
 
   void transferFrom(KernelMeta &&meta);
 };

@@ -18,6 +18,7 @@
 #include "dfcxx/types/type.h"
 #include "dfcxx/vars/var.h"
 
+#include <cassert>
 #include <initializer_list>
 #include <ostream>
 #include <string>
@@ -35,6 +36,17 @@ namespace dfcxx {
 
 class Kernel {
 private:
+  static std::vector<Kernel *> kernelStack;
+
+  static inline Kernel *getTopKernel() {
+    assert(Kernel::kernelStack.size() > 0);
+    return Kernel::kernelStack.front();
+  }
+
+  static inline KernelMeta *getTopMeta() {
+    return &(Kernel::getTopKernel()->meta);
+  }
+
   KernelMeta meta;
 
   bool compileDot(llvm::raw_fd_ostream *stream);
@@ -83,7 +95,12 @@ protected:
   Kernel();
 
 public:
-  virtual ~Kernel() = default;
+  virtual ~Kernel() {
+    Kernel::kernelStack.pop_back();
+    if (Kernel::kernelStack.empty()) {
+      KernelMeta::top = nullptr;
+    }
+  }
 
   virtual std::string_view getName() const = 0;
 

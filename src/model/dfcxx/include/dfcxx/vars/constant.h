@@ -50,8 +50,7 @@ public:
 
   static TypeKind kindByType(DFTypeImpl *type);
 
-  static DFVariableImpl *createOrUseConst(KernelMeta *meta,
-                                          DFTypeImpl *type,
+  static DFVariableImpl *createOrUseConst(DFTypeImpl *type,
                                           Value value);
 
   DFVariableImpl *operator+(DFVariableImpl &rhs) override;
