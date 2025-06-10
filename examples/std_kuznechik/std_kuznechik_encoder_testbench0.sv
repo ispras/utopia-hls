@@ -24,7 +24,7 @@ module KuznechikEncoder_test0();
     .block(block),
     .key(key),
     .encoded(encoded),
-    .clk (clk)
+    .clk(clk)
   );
 
   initial clk = 0;

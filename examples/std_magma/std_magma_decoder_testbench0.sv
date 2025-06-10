@@ -25,7 +25,7 @@ module MagmaDecoder_test0();
     .encoded(encoded),
     .key(key),
     .block(block),
-    .clk (clk)
+    .clk(clk)
   );
 
   initial clk = 0;
