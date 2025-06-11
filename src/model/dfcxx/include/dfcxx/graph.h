@@ -56,6 +56,7 @@ class Graph {
 
 private:
   Nodes nodes;
+  std::vector<ModuleInst> instances;
 
   NodeNameMap nameMap;
   Nodes startNodes;
@@ -67,19 +68,29 @@ public:
 
   ~Graph();
 
+  const std::vector<ModuleInst> &getInstances() const {
+    return instances;
+  }
+
   const Nodes &getNodes() const { return nodes; }
 
   const NodeNameMap &getNameMap() const  { return nameMap; }
 
   const Nodes &getStartNodes() const { return startNodes; }
 
-  std::pair<Node *, bool> addNode(DFVariableImpl *var, OpType type, NodeData data);
+  std::pair<Node *, bool>
+  addNode(DFVariableImpl *var, ModuleInst *inst, OpType type, NodeData data);
 
   Channel *addChannel(Node *source, Node *target,
                       unsigned opInd, bool connect);
 
-  Channel *addChannel(DFVariableImpl *source, DFVariableImpl *target,
+  Channel *addChannel(DFVariableImpl *source, ModuleInst *sourceInst,
+                      DFVariableImpl *target, ModuleInst *targetInst,
                       unsigned opInd, bool connect);
+
+  ModuleInst *addInst(std::string name,
+                      std::vector<ModuleInst::Port> ports,
+                      std::vector<ModuleParam> params);
 
   void transferFrom(Graph &&graph);
 
@@ -93,7 +104,7 @@ public:
 
   Node *findNode(const std::string &name);
 
-  Node *findNode(DFVariableImpl *var);
+  Node *findNode(DFVariableImpl *var, ModuleInst *inst);
 
   Node *findNodeIf(NodePtrPred pred);
 

@@ -22,7 +22,7 @@ DFVariable IO::input(const std::string &name, const DFType &type) {
                                           &meta,
                                           type);
   meta.storage.addVariable(var);
-  meta.graph.addNode(var, OpType::IN, NodeData {});
+  meta.graph.addNode(var, nullptr, OpType::IN, NodeData {});
   return var;
 }
 
@@ -32,7 +32,7 @@ DFVariable IO::inputScalar(const std::string &name, const DFType &type) {
                                           &meta,
                                           type);
   meta.storage.addVariable(var);
-  meta.graph.addNode(var, OpType::IN, NodeData {});
+  meta.graph.addNode(var, nullptr, OpType::IN, NodeData {});
   return var;
 }
 
@@ -42,7 +42,7 @@ DFVariable IO::newStream(const DFType &type) {
                                           &meta,
                                           type);
   meta.storage.addVariable(var);
-  meta.graph.addNode(var, OpType::NONE, NodeData {});
+  meta.graph.addNode(var, nullptr, OpType::NONE, NodeData {});
   return var;
 }
 
@@ -52,7 +52,7 @@ DFVariable IO::newScalar(const DFType &type) {
                                           &meta,
                                           type);
   meta.storage.addVariable(var);
-  meta.graph.addNode(var, OpType::NONE, NodeData {});
+  meta.graph.addNode(var, nullptr, OpType::NONE, NodeData {});
   return var;
 }
 
@@ -62,7 +62,7 @@ DFVariable IO::output(const std::string &name, const DFType &type) {
                                           &meta,
                                           type);
   meta.storage.addVariable(var);
-  meta.graph.addNode(var, OpType::OUT, NodeData {});
+  meta.graph.addNode(var, nullptr, OpType::OUT, NodeData {});
   return var;
 }
 
@@ -72,7 +72,7 @@ DFVariable IO::outputScalar(const std::string &name, const DFType &type) {
                                           &meta,
                                           type);
   meta.storage.addVariable(var);
-  meta.graph.addNode(var, OpType::OUT, NodeData {});
+  meta.graph.addNode(var, nullptr, OpType::OUT, NodeData {});
   return var;
 }
 

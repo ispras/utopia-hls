@@ -68,6 +68,23 @@ const Graph &Kernel::getGraph() const {
   return meta.graph;
 }
 
+void Kernel::instanceExt(const std::string &name,
+                         const std::vector<IOBinding> &inputs,
+                         const std::vector<TypedIOBinding> &outputs,
+                         const std::vector<ModuleParam> &params) {
+  std::vector<ModuleInst::Port> ports;
+  for (const TypedIOBinding &output : outputs) {
+  }
+  for (const IOBinding &input : inputs) {
+  }
+  ModuleInst *inst = meta.graph.addInst(name, ports, params);
+  meta.graph.addNode(nullptr, inst, OpType::EXT_MODULE, NodeData {});
+  for (const TypedIOBinding &output : outputs) {
+  }
+  for (const IOBinding &input : inputs) {
+  }
+}
+
 bool Kernel::compileDot(llvm::raw_fd_ostream *stream) {
   using ctemplate::TemplateDictionary;
 
@@ -160,14 +177,14 @@ bool Kernel::compileDot(llvm::raw_fd_ostream *stream) {
 }
 
 void Kernel::rebindInput(DFVariable source, Node *input, Kernel &kern) {
-  Node *sourceNode = meta.graph.findNode(source);
+  Node *sourceNode = meta.graph.findNode(source, nullptr);
   meta.graph.rebindInput(sourceNode, input);
 
   kern.deleteNode(input);
 }
 
 DFVariable Kernel::rebindOutput(Node *output, DFVariable target, Kernel &kern) {
-  Node *targetNode = meta.graph.findNode(target);
+  Node *targetNode = meta.graph.findNode(target, nullptr);
   Node *node = meta.graph.rebindOutput(output, targetNode);
 
   if (targetNode != node) {

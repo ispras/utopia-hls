@@ -48,7 +48,7 @@ DFVariableImpl *DFConstant::createOrUseConst(DFTypeImpl *type,
 
   auto *var = meta->varBuilder.buildConstant(meta, type,
                                              value);
-  meta->graph.addNode(var, OpType::CONST, NodeData {});
+  meta->graph.addNode(var, nullptr, OpType::CONST, NodeData {});
   meta->storage.addVariable(var);
   return var;
 }
@@ -74,9 +74,9 @@ if (rhs.isConstant()) {                                                \
 KernelMeta *rMeta = rhs.getMeta();                                     \
 newVar =                                                               \
     rMeta->varBuilder.buildStream("", IODirection::NONE, rMeta, type); \
-rMeta->graph.addNode(newVar, OP_TYPE, NodeData {});                    \
-rMeta->graph.addChannel(this, newVar, 0, false);                       \
-rMeta->graph.addChannel(&rhs, newVar, 1, false);                       \
+rMeta->graph.addNode(newVar, nullptr, OP_TYPE, NodeData {});           \
+rMeta->graph.addChannel(this, nullptr, newVar, nullptr, 0, false);     \
+rMeta->graph.addChannel(&rhs, nullptr, newVar, nullptr, 1, false);     \
 rMeta->storage.addVariable(newVar);                                    \
 return newVar
 
@@ -107,9 +107,9 @@ if (rhs.isConstant()) {                                                \
 KernelMeta *rMeta = rhs.getMeta();                                     \
 newVar =                                                               \
     rMeta->varBuilder.buildStream("", IODirection::NONE, rMeta, type); \
-rMeta->graph.addNode(newVar, OP_TYPE, NodeData {});                    \
-rMeta->graph.addChannel(this, newVar, 0, false);                       \
-rMeta->graph.addChannel(&rhs, newVar, 1, false);                       \
+rMeta->graph.addNode(newVar, nullptr, OP_TYPE, NodeData {});           \
+rMeta->graph.addChannel(this, nullptr, newVar, nullptr, 0, false);     \
+rMeta->graph.addChannel(&rhs, nullptr, newVar, nullptr, 1, false);     \
 rMeta->storage.addVariable(newVar);                                    \
 return newVar
 
@@ -170,9 +170,9 @@ DFTypeImpl *newType =                                                     \
     rMeta->storage.addType(rMeta->typeBuilder.buildBool());               \
 newVar =                                                                  \
     rMeta->varBuilder.buildStream("", IODirection::NONE, rMeta, newType); \
-rMeta->graph.addNode(newVar, OP_TYPE, NodeData {});                       \
-rMeta->graph.addChannel(this, newVar, 0, false);                          \
-rMeta->graph.addChannel(&rhs, newVar, 1, false);                          \
+rMeta->graph.addNode(newVar, nullptr, OP_TYPE, NodeData {});              \
+rMeta->graph.addChannel(this, nullptr, newVar, nullptr, 0, false);        \
+rMeta->graph.addChannel(&rhs, nullptr, newVar, nullptr, 1, false);        \
 rMeta->storage.addVariable(newVar);                                       \
 return newVar
 
