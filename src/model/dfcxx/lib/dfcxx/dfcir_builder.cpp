@@ -132,7 +132,9 @@ void DFCIRBuilder::translate(Node *node, const Graph &graph,
       }
       break;
     }
-    case EXT_MODULE
+    case EXT_MODULE: {
+      return;
+    }
     case CONST: {
       auto constant = (DFConstant *) (node->var);
       int64_t val;
