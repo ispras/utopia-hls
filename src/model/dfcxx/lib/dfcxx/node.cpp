@@ -11,6 +11,10 @@
 
 namespace dfcxx {
 
+
+ModuleInst::Port::Port(std::string name, Kind kind) :
+    name(name), kind(kind) { }
+
 ModuleInst::ModuleInst(std::string name, std::vector<Port> ports,
                        std::vector<ModuleParam> params) :
                        name(name), ports(ports), params(params)	{ }

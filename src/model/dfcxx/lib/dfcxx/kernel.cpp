@@ -72,16 +72,54 @@ void Kernel::instanceExt(const std::string &name,
                          const std::vector<IOBinding> &inputs,
                          const std::vector<TypedIOBinding> &outputs,
                          const std::vector<ModuleParam> &params) {
+  using IODirection = dfcxx::DFVariableImpl::IODirection;
   std::vector<ModuleInst::Port> ports;
-  for (const TypedIOBinding &output : outputs) {
-  }
+
   for (const IOBinding &input : inputs) {
+    ports.emplace_back(input.second, ModuleInst::Port::Kind::IN);
   }
+
+  for (const TypedIOBinding &output : outputs) {
+    ports.emplace_back(output.name, ModuleInst::Port::Kind::OUT);
+  }
+
   ModuleInst *inst = meta.graph.addInst(name, ports, params);
-  meta.graph.addNode(nullptr, inst, OpType::EXT_MODULE, NodeData {});
-  for (const TypedIOBinding &output : outputs) {
+  std::pair<Node *, bool> addResult;
+  addResult =
+      meta.graph.addNode(nullptr, inst, OpType::EXT_MODULE, NodeData {});
+  assert(addResult.second);
+  Node *node = addResult.first;
+
+  for (size_t i = 0; i < inputs.size(); ++i) {
+    Node *inputNode = meta.graph.findNode(inputs[i].first, nullptr);
+    meta.graph.addChannel(inputNode, node, i, false);
   }
-  for (const IOBinding &input : inputs) {
+
+  for (const TypedIOBinding &output : outputs) {
+    DFVariableImpl *outputImpl =
+        meta.varBuilder.buildStream("", IODirection::NONE, &meta, output.type);
+
+    meta.storage.addVariable(outputImpl);
+
+    addResult =
+        meta.graph.addNode(outputImpl, nullptr,
+                           OpType::EXT_MODULE_OUT, NodeData {});
+    assert(addResult.second);
+    Node *outputNode = addResult.first;
+
+    meta.graph.addChannel(node, outputNode, 0, false);
+
+    Node *oldOutputNode = meta.graph.findNode(output.var, nullptr);
+    if (oldOutputNode->type == OpType::NONE) {
+      outputNode->outputs = std::move(oldOutputNode->outputs);
+      for (Channel *channel : outputNode->outputs) {
+        channel->source = outputNode;
+      }
+      deleteNode(oldOutputNode);
+      output.var = outputImpl;
+    } else if (oldOutputNode->type == OpType::OUT) {
+      meta.graph.addChannel(outputNode, oldOutputNode, 0, true);
+    }
   }
 }
 

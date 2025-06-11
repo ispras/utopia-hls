@@ -55,6 +55,8 @@ struct ModuleInst {
     };
     std::string name;
     Kind kind;
+
+    Port(std::string name, Kind kind);
   };
 
   std::string name;

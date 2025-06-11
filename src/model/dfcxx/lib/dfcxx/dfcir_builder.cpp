@@ -96,6 +96,8 @@ void DFCIRBuilder::translate(Node *node, const Graph &graph,
   mlir::Operation *newOp = nullptr;
 
   switch (node->type) {
+    // EXT_MODULE_OUT are handled in EXT_MODULE-case.
+    case EXT_MODULE_OUT: return;
     case OFFSET: {
       Node *in = ins[0]->source;
       auto type = mlir::IntegerType::get(builder.getContext(),
@@ -130,6 +132,7 @@ void DFCIRBuilder::translate(Node *node, const Graph &graph,
       }
       break;
     }
+    case EXT_MODULE
     case CONST: {
       auto constant = (DFConstant *) (node->var);
       int64_t val;
