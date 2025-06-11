@@ -16,10 +16,12 @@ ModuleInst::ModuleInst(std::string name, std::vector<Port> ports,
                        name(name), ports(ports), params(params)	{ }
 
 Node::Node(DFVariableImpl *var, ModuleInst *inst) :
-    var(var), type(OpType::NONE), data(NodeData {}), inputs(), outputs() {}
+    var(var), inst(inst), type(OpType::NONE),
+    data(NodeData {}), inputs(), outputs() {}
 
 Node::Node(DFVariableImpl *var, ModuleInst *inst, OpType type, NodeData data) :
-    var(var), inst(inst), type(type), data(data), inputs(), outputs() {}
+    var(var), inst(inst), type(type),
+    data(data), inputs(), outputs() {}
 
 Channel *Node::getConnection() {
   if (inputs.size() == 1 && inputs.front()->connect) {
