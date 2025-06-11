@@ -11,17 +11,21 @@
 
 namespace dfcxx {
 
-Node::Node(DFVariableImpl *var) : var(var),
-                                  type(OpType::NONE),
-                                  data(NodeData {}),
-                                  inputs(),
-                                  outputs() {}
 
-Node::Node(DFVariableImpl *var, OpType type, NodeData data) : var(var),
-                                                              type(type),
-                                                              data(data),
-                                                              inputs(),
-                                                              outputs() {}
+ModuleInst::Port::Port(std::string name, Kind kind) :
+    name(name), kind(kind) { }
+
+ModuleInst::ModuleInst(std::string name, std::vector<Port> ports,
+                       std::vector<ModuleParam> params) :
+                       name(name), ports(ports), params(params)	{ }
+
+Node::Node(DFVariableImpl *var, ModuleInst *inst) :
+    var(var), inst(inst), type(OpType::NONE),
+    data(NodeData {}), inputs(), outputs() {}
+
+Node::Node(DFVariableImpl *var, ModuleInst *inst, OpType type, NodeData data) :
+    var(var), inst(inst), type(type),
+    data(data), inputs(), outputs() {}
 
 Channel *Node::getConnection() {
   if (inputs.size() == 1 && inputs.front()->connect) {
@@ -31,7 +35,7 @@ Channel *Node::getConnection() {
 }
 
 bool Node::operator==(const dfcxx::Node &node) const {
-  return var == node.var;
+  return var == node.var && inst == node.inst;
 }
 
 } // namespace dfcxx

@@ -9,6 +9,7 @@
 #ifndef DFCXX_KERNEL_H
 #define DFCXX_KERNEL_H
 
+#include "dfcxx/common.h"
 #include "dfcxx/constant.h"
 #include "dfcxx/control.h"
 #include "dfcxx/io.h"
@@ -91,6 +92,17 @@ protected:
 
     meta.transferFrom(std::move(kern.meta));
   }
+
+  struct TypedIOBinding {
+    DFVariable &var;
+    const DFType &type;
+    const std::string &name;
+  };
+
+  void instanceExt(const std::string &name,
+                   const std::vector<IOBinding> &inputs,
+                   const std::vector<TypedIOBinding> &outputs,
+                   const std::vector<ModuleParam> &params);
 
   Kernel();
 

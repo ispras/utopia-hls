@@ -24,10 +24,10 @@ DFVariable Control::mux(DFVariable ctrl,
                                           &meta,
                                           argsData[0].getType());
   meta.storage.addVariable(var);
-  meta.graph.addNode(var, OpType::MUX, NodeData {.muxId = 0});
-  meta.graph.addChannel(ctrl, var, 0, false);
+  meta.graph.addNode(var, nullptr, OpType::MUX, NodeData {.muxId = 0});
+  meta.graph.addChannel(ctrl, nullptr, var, nullptr, 0, false);
   for (unsigned i = 0; i < argsCount; ++i) {
-    meta.graph.addChannel(argsData[i], var, i + 1, false);
+    meta.graph.addChannel(argsData[i], nullptr, var, nullptr, i + 1, false);
   }
   return var;
 }
