@@ -72,7 +72,9 @@ namespace mlir::dfcir {
 using std::unique_ptr;
 using mlir::Pass;
 
-unique_ptr<Pass> createDFCIRCombPipelinePassPass(uint64_t stages);
+unique_ptr<Pass> createDFCIRCombinifyPass();
+
+unique_ptr<Pass> createDFCIRCombPipelinePass(uint64_t stages);
 
 unique_ptr<Pass> createDFCIRToFIRRTLPass();
 

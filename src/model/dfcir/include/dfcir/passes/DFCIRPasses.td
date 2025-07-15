@@ -31,6 +31,12 @@ def DFCIRCombPipelinePass: Pass<"dfcir-comb-pipeline-pass", "mlir::ModuleOp"> {
   ];
 }
 
+def DFCIRCombinifyPass: Pass<"dfcir-combinify-pass", "mlir::dfcir::KernelOp"> {
+  let summary = "Explicitly sets latency '0' for every '?' latency in the kernel.";
+
+  let constructor = "mlir::dfcir::createDFCIRCombinifyPass()";
+}
+
 class DFCIRSchedulerPass<string name, string op>: Pass<name, op> {
 
   let options = [

@@ -22,7 +22,7 @@ include "mlir/IR/OpBase.td"
 class DFCIR_Op<string name, list<Trait> traits = []> : Op<DFCIR_Dialect, name, traits>;
 
 def KernelOp : DFCIR_Op<"kernel", 
-    [NoRegionArguments, NoTerminator, SingleBlock]> {
+    [IsolatedFromAbove, NoRegionArguments, NoTerminator, SingleBlock]> {
   let summary = "Defines a dataflow kernel.";
 
   let arguments = (ins

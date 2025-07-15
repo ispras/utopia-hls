@@ -74,7 +74,12 @@ bool DFCIRProcessor::convertAndPrint(mlir::ModuleOp module,
       pm.addPass(mlir::dfcir::createDFCIRASAPSchedulerPass(&config));
       break;
     case CombPipelining:
-      pm.addPass(mlir::dfcir::createDFCIRCombPipelinePassPass(options.stages));
+      if (!options.stages) {
+        mlir::OpPassManager &nestedDfcir = pm.nest<mlir::dfcir::KernelOp>();
+        nestedDfcir.addPass(mlir::dfcir::createDFCIRCombinifyPass());
+      } else {
+        pm.addPass(mlir::dfcir::createDFCIRCombPipelinePass(options.stages));
+      }
       break;
   }
 

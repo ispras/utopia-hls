@@ -54,7 +54,7 @@ public:
   }
 };
 
-std::unique_ptr<mlir::Pass> createDFCIRCombPipelinePassPass(uint64_t stages) {
+std::unique_ptr<mlir::Pass> createDFCIRCombPipelinePass(uint64_t stages) {
   DFCIRCombPipelinePassOptions options;
   options.stages = stages;
   return std::make_unique<DFCIRCombPipelinePass>(options);
