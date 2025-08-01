@@ -19,8 +19,8 @@ DFVariable Offset::operator()(DFVariable &stream, int64_t offset) {
                                           DFVariableImpl::IODirection::NONE,
                                           &meta, stream.getType());
   meta.storage.addVariable(var);
-  meta.graph.addNode(var, OpType::OFFSET, NodeData{.offset = offset});
-  meta.graph.addChannel(stream, var, 0, false);
+  meta.graph.addNode(var, nullptr, OpType::OFFSET, NodeData{.offset = offset});
+  meta.graph.addChannel(stream, nullptr, var, nullptr, 0, false);
   return var;
 }
 

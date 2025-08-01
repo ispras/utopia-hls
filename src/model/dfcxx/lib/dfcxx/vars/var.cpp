@@ -67,7 +67,7 @@ bool DFVariableImpl::isConstant() const {
 }
 
 void DFVariableImpl::connect(DFVariableImpl *connectee) {
-  meta->graph.addChannel(connectee, this, 0, true);
+  meta->graph.addChannel(connectee, nullptr, this, nullptr, 0, true);
 }
 
 DFVariableImpl *DFVariableImpl::operator()(uint16_t first, uint16_t second) {
@@ -85,8 +85,8 @@ DFVariableImpl *DFVariableImpl::operator()(uint16_t first, uint16_t second) {
   DFVariableImpl *newVar =
       meta->varBuilder.buildStream("", IODirection::NONE, meta, newType);
   NodeData data = {.bitsRange={.left=left, .right=right}};
-  meta->graph.addNode(newVar, OpType::BITS, data);
-  meta->graph.addChannel(this, newVar, 0, false);
+  meta->graph.addNode(newVar, nullptr, OpType::BITS, data);
+  meta->graph.addChannel(this, nullptr, newVar, nullptr, 0, false);
   meta->storage.addVariable(newVar);
   return newVar;
 }
@@ -97,9 +97,9 @@ DFVariableImpl *DFVariableImpl::cat(DFVariableImpl &rhs) {
       meta->typeBuilder.buildRawBits(total));
   DFVariableImpl *newVar =
       meta->varBuilder.buildStream("", IODirection::NONE, meta, newType);
-  meta->graph.addNode(newVar, OpType::CAT, NodeData{});
-  meta->graph.addChannel(this, newVar, 0, false);
-  meta->graph.addChannel(&rhs, newVar, 1, false);
+  meta->graph.addNode(newVar, nullptr, OpType::CAT, NodeData{});
+  meta->graph.addChannel(this, nullptr, newVar, nullptr, 0, false);
+  meta->graph.addChannel(&rhs, nullptr, newVar, nullptr, 1, false);
   meta->storage.addVariable(newVar);
   return newVar;
 }
@@ -111,8 +111,8 @@ DFVariableImpl *DFVariableImpl::cast(DFTypeImpl *type) {
 
   DFVariableImpl *var =
       meta->varBuilder.buildStream("", IODirection::NONE, meta, type);
-  meta->graph.addNode(var, OpType::CAST, NodeData {});
-  meta->graph.addChannel(this, var, 0, false);
+  meta->graph.addNode(var, nullptr, OpType::CAST, NodeData {});
+  meta->graph.addChannel(this, nullptr, var, nullptr, 0, false);
   meta->storage.addVariable(var);
   return var;
 }

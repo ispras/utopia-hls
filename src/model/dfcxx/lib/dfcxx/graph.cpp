@@ -34,8 +34,8 @@ Node *Graph::findNode(const std::string &name) {
   return it->second;
 }
 
-Node *Graph::findNode(DFVariableImpl *var) {
-  Node *bufNode = new Node(var);
+Node *Graph::findNode(DFVariableImpl *var, ModuleInst *inst) {
+  Node *bufNode = new Node(var, inst);
   auto found = nodes.find(bufNode);
   delete bufNode;
   if (found != nodes.end()) {
@@ -50,7 +50,7 @@ Node *Graph::findNodeIf(NodePtrPred pred) {
 }
 
 Node *Graph::findStartNode(DFVariableImpl *var) {
-  Node *bufNode = new Node(var);
+  Node *bufNode = new Node(var, nullptr);
   auto found = startNodes.find(bufNode);
   delete bufNode;
   if (found != startNodes.end()) {
@@ -64,10 +64,10 @@ Node *Graph::findStartNodeIf(NodePtrPred pred) {
   return (found != startNodes.end()) ? *found : nullptr;
 }
 
-std::pair<Node *, bool> Graph::addNode(DFVariableImpl *var,
-                                       OpType type,
-                                       NodeData data) {
-  Node *newNode = new Node(var, type, data);
+std::pair<Node *, bool>
+Graph::addNode(DFVariableImpl *var, ModuleInst *inst,
+               OpType type, NodeData data) {
+  Node *newNode = new Node(var, inst, type, data);
   auto insertRes = nodes.insert(newNode);
 
   if (!insertRes.second) {
@@ -97,14 +97,22 @@ Channel *Graph::addChannel(Node *source, Node *target,
   return newChannel;
 }
 
-Channel *Graph::addChannel(DFVariableImpl *source, DFVariableImpl *target,
+Channel *Graph::addChannel(DFVariableImpl *source, ModuleInst *sourceInst,
+                           DFVariableImpl *target, ModuleInst *targetInst,
                            unsigned opInd, bool connect) {
   // Constants are saved in top-level graph.
   Node *foundSource = (source->isConstant() ?
 		      &(KernelMeta::top->graph) :
-		      this)->findNode(source);
-  Node *foundTarget = findNode(target);
+		      this)->findNode(source, sourceInst);
+  Node *foundTarget = findNode(target, targetInst);
   return addChannel(foundSource, foundTarget, opInd, connect);
+}
+
+ModuleInst *Graph::addInst(std::string name,
+                           std::vector<ModuleInst::Port> ports,
+                           std::vector<ModuleParam> params) {
+  instances.emplace_back(name, ports, params);
+  return &(instances.back());
 }
 
 void Graph::transferFrom(Graph &&graph) {

@@ -22,7 +22,7 @@ TEST(DFCXXGraph, AddNode) {
   meta.storage.addType(type);
   DFVariableImpl *var = meta.varBuilder.buildStream("", direction, &meta, type);
   meta.storage.addVariable(var);
-  auto result = meta.graph.addNode(var, opType, NodeData {});
+  auto result = meta.graph.addNode(var, nullptr, opType, NodeData {});
   EXPECT_TRUE(result.first);
   EXPECT_TRUE(result.second);
   const Nodes &nodes = meta.graph.getNodes();
@@ -47,7 +47,7 @@ TEST(DFCXXGraph, AddStartNode) {
   meta.storage.addType(type);
   DFVariableImpl *var = meta.varBuilder.buildStream(STUB_NAME, direction, &meta, type);
   meta.storage.addVariable(var);
-  auto result = meta.graph.addNode(var, opType, NodeData {});
+  auto result = meta.graph.addNode(var, nullptr, opType, NodeData {});
   EXPECT_TRUE(result.first);
   EXPECT_TRUE(result.second);
   const Nodes &nodes = meta.graph.getNodes();
@@ -75,8 +75,8 @@ TEST(DFCXXGraph, AddAlreadyExistingNode) {
   meta.storage.addType(type);
   DFVariableImpl *var = meta.varBuilder.buildStream("", direction, &meta, type);
   meta.storage.addVariable(var);
-  auto result = meta.graph.addNode(var, opType, NodeData {});
-  result = meta.graph.addNode(var, opType, NodeData {});
+  auto result = meta.graph.addNode(var, nullptr, opType, NodeData {});
+  result = meta.graph.addNode(var, nullptr, opType, NodeData {});
   EXPECT_TRUE(result.first);
   EXPECT_TRUE(!result.second);
   const Nodes &nodes = meta.graph.getNodes();
@@ -102,11 +102,11 @@ TEST(DFCXXGraph, AddChannel) {
 
   DFVariableImpl *var1 = meta.varBuilder.buildStream("", direction, &meta, type);
   meta.storage.addVariable(var1);
-  auto result1 = meta.graph.addNode(var1, opType, NodeData {});
+  auto result1 = meta.graph.addNode(var1, nullptr, opType, NodeData {});
 
   DFVariableImpl *var2 = meta.varBuilder.buildStream("", direction, &meta, type);
   meta.storage.addVariable(var2);
-  auto result2 = meta.graph.addNode(var2, opType, NodeData {});
+  auto result2 = meta.graph.addNode(var2, nullptr, opType, NodeData {});
 
   Channel *channel = meta.graph.addChannel(result1.first, result2.first, 0, false);
   EXPECT_TRUE(channel);
@@ -138,11 +138,11 @@ TEST(DFCXXGraph, AddChannelWithConnection) {
 
   DFVariableImpl *var1 = meta.varBuilder.buildStream("", direction, &meta, type);
   meta.storage.addVariable(var1);
-  auto result1 = meta.graph.addNode(var1, opType, NodeData {});
+  auto result1 = meta.graph.addNode(var1, nullptr, opType, NodeData {});
 
   DFVariableImpl *var2 = meta.varBuilder.buildStream("", direction, &meta, type);
   meta.storage.addVariable(var2);
-  auto result2 = meta.graph.addNode(var2, opType, NodeData {});
+  auto result2 = meta.graph.addNode(var2, nullptr, opType, NodeData {});
 
   Channel *channel = meta.graph.addChannel(result1.first, result2.first, 0, true);
   EXPECT_TRUE(channel);
@@ -174,19 +174,19 @@ TEST(DFCXXGraph, FindNodeByName) {
 
   DFVariableImpl *var1 = meta.varBuilder.buildStream(STUB_NAME "1", direction, &meta, type);
   meta.storage.addVariable(var1);
-  auto result1 = meta.graph.addNode(var1, opType, NodeData {});
+  auto result1 = meta.graph.addNode(var1, nullptr, opType, NodeData {});
   EXPECT_TRUE(result1.first);
   EXPECT_TRUE(result1.second);
 
   DFVariableImpl *var2 = meta.varBuilder.buildStream(STUB_NAME "2", direction, &meta, type);
   meta.storage.addVariable(var2);
-  auto result2 = meta.graph.addNode(var2, opType, NodeData {});
+  auto result2 = meta.graph.addNode(var2, nullptr, opType, NodeData {});
   EXPECT_TRUE(result2.first);
   EXPECT_TRUE(result2.second);
 
   DFVariableImpl *var3 = meta.varBuilder.buildStream(STUB_NAME "3", direction, &meta, type);
   meta.storage.addVariable(var3);
-  auto result3 = meta.graph.addNode(var3, opType, NodeData {});
+  auto result3 = meta.graph.addNode(var3, nullptr, opType, NodeData {});
   EXPECT_TRUE(result3.first);
   EXPECT_TRUE(result3.second);
 
@@ -205,21 +205,21 @@ TEST(DFCXXGraph, FindNode) {
 
   DFVariableImpl *var1 = meta.varBuilder.buildStream(STUB_NAME "1", direction, &meta, type);
   meta.storage.addVariable(var1);
-  auto result1 = meta.graph.addNode(var1, opType, NodeData {});
+  auto result1 = meta.graph.addNode(var1, nullptr, opType, NodeData {});
   EXPECT_TRUE(result1.first);
   EXPECT_TRUE(result1.second);
 
   DFVariableImpl *var2 = meta.varBuilder.buildStream(STUB_NAME "2", direction, &meta, type);
   meta.storage.addVariable(var2);
-  auto result2 = meta.graph.addNode(var2, opType, NodeData {});
+  auto result2 = meta.graph.addNode(var2, nullptr, opType, NodeData {});
   EXPECT_TRUE(result2.first);
   EXPECT_TRUE(result2.second);
 
   DFVariableImpl *var3 = meta.varBuilder.buildStream(STUB_NAME "3", direction, &meta, type);
   meta.storage.addVariable(var3);
-  auto result3 = meta.graph.addNode(var3, opType, NodeData {});
+  auto result3 = meta.graph.addNode(var3, nullptr, opType, NodeData {});
   EXPECT_TRUE(result3.first);
   EXPECT_TRUE(result3.second);
 
-  EXPECT_EQ(meta.graph.findNode(var2), result2.first);
+  EXPECT_EQ(meta.graph.findNode(var2, nullptr), result2.first);
 }
